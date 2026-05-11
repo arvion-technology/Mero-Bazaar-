@@ -1,5 +1,19 @@
-import { IsEnum, IsBoolean, IsInt, IsNumber, IsString, Min, IsOptional } from "class-validator";
-import { BluebookStatus, FuelType, VehicleCondition, VehicleType } from "src/common/enums/vehicle.enum";
+import {
+  IsEnum,
+  IsBoolean,
+  IsInt,
+  IsString,
+  Min,
+  IsOptional,
+} from "class-validator";
+
+import { Type } from "class-transformer";
+import {
+  BluebookStatus,
+  FuelType,
+  VehicleCondition,
+  VehicleType,
+} from "src/common/enums/vehicle.enum";
 
 export class CreateVehicleDto {
   @IsEnum(VehicleType)
@@ -11,9 +25,11 @@ export class CreateVehicleDto {
   @IsString()
   model: string;
 
+  @Type(() => Number)
   @IsInt()
   year: number;
 
+  @Type(() => Number)
   @IsInt()
   @Min(0)
   km_driven: number;
@@ -29,9 +45,7 @@ export class CreateVehicleDto {
   fuel_type?: FuelType;
 
   @IsOptional()
+  @Type(() => Boolean)
   @IsBoolean()
   ownership_transfer_ready?: boolean;
-
-  @IsNumber()
-  price: number;
 }

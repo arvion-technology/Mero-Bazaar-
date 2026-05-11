@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateListingDto } from './dto/create_listing.dto';
 import { UpdateListingDto } from './dto/update_listing.dto';
+import { SearchListingDto } from './dto/search_listing.dto';
+import { buildListingFilter } from './search/listings_filter.builder';
 
 @Injectable()
 export class ListingsService {
@@ -16,6 +18,8 @@ export class ListingsService {
           price: dto.price,
           category: dto.category,
           images: dto.images,
+          latitude: dto.latitude,
+          longitude: dto.longitude,
         },
       });
 
@@ -23,7 +27,16 @@ export class ListingsService {
         await tx.vehicle.create({
           data: {
             listingId: listing.id,
-            ...dto.vehicle,
+
+            type: dto.vehicle.type,
+            brand: dto.vehicle.brand,
+            model: dto.vehicle.model,
+            year: dto.vehicle.year,
+            km_driven: dto.vehicle.km_driven,
+            condition: dto.vehicle.condition,
+            bluebook_status: dto.vehicle.bluebook_status,
+            fuel_type: dto.vehicle.fuel_type,
+            ownership_transfer_ready: dto.vehicle.ownership_transfer_ready ?? false,
           },
         });
       }
@@ -59,7 +72,7 @@ export class ListingsService {
         category: dto.category,
         images: dto.images,
       },
-      include:{
+      include: {
         vehicle: true,
       },
     });
@@ -74,6 +87,17 @@ export class ListingsService {
       return tx.listing.delete({
         where: { id },
       });
+    });
+  }
+
+  async search(query: SearchListingDto) {
+    const where = buildListingFilter(query);
+
+    return this.prisma.listing.findMany({
+      where,
+      include: {
+        vehicle: true,
+      },
     });
   }
 }
