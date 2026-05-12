@@ -10,6 +10,7 @@ import {
   VehicleCondition,
   FuelType,
   BluebookStatus,
+  ListingCategory,
 } from "@prisma/client";
 
 import { Type } from "class-transformer";
@@ -72,4 +73,8 @@ export class SearchListingDto {
   @Type(() => Number)
   @IsNumber()
   maxKm?: number;
+
+  @IsOptional()
+  @IsEnum(ListingCategory)
+  category?: ListingCategory;
 }

@@ -19,16 +19,19 @@ model Listing {
   createdAt   DateTime        @default(now())
 
   vehicle Vehicle?
+  job     Job?
 }
 
 enum ListingCategory {
   VEHICLE
+  JOB
 }
 
 model Vehicle {
   id                       String           @id @default(cuid())
   listingId                String           @unique
   listing                  Listing          @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
   type                     VehicleType
   brand                    String
   model                    String
@@ -38,6 +41,7 @@ model Vehicle {
   bluebook_status          BluebookStatus
   fuel_type                FuelType?
   ownership_transfer_ready Boolean          @default(false)
+
   createdAt                DateTime         @default(now())
 }
 
@@ -67,4 +71,46 @@ enum FuelType {
   diesel
   electric
   hybrid
+}
+
+model Job {
+  id                      String        @id @default(cuid())
+
+  listingId               String        @unique
+  listing                 Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  role                    String
+
+  salaryMin               Int
+  salaryMax               Int
+  payPeriod               PayPeriod
+
+  city                    String
+  skillTags               String[]
+
+  contractType            ContractType
+
+  isUrgent                Boolean       @default(false)
+  employerPhoneVerified   Boolean       @default(false)
+
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  @@index([city])
+  @@index([isUrgent])
+  @@index([contractType])
+}
+
+enum PayPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ContractType {
+  FULL_TIME
+  PART_TIME
+  GIG
+  LABOUR
+  DOMESTIC
 }

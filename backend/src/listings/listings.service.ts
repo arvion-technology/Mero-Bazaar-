@@ -3,7 +3,8 @@ import { PrismaService } from 'src/database/prisma.service';
 import { CreateListingDto } from './dto/create_listing.dto';
 import { UpdateListingDto } from './dto/update_listing.dto';
 import { SearchListingDto } from './dto/search_listing.dto';
-import { buildListingFilter } from './search/listings_filter.builder';
+import { buildListingFilter } from './builders/listings_filter.builder';
+import { ListingCategory } from '@prisma/client';
 
 @Injectable()
 export class ListingsService {
@@ -23,7 +24,7 @@ export class ListingsService {
         },
       });
 
-      if (dto.category === 'VEHICLE' && dto.vehicle) {
+      if (dto.category === ListingCategory.VEHICLE && dto.vehicle) {
         await tx.vehicle.create({
           data: {
             listingId: listing.id,
@@ -66,11 +67,11 @@ export class ListingsService {
     return this.prisma.listing.update({
       where: { id },
       data: {
-        title: dto.title,
-        description: dto.description,
-        price: dto.price,
-        category: dto.category,
-        images: dto.images,
+        ...(dto.title && { title: dto.title }),
+        ...(dto.description && { description: dto.description }),
+        ...(dto.price !== undefined && { price: dto.price }),
+        ...(dto.category && { category: dto.category }),
+        ...(dto.images !== undefined && { images: dto.images }),
       },
       include: {
         vehicle: true,

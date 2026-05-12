@@ -7,7 +7,7 @@ import {
   IsString,
 } from "class-validator";
 
-import { CreateVehicleDto } from "src/modules/vehicles/dto/vehicle.dto";
+import { CreateVehicleDto } from "src/modules/vehicles/dto/create_vehicle.dto";
 import { Type } from "class-transformer";
 import { ListingCategory } from "@prisma/client";
 
