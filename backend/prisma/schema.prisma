@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Listing {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  price       Int?
+  category    ListingCategory @default(VEHICLE)
+  latitude    Float?
+  longitude   Float?
+  images      String[]
+  createdAt   DateTime        @default(now())
+
+  vehicle Vehicle?
+}
+
+enum ListingCategory {
+  VEHICLE
+}
+
+model Vehicle {
+  id                       String           @id @default(cuid())
+  listingId                String           @unique
+  listing                  Listing          @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  type                     VehicleType
+  brand                    String
+  model                    String
+  year                     Int
+  km_driven                Int
+  condition                VehicleCondition
+  bluebook_status          BluebookStatus
+  fuel_type                FuelType?
+  ownership_transfer_ready Boolean          @default(false)
+  createdAt                DateTime         @default(now())
+}
+
+enum VehicleType {
+  bike
+  scooter
+  car
+  ev
+  truck
+  spare_parts
+}
+
+enum VehicleCondition {
+  new
+  used
+  refurb
+}
+
+enum BluebookStatus {
+  verified
+  pending
+  none
+}
+
+enum FuelType {
+  petrol
+  diesel
+  electric
+  hybrid
+}
