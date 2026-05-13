@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/database/prisma.service";
 import { SearchStrategy } from "./search.strategy.interface";
 import { JobSearchDto } from "../dto/job_search.dto";
+import { buildJobFilter } from "../builders/job-filter.builder";
 
 @Injectable()
 export class JobStrategy implements SearchStrategy {
@@ -9,21 +10,9 @@ export class JobStrategy implements SearchStrategy {
 
   async search(filters: JobSearchDto) {
     return this.prisma.job.findMany({
-      where: {
-        ...(filters.query && {
-          role: {
-            contains: filters.query,
-            mode: 'insensitive',
-          },
-        }),
-
-        ...(filters.city && {
-          city: filters.city,
-        }),
-
-        ...(filters.isUrgent !== undefined && {
-          isUrgent: filters.isUrgent,
-        }),
+      where: buildJobFilter(filters),
+      include: {
+        listing: true,
       },
     });
   }

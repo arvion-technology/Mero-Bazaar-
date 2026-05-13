@@ -13,8 +13,8 @@ export class VehiclesService {
         type: dto.type,
         brand: dto.brand,
         model: dto.model,
-        year: dto.year,
-        km_driven: dto.km_driven,
+        year: Number(dto.year),
+        km_driven: Number(dto.km_driven),
         condition: dto.condition,
         bluebook_status: dto.bluebook_status,
         fuel_type: dto.fuel_type,
@@ -26,6 +26,9 @@ export class VehiclesService {
   findByListingId(listingId: string) {
     return this.prisma.vehicle.findUnique({
       where: { listingId },
+      include: {
+        listing: true,
+      },
     });
   }
 }

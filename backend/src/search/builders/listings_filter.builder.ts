@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { SearchListingDto } from "../dto/search_listing.dto";
+import { SearchListingDto } from "../../modules/listings/dto/search_listing.dto";
 
 export function buildListingFilter(
   dto: SearchListingDto,

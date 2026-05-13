@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateJobDto } from './dto/create_job.dto';
 
@@ -7,10 +7,21 @@ export class JobsService {
   constructor(private prisma: PrismaService) {}
 
   async create(listingId: string, dto: CreateJobDto) {
+
+    if (dto.salaryMin > dto.salaryMax) {
+      throw new BadRequestException('Minimum salary cannot be greater than maximum salary!')
+    }
     return this.prisma.job.create({
       data: {
         listingId,
-        ...dto,
+        role: dto.role.trim(),
+        salaryMin: Number(dto.salaryMin),
+        salaryMax: Number(dto.salaryMax),
+        payPeriod: dto.payPeriod,
+        city: dto.city.trim(),
+        skillTags: dto.skillTags ?? [],
+        contractType: dto.contractType,
+        isUrgent: dto.isUrgent ?? false,
       },
     });
   }

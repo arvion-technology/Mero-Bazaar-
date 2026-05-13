@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { VehiclesModule } from '../modules/vehicles/vehicles.module';
+import { VehiclesModule } from '../vehicles/vehicles.module';
 import { PrismaModule } from 'src/database/prisma.module';
 import { ListingsService } from './listings.service';
 import { ListingsController } from './listings.controller';
@@ -8,5 +8,6 @@ import { ListingsController } from './listings.controller';
   imports: [PrismaModule, VehiclesModule],
   controllers: [ListingsController],
   providers: [ListingsService],
+  exports: [ListingsService],
 })
 export class ListingsModule {}

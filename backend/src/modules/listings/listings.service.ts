@@ -3,7 +3,7 @@ import { PrismaService } from 'src/database/prisma.service';
 import { CreateListingDto } from './dto/create_listing.dto';
 import { UpdateListingDto } from './dto/update_listing.dto';
 import { SearchListingDto } from './dto/search_listing.dto';
-import { buildListingFilter } from './builders/listings_filter.builder';
+import { buildListingFilter } from '../../search/builders/listings_filter.builder';
 import { ListingCategory } from '@prisma/client';
 
 @Injectable()
