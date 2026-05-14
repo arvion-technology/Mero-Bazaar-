@@ -8,5 +8,6 @@ import { ListingsController } from './listings.controller';
   imports: [PrismaModule, VehiclesModule],
   controllers: [ListingsController],
   providers: [ListingsService],
+  exports: [ListingsService],
 })
 export class ListingsModule {}
