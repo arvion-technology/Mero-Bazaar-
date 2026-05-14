@@ -20,17 +20,22 @@ model Listing {
 
   vehicle Vehicle?
   job     Job?
+  medical MedicalAndDental?
+
+  leads        Lead[]
+  appointments Appointment[]
 }
 
 enum ListingCategory {
   VEHICLE
   JOB
+  MEDICAL
 }
 
 model Vehicle {
-  id                       String           @id @default(cuid())
-  listingId                String           @unique
-  listing                  Listing          @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   type                     VehicleType
   brand                    String
@@ -42,7 +47,7 @@ model Vehicle {
   fuel_type                FuelType?
   ownership_transfer_ready Boolean          @default(false)
 
-  createdAt                DateTime         @default(now())
+  createdAt DateTime @default(now())
 }
 
 enum VehicleType {
@@ -74,27 +79,27 @@ enum FuelType {
 }
 
 model Job {
-  id                      String        @id @default(cuid())
+  id String @id @default(cuid())
 
-  listingId               String        @unique
-  listing                 Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  role                    String
+  role String
 
-  salaryMin               Int
-  salaryMax               Int
-  payPeriod               PayPeriod
+  salaryMin Int
+  salaryMax Int
+  payPeriod PayPeriod
 
-  city                    String
-  skillTags               String[]
+  city      String
+  skillTags String[]
 
-  contractType            ContractType
+  contractType ContractType
 
-  isUrgent                Boolean       @default(false)
-  employerPhoneVerified   Boolean       @default(false)
+  isUrgent              Boolean @default(false)
+  employerPhoneVerified Boolean @default(false)
 
-  createdAt               DateTime      @default(now())
-  updatedAt               DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([city])
   @@index([isUrgent])
@@ -113,4 +118,92 @@ enum ContractType {
   GIG
   LABOUR
   DOMESTIC
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  leadType  LeadType
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
+  @@index([leadType])
+}
+
+enum LeadType {
+  CALL
+  CHAT
+  APPLY
+}
+
+model MedicalAndDental {
+  id        String  @id @default(cuid())
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  category         MedicalCategory
+  doctorName       String
+  speciality       String
+  nmcLicenseNumber String
+  isVerified       Boolean         @default(false)
+
+  appointmentFee     Int
+  availableSlots     Json
+  homeVisitAvailable Boolean @default(false)
+  clinicAddress      String
+  city               String
+  latitude           Float?
+  longitude          Float?
+
+  verification_doc_url String?
+  verification_status  VerificationStatus @default(PENDING)
+  nmcBadge             Boolean            @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments Appointment[]
+
+  @@index([city])
+  @@index([speciality])
+  @@index([homeVisitAvailable])
+  @@index([isVerified])
+}
+
+model Appointment {
+  id        String           @id @default(cuid())
+  listingId String
+  listing   Listing          @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  doctorId  String
+  doctor    MedicalAndDental @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  start_time DateTime
+  end_time   DateTime
+  notes      String?
+
+  status     AppointmentStatus @default(PENDING)
+  created_at DateTime          @default(now())
+
+  @@index([listingId])
+  @@index([status])
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum MedicalCategory {
+  DENTAL
+  GENERAL
+  SPECIALIST
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
 }
