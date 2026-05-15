@@ -1,16 +1,16 @@
-import { Controller, Param, Patch, Post } from "@nestjs/common";
+import { Controller, Param, Patch, Post, Body } from "@nestjs/common";
 import { VerificationService } from "./verification.service";
 
-@Controller('verification_docs')
+@Controller('verification-docs')
 export class VerificationController {
   constructor(private readonly verificationService: VerificationService) {}
 
   @Post()
-  upload() {
-    return 'upload verification doc';
+  upload(@Body() dto: any) {
+    return this.verificationService.upload(dto);
   }
 
-  @Patch(':id')
+  @Patch(':id/approve')
   approve(@Param('id') id: string) {
     return this.verificationService.approve(id);
   }

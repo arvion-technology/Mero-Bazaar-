@@ -156,14 +156,13 @@ model MedicalAndDental {
   latitude           Float?
   longitude          Float?
 
-  verification_doc_url String?
-  verification_status  VerificationStatus @default(PENDING)
-  nmcBadge             Boolean            @default(false)
+  nmcBadge Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  appointments Appointment[]
+  appointments          Appointment[]
+  verificationDocuments VerificationDocument[]
 
   @@index([city])
   @@index([speciality])
@@ -172,11 +171,16 @@ model MedicalAndDental {
 }
 
 model Appointment {
-  id        String           @id @default(cuid())
+  id String @id @default(cuid())
+
   listingId String
-  listing   Listing          @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  doctorId  String
-  doctor    MedicalAndDental @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  doctorId String
+  doctor   MedicalAndDental @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  patientId   String?
+  patientName String
 
   start_time DateTime
   end_time   DateTime
@@ -185,7 +189,8 @@ model Appointment {
   status     AppointmentStatus @default(PENDING)
   created_at DateTime          @default(now())
 
-  @@index([listingId])
+  @@unique([doctorId, start_time])
+  @@index([doctorId])
   @@index([status])
 }
 
@@ -206,4 +211,22 @@ enum VerificationStatus {
   PENDING
   VERIFIED
   REJECTED
+}
+
+model VerificationDocument {
+  id String @id @default(cuid())
+
+  medicalId String
+  medical   MedicalAndDental @relation(fields: [medicalId], references: [id], onDelete: Cascade)
+
+  fileUrl  String
+  filePath String
+
+  status          VerificationStatus @default(PENDING)
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([medicalId])
 }

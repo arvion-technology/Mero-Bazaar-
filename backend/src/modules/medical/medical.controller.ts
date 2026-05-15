@@ -1,15 +1,12 @@
-import { Controller, Post, Get, Body, Query, Param } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, Param, UsePipes, ValidationPipe } from '@nestjs/common';
 import { MedicalService } from './medical.service';
 import { CreateMedicalDto } from './dto/create_medical.dto';
 import { MedicalQueryDto } from './dto/medical_query.dto';
-import { CreateAppointmentDto } from './appointments/dto/create_appointment.dto';
-import { UpdateAppointmentStatusDto } from './appointments/dto/update_appointment_status.dto';
 
 @Controller('medical')
+@UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 export class MedicalController {
-  constructor(
-    private readonly medicalService: MedicalService,
-  ) {}
+  constructor(private readonly medicalService: MedicalService) {}
 
   @Post()
   create(@Body() dto: CreateMedicalDto) {

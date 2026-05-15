@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { MedicalCategory } from '@prisma/client';
 import { CreateMedicalDto } from './dto/create_medical.dto';
-import { CreateAppointmentDto } from './appointments/dto/create_appointment.dto';
-import { UpdateAppointmentStatusDto } from './appointments/dto/update_appointment_status.dto';
 import { MedicalQueryDto } from './dto/medical_query.dto';
+import { MedicalCategory, ListingCategory } from '@prisma/client';
 
 @Injectable()
 export class MedicalService {
@@ -13,8 +11,9 @@ export class MedicalService {
   async create(dto: CreateMedicalDto) {
     return this.prisma.listing.create({
       data: {
+        category: ListingCategory.MEDICAL,
         title: dto.doctorName,
-        description: dto.speciality,
+
         medical: {
           create: {
             category: dto.category as MedicalCategory,
@@ -25,12 +24,11 @@ export class MedicalService {
             availableSlots: dto.availableSlots,
             clinicAddress: dto.clinicAddress,
             city: dto.city,
-            latitude: dto.latitude,
-            longitude: dto.longitude,
+            latitude: dto.latitude ?? null,
+            longitude: dto.longitude ?? null,
           },
         },
       },
-
       include: {
         medical: true,
       },
@@ -39,6 +37,18 @@ export class MedicalService {
 
   async findAll(query: MedicalQueryDto) {
     return this.prisma.listing.findMany({
+      where: {
+        category: ListingCategory.MEDICAL,
+
+        medical: {
+          ...(query.city ? { city: query.city } : {}),
+          ...(query.speciality ? { speciality: query.speciality } : {}),
+          ...(query.doctorName ? { doctorName: query.doctorName } : {}),
+          ...(query.homeVisitAvailable !== undefined
+            ? { homeVisitAvailable: query.homeVisitAvailable }
+            : {}),
+        },
+      },
       include: {
         medical: true,
       },
@@ -48,7 +58,6 @@ export class MedicalService {
   async findOne(id: string) {
     return this.prisma.listing.findUnique({
       where: { id },
-
       include: {
         medical: true,
       },

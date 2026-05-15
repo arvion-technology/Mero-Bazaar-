@@ -1,18 +1,26 @@
 import { Module } from '@nestjs/common';
-import { MedicalService } from './medical.service';
-import { MedicalController } from './medical.controller';
 import { PrismaModule } from 'src/database/prisma.module';
 
-import { AppointmentsController } from './appointments/appointments.controller';
-import { AppointmentsService } from './appointments/appointments.service';
+import { MedicalService } from './medical.service';
+import { MedicalController } from './medical.controller';
 
-import { VerificationController } from './verification/verification.controller';
+import { AppointmentsService } from './appointments/appointments.service';
+import { AppointmentsController } from './appointments/appointments.controller';
+
 import { VerificationService } from './verification/verification.service';
+import { VerificationController } from './verification/verification.controller';
 
 @Module({
   imports: [PrismaModule],
-  controllers: [MedicalController, AppointmentsController, VerificationController],
-  providers: [MedicalService, AppointmentsService, VerificationService],
-  exports: [PrismaModule],
+  controllers: [
+    MedicalController,
+    AppointmentsController,
+    VerificationController,
+  ],
+  providers: [
+    MedicalService,
+    AppointmentsService,
+    VerificationService,
+  ],
 })
 export class MedicalModule {}
