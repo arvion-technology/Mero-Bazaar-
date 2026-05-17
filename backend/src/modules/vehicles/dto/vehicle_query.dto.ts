@@ -1,6 +1,6 @@
 import { IsOptional, IsString, IsEnum, IsNumber } from "class-validator";
 import { Type } from "class-transformer";
-import { VehicleType, VehicleCondition, FuelType, BluebookStatus } from "@prisma/client";
+import { VehicleType, VehicleCondition, FuelType } from "@prisma/client";
 
 export class VehicleSearchDto {
   @IsOptional()
@@ -26,10 +26,6 @@ export class VehicleSearchDto {
   @IsOptional()
   @IsEnum(FuelType)
   fuelType?: FuelType;
-
-  @IsOptional()
-  @IsEnum(BluebookStatus)
-  bluebookStatus?: BluebookStatus;
 
   @IsOptional()
   @Type(() => Number)

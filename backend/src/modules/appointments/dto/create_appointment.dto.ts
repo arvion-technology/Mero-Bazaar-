@@ -15,10 +15,10 @@ export class CreateAppointmentDto {
   patientName: string;
 
   @IsDateString()
-  start_time: string;
+  startTime: string;
 
   @IsDateString()
-  end_time: string;
+  endTime: string;
 
   @IsOptional()
   @IsString()

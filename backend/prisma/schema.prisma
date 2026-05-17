@@ -13,14 +13,20 @@ model Listing {
   description String?
   price       Int?
   category    ListingCategory @default(VEHICLE)
+
   latitude    Float?
   longitude   Float?
-  images      String[]
-  createdAt   DateTime        @default(now())
 
-  vehicle Vehicle?
-  job     Job?
-  medical MedicalAndDental?
+  images      String[]
+
+  isVerifiedDoctor Boolean @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  vehicle     Vehicle?
+  job         Job?
+  medical     MedicalAndDental?
 
   leads        Lead[]
   appointments Appointment[]
@@ -45,7 +51,7 @@ model Vehicle {
   condition                VehicleCondition
   bluebook_status          BluebookStatus
   fuel_type                FuelType?
-  ownership_transfer_ready Boolean          @default(false)
+  ownership_transfer_ready Boolean @default(false)
 
   createdAt DateTime @default(now())
 }
@@ -81,7 +87,7 @@ enum FuelType {
 model Job {
   id String @id @default(cuid())
 
-  listingId String  @unique
+  listingId String @unique
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   role String
@@ -124,6 +130,7 @@ model Lead {
   id        String   @id @default(cuid())
   listingId String
   listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
   leadType  LeadType
   createdAt DateTime @default(now())
 
@@ -139,24 +146,26 @@ enum LeadType {
 
 model MedicalAndDental {
   id        String  @id @default(cuid())
+
   listingId String  @unique
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  category         MedicalCategory
   doctorName       String
-  speciality       String
+  specialty        String
   nmcLicenseNumber String
-  isVerified       Boolean         @default(false)
+
+  verificationStatus VerificationStatus @default(PENDING)
 
   appointmentFee     Int
   availableSlots     Json
-  homeVisitAvailable Boolean @default(false)
-  clinicAddress      String
-  city               String
-  latitude           Float?
-  longitude          Float?
 
-  nmcBadge Boolean @default(false)
+  homeVisitAvailable Boolean @default(false)
+
+  clinicAddress String
+  city          String
+
+  latitude  Float?
+  longitude Float?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -165,9 +174,9 @@ model MedicalAndDental {
   verificationDocuments VerificationDocument[]
 
   @@index([city])
-  @@index([speciality])
+  @@index([specialty])
   @@index([homeVisitAvailable])
-  @@index([isVerified])
+  @@index([verificationStatus])
 }
 
 model Appointment {
@@ -182,14 +191,13 @@ model Appointment {
   patientId   String?
   patientName String
 
-  start_time DateTime
-  end_time   DateTime
+  startTime DateTime
+  endTime   DateTime
   notes      String?
 
   status     AppointmentStatus @default(PENDING)
-  created_at DateTime          @default(now())
+  createdAt  DateTime @default(now())
 
-  @@unique([doctorId, start_time])
   @@index([doctorId])
   @@index([status])
 }
@@ -199,12 +207,6 @@ enum AppointmentStatus {
   CONFIRMED
   CANCELLED
   COMPLETED
-}
-
-enum MedicalCategory {
-  DENTAL
-  GENERAL
-  SPECIALIST
 }
 
 enum VerificationStatus {
@@ -219,7 +221,6 @@ model VerificationDocument {
   medicalId String
   medical   MedicalAndDental @relation(fields: [medicalId], references: [id], onDelete: Cascade)
 
-  fileUrl  String
   filePath String
 
   status          VerificationStatus @default(PENDING)

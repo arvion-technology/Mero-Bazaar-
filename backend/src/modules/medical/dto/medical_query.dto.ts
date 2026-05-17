@@ -1,10 +1,21 @@
-import { Transform } from 'class-transformer';
+import { IsOptional, IsString, IsBoolean } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class MedicalQueryDto {
+  @IsOptional()
+  @IsString()
   city?: string;
-  speciality?: string;
+
+  @IsOptional()
+  @IsString()
+  specialty?: string;
+
+  @IsOptional()
+  @IsString()
   doctorName?: string;
 
-  @Transform(({ value }) => value === 'true')
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
   homeVisitAvailable?: boolean;
 }
