@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateMedicalDto } from './dto/create_medical.dto';
 import { MedicalQueryDto } from './dto/medical_query.dto';
-import { MedicalCategory, ListingCategory } from '@prisma/client';
+import { ListingCategory } from '@prisma/client';
 
 @Injectable()
 export class MedicalService {
@@ -12,13 +12,12 @@ export class MedicalService {
     return this.prisma.listing.create({
       data: {
         category: ListingCategory.MEDICAL,
-        title: dto.doctorName,
+        title: `${dto.doctorName} - ${dto.specialty}`,
 
         medical: {
           create: {
-            category: dto.category as MedicalCategory,
             doctorName: dto.doctorName,
-            speciality: dto.speciality,
+            specialty: dto.specialty,
             nmcLicenseNumber: dto.nmcLicenseNumber,
             appointmentFee: dto.appointmentFee,
             availableSlots: dto.availableSlots,
@@ -41,23 +40,28 @@ export class MedicalService {
         category: ListingCategory.MEDICAL,
 
         medical: {
-          ...(query.city ? { city: query.city } : {}),
-          ...(query.speciality ? { speciality: query.speciality } : {}),
-          ...(query.doctorName ? { doctorName: query.doctorName } : {}),
-          ...(query.homeVisitAvailable !== undefined
-            ? { homeVisitAvailable: query.homeVisitAvailable }
-            : {}),
+          is: {
+            ...(query.city && { city: query.city }),
+            ...(query.specialty && { specialty: query.specialty }),
+            ...(query.doctorName && { doctorName: query.doctorName }),
+            ...(query.homeVisitAvailable !== undefined && {
+              homeVisitAvailable: query.homeVisitAvailable,
+            }),
+          },
         },
       },
+
       include: {
         medical: true,
       },
     });
   }
-
   async findOne(id: string) {
-    return this.prisma.listing.findUnique({
-      where: { id },
+    return this.prisma.listing.findFirst({
+      where: {
+        id,
+        category: ListingCategory.MEDICAL,
+      },
       include: {
         medical: true,
       },
