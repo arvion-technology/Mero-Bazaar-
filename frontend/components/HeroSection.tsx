@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 
+// popular searches to show below the search bar
 const popularSearches = [
   "Bajaj N160",
   "2BHK Rent Kathmandu",
@@ -11,6 +12,7 @@ const popularSearches = [
   "Driver Job",
 ];
 
+// all the locations for the dropdown
 const locations = [
   "All Nepal",
   "Kathmandu",
@@ -24,10 +26,12 @@ const locations = [
   "Dharan",
 ];
 
+// trust badges that show at the bottom - each has an icon, title and subtitle
 const trustBadges = [
   {
     id: "verified",
     icon: (
+      // verified sellers icon
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <circle cx="14" cy="14" r="13" stroke="#C0392B" strokeWidth="1.5" fill="#fff5f5" />
         <path d="M14 4l2.2 6.5H23l-5.5 4 2.1 6.5L14 17l-5.6 4 2.1-6.5L5 10.5h6.8L14 4z"
@@ -41,6 +45,7 @@ const trustBadges = [
   {
     id: "blockchain",
     icon: (
+      // blockchain icon - not sure if we actually need this one
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <rect x="1.5" y="1.5" width="25" height="25" rx="5" stroke="#4B6BFB" strokeWidth="1.5" fill="#f0f3ff" />
         <rect x="9" y="9" width="10" height="10" rx="2" stroke="#4B6BFB" strokeWidth="1.5" fill="none" />
@@ -91,11 +96,14 @@ const trustBadges = [
 ];
 
 export default function HeroSection() {
+  // state for the search input and location dropdown
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("All Nepal");
   const [locOpen, setLocOpen] = useState(false);
+
   const locRef = useRef<HTMLDivElement>(null);
 
+  // close location dropdown when clicking outside - same pattern as navbar
   useEffect(() => {
     function handleOutside(e: MouseEvent) {
       if (locRef.current && !locRef.current.contains(e.target as Node)) {
@@ -108,6 +116,7 @@ export default function HeroSection() {
 
   return (
     <>
+      {/* big style block for the whole hero section */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
@@ -194,7 +203,6 @@ export default function HeroSection() {
           font-weight: 400;
           text-shadow: 0 1px 6px rgba(0,0,0,0.3);
         }
-        /* Search bar */
         .hero-search-box {
           background: #fff;
           border-radius: 10px;
@@ -231,7 +239,6 @@ export default function HeroSection() {
           background: #e0e0e0;
           flex-shrink: 0;
         }
-        /* Location dropdown */
         .hero-loc-wrap {
           position: relative;
           flex-shrink: 0;
@@ -310,7 +317,6 @@ export default function HeroSection() {
           letter-spacing: 0.2px;
         }
         .hero-search-btn:hover { background: #a93226; }
-        /* Popular searches */
         .hero-popular {
           display: flex;
           align-items: center;
@@ -345,7 +351,7 @@ export default function HeroSection() {
           color: #fff;
         }
 
-        /* ── Trust Badge Bar ── */
+        /* trust badges section at the bottom */
         .trust-bar {
           background: #fff;
           border-top: 1px solid #f0f0f0;
@@ -385,6 +391,7 @@ export default function HeroSection() {
           font-family: 'Inter', sans-serif;
         }
 
+        /* mobile styles */
         @media (max-width: 768px) {
           .trust-inner {
             flex-wrap: wrap;
@@ -404,28 +411,29 @@ export default function HeroSection() {
         }
       `}</style>
 
-      {/* ── Hero ── */}
+      {/* hero section */}
       <section className="hero-wrap">
         <div className="hero-bg" />
 
         <div className="hero-content">
-          {/* Badge */}
+          {/* little badge at the top */}
           <div className="hero-badge">
             <span className="hero-badge-dot" />
             नेपालको सबैभन्दा भरोसायो डिजिटल मार्केटप्लेस
           </div>
 
-          {/* Headline */}
+          {/* main heading */}
           <h1 className="hero-h1">
             किन्ने, बेच्ने, बुक गर्ने
             <span className="hero-h1-red">सबै एकै ठाउमा</span>
           </h1>
 
-          {/* Subtitle */}
+          {/* subtitle in english */}
           <p className="hero-sub">Buy, Sell, Book and Find Trusted Services Across Nepal</p>
 
-          {/* Search Bar */}
+          {/* search bar with location picker */}
           <div className="hero-search-box">
+            {/* search icon on the left */}
             <div className="hero-search-icon">
               <svg width="18" height="18" fill="none" stroke="#aaa" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="7" strokeWidth="2" />
@@ -439,12 +447,12 @@ export default function HeroSection() {
               placeholder="Search vehicles, jobs, plumbers, clinics, and more..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && console.log("search:", query)}
+              onKeyDown={(e) => e.key === "Enter" && console.log("search:", query)} // TODO: hook up real search
             />
 
             <div className="hero-divider" />
 
-            {/* Location */}
+            {/* location dropdown */}
             <div className="hero-loc-wrap" ref={locRef}>
               <button
                 className="hero-loc-btn"
@@ -459,6 +467,7 @@ export default function HeroSection() {
                 </svg>
               </button>
 
+              {/* show location options if open */}
               {locOpen && (
                 <div className="hero-loc-dropdown">
                   {locations.map((loc) => (
@@ -477,7 +486,7 @@ export default function HeroSection() {
             <button className="hero-search-btn">Search</button>
           </div>
 
-          {/* Popular Searches */}
+          {/* popular search chips */}
           <div className="hero-popular">
             <span className="hero-popular-label">Popular Searches:</span>
             {popularSearches.map((term) => (
@@ -489,9 +498,10 @@ export default function HeroSection() {
         </div>
       </section>
 
-      {/* ── Trust Badge Bar ── */}
+      {/* trust badges bar below the hero */}
       <div className="trust-bar">
         <div className="trust-inner">
+          {/* loop through all trust badges */}
           {trustBadges.map((badge) => (
             <div key={badge.id} className="trust-item">
               <div className="trust-icon">{badge.icon}</div>
