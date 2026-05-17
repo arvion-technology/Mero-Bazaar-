@@ -4,28 +4,28 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 
 const categories = [
-  { name: "Vehicles",             slug: "vehicles",           icon: "🚗" },
-  { name: "Property",             slug: "property",           icon: "🏠" },
-  { name: "Jobs & Careers",       slug: "jobs-careers",       icon: "💼" },
-  { name: "Medical & Health",     slug: "medical-health",     icon: "🏥" },
-  { name: "Education & Training", slug: "education-training", icon: "📚" },
-  { name: "Electronics",          slug: "electronics",        icon: "💻" },
-  { name: "Beauty & Wellness",    slug: "beauty-wellness",    icon: "💄" },
-  { name: "Trades & Maintenance", slug: "trades-maintenance", icon: "🔧" },
-  { name: "Food & Restaurants",   slug: "food-restaurants",   icon: "🍽️" },
+  { name: "Vehicles", slug: "vehicles" },
+  { name: "Property", slug: "property" },
+  { name: "Jobs & Careers", slug: "jobs-careers" },
+  { name: "Medical & Health", slug: "medical-health" },
+  { name: "Education & Training", slug: "education-training" },
+  { name: "Electronics", slug: "electronics" },
+  { name: "Beauty & Wellness", slug: "beauty-wellness" },
+  { name: "Trades & Maintenance", slug: "trades-maintenance" },
+  { name: "Food & Restaurants", slug: "food-restaurants" },
 ];
 
 const navLinks = [
-  { label: "Buy",      href: "/buy" },
+  { label: "Buy", href: "/buy" },
   { label: "Services", href: "/services" },
-  { label: "Jobs",     href: "/category/jobs-careers" },
+  { label: "Jobs", href: "/category/jobs-careers" },
   { label: "Property", href: "/category/property" },
 ];
 
 const moreLinks = [
-  { label: "Labour Hire",    href: "/category/labour-hire"   },
-  { label: "Events",         href: "/category/events"        },
-  { label: "Home Services",  href: "/category/home-services" },
+  { label: "Labour Hire", href: "/category/labour-hire" },
+  { label: "Events", href: "/category/events" },
+  { label: "Home Services", href: "/category/home-services" },
   { label: "Travel & Tourism", href: "/category/travel-tourism" },
 ];
 
@@ -33,19 +33,17 @@ const PRIMARY = "#C0392B";
 
 export default function Navbar() {
   const [showCategories, setShowCategories] = useState(false);
-  const [showMore,       setShowMore]       = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileCats, setShowMobileCats] = useState(false);
-  const [hoveredCat,    setHoveredCat]     = useState<string | null>(null);
-  const [hoveredMore,   setHoveredMore]    = useState<string | null>(null);
-  const [hoveredLink,   setHoveredLink]    = useState<string | null>(null);
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
 
-  const catRef  = useRef<HTMLDivElement>(null);
+  const catRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (catRef.current  && !catRef.current.contains(e.target as Node))  setShowCategories(false);
+      if (catRef.current && !catRef.current.contains(e.target as Node)) setShowCategories(false);
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) setShowMore(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -74,7 +72,6 @@ export default function Navbar() {
           height: 60px;
           gap: 6px;
         }
-        /* Logo */
         .hnb-logo {
           display: flex;
           align-items: center;
@@ -103,7 +100,6 @@ export default function Navbar() {
           color: #1a1a1a;
           letter-spacing: -0.2px;
         }
-        /* Nav links */
         .hnb-links {
           display: flex;
           align-items: center;
@@ -130,7 +126,6 @@ export default function Navbar() {
         }
         .hnb-btn:hover { background: #f5f5f5; color: #111; }
         .hnb-btn.active { color: ${PRIMARY}; background: #fff5f5; }
-        /* Dropdowns */
         .hnb-dropdown {
           position: absolute;
           top: calc(100% + 6px);
@@ -167,7 +162,6 @@ export default function Navbar() {
           transition: background 0.12s, color 0.12s;
         }
         .hnb-cat-item:hover { background: #fff5f5; color: ${PRIMARY}; }
-        .hnb-cat-emoji { font-size: 14px; }
         .hnb-view-all {
           border-top: 1px solid #f0f0f0;
           padding: 9px 16px;
@@ -207,7 +201,6 @@ export default function Navbar() {
           transition: background 0.12s, color 0.12s;
         }
         .hnb-more-item:hover { background: #fff5f5; color: ${PRIMARY}; }
-        /* Right actions */
         .hnb-right {
           display: flex;
           align-items: center;
@@ -253,13 +246,11 @@ export default function Navbar() {
         }
         .hnb-login:hover { background: #a93226; transform: translateY(-1px); }
         .hnb-login:active { transform: translateY(0); }
-        /* Chevron */
         .hnb-chevron {
           transition: transform 0.2s ease;
           flex-shrink: 0;
         }
         .hnb-chevron.open { transform: rotate(180deg); }
-        /* Mobile */
         .hnb-hamburger {
           display: none;
           margin-left: auto;
@@ -321,11 +312,9 @@ export default function Navbar() {
       <nav className="hnb-nav">
         <div className="hnb-inner">
 
-          {/* ── Logo ── */}
           <Link href="/" className="hnb-logo">
-            {/* Nepal knot / hamro icon */}
             <svg className="hnb-logo-icon" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="38" height="38" rx="8" fill={PRIMARY}/>
+              <rect width="38" height="38" rx="8" fill={PRIMARY} />
               <path
                 d="M10 10 C10 10, 14 8, 19 13 C24 18, 28 10, 28 10
                    M10 28 C10 28, 14 30, 19 25 C24 20, 28 28, 28 28
@@ -334,7 +323,7 @@ export default function Navbar() {
                    M14 19 C14 19 16 22 19 22 C22 22 24 19 24 19"
                 stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"
               />
-              <circle cx="19" cy="19" r="3" fill="#fff" opacity="0.9"/>
+              <circle cx="19" cy="19" r="3" fill="#fff" opacity="0.9" />
             </svg>
             <div className="hnb-logo-text">
               <span className="hnb-logo-line1">HamroNepal</span>
@@ -342,30 +331,27 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* ── Desktop Nav Links ── */}
           <div className="hnb-links">
 
-            {/* Categories dropdown */}
             <div style={{ position: "relative" }} ref={catRef}>
               <button
                 className={`hnb-btn${showCategories ? " active" : ""}`}
                 onClick={() => { setShowCategories(!showCategories); setShowMore(false); }}
               >
-                {/* 3×3 grid icon */}
                 <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                  <rect x="0"  y="0"  width="4" height="4" rx="1" fill="currentColor" opacity="0.8"/>
-                  <rect x="5.5" y="0"  width="4" height="4" rx="1" fill="currentColor" opacity="0.8"/>
-                  <rect x="11" y="0"  width="4" height="4" rx="1" fill="currentColor" opacity="0.8"/>
-                  <rect x="0"  y="5.5" width="4" height="4" rx="1" fill="currentColor" opacity="0.8"/>
-                  <rect x="5.5" y="5.5" width="4" height="4" rx="1" fill="currentColor" opacity="0.8"/>
-                  <rect x="11" y="5.5" width="4" height="4" rx="1" fill="currentColor" opacity="0.8"/>
-                  <rect x="0"  y="11" width="4" height="4" rx="1" fill="currentColor" opacity="0.8"/>
-                  <rect x="5.5" y="11" width="4" height="4" rx="1" fill="currentColor" opacity="0.8"/>
-                  <rect x="11" y="11" width="4" height="4" rx="1" fill="currentColor" opacity="0.8"/>
+                  <rect x="0" y="0" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
+                  <rect x="5.5" y="0" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
+                  <rect x="11" y="0" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
+                  <rect x="0" y="5.5" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
+                  <rect x="5.5" y="5.5" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
+                  <rect x="11" y="5.5" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
+                  <rect x="0" y="11" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
+                  <rect x="5.5" y="11" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
+                  <rect x="11" y="11" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
                 </svg>
                 Categories
                 <svg className={`hnb-chevron${showCategories ? " open" : ""}`} width="11" height="11" fill="none" stroke="#999" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
@@ -379,7 +365,6 @@ export default function Navbar() {
                         className="hnb-cat-item"
                         onClick={() => setShowCategories(false)}
                       >
-                        <span className="hnb-cat-emoji">{cat.icon}</span>
                         {cat.name}
                       </Link>
                     ))}
@@ -388,7 +373,7 @@ export default function Navbar() {
                     <Link href="/categories" className="hnb-view-all-link" onClick={() => setShowCategories(false)}>
                       View All Categories
                       <svg width="11" height="11" fill="none" stroke={PRIMARY} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                       </svg>
                     </Link>
                   </div>
@@ -396,7 +381,6 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Static nav links */}
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -410,7 +394,6 @@ export default function Navbar() {
               </Link>
             ))}
 
-            {/* More dropdown */}
             <div style={{ position: "relative" }} ref={moreRef}>
               <button
                 className={`hnb-btn${showMore ? " active" : ""}`}
@@ -418,7 +401,7 @@ export default function Navbar() {
               >
                 More
                 <svg className={`hnb-chevron${showMore ? " open" : ""}`} width="11" height="11" fill="none" stroke="#999" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
@@ -439,21 +422,19 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* ── Right Actions ── */}
           <div className="hnb-right">
             <Link href="/sell" className="hnb-seller">Become a Seller</Link>
 
             <button className="hnb-bell" aria-label="Notifications">
               <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
             </button>
 
             <Link href="/login" className="hnb-login">Login / Register</Link>
           </div>
 
-          {/* ── Mobile Hamburger ── */}
           <button
             className="hnb-hamburger"
             onClick={() => setShowMobileMenu(!showMobileMenu)}
@@ -461,14 +442,13 @@ export default function Navbar() {
           >
             <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {showMobileMenu
-                ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
+                ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               }
             </svg>
           </button>
         </div>
 
-        {/* ── Mobile Menu ── */}
         {showMobileMenu && (
           <div className="hnb-mobile-menu">
             {navLinks.map((link) => (
@@ -481,7 +461,7 @@ export default function Navbar() {
               All Categories
               <svg width="14" height="14" fill="none" stroke="#999" viewBox="0 0 24 24"
                 style={{ transform: showMobileCats ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
@@ -489,7 +469,7 @@ export default function Navbar() {
               <div style={{ paddingLeft: 4, paddingBottom: 4 }}>
                 {categories.map((cat) => (
                   <Link key={cat.slug} href={`/category/${cat.slug}`} className="hnb-mobile-sub-link">
-                    {cat.icon} {cat.name}
+                    {cat.name}
                   </Link>
                 ))}
               </div>
