@@ -27,21 +27,27 @@ model Listing {
   vehicle     Vehicle?
   job         Job?
   medical     MedicalAndDental?
+  trades      TradesAndHomeRepair?
 
   leads        Lead[]
   appointments Appointment[]
+
+  @@index([category])
+  @@index([latitude, longitude])
 }
 
 enum ListingCategory {
   VEHICLE
   JOB
   MEDICAL
+  TRADES
 }
 
+
 model Vehicle {
-  id        String  @id @default(cuid())
-  listingId String  @unique
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  id                       String  @id @default(cuid())
+  listingId                String  @unique
+  listing                  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   type                     VehicleType
   brand                    String
@@ -53,7 +59,7 @@ model Vehicle {
   fuel_type                FuelType?
   ownership_transfer_ready Boolean @default(false)
 
-  createdAt DateTime @default(now())
+  createdAt                DateTime @default(now())
 }
 
 enum VehicleType {
@@ -85,27 +91,27 @@ enum FuelType {
 }
 
 model Job {
-  id String @id @default(cuid())
+  id                    String @id @default(cuid())
 
-  listingId String @unique
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId             String @unique
+  listing               Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  role String
+  role                  String
 
-  salaryMin Int
-  salaryMax Int
-  payPeriod PayPeriod
+  salaryMin             Int
+  salaryMax             Int
+  payPeriod             PayPeriod
 
-  city      String
-  skillTags String[]
+  city                  String
+  skillTags             String[]
 
-  contractType ContractType
+  contractType          ContractType
 
   isUrgent              Boolean @default(false)
   employerPhoneVerified Boolean @default(false)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@index([city])
   @@index([isUrgent])
@@ -127,12 +133,15 @@ enum ContractType {
 }
 
 model Lead {
-  id        String   @id @default(cuid())
-  listingId String
-  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  id              String   @id @default(cuid())
+  listingId       String
+  listing         Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  leadType  LeadType
-  createdAt DateTime @default(now())
+  leadType        LeadType
+  createdAt       DateTime @default(now())
+
+  contactedAt     DateTime?
+  respondedAt     DateTime?
 
   @@index([listingId])
   @@index([leadType])
@@ -145,33 +154,33 @@ enum LeadType {
 }
 
 model MedicalAndDental {
-  id        String  @id @default(cuid())
+  id                      String  @id @default(cuid())
 
-  listingId String  @unique
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId               String  @unique
+  listing                 Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  doctorName       String
-  specialty        String
-  nmcLicenseNumber String
+  doctorName              String
+  specialty               String
+  nmcLicenseNumber        String
 
-  verificationStatus VerificationStatus @default(PENDING)
+  verificationStatus      VerificationStatus @default(PENDING)
 
-  appointmentFee     Int
-  availableSlots     Json
+  appointmentFee          Int
+  availableSlots          Json
 
-  homeVisitAvailable Boolean @default(false)
+  homeVisitAvailable      Boolean @default(false)
 
-  clinicAddress String
-  city          String
+  clinicAddress           String
+  city                    String
 
-  latitude  Float?
-  longitude Float?
+  latitude                Float?
+  longitude               Float?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
-  appointments          Appointment[]
-  verificationDocuments VerificationDocument[]
+  appointments            Appointment[]
+  verificationDocuments   VerificationDocument[]
 
   @@index([city])
   @@index([specialty])
@@ -180,23 +189,23 @@ model MedicalAndDental {
 }
 
 model Appointment {
-  id String @id @default(cuid())
+  id             String @id @default(cuid())
 
-  listingId String
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId      String
+  listing        Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  doctorId String
-  doctor   MedicalAndDental @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  doctorId       String
+  doctor         MedicalAndDental @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
-  patientId   String?
-  patientName String
+  patientId      String?
+  patientName    String
 
-  startTime DateTime
-  endTime   DateTime
-  notes      String?
+  startTime      DateTime
+  endTime        DateTime
+  notes          String?
 
-  status     AppointmentStatus @default(PENDING)
-  createdAt  DateTime @default(now())
+  status         AppointmentStatus @default(PENDING)
+  createdAt      DateTime @default(now())
 
   @@index([doctorId])
   @@index([status])
@@ -216,18 +225,40 @@ enum VerificationStatus {
 }
 
 model VerificationDocument {
-  id String @id @default(cuid())
+  id                   String @id @default(cuid())
 
-  medicalId String
-  medical   MedicalAndDental @relation(fields: [medicalId], references: [id], onDelete: Cascade)
+  medicalId            String
+  medical              MedicalAndDental @relation(fields: [medicalId], references: [id], onDelete: Cascade)
 
-  filePath String
+  filePath             String
 
-  status          VerificationStatus @default(PENDING)
-  rejectionReason String?
+  status               VerificationStatus @default(PENDING)
+  rejectionReason      String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([medicalId])
+}
+
+model TradesAndHomeRepair {
+  id                  String @id @default(cuid())
+
+  listingId           String @unique
+  listing             Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  city                String
+  ward                String?
+  skillTags           String[]
+  serviceAreaKm       Int
+  calloutCharge       Int
+  warrantyGiven       Boolean @default(false)
+  emergencyAvailable  Boolean @default(false)
+  avgResponseHours    Float? @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([city])
+  @@index([emergencyAvailable])
+  @@index([serviceAreaKm])
 }
