@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 const categories = [
   {
@@ -9,18 +10,7 @@ const categories = [
     count: "12,540 Listings",
     href: "/category/vehicles",
     bg: "#fff0f0",
-    iconColor: "#E74C3C",
-    icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <rect x="2" y="13" width="32" height="14" rx="4" fill="#E74C3C" opacity="0.15" />
-        <rect x="2" y="13" width="32" height="14" rx="4" stroke="#E74C3C" strokeWidth="1.8" />
-        <path d="M6 13l4-7h16l4 7" stroke="#E74C3C" strokeWidth="1.8" strokeLinejoin="round" />
-        <circle cx="9" cy="27" r="3.5" fill="#fff" stroke="#E74C3C" strokeWidth="1.8" />
-        <circle cx="27" cy="27" r="3.5" fill="#fff" stroke="#E74C3C" strokeWidth="1.8" />
-        <path d="M2 19h32" stroke="#E74C3C" strokeWidth="1.2" opacity="0.4" />
-        <rect x="14" y="9" width="8" height="5" rx="1" stroke="#E74C3C" strokeWidth="1.2" opacity="0.5" />
-      </svg>
-    ),
+    img: "/vehicle.png",
   },
   {
     id: "property",
@@ -28,15 +18,7 @@ const categories = [
     count: "8,732 Listings",
     href: "/category/property",
     bg: "#f0f4ff",
-    iconColor: "#4B6BFB",
-    icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <path d="M4 18L18 6l14 12" stroke="#4B6BFB" strokeWidth="1.8" strokeLinejoin="round" />
-        <rect x="8" y="18" width="20" height="14" rx="1.5" stroke="#4B6BFB" strokeWidth="1.8" />
-        <rect x="14" y="24" width="8" height="8" rx="1" stroke="#4B6BFB" strokeWidth="1.5" />
-        <path d="M12 18v-3a2 2 0 014 0v3" stroke="#4B6BFB" strokeWidth="1.3" opacity="0.5" />
-      </svg>
-    ),
+    img: "/property.png",
   },
   {
     id: "jobs",
@@ -44,15 +26,7 @@ const categories = [
     count: "6,245 Listings",
     href: "/category/jobs",
     bg: "#f0fff5",
-    iconColor: "#27AE60",
-    icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <rect x="5" y="13" width="26" height="18" rx="3" stroke="#27AE60" strokeWidth="1.8" />
-        <path d="M13 13v-3a2 2 0 012-2h6a2 2 0 012 2v3" stroke="#27AE60" strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M5 22h26" stroke="#27AE60" strokeWidth="1.3" opacity="0.4" />
-        <rect x="14" y="19" width="8" height="6" rx="1.5" stroke="#27AE60" strokeWidth="1.4" />
-      </svg>
-    ),
+    img: "/jobs.png",
   },
   {
     id: "medical",
@@ -60,14 +34,7 @@ const categories = [
     count: "3,421 Listings",
     href: "/category/medical",
     bg: "#f0f8ff",
-    iconColor: "#2980B9",
-    icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <circle cx="18" cy="18" r="13" stroke="#2980B9" strokeWidth="1.8" />
-        <path d="M18 12v12M12 18h12" stroke="#2980B9" strokeWidth="2.2" strokeLinecap="round" />
-        <path d="M11 11l14 14M25 11L11 25" stroke="#2980B9" strokeWidth="1" opacity="0.15" />
-      </svg>
-    ),
+    img: "/medical.png",
   },
   {
     id: "education",
@@ -75,14 +42,7 @@ const categories = [
     count: "2,184 Listings",
     href: "/category/education",
     bg: "#f5f0ff",
-    iconColor: "#8E44AD",
-    icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <path d="M18 7l16 8-16 8L2 15l16-8z" stroke="#8E44AD" strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M8 19v7c0 2 4.5 4 10 4s10-2 10-4v-7" stroke="#8E44AD" strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M34 15v8" stroke="#8E44AD" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    ),
+    img: "/education.png",
   },
   {
     id: "construction",
@@ -90,14 +50,7 @@ const categories = [
     count: "4,567 Listings",
     href: "/category/construction",
     bg: "#fff9f0",
-    iconColor: "#F39C12",
-    icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <path d="M18 4l4 8H28l-5 5 2 9-7-4-7 4 2-9-5-5h6L18 4z" stroke="#F39C12" strokeWidth="1.8" strokeLinejoin="round" fill="none" />
-        <path d="M6 32h24" stroke="#F39C12" strokeWidth="1.8" strokeLinecap="round" />
-        <path d="M12 24h12v8H12z" stroke="#F39C12" strokeWidth="1.4" opacity="0.4" />
-      </svg>
-    ),
+    img: "/construction.png",
   },
   {
     id: "electronics",
@@ -105,15 +58,7 @@ const categories = [
     count: "5,231 Listings",
     href: "/category/electronics",
     bg: "#f0f4ff",
-    iconColor: "#2471A3",
-    icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <rect x="4" y="7" width="24" height="17" rx="2.5" stroke="#2471A3" strokeWidth="1.8" />
-        <path d="M10 31h16M18 24v7" stroke="#2471A3" strokeWidth="1.8" strokeLinecap="round" />
-        <rect x="28" y="11" width="4" height="10" rx="1.5" stroke="#2471A3" strokeWidth="1.5" />
-        <path d="M8 12h14M8 16h10M8 20h7" stroke="#2471A3" strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      </svg>
-    ),
+    img: "/electronics.png",
   },
   {
     id: "beauty",
@@ -121,14 +66,7 @@ const categories = [
     count: "3,987 Listings",
     href: "/category/beauty",
     bg: "#fff0f8",
-    iconColor: "#C0392B",
-    icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <circle cx="18" cy="12" r="7" stroke="#C0392B" strokeWidth="1.8" />
-        <path d="M10 28c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="#C0392B" strokeWidth="1.8" strokeLinecap="round" />
-        <path d="M18 19v9M14 32h8" stroke="#C0392B" strokeWidth="1.4" strokeLinecap="round" opacity="0.4" />
-      </svg>
-    ),
+    img: "/beauty and wellness.png",
   },
   {
     id: "home-services",
@@ -136,15 +74,7 @@ const categories = [
     count: "4,321 Listings",
     href: "/category/home-services",
     bg: "#fff9f0",
-    iconColor: "#E67E22",
-    icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <path d="M10 22l4-4 3 3 9-9" stroke="#E67E22" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="10" cy="26" r="3" stroke="#E67E22" strokeWidth="1.6" />
-        <circle cx="26" cy="10" r="3" stroke="#E67E22" strokeWidth="1.6" />
-        <path d="M6 6l24 24" stroke="#E67E22" strokeWidth="1.4" strokeLinecap="round" opacity="0.2" />
-      </svg>
-    ),
+    img: "/home services.png",
   },
   {
     id: "food",
@@ -152,14 +82,7 @@ const categories = [
     count: "2,876 Listings",
     href: "/category/food",
     bg: "#f0fff5",
-    iconColor: "#27AE60",
-    icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <path d="M18 6v10M14 8c0 4 8 4 8 0" stroke="#27AE60" strokeWidth="1.8" strokeLinecap="round" />
-        <path d="M12 16h12l-2 14H14L12 16z" stroke="#27AE60" strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M10 16h16" stroke="#27AE60" strokeWidth="1.4" strokeLinecap="round" />
-      </svg>
-    ),
+    img: "/food and restaurants.png",
   },
   {
     id: "travel",
@@ -167,14 +90,7 @@ const categories = [
     count: "1,982 Listings",
     href: "/category/travel",
     bg: "#f0f8ff",
-    iconColor: "#2980B9",
-    icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <path d="M4 22l8-8 6 4 10-10 4 4" stroke="#2980B9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M28 10l2-6 6 2" stroke="#2980B9" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M4 30h28" stroke="#2980B9" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    ),
+    img: "/travel and tourism.png",
   },
   {
     id: "more",
@@ -182,14 +98,7 @@ const categories = [
     count: "Explore all",
     href: "/categories",
     bg: "#f5f5f5",
-    iconColor: "#888",
-    icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <circle cx="10" cy="18" r="3" fill="#aaa" />
-        <circle cx="18" cy="18" r="3" fill="#aaa" />
-        <circle cx="26" cy="18" r="3" fill="#aaa" />
-      </svg>
-    ),
+    img: null,
   },
 ];
 
@@ -284,6 +193,7 @@ export default function BrowseCategories() {
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          overflow: hidden;
           transition: transform 0.2s ease;
         }
         .bc-card:hover .bc-icon-wrap {
@@ -303,6 +213,16 @@ export default function BrowseCategories() {
           font-weight: 400;
           margin: 0;
           line-height: 1;
+        }
+
+        /* More categories dots */
+        .bc-more-dots {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          width: 100%;
+          height: 100%;
         }
 
         /* Responsive */
@@ -339,7 +259,24 @@ export default function BrowseCategories() {
                   className="bc-icon-wrap"
                   style={{ background: cat.bg }}
                 >
-                  {cat.icon}
+                  {cat.img ? (
+                    <Image
+                      src={cat.img}
+                      alt={cat.label}
+                      width={58}
+                      height={58}
+                      style={{ objectFit: "cover", width: "100%", height: "100%", borderRadius: "50%" }}
+                    />
+                  ) : (
+                    /* More Categories — dots fallback */
+                    <div className="bc-more-dots">
+                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                        <circle cx="10" cy="18" r="3" fill="#aaa" />
+                        <circle cx="18" cy="18" r="3" fill="#aaa" />
+                        <circle cx="26" cy="18" r="3" fill="#aaa" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <p className="bc-label">{cat.label}</p>
