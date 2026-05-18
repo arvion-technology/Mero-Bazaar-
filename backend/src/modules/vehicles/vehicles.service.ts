@@ -23,8 +23,7 @@ export class VehiclesService {
             condition: dto.condition,
             bluebook_status: dto.bluebook_status,
             fuel_type: dto.fuel_type,
-            ownership_transfer_ready:
-              dto.ownership_transfer_ready ?? false,
+            ownership_transfer_ready: dto.ownership_transfer_ready ?? false,
           },
         },
       },
@@ -34,12 +33,29 @@ export class VehiclesService {
     });
   }
 
-  async findByListingId(listingId: string) {
-    return this.prisma.listing.findFirst({
+  async findAll() {
+    return this.prisma.listing.findMany({
       where: {
-        id: listingId,
         category: ListingCategory.VEHICLE,
       },
+      include: {
+        vehicle: true,
+      },
+    });
+  }
+
+  async findById(id: string) {
+    return this.prisma.listing.findUnique({
+      where: { id },
+      include: {
+        vehicle: true,
+      },
+    });
+  }
+
+  async findByListingId(listingId: string) {
+    return this.prisma.listing.findUnique({
+      where: { id: listingId },
       include: {
         vehicle: true,
       },
