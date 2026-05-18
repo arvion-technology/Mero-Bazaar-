@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../../database/prisma.service';
+import { PrismaService } from '../../database/prisma.service';
 import { CreateAppointmentDto } from './dto/create_appointment.dto';
 
 @Injectable()
@@ -7,8 +7,8 @@ export class AppointmentsService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateAppointmentDto) {
-    const startTime = new Date(dto.start_time);
-    const endTime = new Date(dto.end_time);
+    const startTime = new Date(dto.startTime);
+    const endTime = new Date(dto.endTime);
 
     if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
       throw new BadRequestException('Invalid date format');
@@ -35,8 +35,8 @@ export class AppointmentsService {
         doctorId: dto.doctorId,
         status: { not: 'CANCELLED' },
         AND: [
-          { start_time: { lt: endTime } },
-          { end_time: { gt: startTime } },
+          { startTime: { lt: endTime } },
+          { endTime: { gt: startTime } },
         ],
       },
     });
@@ -51,8 +51,8 @@ export class AppointmentsService {
         doctorId: dto.doctorId,
         patientId: dto.patientId,
         patientName: dto.patientName,
-        start_time: startTime,
-        end_time: endTime,
+        startTime: startTime,
+        endTime: endTime,
         notes: dto.notes,
       },
     });
@@ -61,7 +61,7 @@ export class AppointmentsService {
   async getDoctorSchedule(doctorId: string) {
     return this.prisma.appointment.findMany({
       where: { doctorId },
-      orderBy: { start_time: 'asc' },
+      orderBy: { startTime: 'asc' },
     });
   }
 

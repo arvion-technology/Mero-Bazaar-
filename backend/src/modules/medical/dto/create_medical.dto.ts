@@ -1,21 +1,47 @@
-import { MedicalCategory } from '@prisma/client';
+import {
+  IsString,
+  IsNumber,
+  IsBoolean,
+  IsOptional,
+  IsObject,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateMedicalDto {
-  category: MedicalCategory;
-
+  @IsString()
   doctorName: string;
-  speciality: string;
+
+  @IsString()
+  specialty: string;
+
+  @IsString()
   nmcLicenseNumber: string;
 
+  @IsNumber()
+  @Type(() => Number)
   appointmentFee: number;
 
-  availableSlots: any; 
-  
+  @IsObject()
+  availableSlots: Record<string, string[]>;
+
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
   homeVisitAvailable?: boolean;
 
+  @IsString()
   clinicAddress: string;
+
+  @IsString()
   city: string;
 
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
   latitude?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
   longitude?: number;
 }

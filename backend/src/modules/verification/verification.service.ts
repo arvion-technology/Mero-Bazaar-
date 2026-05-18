@@ -10,7 +10,6 @@ export class VerificationService {
     return this.prisma.verificationDocument.create({
       data: {
         medicalId: dto.medicalId,
-        fileUrl: dto.fileUrl,
         filePath: dto.filePath,
         status: VerificationStatus.PENDING,
       },
@@ -27,7 +26,6 @@ export class VerificationService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      // 1. update document
       const updatedDoc = await tx.verificationDocument.update({
         where: { id: documentId },
         data: {
@@ -38,8 +36,35 @@ export class VerificationService {
       await tx.medicalAndDental.update({
         where: { id: doc.medicalId },
         data: {
-          isVerified: true,
-          nmcBadge: true,
+          verificationStatus: VerificationStatus.VERIFIED,
+        },
+      });
+
+      return updatedDoc;
+    });
+  }
+
+  async reject(documentId: string) {
+    const doc = await this.prisma.verificationDocument.findUnique({
+      where: { id: documentId },
+    });
+
+    if (!doc) {
+      throw new NotFoundException("Verification document not found");
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updatedDoc = await tx.verificationDocument.update({
+        where: { id: documentId },
+        data: {
+          status: VerificationStatus.REJECTED,
+        },
+      });
+
+      await tx.medicalAndDental.update({
+        where: { id: doc.medicalId },
+        data: {
+          verificationStatus: VerificationStatus.REJECTED,
         },
       });
 
