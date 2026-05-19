@@ -135,4 +135,9 @@ export class TradesService {
       },
     });
   }
-}
+  async remove(id: string) {
+    return this.prisma.listing.delete({
+      where: { id },
+    });
+  }
+  }
