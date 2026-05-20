@@ -11,6 +11,9 @@ import { LeadsModule } from './modules/leads/leads.module';
 import { MedicalModule } from './modules/medical/medical.module';
 import { TradesController } from './modules/trades/trades.controller';
 import { TradesModule } from './modules/trades/trades.module';
+import { RentalController } from './modules/rental/rental.controller';
+import { RentalService } from './modules/rental/rental.service';
+import { RentalModule } from './modules/rental/rental.module';
 
 @Module({
   imports: [
@@ -22,8 +25,9 @@ import { TradesModule } from './modules/trades/trades.module';
     LeadsModule,
     MedicalModule,
     TradesModule,
+    RentalModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, RentalController],
+  providers: [AppService, RentalService],
 })
 export class AppModule {}
