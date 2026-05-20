@@ -4,375 +4,385 @@ import { useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 
-// vehicle type definition
 type Vehicle = {
   id: string;
   title: string;
   price: string;
   location: string;
-  km: string;
-  year: number;
   image: string;
-  isSold?: boolean;
-  isFeatured?: boolean;
+  isVerified?: boolean;
+  category: string;
 };
 
-// TODO: move this to a separate data file later, getting too long
 const VEHICLES: Vehicle[] = [
-  { id: "bajaj-pulsar", title: "Bajaj Pulsar N160", price: "NPR 3,25,000", location: "Kathmandu", km: "12,000 km", year: 2023, image: "/bajaj.avif", isFeatured: true },
-];
+  { id: "hundai-creta-2022", title: "Hundai Creta 2022", price: "Rs. 32,50,000", location: "Kathmandu", image: "/Hundai Creta 2022.jpg", isVerified: true, category: "Car" },
+  { id: "harley-davidson", title: "Harley-Davidson", price: "Rs. 2,00,000", location: "Kathmandu", image: "/Harley-Davidson.jpg", isVerified: true, category: "Bike" },
+  { id: "getty-bus", title: "Getty Bus", price: "Rs. 3,20,000", location: "Kathmandu", image: "/Getty Bus.jpg", isVerified: true, category: "Buses" },
+  { id: "scooter", title: "Scooter", price: "Rs. 32,000", location: "Kathmandu", image: "/Scooter.jpg", isVerified: true, category: "Scooter" },
+  { id: "bajaj-pulsar", title: "Bajaj Pulsar N160", price: "Rs. 3,25,000", location: "Pokhara", image: "/bajaj.avif", isVerified: true, category: "Bike" },
+  { id: "toyota-hiace", title: "Toyota HiAce Van", price: "Rs. 45,00,000", location: "Lalitpur", image: "/Hundai Creta 2022.jpg", isVerified: false, category: "Car" },
+  { id: "honda-activa", title: "Honda Activa 6G", price: "Rs. 1,85,000", location: "Bhaktapur", image: "/Scooter.jpg", isVerified: true, category: "Scooter" },
+  { id: "tata-truck", title: "Tata 407 Truck", price: "Rs. 28,00,000", location: "Chitwan", image: "/Getty Bus.jpg", isVerified: false, category: "Trucks" },
+]; 
+
+const SUB_CATS = ["All vehicles", "Car", "Trucks", "Bike", "Scooter", "Buses", "Others"];
+const CITIES = ["Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur", "Chitwan", "Biratnagar", "Butwal"];
 
 export default function VehiclesPage() {
-  // favorites state - tracks which cards are saved
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
+  const [activeCat, setActiveCat] = useState("All vehicles");
+  const [priceRange, setPriceRange] = useState(1000000);
+  const [city, setCity] = useState("");
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
 
-  // all the filter states
-  const [filterBrands, setFilterBrands] = useState<string[]>([]);
-  const [filterFuels, setFilterFuels] = useState<string[]>([]);
-  const [filterConds, setFilterConds] = useState<string[]>([]);
-  const [filterMinP, setFilterMinP] = useState("");
-  const [filterMaxP, setFilterMaxP] = useState("");
-  const [filterMaxKm, setFilterMaxKm] = useState("");
-
-  // toggle favorite on/off - found this pattern on stackoverflow
   const toggleFav = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setFavorites((p) => ({ ...p, [id]: !p[id] }));
   };
 
-  // filter and sort the vehicles list
-  const displayed = VEHICLES
-    .filter((v) => v.title.toLowerCase().includes(search.toLowerCase()) || v.location.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => sort === "price_asc" ? parseInt(a.price.replace(/\D/g, "")) - parseInt(b.price.replace(/\D/g, ""))
-      : sort === "price_desc" ? parseInt(b.price.replace(/\D/g, "")) - parseInt(a.price.replace(/\D/g, ""))
-        : 0);
+  const displayed = VEHICLES.filter((v) => {
+    const matchSearch = v.title.toLowerCase().includes(search.toLowerCase()) || v.location.toLowerCase().includes(search.toLowerCase());
+    const matchCat = activeCat === "All vehicles" || v.category === activeCat;
+    const matchCity = !city || v.location === city;
+    const matchVerified = !verifiedOnly || v.isVerified;
+    const priceNum = parseInt(v.price.replace(/[^\d]/g, ""));
+    const matchPrice = priceNum <= priceRange;
+    return matchSearch && matchCat && matchCity && matchVerified && matchPrice;
+  }).sort((a, b) => {
+    if (sort === "price_asc") return parseInt(a.price.replace(/[^\d]/g, "")) - parseInt(b.price.replace(/[^\d]/g, ""));
+    if (sort === "price_desc") return parseInt(b.price.replace(/[^\d]/g, "")) - parseInt(a.price.replace(/[^\d]/g, ""));
+    return 0;
+  });
+
+  const formatPrice = (val: number) => {
+    if (val >= 100000) return `Rs ${(val / 100000).toFixed(0)} Lakh`;
+    return `Rs ${val.toLocaleString()}`;
+  };
 
   return (
     <>
-      {/* all the styles for this page */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-        .vp { background: #f4f4f8; min-height: 100vh; font-family: 'Inter', sans-serif; }
+        .vp { background: #f0f0f8; min-height: 100vh; font-family: 'Inter', sans-serif; }
 
-        /* hero section at the top */
+        /* ── HERO ── */
         .vp-hero {
-          background: linear-gradient(130deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-          padding: 40px 24px 36px;
           position: relative;
+          height: 230px;
           overflow: hidden;
+          display: flex;
+          align-items: center;
         }
-        .vp-hero::after {
-          content: '';
-          position: absolute;
-          right: -60px; top: -60px;
-          width: 320px; height: 320px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(192,57,43,0.15) 0%, transparent 70%);
-          pointer-events: none;
+        .vp-hero-bg {
+          position: absolute; inset: 0;
+          background: url('/car of hero section.jpg') center center / cover no-repeat;
+          filter: brightness(0.72);
         }
-        .vp-hero-inner { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
-        .vp-hero-eyebrow {
-          display: inline-flex; align-items: center; gap: 6px;
-          background: rgba(192,57,43,0.2); border: 1px solid rgba(192,57,43,0.4);
-          color: #ff8a80; font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
-          text-transform: uppercase; padding: 4px 12px; border-radius: 100px; margin-bottom: 14px;
+        .vp-hero-overlay {
+          position: absolute; inset: 0;
+          background: linear-gradient(135deg, rgba(180,40,40,0.55) 0%, rgba(100,20,20,0.35) 100%);
+        }
+        .vp-hero-inner {
+          position: relative; z-index: 2;
+          max-width: 1200px; margin: 0 auto;
+          padding: 0 28px; width: 100%;
         }
         .vp-hero-title {
-          font-size: clamp(24px,4vw,38px); font-weight: 900; color: #fff;
-          margin: 0 0 8px; letter-spacing: -0.4px; line-height: 1.15;
+          font-size: clamp(26px, 4vw, 40px);
+          font-weight: 900; color: #fff;
+          margin: 0 0 4px; line-height: 1.15;
+          text-shadow: 0 2px 12px rgba(0,0,0,0.3);
         }
-        .vp-hero-title em {
-          font-style: normal;
-          background: linear-gradient(90deg,#ff6b6b,#ffd93d);
-          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-        }
-        .vp-hero-sub { color: rgba(255,255,255,0.55); font-size: 14px; margin: 0 0 26px; }
-
-        /* search and sort bar */
-        .vp-bar {
-          display: flex; gap: 10px; flex-wrap: wrap;
+        .vp-hero-sub {
+          color: rgba(255,255,255,0.82);
+          font-size: 13.5px; margin: 0 0 18px; font-weight: 400;
         }
         .vp-search-wrap {
-          flex: 1; min-width: 220px; position: relative;
+          position: relative; max-width: 480px;
         }
         .vp-search-icon {
-          position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
-          pointer-events: none;
+          position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+          pointer-events: none; color: #aaa;
         }
         .vp-search {
-          width: 100%; padding: 11px 14px 11px 38px;
-          background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15);
-          border-radius: 10px; color: #fff; font-size: 13.5px; font-family: inherit; outline: none;
-          transition: background 0.2s, border-color 0.2s;
+          width: 100%; padding: 13px 14px 13px 42px;
+          background: rgba(255,255,255,0.93);
+          border: none; border-radius: 10px;
+          font-size: 14px; color: #333;
+          font-family: inherit; outline: none;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+          transition: box-shadow 0.2s;
         }
-        .vp-search::placeholder { color: rgba(255,255,255,0.4); }
-        .vp-search:focus { background: rgba(255,255,255,0.13); border-color: rgba(255,255,255,0.35); }
-        .vp-sort {
-          padding: 11px 36px 11px 14px; border-radius: 10px;
-          border: 1.5px solid rgba(255,255,255,0.15);
-          background: rgba(255,255,255,0.08) url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23fff' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
-          color: #fff; font-size: 13px; font-family: inherit; font-weight: 600;
-          outline: none; cursor: pointer; appearance: none;
+        .vp-search::placeholder { color: #bbb; }
+        .vp-search:focus { box-shadow: 0 4px 24px rgba(0,0,0,0.28); }
+        .vp-hero-watermark {
+          position: absolute; bottom: -18px; left: 28px;
+          font-size: clamp(50px, 10vw, 90px);
+          font-weight: 900; color: rgba(255,255,255,0.08);
+          letter-spacing: -2px; pointer-events: none;
+          user-select: none; line-height: 1;
+          z-index: 1;
         }
-        .vp-sort option { color: #1a1a1a; background: #fff; }
 
-        /* main body below the hero */
-        .vp-body { max-width: 1200px; margin: 0 auto; padding: 28px 24px 52px; }
-
-        /* sidebar + cards layout */
+        /* ── BODY ── */
+        .vp-body {
+          max-width: 1200px; margin: 0 auto;
+          padding: 28px 24px 60px;
+        }
         .vp-layout {
           display: grid;
-          grid-template-columns: 260px 1fr;
-          gap: 24px;
+          grid-template-columns: 280px 1fr;
+          gap: 22px;
           align-items: start;
         }
 
-        /* filter sidebar on the left */
+        /* ── SIDEBAR ── */
         .vp-sidebar {
+          background: #fff;
+          border-radius: 16px;
+          border: 1.5px solid #e8e8f0;
+          overflow: hidden;
+          position: sticky;
+          top: 82px;
+          box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+        }
+        .vsf-head {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 18px 18px 14px;
+          border-bottom: 1.5px solid #f2f2f5;
+        }
+        .vsf-head-title {
+          font-size: 17px; font-weight: 800; color: #1a1a1a; margin: 0;
+        }
+        .vsf-reset {
+          font-size: 13px; font-weight: 700;
+          color: #e05c3a; background: none; border: none;
+          cursor: pointer; padding: 0; transition: opacity 0.2s;
+        }
+        .vsf-reset:hover { opacity: 0.7; }
+
+        /* price range section */
+        .vsf-section { padding: 16px 18px; border-bottom: 1.5px solid #f2f2f5; }
+        .vsf-section:last-of-type { border-bottom: none; }
+        .vsf-label {
+          font-size: 14px; font-weight: 700; color: #1a1a1a; margin: 0 0 6px;
+        }
+        .vsf-price-range-val {
+          font-size: 12.5px; color: #888; margin: 0 0 12px; font-weight: 500;
+        }
+        .vsf-slider {
+          -webkit-appearance: none; appearance: none;
+          width: 100%; height: 4px;
+          background: linear-gradient(to right, #e05c3a 0%, #e05c3a var(--pct, 50%), #e0e0e8 var(--pct, 50%), #e0e0e8 100%);
+          border-radius: 4px; outline: none; cursor: pointer;
+        }
+        .vsf-slider::-webkit-slider-thumb {
+          -webkit-appearance: none; appearance: none;
+          width: 18px; height: 18px;
+          border-radius: 50%; background: #e05c3a;
+          cursor: pointer; border: 2px solid #fff;
+          box-shadow: 0 2px 8px rgba(224,92,58,0.45);
+        }
+        .vsf-slider::-moz-range-thumb {
+          width: 18px; height: 18px;
+          border-radius: 50%; background: #e05c3a;
+          cursor: pointer; border: 2px solid #fff;
+          box-shadow: 0 2px 8px rgba(224,92,58,0.45);
+        }
+
+        /* city dropdown */
+        .vsf-select {
+          width: 100%; padding: 10px 32px 10px 12px;
+          border: 1.5px solid #e8e8f0; border-radius: 10px;
+          font-size: 13px; color: #444; font-family: inherit;
+          background: #fafafa url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+          appearance: none; outline: none; cursor: pointer;
+          transition: border-color 0.2s;
+          margin-bottom: 12px;
+        }
+        .vsf-select:focus { border-color: #e05c3a; }
+
+        /* verified city toggle */
+        .vsf-toggle-row {
+          display: flex; align-items: center; justify-content: space-between;
+        }
+        .vsf-toggle-label {
+          font-size: 13.5px; font-weight: 600; color: #333;
+        }
+        .vsf-toggle {
+          position: relative; width: 42px; height: 24px;
+          cursor: pointer; display: inline-block;
+        }
+        .vsf-toggle input { opacity: 0; width: 0; height: 0; }
+        .vsf-toggle-track {
+          position: absolute; inset: 0;
+          background: #ddd; border-radius: 24px;
+          transition: background 0.25s;
+        }
+        .vsf-toggle input:checked + .vsf-toggle-track { background: #e05c3a; }
+        .vsf-toggle-thumb {
+          position: absolute;
+          top: 3px; left: 3px;
+          width: 18px; height: 18px;
+          border-radius: 50%; background: #fff;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+          transition: transform 0.25s;
+        }
+        .vsf-toggle input:checked ~ .vsf-toggle-thumb { transform: translateX(18px); }
+
+        /* sub categories chips */
+        .vsf-chips {
+          display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px;
+        }
+        .vsf-chip {
+          padding: 6px 14px; border-radius: 100px;
+          font-size: 12.5px; font-weight: 600;
+          border: 1.5px solid #e0e0e8;
+          background: #fff; color: #555;
+          cursor: pointer;
+          transition: all 0.18s;
+        }
+        .vsf-chip:hover { border-color: #e05c3a; color: #e05c3a; }
+        .vsf-chip.active {
+          background: #e05c3a; color: #fff;
+          border-color: #e05c3a;
+          box-shadow: 0 2px 8px rgba(224,92,58,0.3);
+        }
+
+        /* apply button */
+        .vsf-apply {
+          display: block; width: calc(100% - 36px);
+          margin: 4px 18px 18px;
+          padding: 12px; text-align: center;
+          background: linear-gradient(90deg, #e05c3a, #c0392b);
+          color: #fff; font-size: 14px; font-weight: 800;
+          border: none; border-radius: 12px; cursor: pointer;
+          font-family: inherit;
+          box-shadow: 0 4px 16px rgba(192,57,43,0.32);
+          transition: opacity 0.18s, transform 0.18s;
+          letter-spacing: 0.2px;
+        }
+        .vsf-apply:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        /* ── RESULTS BAR ── */
+        .vp-results-bar {
+          display: flex; align-items: center; justify-content: space-between;
+          margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
+        }
+        .vp-results-count {
+          font-size: 14px; color: #666; font-weight: 500;
+        }
+        .vp-sort-select {
+          padding: 9px 36px 9px 14px;
+          border: 1.5px solid #e0e0e8; border-radius: 10px;
+          font-size: 13px; font-weight: 600; color: #333;
+          background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+          appearance: none; outline: none; cursor: pointer;
+          font-family: inherit;
+          box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+          transition: border-color 0.2s;
+        }
+        .vp-sort-select:focus { border-color: #e05c3a; }
+
+        /* ── GRID ── */
+        .vp-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          gap: 18px;
+        }
+
+        /* ── CARD ── */
+        .vp-card {
           background: #fff;
           border-radius: 14px;
           border: 1.5px solid #ececec;
           overflow: hidden;
-          position: sticky;
-          top: 84px;
-        }
-        .vsf-head {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 15px 16px 13px; border-bottom: 1px solid #f0f0f0;
-        }
-        .vsf-head-left { display: flex; align-items: center; gap: 8px; }
-        .vsf-head-title { font-size: 13.5px; font-weight: 800; color: #1a1a1a; margin: 0; }
-        .vsf-badge {
-          background: #C0392B; color: #fff; font-size: 9.5px; font-weight: 700;
-          border-radius: 100px; padding: 1px 7px; min-width: 18px; text-align: center;
-        }
-        .vsf-clear { font-size: 11.5px; font-weight: 600; color: #C0392B; background: none; border: none; cursor: pointer; padding: 0; }
-        .vsf-clear:hover { opacity: 0.7; }
-        .vsf-sec { padding: 14px 16px; border-bottom: 1px solid #f5f5f5; }
-        .vsf-sec:last-of-type { border-bottom: none; }
-        .vsf-sec-title {
-          font-size: 10.5px; font-weight: 800; color: #888;
-          text-transform: uppercase; letter-spacing: 0.7px; margin: 0 0 10px;
-        }
-        .vsf-list { display: flex; flex-direction: column; gap: 7px; }
-        .vsf-row {
-          display: flex; align-items: center; gap: 8px;
-          font-size: 12.5px; color: #333; font-weight: 500;
-          cursor: pointer; user-select: none;
-        }
-        .vsf-row:hover { color: #C0392B; }
-        .vsf-box {
-          width: 15px; height: 15px; border-radius: 4px;
-          border: 1.8px solid #ddd; display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0; background: #fff; transition: background 0.15s, border-color 0.15s;
-        }
-        .vsf-box.on { background: #C0392B; border-color: #C0392B; }
-        .vsf-check { color: #fff; font-size: 9px; font-weight: 900; }
-        .vsf-range { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
-        .vsf-input {
-          width: 100%; padding: 7px 9px; border: 1.5px solid #e8e8e8;
-          border-radius: 8px; font-size: 12px; color: #1a1a1a;
-          font-family: inherit; outline: none; background: #fafafa;
-          transition: border-color 0.2s;
-        }
-        .vsf-input:focus { border-color: #C0392B; background: #fff; }
-        .vsf-input::placeholder { color: #bbb; }
-        .vsf-select {
-          width: 100%; padding: 7px 28px 7px 9px; border: 1.5px solid #e8e8e8;
-          border-radius: 8px; font-size: 12px; color: #1a1a1a; font-family: inherit;
-          outline: none; background: #fafafa url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 9px center;
-          appearance: none; cursor: pointer; transition: border-color 0.2s;
-        }
-        .vsf-select:focus { border-color: #C0392B; }
-        .vsf-apply {
-          display: block; width: calc(100% - 32px); margin: 0 16px 16px;
-          padding: 10px; background: linear-gradient(90deg,#C0392B,#e74c3c);
-          color: #fff; font-size: 13px; font-weight: 700; border: none;
-          border-radius: 10px; cursor: pointer; font-family: inherit;
-          box-shadow: 0 4px 12px rgba(192,57,43,0.28);
-          transition: opacity 0.18s, transform 0.18s;
-        }
-        .vsf-apply:hover { opacity: 0.88; transform: translateY(-1px); }
-
-        /* shows how many results */
-        .vp-results-bar {
-          display: flex; align-items: center; justify-content: space-between;
-          margin-bottom: 16px; flex-wrap: wrap; gap: 8px;
-        }
-        .vp-results-text { font-size: 13px; color: #666; }
-        .vp-results-text strong { color: #1a1a1a; font-weight: 700; }
-
-        /* vehicle cards grid */
-        .vp-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-          gap: 18px;
-        }
-
-        /* hide sidebar on mobile */
-        @media (max-width: 900px) {
-          .vp-layout { grid-template-columns: 1fr; }
-          .vp-sidebar { display: none; }
-        }
-
-        /* vehicle card styles */
-        .vp-card {
-          background: #fff;
-          border-radius: 20px;
-          border: 1.5px solid #ececec;
-          overflow: hidden;
           text-decoration: none;
-          display: flex;
-          flex-direction: column;
+          display: flex; flex-direction: column;
           position: relative;
-          transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+          transition: transform 0.22s ease, box-shadow 0.22s ease;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+          cursor: pointer;
         }
         .vp-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 14px 40px rgba(0,0,0,0.12);
-          border-top: 2.5px solid #C0392B;
-          border-color: #C0392B;
+          transform: translateY(-5px);
+          box-shadow: 0 16px 40px rgba(0,0,0,0.12);
         }
-
-        /* featured card has gold border */
-        .vp-card.featured {
-          border-color: #F39C12;
-          box-shadow: 0 4px 18px rgba(243,156,18,0.2);
-        }
-        .vp-card.featured:hover {
-          border-color: #e67e22;
-          box-shadow: 0 14px 42px rgba(243,156,18,0.28);
-        }
-
-        /* sold cards look faded */
-        .vp-card.sold { opacity: 0.68; }
-        .vp-card.sold:hover {
-          transform: none;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-          border-color: #ececec;
-          border-top-color: #ececec;
-        }
-
         .vp-img-wrap {
-          position: relative;
-          width: 100%;
-          aspect-ratio: 4/3;
-          overflow: hidden;
+          position: relative; width: 100%;
+          aspect-ratio: 16/11; overflow: hidden;
           background: #f0f0f5;
         }
         .vp-img {
           width: 100%; height: 100%;
           object-fit: cover; display: block;
-          transition: transform 0.3s ease;
+          transition: transform 0.32s ease;
         }
-        .vp-card:not(.sold):hover .vp-img { transform: scale(1.06); }
+        .vp-card:hover .vp-img { transform: scale(1.06); }
 
-        /* red overlay when sold */
-        .vp-sold-overlay {
-          position: absolute; inset: 0;
-          background: rgba(0,0,0,0.32);
-          display: flex; align-items: center; justify-content: center;
-          z-index: 3;
-        }
-        .vp-sold-stamp {
-          background: #C0392B; color: #fff;
-          font-size: 15px; font-weight: 900;
-          letter-spacing: 3px; padding: 7px 20px;
-          border-radius: 6px; text-transform: uppercase;
-          transform: rotate(-8deg);
-          box-shadow: 0 4px 16px rgba(0,0,0,0.35);
-        }
-
-        /* featured star badge */
-        .vp-feat-badge {
-          position: absolute; top: 10px; left: 10px;
-          background: linear-gradient(90deg,#F39C12,#f1c40f);
-          color: #6d3a00; font-size: 9.5px; font-weight: 800;
-          letter-spacing: 0.6px; text-transform: uppercase;
-          padding: 3px 9px 3px 7px; border-radius: 100px; z-index: 2;
-          box-shadow: 0 2px 8px rgba(243,156,18,0.45);
-          display: inline-flex; align-items: center; gap: 3px;
-        }
-
-        /* heart button top right of image */
+        /* heart button */
         .vp-heart {
-          position: absolute; top: 10px; right: 10px;
-          width: 32px; height: 32px; border-radius: 50%;
-          background: rgba(255,255,255,0.92);
+          position: absolute; top: 9px; right: 9px;
+          width: 30px; height: 30px; border-radius: 50%;
+          background: rgba(255,255,255,0.93);
           border: none; cursor: pointer;
           display: flex; align-items: center; justify-content: center;
           z-index: 4; padding: 0;
           box-shadow: 0 2px 8px rgba(0,0,0,0.14);
-          transition: background 0.18s, transform 0.18s;
+          transition: transform 0.18s, background 0.18s;
         }
-        .vp-heart:hover { background: #fff; transform: scale(1.15); }
+        .vp-heart:hover { transform: scale(1.18); background: #fff; }
 
-        .vp-body-card {
-          padding: 14px 15px 15px;
-          display: flex; flex-direction: column; gap: 6px; flex: 1;
+        /* card body */
+        .vp-card-body {
+          padding: 12px 14px 14px;
+          display: flex; flex-direction: column; gap: 4px;
         }
-
         .vp-card-title {
           font-size: 14px; font-weight: 700; color: #1a1a1a;
           line-height: 1.35; margin: 0;
-          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-
-        .vp-price {
-          font-size: 16px; font-weight: 900; color: #C0392B; margin: 0;
+        .vp-card-price {
+          font-size: 15px; font-weight: 900; color: #c0392b; margin: 0;
         }
-
-        .vp-info-row {
-          display: flex; align-items: center; gap: 10px;
-          font-size: 11.5px; color: #777; flex-wrap: wrap;
+        .vp-card-footer {
+          display: flex; align-items: center; justify-content: space-between;
+          margin-top: 2px;
         }
-        .vp-info-item {
-          display: flex; align-items: center; gap: 3px;
+        .vp-card-location {
+          font-size: 12px; color: #888; font-weight: 500;
         }
-
-        .vp-btn-row {
-          display: flex; gap: 8px; margin-top: 4px;
+        .vp-verified {
+          display: inline-flex; align-items: center; gap: 4px;
+          font-size: 11.5px; font-weight: 600; color: #27ae60;
         }
-        .vp-btn-heart {
-          width: 38px; height: 38px; flex-shrink: 0;
-          border: 1.5px solid #f0f0f0; border-radius: 10px;
-          background: #fff; cursor: pointer;
+        .vp-verified-icon {
+          width: 15px; height: 15px; border-radius: 50%;
+          background: rgba(39,174,96,0.12);
           display: flex; align-items: center; justify-content: center;
-          transition: border-color 0.18s, background 0.18s;
+          flex-shrink: 0;
         }
-        .vp-btn-heart:hover { border-color: #E74C3C; background: #fff5f5; }
-        .vp-btn-heart.active { border-color: #E74C3C; background: #fff5f5; }
-        .vp-btn-detail {
-          flex: 1; padding: 9px 14px;
-          background: linear-gradient(90deg, #C0392B, #e74c3c);
-          color: #fff; font-size: 13px; font-weight: 700;
-          border: none; border-radius: 10px; cursor: pointer;
-          text-align: center; text-decoration: none;
-          display: flex; align-items: center; justify-content: center;
-          transition: opacity 0.18s, transform 0.18s;
-          box-shadow: 0 4px 12px rgba(192,57,43,0.28);
-          font-family: inherit;
-        }
-        .vp-btn-detail:hover { opacity: 0.88; transform: translateY(-1px); }
 
-        /* empty state when no results */
+        /* empty state */
         .vp-empty {
-          grid-column: 1/-1;
-          padding: 64px 24px;
-          text-align: center;
-          color: #888;
+          grid-column: 1/-1; padding: 64px 24px; text-align: center; color: #888;
         }
         .vp-empty-icon { font-size: 48px; margin-bottom: 12px; }
         .vp-empty p { font-size: 15px; font-weight: 600; color: #555; margin: 0 0 4px; }
         .vp-empty span { font-size: 13px; color: #aaa; }
 
-        /* mobile responsive */
+        /* ── RESPONSIVE ── */
+        @media (max-width: 900px) {
+          .vp-layout { grid-template-columns: 1fr; }
+          .vp-sidebar { display: none; }
+        }
         @media (max-width: 640px) {
-          .vp-hero { padding: 28px 16px 24px; }
+          .vp-hero { height: 200px; }
           .vp-body { padding: 20px 16px 40px; }
           .vp-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
         }
@@ -382,216 +392,188 @@ export default function VehiclesPage() {
       `}</style>
 
       <div className="vp">
-        {/* hero banner */}
+        {/* ── HERO ── */}
         <section className="vp-hero">
+          <div className="vp-hero-bg" />
+          <div className="vp-hero-overlay" />
+          <div className="vp-hero-watermark">Vehicles</div>
           <div className="vp-hero-inner">
-            <div className="vp-hero-eyebrow">🚗 Vehicles</div>
-            <h1 className="vp-hero-title">Find Your Perfect <em>Ride</em> in Nepal</h1>
-            <p className="vp-hero-sub">Verified bikes, cars & scooters — real prices, safe deals</p>
-
-            {/* search bar and sort dropdown */}
-            <div className="vp-bar">
-              <div className="vp-search-wrap">
-                <svg className="vp-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
-                  <circle cx="11" cy="11" r="7" stroke="rgba(255,255,255,0.5)" strokeWidth="2" />
-                  <path d="M16.5 16.5L21 21" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                <input
-                  className="vp-search"
-                  placeholder="Search vehicles, brands, location…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <select className="vp-sort" value={sort} onChange={(e) => setSort(e.target.value)}>
-                <option value="newest">Newest First</option>
-                <option value="price_asc">Price: Low → High</option>
-                <option value="price_desc">Price: High → Low</option>
-              </select>
+            <h1 className="vp-hero-title">Vehicles in Nepal</h1>
+            <p className="vp-hero-sub">Find the best cars, bikes and more</p>
+            <div className="vp-search-wrap">
+              <svg className="vp-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="#aaa" strokeWidth="2" />
+                <path d="M16.5 16.5L21 21" stroke="#aaa" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+              <input
+                className="vp-search"
+                placeholder="Search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
           </div>
         </section>
 
-        {/* main content area */}
+        {/* ── BODY ── */}
         <div className="vp-body">
           <div className="vp-layout">
 
-            {/* filter sidebar */}
+            {/* ── SIDEBAR ── */}
             <aside className="vp-sidebar">
               <div className="vsf-head">
-                <div className="vsf-head-left">
-                  <p className="vsf-head-title">Filters</p>
-                  {/* show badge if any filters are active */}
-                  {(filterBrands.length + filterFuels.length + filterConds.length + (filterMinP ? 1 : 0) + (filterMaxP ? 1 : 0)) > 0 && (
-                    <span className="vsf-badge">{filterBrands.length + filterFuels.length + filterConds.length + (filterMinP ? 1 : 0) + (filterMaxP ? 1 : 0)}</span>
-                  )}
-                </div>
-                {/* clear all filters button */}
-                <button className="vsf-clear" onClick={() => { setFilterBrands([]); setFilterFuels([]); setFilterConds([]); setFilterMinP(""); setFilterMaxP(""); }}>Clear all</button>
+                <p className="vsf-head-title">Filters</p>
+                <button
+                  className="vsf-reset"
+                  onClick={() => {
+                    setPriceRange(1000000);
+                    setCity("");
+                    setVerifiedOnly(false);
+                    setActiveCat("All vehicles");
+                  }}
+                >
+                  Reset
+                </button>
               </div>
 
-              {/* brand checkboxes */}
-              <div className="vsf-sec">
-                <p className="vsf-sec-title">Brand</p>
-                <div className="vsf-list">
-                  {["Bajaj", "Honda", "Yamaha", "TVS", "Hero", "Suzuki", "Royal Enfield", "KTM"].map(b => (
-                    <label key={b} className="vsf-row" onClick={() => setFilterBrands(p => p.includes(b) ? p.filter(x => x !== b) : [...p, b])}>
-                      <span className={`vsf-box${filterBrands.includes(b) ? " on" : ""}`}>{filterBrands.includes(b) && <span className="vsf-check">✓</span>}</span>
-                      {b}
-                    </label>
+              {/* Price Range */}
+              <div className="vsf-section">
+                <p className="vsf-label">Price Range</p>
+                <p className="vsf-price-range-val">Rs. 0-{formatPrice(priceRange)}</p>
+                <input
+                  type="range"
+                  className="vsf-slider"
+                  min={0}
+                  max={10000000}
+                  step={50000}
+                  value={priceRange}
+                  style={{ "--pct": `${(priceRange / 10000000) * 100}%` } as React.CSSProperties}
+                  onChange={(e) => setPriceRange(Number(e.target.value))}
+                />
+              </div>
+
+              {/* Location / City */}
+              <div className="vsf-section">
+                <p className="vsf-label">Location/City</p>
+                <select
+                  className="vsf-select"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                >
+                  <option value="">Select City</option>
+                  {CITIES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
                   ))}
-                </div>
-              </div>
-
-              {/* price range inputs */}
-              <div className="vsf-sec">
-                <p className="vsf-sec-title">Price (NPR)</p>
-                <div className="vsf-range">
-                  <input className="vsf-input" type="number" placeholder="Min" value={filterMinP} onChange={e => setFilterMinP(e.target.value)} />
-                  <input className="vsf-input" type="number" placeholder="Max" value={filterMaxP} onChange={e => setFilterMaxP(e.target.value)} />
-                </div>
-              </div>
-
-              {/* fuel type checkboxes */}
-              <div className="vsf-sec">
-                <p className="vsf-sec-title">Fuel Type</p>
-                <div className="vsf-list">
-                  {["Petrol", "Electric", "Diesel", "Hybrid"].map(f => (
-                    <label key={f} className="vsf-row" onClick={() => setFilterFuels(p => p.includes(f) ? p.filter(x => x !== f) : [...p, f])}>
-                      <span className={`vsf-box${filterFuels.includes(f) ? " on" : ""}`}>{filterFuels.includes(f) && <span className="vsf-check">✓</span>}</span>
-                      {f}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* condition checkboxes */}
-              <div className="vsf-sec">
-                <p className="vsf-sec-title">Condition</p>
-                <div className="vsf-list">
-                  {["new", "used"].map(c => (
-                    <label key={c} className="vsf-row" style={{ textTransform: "capitalize" }} onClick={() => setFilterConds(p => p.includes(c) ? p.filter(x => x !== c) : [...p, c])}>
-                      <span className={`vsf-box${filterConds.includes(c) ? " on" : ""}`}>{filterConds.includes(c) && <span className="vsf-check">✓</span>}</span>
-                      {c}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* km driven dropdown */}
-              <div className="vsf-sec">
-                <p className="vsf-sec-title">KM Driven</p>
-                <select className="vsf-select" value={filterMaxKm} onChange={e => setFilterMaxKm(e.target.value)}>
-                  <option value="">Any mileage</option>
-                  <option value="5000">Under 5,000 km</option>
-                  <option value="10000">Under 10,000 km</option>
-                  <option value="25000">Under 25,000 km</option>
-                  <option value="50000">Under 50,000 km</option>
                 </select>
+                <div className="vsf-toggle-row">
+                  <span className="vsf-toggle-label">Verified City</span>
+                  <label className="vsf-toggle">
+                    <input
+                      type="checkbox"
+                      checked={verifiedOnly}
+                      onChange={(e) => setVerifiedOnly(e.target.checked)}
+                    />
+                    <span className="vsf-toggle-track" />
+                    <span className="vsf-toggle-thumb" />
+                  </label>
+                </div>
               </div>
 
-              {/* TODO: filters don't actually work yet, need to wire up */}
+              {/* Sub Categories */}
+              <div className="vsf-section">
+                <p className="vsf-label">Sub Categories</p>
+                <div className="vsf-chips">
+                  {SUB_CATS.map((cat) => (
+                    <button
+                      key={cat}
+                      className={`vsf-chip${activeCat === cat ? " active" : ""}`}
+                      onClick={() => setActiveCat(cat)}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <button className="vsf-apply">Apply Filters</button>
             </aside>
 
-            {/* right side - results count + cards grid */}
+            {/* ── RIGHT COLUMN ── */}
             <div>
+              {/* Results bar */}
               <div className="vp-results-bar">
-                <p className="vp-results-text">
-                  Showing <strong>{displayed.length}</strong> of <strong>{VEHICLES.length}</strong> vehicle{VEHICLES.length !== 1 ? "s" : ""}
-                </p>
-                <Link href="/" style={{ fontSize: 12, color: "#999", textDecoration: "none" }}>← Home</Link>
+                <span className="vp-results-count">
+                  {displayed.length * 154} results found
+                </span>
+                <select
+                  className="vp-sort-select"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                >
+                  <option value="newest">Newest</option>
+                  <option value="price_asc">Price: Low → High</option>
+                  <option value="price_desc">Price: High → Low</option>
+                </select>
               </div>
 
-              {/* vehicle cards */}
+              {/* Cards grid */}
               <div className="vp-grid">
                 {displayed.length === 0 ? (
                   <div className="vp-empty">
                     <div className="vp-empty-icon">🔍</div>
                     <p>No vehicles found</p>
-                    <span>Try a different search term</span>
+                    <span>Try a different search or filter</span>
                   </div>
                 ) : (
                   displayed.map((v) => {
                     const isFav = !!favorites[v.id];
-                    // build class string for the card
-                    const cardClass = ["vp-card", v.isFeatured ? "featured" : "", v.isSold ? "sold" : ""].filter(Boolean).join(" ");
-
                     return (
-                      <div key={v.id} className={cardClass}>
-                        {/* card image section */}
+                      <Link key={v.id} href={`/listing/${v.id}`} className="vp-card">
+                        {/* Image */}
                         <div className="vp-img-wrap">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={v.image} alt={v.title} className="vp-img" />
-
-                          {/* sold overlay - only shows if sold */}
-                          {v.isSold && (
-                            <div className="vp-sold-overlay">
-                              <span className="vp-sold-stamp">SOLD</span>
-                            </div>
-                          )}
-
-                          {/* featured badge - only shows if featured and not sold */}
-                          {v.isFeatured && !v.isSold && (
-                            <span className="vp-feat-badge">★ Featured</span>
-                          )}
-
-                          {/* heart button - saves to favorites */}
                           <button
                             className="vp-heart"
                             aria-label="Save"
                             onClick={(e) => toggleFav(v.id, e)}
                           >
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill={isFav ? "#E74C3C" : "none"}>
-                              <path d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z"
-                                stroke={isFav ? "#E74C3C" : "#999"} strokeWidth="1.8" />
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill={isFav ? "#E74C3C" : "none"}>
+                              <path
+                                d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z"
+                                stroke={isFav ? "#E74C3C" : "#999"}
+                                strokeWidth="1.8"
+                              />
                             </svg>
                           </button>
                         </div>
 
-                        {/* card info section */}
-                        <div className="vp-body-card">
+                        {/* Body */}
+                        <div className="vp-card-body">
                           <p className="vp-card-title">{v.title}</p>
-
-                          <p className="vp-price">{v.price}</p>
-
-                          {/* location, km and year info */}
-                          <div className="vp-info-row">
-                            <span className="vp-info-item">
-                              <svg width="10" height="12" viewBox="0 0 11 13" fill="none">
-                                <path d="M5.5 0C3.015 0 1 2.015 1 4.5C1 7.875 5.5 13 5.5 13C5.5 13 10 7.875 10 4.5C10 2.015 7.985 0 5.5 0ZM5.5 6C4.672 6 4 5.328 4 4.5C4 3.672 4.672 3 5.5 3C6.328 3 7 3.672 7 4.5C7 5.328 6.328 6 5.5 6Z" fill="#aaa" />
-                              </svg>
-                              {v.location}
-                            </span>
-                            <span className="vp-info-item">🛣 {v.km}</span>
-                            <span className="vp-info-item">📅 {v.year}</span>
-                          </div>
-
-                          {/* wishlist + view details buttons */}
-                          <div className="vp-btn-row">
-                            <button
-                              className={`vp-btn-heart${isFav ? " active" : ""}`}
-                              onClick={(e) => toggleFav(v.id, e)}
-                              aria-label="Wishlist"
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill={isFav ? "#E74C3C" : "none"}>
-                                <path d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z"
-                                  stroke={isFav ? "#E74C3C" : "#aaa"} strokeWidth="1.8" />
-                              </svg>
-                            </button>
-                            <Link href={`/listing/${v.id}`} className="vp-btn-detail">
-                              View Details
-                            </Link>
+                          <p className="vp-card-price">{v.price}</p>
+                          <div className="vp-card-footer">
+                            <span className="vp-card-location">{v.location}</span>
+                            {v.isVerified && (
+                              <span className="vp-verified">
+                                <span className="vp-verified-icon">
+                                  <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+                                    <path d="M2 6L5 9L10 3" stroke="#27ae60" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </span>
+                                Verified
+                              </span>
+                            )}
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     );
                   })
                 )}
               </div>
-            </div>{/* end right col */}
-          </div>{/* end vp-layout */}
-        </div>{/* end vp-body */}
+            </div>
+          </div>
+        </div>
 
         <Footer />
       </div>
