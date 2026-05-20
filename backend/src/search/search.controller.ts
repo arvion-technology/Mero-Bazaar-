@@ -4,6 +4,7 @@ import { ListingSearchDto } from './dto/listing_search.dto';
 import { VehicleSearchDto } from './dto/vehicle_search.dto';
 import { JobSearchDto } from './dto/job_search.dto';
 import { MedicalSearchDto } from './dto/medical_search.dto';
+import { TradesSearchDto } from './dto/trade_search.dto';
 
 @Controller('search')
 export class SearchController {
@@ -27,5 +28,10 @@ export class SearchController {
   @Get('medical')
   medical(@Query() filters: MedicalSearchDto) {
     return this.searchService.medicalSearch(filters);
+  }
+
+  @Get('trades')
+  trades(@Query() filters: TradesSearchDto) {
+    return this.searchService.tradesSearch(filters);
   }
 }

@@ -28,6 +28,7 @@ model Listing {
   job         Job?
   medical     MedicalAndDental?
   trades      TradesAndHomeRepair?
+  rental      RentalAndRealEstate?
 
   leads        Lead[]
   appointments Appointment[]
@@ -41,6 +42,7 @@ enum ListingCategory {
   JOB
   MEDICAL
   TRADES
+  RENTAL
 }
 
 
@@ -261,4 +263,79 @@ model TradesAndHomeRepair {
   @@index([city])
   @@index([emergencyAvailable])
   @@index([serviceAreaKm])
+}
+
+model RentalAndRealEstate {
+  id                   String   @id @default(cuid())
+
+  listingId            String   @unique
+  listing              Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  propertyType         PropertyType
+  listingType          ListingType
+
+  city                 String
+  area                 String?
+  ward                 String?
+
+  address              String?
+
+  latitude             Float?
+  longitude            Float?
+
+  monthlyRent          Int
+  depositAmount        Int
+
+  bedrooms             Int?
+  bathrooms            Int?
+  squareFeet           Int?
+
+  furnished            Boolean @default(false)
+
+  parkingAvailable     Boolean @default(false)
+  wifiAvailable        Boolean @default(false)
+  waterIncluded        Boolean @default(false)
+  electricityIncluded  Boolean @default(false)
+
+  petFriendly          Boolean @default(false)
+
+  availableFrom        DateTime?
+
+  isOwnerOrAgent       OwnerType
+  noBroker             Boolean @default(false)
+
+  nearbyLandmarks      String[]
+
+  rules                String[]
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([city])
+  @@index([propertyType])
+  @@index([listingType])
+  @@index([furnished])
+  @@index([isOwnerOrAgent])
+  @@index([latitude, longitude])
+}
+
+enum PropertyType {
+  ROOM
+  FLAT
+  APARTMENT
+  HOUSE
+  HOSTEL
+  LAND
+  SHUTTER
+  OFFICE
+}
+
+enum ListingType {
+  RENT
+  SALE
+}
+
+enum OwnerType {
+  OWNER
+  AGENT
 }

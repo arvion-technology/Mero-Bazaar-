@@ -7,6 +7,7 @@ import {
   Param,
   ParseFloatPipe,
   Patch,
+  Delete,
 } from '@nestjs/common';
 
 import { TradesService } from './trades.service';
@@ -56,5 +57,10 @@ export class TradesController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateTradesDto) {
     return this.tradesService.update(id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.tradesService.remove(id);
   }
 }
