@@ -4,14 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 
 const galleryImages = [
-  "/Apartment.jpg",
-  "/apartment.avif",
-  "/Apartment.jpg",
-  "/apartment.avif",
-  "/Apartment.jpg",
-  "/apartment.avif",
-  "/Apartment.jpg",
-  "/apartment.avif",
+  "/apartment1.jpg",
+  "/apartment2.jpg",
+  "/apartment3.jpg",
+  "/apartment4.jpg",
+  "/apartment5.jpg",
+  "/apartment6.jpg",
+  "/apartment7.jpg",
+  "/apartment8.jpg",
+  "/apartment9.jpg",
+  "/Apartment.avif",
 ];
 
 export default function PropertyDetailPage() {

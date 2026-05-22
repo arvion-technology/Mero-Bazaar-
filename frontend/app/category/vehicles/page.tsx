@@ -15,13 +15,14 @@ type Vehicle = {
 };
 
 const VEHICLES: Vehicle[] = [
+  { id: "toyota-land-cruiser-prado-2020", title: "Toypta land Cruiser Prado TXL 2020", price: "Rs. 1,50,00,000", location: "Lalitpur", image: "/car1.jpg", isVerified: true, category: "Car" },
   { id: "hundai-creta-2022", title: "Hundai Creta 2022", price: "Rs. 32,50,000", location: "Kathmandu", image: "/Hundai Creta 2022.jpg", isVerified: true, category: "Car" },
   { id: "harley-davidson", title: "Harley-Davidson", price: "Rs. 2,00,000", location: "Kathmandu", image: "/Harley-Davidson.jpg", isVerified: true, category: "Bike" },
   { id: "getty-bus", title: "Getty Bus", price: "Rs. 3,20,000", location: "Kathmandu", image: "/Getty Bus.jpg", isVerified: true, category: "Buses" },
   { id: "scooter", title: "Scooter", price: "Rs. 32,000", location: "Kathmandu", image: "/Scooter.jpg", isVerified: true, category: "Scooter" },
   { id: "bajaj-pulsar", title: "Bajaj Pulsar N160", price: "Rs. 3,25,000", location: "Pokhara", image: "/bajaj.avif", isVerified: true, category: "Bike" },
   { id: "toyota-hiace", title: "Toyota HiAce Van", price: "Rs. 45,00,000", location: "Lalitpur", image: "/Hundai Creta 2022.jpg", isVerified: false, category: "Car" },
-  { id: "honda-activa", title: "Honda Activa 6G", price: "Rs. 1,85,000", location: "Bhaktapur", image: "/Scooter.jpg", isVerified: true, category: "Scooter" },
+  { id: "honda-activa", title: "Honda Activa 6G", price: "Rs. 1,85,000", location: "Bhaktapur", image: "/honda.jpg", isVerified: true, category: "Scooter" },
   { id: "tata-truck", title: "Tata 407 Truck", price: "Rs. 28,00,000", location: "Chitwan", image: "/Getty Bus.jpg", isVerified: false, category: "Trucks" },
 ]; 
 

@@ -12,7 +12,7 @@ const propertyListings = [
     meta: ["2 Beds", "2 Baths", "1200 sqft"],
     badge: "VERIFIED",
     badgeColor: "#27AE60",
-    img: "/Apartment.jpg",
+    img: "/apartment1.jpg",
   },
   {
     id: "2bhk-sanepa",
@@ -22,7 +22,7 @@ const propertyListings = [
     meta: ["2 Beds", "1 Bath", "950 sqft"],
     badge: "VERIFIED",
     badgeColor: "#27AE60",
-    img: "/apartment.avif",
+    img: "/apartment2.jpg",
   },
   {
     id: "3bhk-lazimpat",
@@ -32,7 +32,7 @@ const propertyListings = [
     meta: ["3 Beds", "2 Baths", "1500 sqft"],
     badge: "FEATURED",
     badgeColor: "#F39C12",
-    img: "/Apartment.jpg",
+    img: "/apartment.avif",
   },
   {
     id: "2bhk-baneshwor",
@@ -42,7 +42,7 @@ const propertyListings = [
     meta: ["2 Beds", "1 Bath", "880 sqft"],
     badge: "VERIFIED",
     badgeColor: "#27AE60",
-    img: "/apartment.avif",
+    img: "/apartment3.jpg",
   },
   {
     id: "1bhk-jawalakhel",
@@ -52,7 +52,7 @@ const propertyListings = [
     meta: ["1 Bed", "1 Bath", "600 sqft"],
     badge: "VERIFIED",
     badgeColor: "#27AE60",
-    img: "/Apartment.jpg",
+    img: "/apartment4.jpg",
   },
   {
     id: "3bhk-bhaktapur",
@@ -62,7 +62,7 @@ const propertyListings = [
     meta: ["3 Beds", "2 Baths", "1350 sqft"],
     badge: "VERIFIED",
     badgeColor: "#27AE60",
-    img: "/apartment.avif",
+    img: "/apartment5.jpg",
   },
   {
     id: "2bhk-laganthet",
@@ -72,7 +72,7 @@ const propertyListings = [
     meta: ["2 Beds", "1 Bath", "1050 sqft"],
     badge: "VERIFIED",
     badgeColor: "#27AE60",
-    img: "/Apartment.jpg",
+    img: "/apartment6.jpg",
   },
   {
     id: "studio-thamel",
@@ -82,7 +82,7 @@ const propertyListings = [
     meta: ["1 Bed", "1 Bath", "450 sqft"],
     badge: "FEATURED",
     badgeColor: "#F39C12",
-    img: "/apartment.avif",
+    img: "/apartment7.jpg",
   },
   {
     id: "2bhk-patan",
@@ -92,7 +92,7 @@ const propertyListings = [
     meta: ["2 Beds", "2 Baths", "1100 sqft"],
     badge: "VERIFIED",
     badgeColor: "#27AE60",
-    img: "/Apartment.jpg",
+    img: "/apartment8.jpg",
   },
   {
     id: "3bhk-koteshwor",
@@ -102,7 +102,7 @@ const propertyListings = [
     meta: ["3 Beds", "2 Baths", "1400 sqft"],
     badge: "VERIFIED",
     badgeColor: "#27AE60",
-    img: "/apartment.avif",
+    img: "/apartment9.jpg",
   },
 ];
 
