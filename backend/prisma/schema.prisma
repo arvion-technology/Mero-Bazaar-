@@ -29,6 +29,7 @@ model Listing {
   medical     MedicalAndDental?
   trades      TradesAndHomeRepair?
   rental      RentalAndRealEstate?
+  agriculture AgricultureAndLivestock?
 
   leads        Lead[]
   appointments Appointment[]
@@ -43,6 +44,7 @@ enum ListingCategory {
   MEDICAL
   TRADES
   RENTAL
+  AGRICULTURE
 }
 
 
@@ -338,4 +340,59 @@ enum ListingType {
 enum OwnerType {
   OWNER
   AGENT
+}
+
+model AgricultureAndLivestock {
+  id            String @id @default(cuid())
+
+  listingId     String @unique
+  listing       Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  listingType    AgricultureListingType
+
+  district      String
+  village        String?
+  location       String
+  pricePerUnit   Int
+  unit           UnitType
+
+  organicCertified  Boolean @default(false)
+  organicVerified   Boolean @default(false)
+
+  seasonalAvailability  String?
+  animalType            String?
+  breed                 String?
+  age                   Int?
+  healthVaccineStatus   HealthVaccineStatus?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([district])
+  @@index([listingType])
+  @@index([organicCertified])
+  @@index([healthVaccineStatus])
+}
+
+enum AgricultureListingType {
+  PRODUCE
+  LIVESTOCK
+  TOOL
+  SEED
+  FERTILIZER
+  VET_SERVICE
+  FARM_LABOUR
+}
+
+enum UnitType {
+  KG
+  LITRE 
+  PIECE
+  HEAD
+  BIGHA
+}
+
+enum HealthVaccineStatus {
+  VACCINATED
+  NOT_VACCINATED
+  UNKNOWN
 }

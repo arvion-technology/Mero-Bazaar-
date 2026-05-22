@@ -1,4 +1,4 @@
-import { Prisma, ListingCategory, OwnerType, PropertyType, ListingType } from '@prisma/client';
+import { Prisma, ListingCategory, OwnerType, PropertyType, ListingType } from '@prisma/client'; 
 import { RentalSearchDto } from '../dto/rental_search.dto';
 
 export function buildRentalFilter(
