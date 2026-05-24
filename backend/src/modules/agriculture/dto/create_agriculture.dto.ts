@@ -3,9 +3,6 @@ import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUUID } from 'class-va
 import { AgricultureListingType, UnitType, HealthVaccineStatus } from '@prisma/client';
 
 export class CreateAgricultureDto {
-  @IsUUID()
-  listingId: string;
-
   @IsEnum(AgricultureListingType)
   listingType: AgricultureListingType;
 
