@@ -37,3 +37,4 @@ PORT=3000
 -Trades and home repair<br>
 -Rental and real Estate<br>
 -Agriculture and livestock<br>
+-Secondhand goods<br>
