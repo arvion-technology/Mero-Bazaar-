@@ -36,3 +36,5 @@ PORT=3000
 -Medical and Dental<br>
 -Trades and home repair<br>
 -Rental and real Estate<br>
+-Agriculture and livestock<br>
+-Secondhand goods<br>

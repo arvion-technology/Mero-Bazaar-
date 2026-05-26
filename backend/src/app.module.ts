@@ -14,6 +14,11 @@ import { TradesModule } from './modules/trades/trades.module';
 import { RentalController } from './modules/rental/rental.controller';
 import { RentalService } from './modules/rental/rental.service';
 import { RentalModule } from './modules/rental/rental.module';
+import { AgricultureService } from './modules/agriculture/agriculture.service';
+import { AgricultureModule } from './modules/agriculture/agriculture.module';
+import { SecondhandModule } from './modules/secondhand/secondhand.module';
+import { SecondhandService } from './module/secondhand/secondhand.service';
+import { SecondhandController } from './module/secondhand/secondhand.controller';
 
 @Module({
   imports: [
@@ -26,8 +31,10 @@ import { RentalModule } from './modules/rental/rental.module';
     MedicalModule,
     TradesModule,
     RentalModule,
+    AgricultureModule,
+    SecondhandModule,
   ],
-  controllers: [AppController, RentalController],
-  providers: [AppService, RentalService],
+  controllers: [AppController, RentalController, SecondhandController],
+  providers: [AppService, RentalService, AgricultureService, SecondhandService],
 })
 export class AppModule {}

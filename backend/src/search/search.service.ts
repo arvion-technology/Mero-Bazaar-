@@ -6,12 +6,14 @@ import { buildVehicleFilter } from "./builders/vehicle_filter.builder";
 import { buildJobFilter } from "./builders/job_filter.builder";
 import { buildMedicalFilter } from "./builders/medical_filter.builder.dto";
 import { buildTradesFilter } from "./builders/trades_filter.build";
+import { buildAgricultureFilter } from "./builders/agriculture_filter.builder";
 
 import { ListingSearchDto } from "./dto/listing_search.dto";
 import { VehicleSearchDto } from "./dto/vehicle_search.dto";
 import { JobSearchDto } from "./dto/job_search.dto";
 import { MedicalSearchDto } from "./dto/medical_search.dto";
 import { TradesSearchDto } from "./dto/trade_search.dto";
+import { AgricultureSearchDto } from "./dto/agriculture_search.dto";
 
 @Injectable()
 export class SearchService {
@@ -26,7 +28,7 @@ export class SearchService {
         vehicle: true,
         job: true,
         medical: true,
-        trades: true, // optional if included in global search
+        trades: true, 
       },
       orderBy: {
         createdAt: "desc",
@@ -86,6 +88,19 @@ export class SearchService {
       },
       orderBy: {
         createdAt: "desc",
+      },
+    });
+  }
+  async agricultureSearch(filters: AgricultureSearchDto) {
+    const where = buildAgricultureFilter(filters);
+
+    return this.prisma.listing.findMany({
+      where,
+      include: {
+        agriculture: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
   }
