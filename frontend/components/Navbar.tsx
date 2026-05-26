@@ -6,8 +6,8 @@ import Link from "next/link";
 const categories = [
   { name: "Vehicles", slug: "vehicles" },
   { name: "Property", slug: "property" },
-  { name: "Jobs & Careers", slug: "jobs-careers" },
-  { name: "Medical & Health", slug: "medical-health" },
+  { name: "Jobs & Careers", slug: "job" },
+  { name: "Medical & Health", slug: "medical" },
   { name: "Education & Training", slug: "education-training" },
   { name: "Electronics", slug: "electronics" },
   { name: "Beauty & Wellness", slug: "beauty-wellness" },
@@ -18,7 +18,8 @@ const categories = [
 const navLinks = [
   { label: "Buy", href: "/buy" },
   { label: "Services", href: "/services" },
-  { label: "Jobs", href: "/category/jobs-careers" },
+  { label: "Jobs", href: "/category/job" },
+  { label: "Medical", href: "/category/medical" },
   { label: "Property", href: "/category/property" },
 ];
 

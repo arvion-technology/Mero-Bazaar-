@@ -2,459 +2,621 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Footer from "@/components/Footer";
 
-const propertyListings = [
+type Property = {
+  id: string;
+  title: string;
+  price: string;
+  location: string;
+  city: string;
+  type: string;
+  beds: number;
+  baths: number;
+  sqft: number;
+  image: string;
+  isVerified?: boolean;
+  isFeatured?: boolean;
+  purpose: "Rent" | "Sale";
+};
+
+const LISTINGS: Property[] = [
   {
     id: "2bhk-lazimpat",
-    title: "2BKH Modern Apartment in Lazimpat",
+    title: "2BHK Modern Apartment in Lazimpat",
     price: "Rs. 25,000 / month",
     location: "Lazimpat, Kathmandu",
-    meta: ["2 Beds", "2 Baths", "1200 sqft"],
-    badge: "VERIFIED",
-    badgeColor: "#27AE60",
-    img: "/apartment1.jpg",
+    city: "Kathmandu",
+    type: "Apartment",
+    beds: 2, baths: 2, sqft: 1200,
+    image: "/apartment1.jpg",
+    isVerified: true, isFeatured: true, purpose: "Rent",
   },
   {
     id: "2bhk-sanepa",
     title: "2BHK Apartment in Sanepa",
     price: "Rs. 17,000 / month",
     location: "Sanepa, Lalitpur",
-    meta: ["2 Beds", "1 Bath", "950 sqft"],
-    badge: "VERIFIED",
-    badgeColor: "#27AE60",
-    img: "/apartment2.jpg",
+    city: "Lalitpur",
+    type: "Apartment",
+    beds: 2, baths: 1, sqft: 950,
+    image: "/apartment2.jpg",
+    isVerified: true, isFeatured: false, purpose: "Rent",
   },
   {
     id: "3bhk-lazimpat",
     title: "3BHK Spacious Apartment in Lazimpat",
     price: "Rs. 32,000 / month",
     location: "Lazimpat, Kathmandu",
-    meta: ["3 Beds", "2 Baths", "1500 sqft"],
-    badge: "FEATURED",
-    badgeColor: "#F39C12",
-    img: "/apartment.avif",
+    city: "Kathmandu",
+    type: "Apartment",
+    beds: 3, baths: 2, sqft: 1500,
+    image: "/apartment.avif",
+    isVerified: false, isFeatured: true, purpose: "Rent",
   },
   {
     id: "2bhk-baneshwor",
     title: "2BHK Apartment in Baneshwor",
     price: "Rs. 11,000 / month",
     location: "Baneshwor, Kathmandu",
-    meta: ["2 Beds", "1 Bath", "880 sqft"],
-    badge: "VERIFIED",
-    badgeColor: "#27AE60",
-    img: "/apartment3.jpg",
+    city: "Kathmandu",
+    type: "Apartment",
+    beds: 2, baths: 1, sqft: 880,
+    image: "/apartment3.jpg",
+    isVerified: true, isFeatured: false, purpose: "Rent",
   },
   {
-    id: "1bhk-jawalakhel",
-    title: "1BHK Apartment in Jawalakhel",
-    price: "Rs. 8,000 / month",
-    location: "Jawalakhel, Lalitpur",
-    meta: ["1 Bed", "1 Bath", "600 sqft"],
-    badge: "VERIFIED",
-    badgeColor: "#27AE60",
-    img: "/apartment4.jpg",
-  },
-  {
-    id: "3bhk-bhaktapur",
-    title: "3BHK Apartment in Bhaktapur",
-    price: "Rs. 20,000 / month",
+    id: "house-bhaktapur",
+    title: "Private House for Sale in Bhaktapur",
+    price: "Rs. 1,20,00,000",
     location: "Bhaktapur, Bagmati",
-    meta: ["3 Beds", "2 Baths", "1350 sqft"],
-    badge: "VERIFIED",
-    badgeColor: "#27AE60",
-    img: "/apartment5.jpg",
+    city: "Bhaktapur",
+    type: "House",
+    beds: 4, baths: 3, sqft: 2200,
+    image: "/house.jpg",
+    isVerified: true, isFeatured: true, purpose: "Sale",
   },
   {
-    id: "2bhk-laganthet",
-    title: "2BHK Apartment in Laganthet",
-    price: "Rs. 15,000 / month",
-    location: "Laganthet, Lalitpur",
-    meta: ["2 Beds", "1 Bath", "1050 sqft"],
-    badge: "VERIFIED",
-    badgeColor: "#27AE60",
-    img: "/apartment6.jpg",
+    id: "house1-kathmandu",
+    title: "Modern House in Budhanilkantha",
+    price: "Rs. 85,00,000",
+    location: "Budhanilkantha, Kathmandu",
+    city: "Kathmandu",
+    type: "House",
+    beds: 3, baths: 2, sqft: 1800,
+    image: "/house1.jpg",
+    isVerified: true, isFeatured: false, purpose: "Sale",
   },
   {
-    id: "studio-thamel",
-    title: "Studio Apartment in Thamel",
-    price: "Rs. 12,000 / month",
-    location: "Thamel, Kathmandu",
-    meta: ["1 Bed", "1 Bath", "450 sqft"],
-    badge: "FEATURED",
-    badgeColor: "#F39C12",
-    img: "/apartment7.jpg",
+    id: "house2-lalitpur",
+    title: "Family House in Godawari",
+    price: "Rs. 95,00,000",
+    location: "Godawari, Lalitpur",
+    city: "Lalitpur",
+    type: "House",
+    beds: 4, baths: 3, sqft: 2000,
+    image: "/house2.jpg",
+    isVerified: false, isFeatured: false, purpose: "Sale",
   },
   {
-    id: "2bhk-patan",
+    id: "apartment-patan",
     title: "2BHK Apartment in Patan",
     price: "Rs. 18,500 / month",
     location: "Patan, Lalitpur",
-    meta: ["2 Beds", "2 Baths", "1100 sqft"],
-    badge: "VERIFIED",
-    badgeColor: "#27AE60",
-    img: "/apartment8.jpg",
+    city: "Lalitpur",
+    type: "Apartment",
+    beds: 2, baths: 2, sqft: 1100,
+    image: "/apartment8.jpg",
+    isVerified: true, isFeatured: false, purpose: "Rent",
   },
   {
-    id: "3bhk-koteshwor",
-    title: "3BHK Apartment in Koteshwor",
-    price: "Rs. 22,000 / month",
-    location: "Koteshwor, Kathmandu",
-    meta: ["3 Beds", "2 Baths", "1400 sqft"],
-    badge: "VERIFIED",
-    badgeColor: "#27AE60",
-    img: "/apartment9.jpg",
+    id: "apartment-thamel",
+    title: "Studio Apartment in Thamel",
+    price: "Rs. 12,000 / month",
+    location: "Thamel, Kathmandu",
+    city: "Kathmandu",
+    type: "Apartment",
+    beds: 1, baths: 1, sqft: 450,
+    image: "/apartment7.jpg",
+    isVerified: false, isFeatured: true, purpose: "Rent",
+  },
+  {
+    id: "house3-pokhara",
+    title: "Lakeside House in Pokhara",
+    price: "Rs. 1,10,00,000",
+    location: "Lakeside, Pokhara",
+    city: "Pokhara",
+    type: "House",
+    beds: 3, baths: 2, sqft: 1650,
+    image: "/house3.jpg",
+    isVerified: true, isFeatured: false, purpose: "Sale",
   },
 ];
 
-export default function PropertyCategoryPage() {
+const PROP_TYPES = ["All", "Apartment", "House", "Land", "Commercial", "Office"];
+const PURPOSES = ["All", "Rent", "Sale"];
+const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Biratnagar"];
+const BEDS = ["Any", "1+", "2+", "3+", "4+"];
+
+const TYPE_ICONS: Record<string, string> = {
+  Apartment: "🏢",
+  House: "🏠",
+  Land: "🌿",
+  Commercial: "🏪",
+  Office: "🏗️",
+};
+
+const TYPE_COUNTS: Record<string, number> = {
+  Apartment: 892,
+  House: 645,
+  Land: 320,
+  Commercial: 210,
+  Office: 155,
+};
+
+export default function PropertyPage() {
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("newest");
+  const [activeType, setActiveType] = useState("All");
+  const [purpose, setPurpose] = useState("All");
+  const [city, setCity] = useState("");
+  const [beds, setBeds] = useState("Any");
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
-  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
-  const toggleFavorite = (id: string, e: React.MouseEvent) => {
+  const toggleFav = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
-    setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
+    e.stopPropagation();
+    setFavorites((p) => ({ ...p, [id]: !p[id] }));
   };
 
-  const handleImgError = (id: string) => {
-    setImgErrors((prev) => ({ ...prev, [id]: true }));
+  const reset = () => {
+    setActiveType("All");
+    setPurpose("All");
+    setCity("");
+    setBeds("Any");
+    setVerifiedOnly(false);
   };
+
+  const minBeds = beds === "Any" ? 0 : parseInt(beds);
+
+  const displayed = LISTINGS.filter((l) => {
+    const matchSearch =
+      l.title.toLowerCase().includes(search.toLowerCase()) ||
+      l.location.toLowerCase().includes(search.toLowerCase());
+    const matchType = activeType === "All" || l.type === activeType;
+    const matchPurpose = purpose === "All" || l.purpose === purpose;
+    const matchCity = !city || l.city === city;
+    const matchBeds = l.beds >= minBeds;
+    const matchVerified = !verifiedOnly || l.isVerified;
+    return matchSearch && matchType && matchPurpose && matchCity && matchBeds && matchVerified;
+  }).sort((a, b) => {
+    if (sort === "featured") return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
+    return 0;
+  });
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-        /* ── Breadcrumb ── */
-        .prop-bc {
-          background: #fff;
-          border-bottom: 1px solid #ececec;
-          padding: 12px 0;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-        .prop-bc-inner {
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 0 24px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 13px;
-          color: #888;
-        }
-        .prop-bc-link {
-          color: #555;
-          text-decoration: none;
-          font-weight: 500;
-          transition: color 0.18s;
-        }
-        .prop-bc-link:hover { color: #C0392B; }
-        .prop-bc-sep { color: #bbb; font-size: 12px; }
-        .prop-bc-cur { color: #1a1a1a; font-weight: 600; }
+        .pp { background: #f2f4f7; min-height: 100vh; font-family: 'Inter', sans-serif; }
 
-        /* ── Section ── */
-        .prop-section {
-          background: #f8f8f8;
-          padding: 36px 0 48px;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        /* ── HERO ── */
+        .pp-hero {
+          position: relative; height: 280px; overflow: hidden;
+          display: flex; align-items: center;
         }
-        .prop-inner {
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 0 24px;
+        .pp-hero-bg {
+          position: absolute; inset: 0;
+          background: url('/Apartment.jpg') center 40% / cover no-repeat;
+          filter: brightness(0.45);
         }
-
-        /* Header */
-        .prop-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 22px;
+        .pp-hero-overlay {
+          position: absolute; inset: 0;
+          background: linear-gradient(135deg, rgba(20,40,100,0.78) 0%, rgba(80,20,60,0.5) 100%);
         }
-        .prop-title {
-          font-size: 20px;
-          font-weight: 800;
-          color: #1a1a1a;
-          letter-spacing: -0.3px;
-          margin: 0;
+        .pp-hero-inner {
+          position: relative; z-index: 2;
+          max-width: 1200px; margin: 0 auto;
+          padding: 0 28px; width: 100%;
         }
-        .prop-count {
-          font-size: 13px;
-          color: #888;
-          font-weight: 400;
-          margin-left: 8px;
+        .pp-hero-tag {
+          display: inline-flex; align-items: center; gap: 6px;
+          background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.28);
+          color: #fff; font-size: 12px; font-weight: 600;
+          padding: 4px 14px; border-radius: 20px; margin-bottom: 12px;
+          backdrop-filter: blur(8px);
+        }
+        .pp-hero-title {
+          font-size: clamp(26px, 4vw, 44px); font-weight: 900; color: #fff;
+          margin: 0 0 6px; line-height: 1.15;
+          text-shadow: 0 2px 16px rgba(0,0,0,0.4);
+        }
+        .pp-hero-title span { color: #ffd580; }
+        .pp-hero-sub {
+          color: rgba(255,255,255,0.78); font-size: 14px;
+          margin: 0 0 22px; font-weight: 400;
+        }
+        .pp-search-wrap { position: relative; max-width: 520px; }
+        .pp-search-icon {
+          position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+          pointer-events: none;
+        }
+        .pp-search {
+          width: 100%; padding: 14px 16px 14px 46px;
+          background: rgba(255,255,255,0.97); border: none; border-radius: 14px;
+          font-size: 14px; color: #333; font-family: inherit; outline: none;
+          box-shadow: 0 6px 28px rgba(0,0,0,0.22); transition: box-shadow 0.2s;
+        }
+        .pp-search:focus { box-shadow: 0 6px 34px rgba(0,0,0,0.3); }
+        .pp-hero-watermark {
+          position: absolute; bottom: -18px; right: 28px;
+          font-size: clamp(56px, 11vw, 100px); font-weight: 900;
+          color: rgba(255,255,255,0.05); letter-spacing: -3px;
+          pointer-events: none; user-select: none; line-height: 1; z-index: 1;
         }
 
-        /* Cards grid */
-        .prop-grid {
-          display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          gap: 16px;
+        /* ── CATEGORY STRIP ── */
+        .pp-cats-strip {
+          background: #fff; border-bottom: 1.5px solid #eaeaea; padding: 18px 0;
         }
+        .pp-cats-inner {
+          max-width: 1200px; margin: 0 auto; padding: 0 28px;
+        }
+        .pp-cats-label { font-size: 13px; font-weight: 700; color: #888; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.6px; }
+        .pp-cats-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .pp-cat-card {
+          display: flex; align-items: center; gap: 10px;
+          padding: 10px 18px; border-radius: 14px;
+          border: 1.5px solid #e4e8f0; background: #fafbff;
+          cursor: pointer; transition: all 0.18s;
+          min-width: 130px; font-family: inherit;
+        }
+        .pp-cat-card:hover { border-color: #3b5bdb; background: #eef2ff; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(59,91,219,0.12); }
+        .pp-cat-card.active { border-color: #3b5bdb; background: #e8ecff; box-shadow: 0 4px 16px rgba(59,91,219,0.2); }
+        .pp-cat-icon { font-size: 22px; }
+        .pp-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; }
+        .pp-cat-count { font-size: 11px; color: #888; display: block; }
 
-        /* Card */
-        .prop-card {
-          background: #fff;
-          border-radius: 12px;
-          border: 1.5px solid #ebebeb;
-          overflow: hidden;
-          text-decoration: none;
-          display: flex;
-          flex-direction: column;
-          transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-          position: relative;
-        }
-        .prop-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 12px 36px rgba(0,0,0,0.11);
-          border-color: #ddd;
-        }
+        /* ── BODY ── */
+        .pp-body { max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px; }
+        .pp-layout { display: grid; grid-template-columns: 280px 1fr; gap: 22px; align-items: start; }
 
-        /* Image area */
-        .prop-img-wrap {
-          position: relative;
-          width: 100%;
-          aspect-ratio: 4/3;
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+        /* ── SIDEBAR ── */
+        .pp-sidebar {
+          background: #fff; border-radius: 18px;
+          border: 1.5px solid #e4e8f0; overflow: hidden;
+          position: sticky; top: 82px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.06);
         }
-        .prop-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform 0.3s ease;
+        .psf-head {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 18px 18px 14px; border-bottom: 1.5px solid #f2f4f8;
         }
-        .prop-card:hover .prop-img { transform: scale(1.05); }
+        .psf-head-title { font-size: 17px; font-weight: 800; color: #1a1a1a; margin: 0; }
+        .psf-reset {
+          font-size: 13px; font-weight: 700; color: #3b5bdb;
+          background: none; border: none; cursor: pointer; padding: 0; transition: opacity 0.2s;
+        }
+        .psf-reset:hover { opacity: 0.7; }
+        .psf-section { padding: 16px 18px; border-bottom: 1.5px solid #f2f4f8; }
+        .psf-section:last-of-type { border-bottom: none; }
+        .psf-label { font-size: 13.5px; font-weight: 700; color: #1a1a1a; margin: 0 0 10px; }
 
-        /* Badge */
-        .prop-badge {
-          position: absolute;
-          top: 10px;
-          left: 10px;
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          padding: 3px 9px;
-          border-radius: 5px;
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.6px;
-          color: #fff;
-          text-transform: uppercase;
-          z-index: 2;
+        .psf-select {
+          width: 100%; padding: 10px 32px 10px 12px;
+          border: 1.5px solid #e4e8f0; border-radius: 10px;
+          font-size: 13px; color: #444; font-family: inherit;
+          background: #fafafa url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+          appearance: none; outline: none; cursor: pointer; transition: border-color 0.2s;
         }
-        .prop-badge-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.85);
-          flex-shrink: 0;
-        }
+        .psf-select:focus { border-color: #3b5bdb; }
 
-        /* Heart */
-        .prop-heart {
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.92);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 2;
-          cursor: pointer;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-          transition: background 0.2s, transform 0.2s;
-          border: none;
-          padding: 0;
+        .psf-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+        .psf-chip {
+          padding: 6px 14px; border-radius: 100px; font-size: 12px; font-weight: 600;
+          border: 1.5px solid #e0e4f0; background: #fff; color: #555;
+          cursor: pointer; transition: all 0.18s; font-family: inherit;
         }
-        .prop-heart:hover { background: #fff; transform: scale(1.12); }
+        .psf-chip:hover { border-color: #3b5bdb; color: #3b5bdb; }
+        .psf-chip.active { background: #3b5bdb; color: #fff; border-color: #3b5bdb; box-shadow: 0 2px 10px rgba(59,91,219,0.3); }
 
-        /* Card body */
-        .prop-body {
-          padding: 12px 13px 14px;
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-          flex: 1;
+        .psf-toggle-row { display: flex; align-items: center; justify-content: space-between; }
+        .psf-toggle-label { font-size: 13.5px; font-weight: 600; color: #333; }
+        .psf-toggle { position: relative; width: 44px; height: 24px; cursor: pointer; display: inline-block; }
+        .psf-toggle input { opacity: 0; width: 0; height: 0; }
+        .psf-toggle-track { position: absolute; inset: 0; background: #ddd; border-radius: 24px; transition: background 0.25s; }
+        .psf-toggle input:checked + .psf-toggle-track { background: #3b5bdb; }
+        .psf-toggle-thumb {
+          position: absolute; top: 3px; left: 3px;
+          width: 18px; height: 18px; border-radius: 50%; background: #fff;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.2); transition: transform 0.25s;
         }
-        .prop-listing-title {
-          font-size: 13.5px;
-          font-weight: 700;
-          color: #1a1a1a;
-          line-height: 1.35;
-          margin: 0;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .prop-location {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          font-size: 12px;
-          color: #888;
-          font-weight: 400;
-          margin: 0;
-        }
-        .prop-location svg { flex-shrink: 0; }
-        .prop-price {
-          font-size: 14px;
-          font-weight: 800;
-          color: #C0392B;
-          margin: 2px 0 0;
-        }
-        .prop-divider {
-          border: none;
-          border-top: 1px solid #f2f2f2;
-          margin: 4px 0 2px;
-        }
-        .prop-meta {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          margin: 0;
-          flex-wrap: wrap;
-        }
-        .prop-meta-item {
-          font-size: 11.5px;
-          color: #666;
-          font-weight: 500;
-        }
-        .prop-meta-dot {
-          width: 3px;
-          height: 3px;
-          border-radius: 50%;
-          background: #ccc;
-          flex-shrink: 0;
-        }
+        .psf-toggle input:checked ~ .psf-toggle-thumb { transform: translateX(20px); }
 
-        /* Placeholder */
-        .prop-img-placeholder {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: linear-gradient(135deg,#2d4a7a 0%,#1a2f5a 100%);
+        .psf-apply {
+          display: block; width: calc(100% - 36px); margin: 4px 18px 18px;
+          padding: 13px; text-align: center;
+          background: linear-gradient(90deg, #3b5bdb, #2246c7);
+          color: #fff; font-size: 14px; font-weight: 800;
+          border: none; border-radius: 12px; cursor: pointer; font-family: inherit;
+          box-shadow: 0 4px 18px rgba(59,91,219,0.32);
+          transition: opacity 0.18s, transform 0.18s;
         }
+        .psf-apply:hover { opacity: 0.88; transform: translateY(-1px); }
 
-        /* Responsive */
-        @media (max-width: 1100px) {
-          .prop-grid { grid-template-columns: repeat(4, 1fr); }
+        /* ── RESULTS BAR ── */
+        .pp-results-bar {
+          display: flex; align-items: center; justify-content: space-between;
+          margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
         }
-        @media (max-width: 820px) {
-          .prop-grid { grid-template-columns: repeat(3, 1fr); }
+        .pp-results-count { font-size: 14px; color: #666; font-weight: 500; }
+        .pp-sort-select {
+          padding: 9px 36px 9px 14px; border: 1.5px solid #e0e4f0; border-radius: 10px;
+          font-size: 13px; font-weight: 600; color: #333;
+          background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+          appearance: none; outline: none; cursor: pointer;
+          font-family: inherit; box-shadow: 0 1px 6px rgba(0,0,0,0.06); transition: border-color 0.2s;
         }
-        @media (max-width: 580px) {
-          .prop-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-          .prop-title { font-size: 17px; }
+        .pp-sort-select:focus { border-color: #3b5bdb; }
+
+        /* ── GRID ── */
+        .pp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+
+        /* ── CARD ── */
+        .pp-card {
+          background: #fff; border-radius: 18px; border: 1.5px solid #ececec;
+          overflow: hidden; text-decoration: none;
+          display: flex; flex-direction: column; position: relative;
+          transition: transform 0.22s ease, box-shadow 0.22s ease;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.05); cursor: pointer;
         }
-        @media (max-width: 360px) {
-          .prop-grid { grid-template-columns: 1fr; }
+        .pp-card:hover { transform: translateY(-5px); box-shadow: 0 18px 44px rgba(0,0,0,0.12); }
+
+        .pp-img-wrap {
+          position: relative; width: 100%; aspect-ratio: 4/3;
+          overflow: hidden; background: #e8eaf0;
         }
+        .pp-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.32s ease; }
+        .pp-card:hover .pp-img { transform: scale(1.06); }
+
+        .pp-heart {
+          position: absolute; top: 9px; right: 9px;
+          width: 32px; height: 32px; border-radius: 50%;
+          background: rgba(255,255,255,0.94); border: none; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          z-index: 4; padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.16);
+          transition: transform 0.18s, background 0.18s;
+        }
+        .pp-heart:hover { transform: scale(1.18); background: #fff; }
+
+        .pp-badges {
+          position: absolute; top: 9px; left: 9px;
+          display: flex; flex-direction: column; gap: 4px;
+        }
+        .pp-badge-verified {
+          display: inline-flex; align-items: center; gap: 3px;
+          background: #eafaf1; color: #1e8449; border: 1px solid #a9dfbf;
+          font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+        }
+        .pp-badge-featured {
+          display: inline-flex; align-items: center; gap: 3px;
+          background: #fff8e1; color: #b7950b; border: 1px solid #f9e79f;
+          font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+        }
+        .pp-purpose-tag {
+          position: absolute; bottom: 9px; left: 9px;
+          font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+        }
+        .pp-purpose-rent { background: #eef2ff; color: #3b5bdb; }
+        .pp-purpose-sale { background: #fff4e6; color: #d9480f; }
+
+        .pp-card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 4px; }
+        .pp-card-title {
+          font-size: 14.5px; font-weight: 700; color: #1a1a1a;
+          line-height: 1.35; margin: 0;
+          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .pp-card-price { font-size: 16px; font-weight: 900; color: #3b5bdb; margin: 2px 0 0; }
+        .pp-card-location { font-size: 12px; color: #888; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+        .pp-card-divider { border: none; border-top: 1px solid #f2f4f8; margin: 8px 0 4px; }
+        .pp-card-meta { display: flex; align-items: center; gap: 14px; }
+        .pp-card-meta-item { font-size: 12px; color: #666; font-weight: 500; display: flex; align-items: center; gap: 4px; }
+
+        /* ── EMPTY ── */
+        .pp-empty { grid-column: 1/-1; padding: 64px 24px; text-align: center; }
+        .pp-empty-icon { font-size: 52px; margin-bottom: 14px; }
+        .pp-empty p { font-size: 15px; font-weight: 600; color: #555; margin: 0 0 4px; }
+        .pp-empty span { font-size: 13px; color: #aaa; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 960px) { .pp-layout { grid-template-columns: 1fr; } .pp-sidebar { display: none; } }
+        @media (max-width: 640px) { .pp-hero { height: 220px; } .pp-body { padding: 20px 16px 40px; } .pp-grid { grid-template-columns: 1fr; gap: 12px; } }
       `}</style>
 
-      {/* Breadcrumb */}
-      <nav className="prop-bc" aria-label="Breadcrumb">
-        <div className="prop-bc-inner">
-          <Link href="/" className="prop-bc-link">Home</Link>
-          <span className="prop-bc-sep">›</span>
-          <span className="prop-bc-cur">Property</span>
-        </div>
-      </nav>
-
-      <section className="prop-section">
-        <div className="prop-inner">
-
-          {/* Header */}
-          <div className="prop-header">
-            <h1 className="prop-title">
-              Property Listings
-              <span className="prop-count">({propertyListings.length} listings)</span>
+      <div className="pp">
+        {/* ── HERO ── */}
+        <section className="pp-hero">
+          <div className="pp-hero-bg" />
+          <div className="pp-hero-overlay" />
+          <div className="pp-hero-watermark">Property</div>
+          <div className="pp-hero-inner">
+            <div className="pp-hero-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/>
+                <path d="M9 21V12h6v9" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/>
+              </svg>
+              Nepal's #1 Property Portal
+            </div>
+            <h1 className="pp-hero-title">
+              Find Your Perfect<br />
+              <span>Property in Nepal</span>
             </h1>
+            <p className="pp-hero-sub">Browse apartments, houses & land for rent and sale across Nepal</p>
+            <div className="pp-search-wrap">
+              <svg className="pp-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="#bbb" strokeWidth="2.2" />
+                <path d="M16.5 16.5L21 21" stroke="#bbb" strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
+              <input
+                className="pp-search"
+                placeholder="Search apartments, houses, locations..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
           </div>
+        </section>
 
-          {/* Grid */}
-          <div className="prop-grid">
-            {propertyListings.map((item) => (
-              <Link key={item.id} href={`/category/property/${item.id}`} className="prop-card">
-                {/* Image */}
-                <div className="prop-img-wrap">
-                  {imgErrors[item.id] ? (
-                    <div className="prop-img-placeholder">
-                      <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-                        <path d="M6 26L26 8l20 18" stroke="#4B6BFB" strokeWidth="2.2" strokeLinejoin="round"/>
-                        <rect x="12" y="26" width="28" height="20" rx="2" stroke="#4B6BFB" strokeWidth="2"/>
-                        <rect x="20" y="34" width="12" height="12" rx="1.5" stroke="#4B6BFB" strokeWidth="2"/>
-                      </svg>
-                    </div>
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.img}
-                      alt={item.title}
-                      className="prop-img"
-                      onError={() => handleImgError(item.id)}
-                    />
-                  )}
-
-                  {/* Badge */}
-                  <span className="prop-badge" style={{ background: item.badgeColor }}>
-                    <span className="prop-badge-dot" />
-                    {item.badge}
+        {/* ── CATEGORY STRIP ── */}
+        <section className="pp-cats-strip">
+          <div className="pp-cats-inner">
+            <p className="pp-cats-label">Property Types</p>
+            <div className="pp-cats-row">
+              {Object.entries(TYPE_ICONS).map(([type, icon]) => (
+                <button
+                  key={type}
+                  className={`pp-cat-card${activeType === type ? " active" : ""}`}
+                  onClick={() => setActiveType(activeType === type ? "All" : type)}
+                >
+                  <span className="pp-cat-icon">{icon}</span>
+                  <span>
+                    <span className="pp-cat-name">{type}</span>
+                    <span className="pp-cat-count">{TYPE_COUNTS[type].toLocaleString()} listings</span>
                   </span>
-
-                  {/* Heart */}
-                  <button
-                    className="prop-heart"
-                    aria-label="Save to wishlist"
-                    onClick={(e) => toggleFavorite(item.id, e)}
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z"
-                        stroke={favorites[item.id] ? "#E74C3C" : "#999"}
-                        strokeWidth="1.8"
-                        fill={favorites[item.id] ? "#E74C3C" : "none"}
-                      />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Body */}
-                <div className="prop-body">
-                  <p className="prop-listing-title">{item.title}</p>
-                  <p className="prop-location">
-                    <svg width="11" height="13" viewBox="0 0 11 13" fill="none">
-                      <path
-                        d="M5.5 0C3.015 0 1 2.015 1 4.5C1 7.875 5.5 13 5.5 13C5.5 13 10 7.875 10 4.5C10 2.015 7.985 0 5.5 0ZM5.5 6C4.672 6 4 5.328 4 4.5C4 3.672 4.672 3 5.5 3C6.328 3 7 3.672 7 4.5C7 5.328 6.328 6 5.5 6Z"
-                        fill="#aaa"
-                      />
-                    </svg>
-                    {item.location}
-                  </p>
-                  <p className="prop-price">{item.price}</p>
-                  <hr className="prop-divider" />
-                  <div className="prop-meta">
-                    {item.meta.map((m, i) => (
-                      <span key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        {i > 0 && <span className="prop-meta-dot" />}
-                        <span className="prop-meta-item">{m}</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
+        </section>
 
+        {/* ── MAIN BODY ── */}
+        <div className="pp-body">
+          <div className="pp-layout">
+            {/* ── SIDEBAR ── */}
+            <aside className="pp-sidebar">
+              <div className="psf-head">
+                <p className="psf-head-title">Filters</p>
+                <button className="psf-reset" onClick={reset}>Reset</button>
+              </div>
+
+              <div className="psf-section">
+                <p className="psf-label">Location / City</p>
+                <select className="psf-select" value={city} onChange={(e) => setCity(e.target.value)}>
+                  <option value="">Select City</option>
+                  {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div className="psf-section">
+                <p className="psf-label">Purpose</p>
+                <div className="psf-chips">
+                  {PURPOSES.map((p) => (
+                    <button key={p} className={`psf-chip${purpose === p ? " active" : ""}`} onClick={() => setPurpose(p)}>{p}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="psf-section">
+                <p className="psf-label">Property Type</p>
+                <div className="psf-chips">
+                  {PROP_TYPES.map((t) => (
+                    <button key={t} className={`psf-chip${activeType === t ? " active" : ""}`} onClick={() => setActiveType(t)}>{t}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="psf-section">
+                <p className="psf-label">Bedrooms</p>
+                <div className="psf-chips">
+                  {BEDS.map((b) => (
+                    <button key={b} className={`psf-chip${beds === b ? " active" : ""}`} onClick={() => setBeds(b)}>{b}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="psf-section">
+                <div className="psf-toggle-row">
+                  <span className="psf-toggle-label">Verified Only</span>
+                  <label className="psf-toggle">
+                    <input type="checkbox" checked={verifiedOnly} onChange={(e) => setVerifiedOnly(e.target.checked)} />
+                    <span className="psf-toggle-track" />
+                    <span className="psf-toggle-thumb" />
+                  </label>
+                </div>
+              </div>
+
+              <button className="psf-apply">Apply Filters</button>
+            </aside>
+
+            {/* ── RIGHT COLUMN ── */}
+            <div>
+              <div className="pp-results-bar">
+                <span className="pp-results-count">
+                  <strong>{displayed.length}</strong> properties found
+                </span>
+                <select className="pp-sort-select" value={sort} onChange={(e) => setSort(e.target.value)}>
+                  <option value="newest">Newest First</option>
+                  <option value="featured">Featured First</option>
+                </select>
+              </div>
+
+              <div className="pp-grid">
+                {displayed.length === 0 ? (
+                  <div className="pp-empty">
+                    <div className="pp-empty-icon">🏠</div>
+                    <p>No properties found</p>
+                    <span>Try adjusting your filters or search</span>
+                  </div>
+                ) : (
+                  displayed.map((l) => {
+                    const isFav = !!favorites[l.id];
+                    return (
+                      <Link key={l.id} href={`/category/property/${l.id}`} className="pp-card">
+                        <div className="pp-img-wrap">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={l.image} alt={l.title} className="pp-img" />
+                          <div className="pp-badges">
+                            {l.isVerified && <span className="pp-badge-verified">✓ Verified</span>}
+                            {l.isFeatured && <span className="pp-badge-featured">⭐ Featured</span>}
+                          </div>
+                          <span className={`pp-purpose-tag ${l.purpose === "Rent" ? "pp-purpose-rent" : "pp-purpose-sale"}`}>
+                            For {l.purpose}
+                          </span>
+                          <button className="pp-heart" aria-label="Save" onClick={(e) => toggleFav(l.id, e)}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill={isFav ? "#E74C3C" : "none"}>
+                              <path d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z" stroke={isFav ? "#E74C3C" : "#999"} strokeWidth="1.8" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="pp-card-body">
+                          <p className="pp-card-title">{l.title}</p>
+                          <p className="pp-card-price">{l.price}</p>
+                          <div className="pp-card-location">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#bbb"/>
+                            </svg>
+                            {l.location}
+                          </div>
+                          <hr className="pp-card-divider" />
+                          <div className="pp-card-meta">
+                            <span className="pp-card-meta-item">🛏 {l.beds} Bed{l.beds > 1 ? "s" : ""}</span>
+                            <span className="pp-card-meta-item">🚿 {l.baths} Bath{l.baths > 1 ? "s" : ""}</span>
+                            <span className="pp-card-meta-item">📐 {l.sqft} sqft</span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
+
+        <Footer />
+      </div>
     </>
   );
 }
