@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["file:///D:/work/Mero-Bazaar-/frontend/app/globals.css"],"sourcesContent":["* {\r\n  box-sizing: border-box;\r\n  margin: 0;\r\n  padding: 0;\r\n}\r\n\r\n:root {\r\n  --primary: #C0392B;\r\n  --primary-dark: #a93226;\r\n  --foreground: #1a1a1a;\r\n  --muted: #666;\r\n  --border: #ececec;\r\n  --background: #ffffff;\r\n}\r\n\r\nhtml {\r\n  scroll-behavior: smooth;\r\n}\r\n\r\nbody {\r\n  background: var(--background);\r\n  color: var(--foreground);\r\n  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;\r\n  -webkit-font-smoothing: antialiased;\r\n  -moz-osx-font-smoothing: grayscale;\r\n}\r\n\r\na {\r\n  color: inherit;\r\n  text-decoration: none;\r\n}\r\n\r\nbutton {\r\n  font-family: inherit;\r\n}\r\n\r\nimg {\r\n  display: block;\r\n  max-width: 100%;\r\n}\r\n"],"names":[],"mappings":"AAAA;;;;;;AAMA;;;;;;;;;AASA;;;;AAIA;;;;;;;;AAQA;;;;;AAKA;;;;AAIA"}}]
+}
