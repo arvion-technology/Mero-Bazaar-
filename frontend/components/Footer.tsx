@@ -9,10 +9,10 @@ const footerLinks = {
   Company: [
 { label: "About Us", href: "/footer/about-us" },
 { label: "Careers", href: "/footer/careers"},
-    { label: "Press", href: "/footer/press" },
+    { label: "Press", href: "/press" },
   ],
   Support: [
-    { label: "Help Center", href: "/footer/help-center" },
+    { label: "Help Center", href: "/help-center" },
     { label: "Safety Center", href: "/safety" },
     { label: "Contact Us", href: "/contact" },
   ],
