@@ -1,45 +1,107 @@
 import { Injectable } from "@nestjs/common";
-import { VehicleStrategy } from "./strategies/vehicle.strategy";
-import { JobStrategy } from "./strategies/jobs.strategy";
-import { SearchDto } from "./dto/search.dto";
-import { ListingsService } from "src/modules/listings/listings.service";
+import { PrismaService } from "src/database/prisma.service";
+
+import { buildListingFilter } from "./builders/listings_filter.builder";
+import { buildVehicleFilter } from "./builders/vehicle_filter.builder";
+import { buildJobFilter } from "./builders/job_filter.builder";
+import { buildMedicalFilter } from "./builders/medical_filter.builder.dto";
+import { buildTradesFilter } from "./builders/trades_filter.build";
+import { buildAgricultureFilter } from "./builders/agriculture_filter.builder";
+
+import { ListingSearchDto } from "./dto/listing_search.dto";
+import { VehicleSearchDto } from "./dto/vehicle_search.dto";
+import { JobSearchDto } from "./dto/job_search.dto";
+import { MedicalSearchDto } from "./dto/medical_search.dto";
+import { TradesSearchDto } from "./dto/trade_search.dto";
+import { AgricultureSearchDto } from "./dto/agriculture_search.dto";
 
 @Injectable()
 export class SearchService {
-  constructor(
-    private vehicleStrategy: VehicleStrategy,
-    private jobStrategy: JobStrategy,
-    private listingService: ListingsService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
-  async search(filters: SearchDto) {
-    switch (filters.type) {
-      case "vehicle":
-        return this.vehicleStrategy.search({
-          brand: filters.query,
-          model: filters.query,
-        });
+  async search(filters: ListingSearchDto) {
+    const where = buildListingFilter(filters);
 
-      case "job":
-        return this.jobStrategy.search({
-          query: filters.query,
-        });
+    return this.prisma.listing.findMany({
+      where,
+      include: {
+        vehicle: true,
+        job: true,
+        medical: true,
+        trades: true, 
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
 
-      default:
-        return Promise.all([
-          this.vehicleStrategy.search({
-            brand: filters.query,
-            model: filters.query,
-          }),
+  async vehicleSearch(filters: VehicleSearchDto) {
+    const where = buildVehicleFilter(filters);
 
-          this.jobStrategy.search({
-            query: filters.query,
-          }),
+    return this.prisma.listing.findMany({
+      where,
+      include: {
+        vehicle: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
 
-          this.listingService.search({
-            query: filters.query,
-          } as any),
-        ]);
-    }
+  async jobSearch(filters: JobSearchDto) {
+    const where = buildJobFilter(filters);
+
+    return this.prisma.listing.findMany({
+      where,
+      include: {
+        job: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
+  async medicalSearch(filters: MedicalSearchDto) {
+    const where = buildMedicalFilter(filters);
+
+    return this.prisma.listing.findMany({
+      where,
+      include: {
+        medical: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
+  async tradesSearch(filters: TradesSearchDto) {
+    const where = buildTradesFilter(filters);
+
+    return this.prisma.listing.findMany({
+      where,
+      include: {
+        trades: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+  async agricultureSearch(filters: AgricultureSearchDto) {
+    const where = buildAgricultureFilter(filters);
+
+    return this.prisma.listing.findMany({
+      where,
+      include: {
+        agriculture: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
   }
 }

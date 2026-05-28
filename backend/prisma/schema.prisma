@@ -13,24 +13,46 @@ model Listing {
   description String?
   price       Int?
   category    ListingCategory @default(VEHICLE)
-  latitude    Float?
-  longitude   Float?
-  images      String[]
-  createdAt   DateTime        @default(now())
 
-  vehicle Vehicle?
-  job     Job?
+  latitude  Float?
+  longitude Float?
+
+  images String[]
+
+  isVerifiedDoctor Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vehicle     Vehicle?
+  job         Job?
+  medical     MedicalAndDental?
+  trades      TradesAndHomeRepair?
+  rental      RentalAndRealEstate?
+  agriculture AgricultureAndLivestock?
+  secondhand  SecondHandGoods?
+
+  leads        Lead[]
+  appointments Appointment[]
+
+  @@index([category])
+  @@index([latitude, longitude])
 }
 
 enum ListingCategory {
   VEHICLE
   JOB
+  MEDICAL
+  TRADES
+  RENTAL
+  AGRICULTURE
+  SECONDHAND
 }
 
 model Vehicle {
-  id                       String           @id @default(cuid())
-  listingId                String           @unique
-  listing                  Listing          @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   type                     VehicleType
   brand                    String
@@ -42,7 +64,7 @@ model Vehicle {
   fuel_type                FuelType?
   ownership_transfer_ready Boolean          @default(false)
 
-  createdAt                DateTime         @default(now())
+  createdAt DateTime @default(now())
 }
 
 enum VehicleType {
@@ -74,27 +96,27 @@ enum FuelType {
 }
 
 model Job {
-  id                      String        @id @default(cuid())
+  id String @id @default(cuid())
 
-  listingId               String        @unique
-  listing                 Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  role                    String
+  role String
 
-  salaryMin               Int
-  salaryMax               Int
-  payPeriod               PayPeriod
+  salaryMin Int
+  salaryMax Int
+  payPeriod PayPeriod
 
-  city                    String
-  skillTags               String[]
+  city      String
+  skillTags String[]
 
-  contractType            ContractType
+  contractType ContractType
 
-  isUrgent                Boolean       @default(false)
-  employerPhoneVerified   Boolean       @default(false)
+  isUrgent              Boolean @default(false)
+  employerPhoneVerified Boolean @default(false)
 
-  createdAt               DateTime      @default(now())
-  updatedAt               DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([city])
   @@index([isUrgent])
@@ -113,4 +135,315 @@ enum ContractType {
   GIG
   LABOUR
   DOMESTIC
+}
+
+model Lead {
+  id        String  @id @default(cuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  leadType  LeadType
+  createdAt DateTime @default(now())
+
+  contactedAt DateTime?
+  respondedAt DateTime?
+
+  @@index([listingId])
+  @@index([leadType])
+}
+
+enum LeadType {
+  CALL
+  CHAT
+  APPLY
+}
+
+model MedicalAndDental {
+  id String @id @default(cuid())
+
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  doctorName       String
+  specialty        String
+  nmcLicenseNumber String
+
+  verificationStatus VerificationStatus @default(PENDING)
+
+  appointmentFee Int
+  availableSlots Json
+
+  homeVisitAvailable Boolean @default(false)
+
+  clinicAddress String
+  city          String
+
+  latitude  Float?
+  longitude Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments          Appointment[]
+  verificationDocuments VerificationDocument[]
+
+  @@index([city])
+  @@index([specialty])
+  @@index([homeVisitAvailable])
+  @@index([verificationStatus])
+}
+
+model Appointment {
+  id String @id @default(cuid())
+
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  doctorId String
+  doctor   MedicalAndDental @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  patientId   String?
+  patientName String
+
+  startTime DateTime
+  endTime   DateTime
+  notes     String?
+
+  status    AppointmentStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+
+  @@index([doctorId])
+  @@index([status])
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model VerificationDocument {
+  id String @id @default(cuid())
+
+  medicalId String
+  medical   MedicalAndDental @relation(fields: [medicalId], references: [id], onDelete: Cascade)
+
+  filePath String
+
+  status          VerificationStatus @default(PENDING)
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([medicalId])
+}
+
+model TradesAndHomeRepair {
+  id String @id @default(cuid())
+
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  city               String
+  ward               String?
+  skillTags          String[]
+  serviceAreaKm      Int
+  calloutCharge      Int
+  warrantyGiven      Boolean  @default(false)
+  emergencyAvailable Boolean  @default(false)
+  avgResponseHours   Float?   @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([city])
+  @@index([emergencyAvailable])
+  @@index([serviceAreaKm])
+}
+
+model RentalAndRealEstate {
+  id String @id @default(cuid())
+
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  propertyType PropertyType
+  listingType  ListingType
+
+  city String
+  area String?
+  ward String?
+
+  address String?
+
+  latitude  Float?
+  longitude Float?
+
+  monthlyRent   Int
+  depositAmount Int
+
+  bedrooms   Int?
+  bathrooms  Int?
+  squareFeet Int?
+
+  furnished Boolean @default(false)
+
+  parkingAvailable    Boolean @default(false)
+  wifiAvailable       Boolean @default(false)
+  waterIncluded       Boolean @default(false)
+  electricityIncluded Boolean @default(false)
+
+  petFriendly Boolean @default(false)
+
+  availableFrom DateTime?
+
+  isOwnerOrAgent OwnerType
+  noBroker       Boolean   @default(false)
+
+  nearbyLandmarks String[]
+
+  rules String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([city])
+  @@index([propertyType])
+  @@index([listingType])
+  @@index([furnished])
+  @@index([isOwnerOrAgent])
+  @@index([latitude, longitude])
+}
+
+enum PropertyType {
+  ROOM
+  FLAT
+  APARTMENT
+  HOUSE
+  HOSTEL
+  LAND
+  SHUTTER
+  OFFICE
+}
+
+enum ListingType {
+  RENT
+  SALE
+}
+
+enum OwnerType {
+  OWNER
+  AGENT
+}
+
+model AgricultureAndLivestock {
+  id String @id @default(cuid())
+
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  listingType AgricultureListingType
+
+  district     String
+  village      String?
+  location     String
+  pricePerUnit Int
+  unit         UnitType
+
+  organicCertified Boolean @default(false)
+  organicVerified  Boolean @default(false)
+
+  seasonalAvailability String?
+  animalType           String?
+  breed                String?
+  age                  Int?
+  healthVaccineStatus  HealthVaccineStatus?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  @@index([district])
+  @@index([listingType])
+  @@index([organicCertified])
+  @@index([healthVaccineStatus])
+}
+
+enum AgricultureListingType {
+  PRODUCE
+  LIVESTOCK
+  TOOL
+  SEED
+  FERTILIZER
+  VET_SERVICE
+  FARM_LABOUR
+}
+
+enum UnitType {
+  KG
+  LITRE
+  PIECE
+  HEAD
+  BIGHA
+}
+
+enum HealthVaccineStatus {
+  VACCINATED
+  NOT_VACCINATED
+  UNKNOWN
+}
+
+model SecondHandGoods {
+  id        String  @id @default(cuid())
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  category  SecondHandCategory
+  condition SecondHandCondition
+
+  itemName     String
+  price        Int
+  isNegotiable Boolean       @default(false)
+  photos       String[]
+  city         String
+  description  String?
+  status       ListingStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  expiresAt    DateTime
+
+  @@index([category])
+  @@index([condition])
+  @@index([city])
+  @@index([price])
+  @@index([status])
+}
+
+enum SecondHandCategory {
+  FURNITURE
+  APPLIANCES
+  CLOTHING
+  BOOKS
+  BABY
+  SPORTS
+  INSTRUMENTS
+  OTHER
+}
+
+enum SecondHandCondition {
+  LIKE_NEW
+  GOOD
+  FAIR
+  FOR_PARTS
+}
+
+enum ListingStatus {
+  ACTIVE
+  SOLD
+  EXPIRED
 }
