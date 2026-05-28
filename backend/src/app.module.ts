@@ -17,8 +17,10 @@ import { RentalModule } from './modules/rental/rental.module';
 import { AgricultureService } from './modules/agriculture/agriculture.service';
 import { AgricultureModule } from './modules/agriculture/agriculture.module';
 import { SecondhandModule } from './modules/secondhand/secondhand.module';
-import { SecondhandService } from './module/secondhand/secondhand.service';
-import { SecondhandController } from './module/secondhand/secondhand.controller';
+import { SecondhandController } from './modules/secondhand/secondhand.controller';
+import { SecondhandService } from './modules/secondhand/secondhand.service';
+import { FoodsModule } from './modules/foods/foods.module';
+
 
 @Module({
   imports: [
@@ -33,6 +35,7 @@ import { SecondhandController } from './module/secondhand/secondhand.controller'
     RentalModule,
     AgricultureModule,
     SecondhandModule,
+    FoodsModule,
   ],
   controllers: [AppController, RentalController, SecondhandController],
   providers: [AppService, RentalService, AgricultureService, SecondhandService],
