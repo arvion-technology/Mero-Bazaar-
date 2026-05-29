@@ -46,7 +46,6 @@ export function buildListingFilter(dto: ListingSearchDto): Prisma.ListingWhereIn
           ...(dto.query && {
             OR: [
               { doctorName: { contains: dto.query, mode: "insensitive" } },
-              { specialty: { contains: dto.query, mode: "insensitive" } },
             ],
           }),
         },

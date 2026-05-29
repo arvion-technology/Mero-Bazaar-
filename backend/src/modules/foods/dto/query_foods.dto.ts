@@ -2,7 +2,7 @@ import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, Min, Max } from "class-v
 import { FoodType, PriceUnit, WeekDay } from "@prisma/client";
 import { Type } from "class-transformer";
 
-export class QueryFoodsAndHomeDelivery {
+export class QueryFoodsAndHomeDeliveryDto {
   @IsOptional()
   @IsEnum(FoodType)
   foodType?: FoodType;
