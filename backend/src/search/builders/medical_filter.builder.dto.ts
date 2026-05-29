@@ -50,12 +50,6 @@ export function buildMedicalFilter(
                 mode: "insensitive",
               },
             },
-            {
-              specialty: {
-                contains: query,
-                mode: "insensitive",
-              },
-            },
           ],
         }),
       },

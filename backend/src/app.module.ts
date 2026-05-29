@@ -20,6 +20,7 @@ import { SecondhandModule } from './modules/secondhand/secondhand.module';
 import { SecondhandController } from './modules/secondhand/secondhand.controller';
 import { SecondhandService } from './modules/secondhand/secondhand.service';
 import { FoodsModule } from './modules/foods/foods.module';
+import { BeautyModule } from './modules/beauty/beauty.module';
 
 
 @Module({
@@ -36,6 +37,7 @@ import { FoodsModule } from './modules/foods/foods.module';
     AgricultureModule,
     SecondhandModule,
     FoodsModule,
+    BeautyModule,
   ],
   controllers: [AppController, RentalController, SecondhandController],
   providers: [AppService, RentalService, AgricultureService, SecondhandService],

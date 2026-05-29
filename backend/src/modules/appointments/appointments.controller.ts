@@ -1,26 +1,5 @@
-import { Controller, Get, Post, Patch, Body, Param } from '@nestjs/common';
-import { AppointmentsService } from './appointments.service';
-import { CreateAppointmentDto } from './dto/create_appointment.dto';
-import { UpdateAppointmentStatusDto } from './dto/update_appointment_status.dto';
+import { Controller } from '@nestjs/common';
 
 @Controller('appointments')
-export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) {}
-
-  @Post()
-  create(@Body() dto: CreateAppointmentDto) {
-    return this.appointmentsService.create(dto);
-  }
-  @Get('doctor/:doctorId')
-    async getDoctorSchedule(@Param('doctorId') doctorId: string) {
-      return this.appointmentsService.getDoctorSchedule(doctorId);
-    }
-
-  @Patch(':id')
-  updateStatus(
-    @Param('id') id: string,
-    @Body() dto: UpdateAppointmentStatusDto,
-  ) {
-    return this.appointmentsService.updateStatus(id, dto);
-  }
-}
+export class AppointmentsController {}
+  
