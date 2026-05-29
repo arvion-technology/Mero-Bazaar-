@@ -3,7 +3,7 @@
 /build
 node_modules
 
-# Logs
+# logs
 logs
 *.log
 npm-debug.log*
@@ -16,12 +16,12 @@ lerna-debug.log*
 Thumbs.db
 ehthumbs.db
 
-# Tests
+# tests
 /coverage
 /.nyc_output
 /jest-cache
 
-# IDEs and editors
+# IDE
 /.idea
 .project
 .classpath
@@ -37,22 +37,22 @@ ehthumbs.db
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# Environment variables
+# env
 .env
 .env.*
 !.env.example
 
-# Temp files
+# temp
 .temp
 .tmp
 
-# Runtime data
+# runtime
 pids
 *.pid
 *.seed
 *.pid.lock
 
-# Diagnostic reports
+# diagnostics
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Prisma
@@ -62,3 +62,20 @@ prisma/migrations/dev
 
 # Docker
 docker-compose.override.yml
+
+# Frontend (IMPORTANT FIX)
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.env.*
+
+# logs inside frontend
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/pnpm-debug.log*
+
+# allow example env
+!frontend/.env.example
