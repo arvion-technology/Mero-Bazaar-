@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import { FiSearch, FiMapPin, FiHeart } from "react-icons/fi";
+import { FaBriefcase, FaHeart } from "react-icons/fa";
 
 type Job = {
   id: string;
@@ -349,16 +351,13 @@ export default function JobsPage() {
           <div className="jp-hero-watermark">Jobs</div>
           <div className="jp-hero-inner">
             <div className="jp-hero-tag">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="20" height="14" rx="2" stroke="#fff" strokeWidth="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke="#fff" strokeWidth="2"/></svg>
-              Nepal's #1 Job Portal
+              <FaBriefcase size={12} color="#fff" />
+              Nepal&apos;s #1 Job Portal
             </div>
             <h1 className="jp-hero-title">Find Your Dream Job</h1>
             <p className="jp-hero-sub">Browse thousands of jobs across Nepal</p>
             <div className="jp-search-wrap">
-              <svg className="jp-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="7" stroke="#aaa" strokeWidth="2" />
-                <path d="M16.5 16.5L21 21" stroke="#aaa" strokeWidth="2" strokeLinecap="round" />
-              </svg>
+              <FiSearch className="jp-search-icon" size={16} color="#aaa" />
               <input
                 className="jp-search"
                 placeholder="Search jobs, companies, locations..."
@@ -448,9 +447,7 @@ export default function JobsPage() {
                             {j.isFeatured && <span className="jp-badge-featured">⭐ Featured</span>}
                           </div>
                           <button className="jp-heart" aria-label="Save" onClick={(e) => toggleFav(j.id, e)}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill={isFav ? "#E74C3C" : "none"}>
-                              <path d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z" stroke={isFav ? "#E74C3C" : "#999"} strokeWidth="1.8" />
-                            </svg>
+                            {isFav ? <FaHeart size={14} color="#E74C3C" /> : <FiHeart size={14} color="#999" />}
                           </button>
                         </div>
                         <div className="jp-card-body">
@@ -459,7 +456,7 @@ export default function JobsPage() {
                           <p className="jp-card-salary">{j.salary}</p>
                           <div className="jp-card-meta">
                             <span className="jp-card-location">
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#bbb"/></svg>
+                              <FiMapPin size={11} color="#bbb" />
                               {j.location}
                             </span>
                             <span className="jp-card-type">{j.type}</span>

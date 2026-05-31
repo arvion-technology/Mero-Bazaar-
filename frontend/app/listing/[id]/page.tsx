@@ -4,6 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
+import {
+  FiShare2, FiHeart, FiMapPin, FiClock, FiPhone,
+  FiMessageSquare, FiMail, FiChevronRight, FiCheckCircle,
+  FiShield, FiTruck, FiTag, FiCalendar, FiDroplet,
+} from "react-icons/fi";
+import { FaHeart, FaStar, FaRegStar } from "react-icons/fa";
+import { MdVerified } from "react-icons/md";
+import { TbManualGearbox } from "react-icons/tb";
 
 // ─── Data ───────────────────────────────────────────────────────────────────
 
@@ -228,17 +236,12 @@ type ListingDetail = {
 
 function StarRating({ rating }: { rating: number }) {
   return (
-    <span className="ld-stars">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill={i <= Math.round(rating) ? "#F39C12" : "none"}>
-          <path
-            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-            stroke="#F39C12"
-            strokeWidth="1.5"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ))}
+    <span style={{ display: "flex", gap: "2px" }}>
+      {[1, 2, 3, 4, 5].map((i) =>
+        i <= Math.round(rating)
+          ? <FaStar key={i} size={13} color="#F39C12" />
+          : <FaRegStar key={i} size={13} color="#F39C12" />
+      )}
     </span>
   );
 }
@@ -711,7 +714,6 @@ export default function ListingDetailPage() {
           font-weight: 700;
           color: #1a1a1a;
         }
-        .ld-stars { display: flex; gap: 2px; }
         .ld-reviews { font-size: 11.5px; color: #888; }
 
         /* Seller badges */
@@ -833,12 +835,7 @@ export default function ListingDetailPage() {
           overflow: hidden;
           background: #e8efe8;
         }
-        .ld-map-svg {
-          width: 100%;
-          height: 100%;
-          display: block;
-        }
-        .ld-map-pin-wrap {
+        .ld-map-pin {
           position: absolute;
           top: 50%;
           left: 50%;
@@ -872,41 +869,6 @@ export default function ListingDetailPage() {
           transform: translateX(-50%);
           border: 5px solid transparent;
           border-bottom-color: #1a1a1a;
-        }
-        .ld-map-zoom {
-          position: absolute;
-          right: 10px;
-          bottom: 10px;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          z-index: 5;
-        }
-        .ld-map-zoom-btn {
-          width: 26px;
-          height: 26px;
-          background: #fff;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 16px;
-          font-weight: 700;
-          color: #444;
-          cursor: pointer;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-          line-height: 1;
-          transition: background 0.15s;
-        }
-        .ld-map-zoom-btn:hover { background: #f5f5f5; }
-        .ld-map-credit {
-          position: absolute;
-          bottom: 2px;
-          left: 8px;
-          font-size: 9px;
-          color: #888;
-          z-index: 5;
         }
         .ld-location-info {
           padding: 12px 18px;
@@ -1217,10 +1179,7 @@ export default function ListingDetailPage() {
             <div className="ld-info-card">
               {listing.isVerified && (
                 <div className="ld-verified-badge">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 12l2 2 4-4" stroke="#1e8449" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                    <circle cx="12" cy="12" r="10" stroke="#1e8449" strokeWidth="2" />
-                  </svg>
+                  <MdVerified size={12} color="#1e8449" />
                   Verified Car
                 </div>
               )}
@@ -1231,12 +1190,7 @@ export default function ListingDetailPage() {
                   {/* Share */}
                   <button className="ld-action-btn" aria-label="Share listing" onClick={handleShare} id="share-btn">
                     <span className="ld-tooltip">{copied ? "Copied!" : "Share"}</span>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                      <circle cx="18" cy="5" r="3" stroke="#555" strokeWidth="1.8" />
-                      <circle cx="6" cy="12" r="3" stroke="#555" strokeWidth="1.8" />
-                      <circle cx="18" cy="19" r="3" stroke="#555" strokeWidth="1.8" />
-                      <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="#555" strokeWidth="1.8" strokeLinecap="round" />
-                    </svg>
+                    <FiShare2 size={15} color="#555" />
                   </button>
                   {/* Wishlist */}
                   <button
@@ -1246,14 +1200,7 @@ export default function ListingDetailPage() {
                     id="wishlist-btn"
                   >
                     <span className="ld-tooltip">{isFav ? "Saved" : "Save"}</span>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z"
-                        stroke={isFav ? "#e74c3c" : "#888"}
-                        strokeWidth="1.8"
-                        fill={isFav ? "#e74c3c" : "none"}
-                      />
-                    </svg>
+                    {isFav ? <FaHeart size={15} color="#e74c3c" /> : <FiHeart size={15} color="#888" />}
                   </button>
                 </div>
               </div>
@@ -1263,27 +1210,18 @@ export default function ListingDetailPage() {
 
               <div className="ld-meta-row">
                 <span className="ld-loc">
-                  <svg width="11" height="13" viewBox="0 0 11 15" fill="none">
-                    <path d="M5.5 0C3.015 0 1 2.015 1 4.5C1 8.125 5.5 15 5.5 15S10 8.125 10 4.5C10 2.015 7.985 0 5.5 0ZM5.5 6.25C4.535 6.25 3.75 5.465 3.75 4.5C3.75 3.535 4.535 2.75 5.5 2.75C6.465 2.75 7.25 3.535 7.25 4.5C7.25 5.465 6.465 6.25 5.5 6.25Z" fill="#888" />
-                  </svg>
+                  <FiMapPin size={12} color="#888" />
                   {listing.location}
                 </span>
                 <span className="ld-driven-meta">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="9" stroke="#bbb" strokeWidth="1.8" />
-                    <path d="M12 7v5l3 2" stroke="#bbb" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
+                  <FiClock size={13} color="#bbb" />
                   {listing.driven}
                 </span>
                 <span className="ld-posted">
                   Posted {listing.postedDaysAgo} day{listing.postedDaysAgo !== 1 ? "s" : ""} ago
                 </span>
                 <a href="#location" className="ld-map-link">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#C0392B" opacity="0.15" />
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="#C0392B" strokeWidth="1.8" />
-                    <circle cx="12" cy="9" r="2.5" fill="#C0392B" />
-                  </svg>
+                  <FiMapPin size={13} color="#C0392B" />
                   View on Map
                 </a>
               </div>
@@ -1292,74 +1230,37 @@ export default function ListingDetailPage() {
               <div className="ld-specs-bar">
                 {/* Make */}
                 <div className="ld-spec-chip">
-                  <div className="ld-spec-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <path d="M3 17l2-6h14l2 6H3z" stroke="#C0392B" strokeWidth="1.6" strokeLinejoin="round" />
-                      <circle cx="7" cy="17" r="2" stroke="#C0392B" strokeWidth="1.6" />
-                      <circle cx="17" cy="17" r="2" stroke="#C0392B" strokeWidth="1.6" />
-                      <path d="M5 11l2-5h10l2 5" stroke="#C0392B" strokeWidth="1.4" />
-                    </svg>
-                  </div>
+                  <div className="ld-spec-icon"><FiTruck size={20} color="#C0392B" /></div>
                   <span className="ld-spec-val">{listing.specs.make}</span>
                   <span className="ld-spec-label">Make</span>
                 </div>
                 {/* Model */}
                 <div className="ld-spec-chip">
-                  <div className="ld-spec-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <rect x="3" y="7" width="18" height="12" rx="2" stroke="#2471A3" strokeWidth="1.6" />
-                      <path d="M7 7V5a5 5 0 0110 0v2" stroke="#2471A3" strokeWidth="1.6" strokeLinecap="round" />
-                    </svg>
-                  </div>
+                  <div className="ld-spec-icon"><FiTag size={20} color="#2471A3" /></div>
                   <span className="ld-spec-val" style={{ fontSize: 10 }}>{listing.specs.model}</span>
                   <span className="ld-spec-label">Model</span>
                 </div>
                 {/* Year */}
                 <div className="ld-spec-chip">
-                  <div className="ld-spec-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <rect x="3" y="4" width="18" height="17" rx="2" stroke="#27AE60" strokeWidth="1.6" />
-                      <path d="M3 9h18" stroke="#27AE60" strokeWidth="1.4" />
-                      <path d="M8 2v3M16 2v3" stroke="#27AE60" strokeWidth="1.6" strokeLinecap="round" />
-                    </svg>
-                  </div>
+                  <div className="ld-spec-icon"><FiCalendar size={20} color="#27AE60" /></div>
                   <span className="ld-spec-val">{listing.specs.year}</span>
                   <span className="ld-spec-label">Year</span>
                 </div>
                 {/* Fuel */}
                 <div className="ld-spec-chip">
-                  <div className="ld-spec-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <path d="M5 21V6a2 2 0 012-2h6a2 2 0 012 2v15H5z" stroke="#F39C12" strokeWidth="1.6" />
-                      <path d="M15 8h2a2 2 0 012 2v2a2 2 0 01-2 2h-2" stroke="#F39C12" strokeWidth="1.6" />
-                      <path d="M9 11h2" stroke="#F39C12" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </div>
+                  <div className="ld-spec-icon"><FiDroplet size={20} color="#F39C12" /></div>
                   <span className="ld-spec-val">{listing.specs.fuel}</span>
                   <span className="ld-spec-label">Fuel</span>
                 </div>
                 {/* Transmission */}
                 <div className="ld-spec-chip">
-                  <div className="ld-spec-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <circle cx="6" cy="6" r="2.5" stroke="#8E44AD" strokeWidth="1.6" />
-                      <circle cx="18" cy="6" r="2.5" stroke="#8E44AD" strokeWidth="1.6" />
-                      <circle cx="6" cy="18" r="2.5" stroke="#8E44AD" strokeWidth="1.6" />
-                      <circle cx="18" cy="18" r="2.5" stroke="#8E44AD" strokeWidth="1.6" />
-                      <path d="M6 8.5V15.5M18 8.5V15.5M8.5 6H15.5M8.5 18H15.5" stroke="#8E44AD" strokeWidth="1.4" strokeLinecap="round" />
-                    </svg>
-                  </div>
+                  <div className="ld-spec-icon"><TbManualGearbox size={20} color="#8E44AD" /></div>
                   <span className="ld-spec-val" style={{ fontSize: 9.5 }}>{listing.specs.transmission}</span>
                   <span className="ld-spec-label">Transmission</span>
                 </div>
                 {/* Driven */}
                 <div className="ld-spec-chip">
-                  <div className="ld-spec-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="9" stroke="#16A085" strokeWidth="1.6" />
-                      <path d="M12 7v5l3.5 2" stroke="#16A085" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
+                  <div className="ld-spec-icon"><FiClock size={20} color="#16A085" /></div>
                   <span className="ld-spec-val" style={{ fontSize: 10 }}>{listing.specs.driven}</span>
                   <span className="ld-spec-label">Driven</span>
                 </div>
@@ -1474,26 +1375,19 @@ export default function ListingDetailPage() {
               <div className="ld-seller-badges">
                 {listing.seller.isVerified && (
                   <span className="ld-sbadge ld-sbadge-verified">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                      <path d="M9 12l2 2 4-4" stroke="#1e8449" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <circle cx="12" cy="12" r="10" stroke="#1e8449" strokeWidth="2" />
-                    </svg>
+                    <FiCheckCircle size={10} color="#1e8449" />
                     Verified Seller
                   </span>
                 )}
                 {listing.seller.isPro && (
                   <span className="ld-sbadge ld-sbadge-pro">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" stroke="#b7950b" strokeWidth="1.8" strokeLinejoin="round" />
-                    </svg>
+                    <FaStar size={10} color="#b7950b" />
                     Pro Member
                   </span>
                 )}
                 {listing.seller.isTrusted && (
                   <span className="ld-sbadge ld-sbadge-trusted">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 2L3 7v6c0 5.25 3.9 10.14 9 11.36C17.1 23.14 21 18.25 21 13V7L12 2z" stroke="#7d3c98" strokeWidth="1.8" strokeLinejoin="round" />
-                    </svg>
+                    <FiShield size={10} color="#7d3c98" />
                     Trusted
                   </span>
                 )}
@@ -1524,22 +1418,15 @@ export default function ListingDetailPage() {
                   id="call-seller-btn"
                   onClick={() => setCallRevealed(true)}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.5 10.94 19.79 19.79 0 01.44 2.27 2 2 0 012.42.09h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.08 6.08l1.19-1.19a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  </svg>
+                  <FiPhone size={15} color="#fff" />
                   {callRevealed ? listing.seller.phone : "📞  Call"}
                 </button>
                 <button className="ld-btn-chat" id="chat-seller-btn">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
-                  </svg>
+                  <FiMessageSquare size={15} color="#fff" />
                   Chat Now
                 </button>
                 <button className="ld-btn-msg" id="message-seller-btn">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#555" strokeWidth="1.7" strokeLinejoin="round" />
-                    <path d="M22 6l-10 7L2 6" stroke="#555" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <FiMail size={15} color="#555" />
                   Message
                 </button>
               </div>
@@ -1549,12 +1436,8 @@ export default function ListingDetailPage() {
             <div className="ld-location-card" id="location">
               <p className="ld-location-card-title">Location</p>
               <div className="ld-map-area">
-                <div className="ld-map-bg" />
                 <div className="ld-map-pin">
-                  <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
-                    <path d="M14 0C6.27 0 0 6.27 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.27 21.73 0 14 0Z" fill="#C0392B" />
-                    <circle cx="14" cy="14" r="6" fill="#fff" />
-                  </svg>
+                  <FiMapPin size={28} color="#C0392B" />
                   <span className="ld-map-label">{listing.location}</span>
                 </div>
               </div>
@@ -1577,9 +1460,7 @@ export default function ListingDetailPage() {
             <h2 className="ld-related-title">Related Listing</h2>
             <Link href="/category/vehicles" className="ld-related-viewall">
               View All
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M9 18l6-6-6-6" stroke="#C0392B" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <FiChevronRight size={13} color="#C0392B" />
             </Link>
           </div>
           <div className="ld-related-scroll">
@@ -1599,19 +1480,11 @@ export default function ListingDetailPage() {
                         setFavRelated((p) => ({ ...p, [rel.id]: !p[rel.id] }));
                       }}
                     >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill={isFavRel ? "#E74C3C" : "none"}>
-                        <path
-                          d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z"
-                          stroke={isFavRel ? "#E74C3C" : "#999"}
-                          strokeWidth="1.8"
-                        />
-                      </svg>
+                      {isFavRel ? <FaHeart size={12} color="#E74C3C" /> : <FiHeart size={12} color="#999" />}
                     </button>
                     {rel.verified && (
                       <span className="ld-rel-badge">
-                        <svg width="7" height="7" viewBox="0 0 12 12" fill="none">
-                          <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+                        <FiCheckCircle size={7} color="#fff" />
                         VERIFIED
                       </span>
                     )}
@@ -1620,9 +1493,7 @@ export default function ListingDetailPage() {
                     <p className="ld-rel-name">{rel.title}</p>
                     <p className="ld-rel-price">{rel.price}</p>
                     <p className="ld-rel-loc">
-                      <svg width="9" height="11" viewBox="0 0 11 15" fill="none">
-                        <path d="M5.5 0C3.015 0 1 2.015 1 4.5C1 8.125 5.5 15 5.5 15S10 8.125 10 4.5C10 2.015 7.985 0 5.5 0ZM5.5 6.25C4.535 6.25 3.75 5.465 3.75 4.5C3.75 3.535 4.535 2.75 5.5 2.75C6.465 2.75 7.25 3.535 7.25 4.5C7.25 5.465 6.465 6.25 5.5 6.25Z" fill="#bbb" />
-                      </svg>
+                      <FiMapPin size={10} color="#bbb" />
                       {rel.location}
                     </p>
                   </div>

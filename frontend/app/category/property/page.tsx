@@ -3,6 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import { FiHome, FiSearch, FiMapPin } from "react-icons/fi";
+import { FaHeart } from "react-icons/fa";
+import { FiHeart } from "react-icons/fi";
 
 type Property = {
   id: string;
@@ -443,11 +446,8 @@ export default function PropertyPage() {
           <div className="pp-hero-watermark">Property</div>
           <div className="pp-hero-inner">
             <div className="pp-hero-tag">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/>
-                <path d="M9 21V12h6v9" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/>
-              </svg>
-              Nepal's #1 Property Portal
+              <FiHome size={13} color="#fff" />
+              Nepal&apos;s #1 Property Portal
             </div>
             <h1 className="pp-hero-title">
               Find Your Perfect<br />
@@ -455,10 +455,7 @@ export default function PropertyPage() {
             </h1>
             <p className="pp-hero-sub">Browse apartments, houses & land for rent and sale across Nepal</p>
             <div className="pp-search-wrap">
-              <svg className="pp-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="7" stroke="#bbb" strokeWidth="2.2" />
-                <path d="M16.5 16.5L21 21" stroke="#bbb" strokeWidth="2.2" strokeLinecap="round" />
-              </svg>
+              <FiSearch className="pp-search-icon" size={18} color="#bbb" />
               <input
                 className="pp-search"
                 placeholder="Search apartments, houses, locations..."
@@ -585,18 +582,14 @@ export default function PropertyPage() {
                             For {l.purpose}
                           </span>
                           <button className="pp-heart" aria-label="Save" onClick={(e) => toggleFav(l.id, e)}>
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill={isFav ? "#E74C3C" : "none"}>
-                              <path d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z" stroke={isFav ? "#E74C3C" : "#999"} strokeWidth="1.8" />
-                            </svg>
+                            {isFav ? <FaHeart size={15} color="#E74C3C" /> : <FiHeart size={15} color="#999" />}
                           </button>
                         </div>
                         <div className="pp-card-body">
                           <p className="pp-card-title">{l.title}</p>
                           <p className="pp-card-price">{l.price}</p>
                           <div className="pp-card-location">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#bbb"/>
-                            </svg>
+                            <FiMapPin size={11} color="#bbb" />
                             {l.location}
                           </div>
                           <hr className="pp-card-divider" />

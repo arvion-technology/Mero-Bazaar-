@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
+import { FaHeart, FaStar, FaRegStar } from "react-icons/fa";
+import { FiHeart, FiPhone, FiGlobe, FiMail, FiMapPin, FiCheckCircle, FiShare2, FiClock, FiCheck, FiMessageSquare } from "react-icons/fi";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -380,11 +382,11 @@ const SIMILAR_SCHOOLS = [
 function StarRating({ rating }: { rating: number }) {
   return (
     <span style={{ display: "flex", gap: "2px" }}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill={i <= Math.round(rating) ? "#F39C12" : "none"}>
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="#F39C12" strokeWidth="1.5" strokeLinejoin="round" />
-        </svg>
-      ))}
+      {[1, 2, 3, 4, 5].map((i) =>
+        i <= Math.round(rating)
+          ? <FaStar key={i} size={13} color="#F39C12" />
+          : <FaRegStar key={i} size={13} color="#F39C12" />
+      )}
     </span>
   );
 }
@@ -816,7 +818,7 @@ export default function EducationDetailPage() {
               <div className="ed-badges-row">
                 {school.isVerified && (
                   <span className="ed-badge ed-badge-verified">
-                    <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="#1e8449" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <FiCheck size={9} color="#1e8449" />
                     Verified
                   </span>
                 )}
@@ -835,9 +837,7 @@ export default function EducationDetailPage() {
                     aria-label="Save"
                     title="Save"
                   >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill={isFav ? "#E74C3C" : "none"}>
-                      <path d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z" stroke={isFav ? "#E74C3C" : "#999"} strokeWidth="1.8" />
-                    </svg>
+                    {isFav ? <FaHeart size={15} color="#E74C3C" /> : <FiHeart size={15} color="#999" />}
                   </button>
                   <button
                     className="ed-action-btn"
@@ -845,12 +845,7 @@ export default function EducationDetailPage() {
                     title="Share"
                     onClick={() => navigator.clipboard?.writeText(window.location.href).catch(() => {})}
                   >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                      <circle cx="18" cy="5" r="3" stroke="#666" strokeWidth="1.8"/>
-                      <circle cx="6" cy="12" r="3" stroke="#666" strokeWidth="1.8"/>
-                      <circle cx="18" cy="19" r="3" stroke="#666" strokeWidth="1.8"/>
-                      <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="#666" strokeWidth="1.8"/>
-                    </svg>
+                    <FiShare2 size={15} color="#666" />
                   </button>
                 </div>
               </div>
@@ -858,7 +853,7 @@ export default function EducationDetailPage() {
               {/* Location */}
               <div className="ed-location-row">
                 <span className="ed-loc-item">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#bbb"/></svg>
+                  <FiMapPin size={13} color="#bbb" />
                   {school.location}
                 </span>
                 <a href="#" className="ed-view-map">View on Map</a>
@@ -871,17 +866,17 @@ export default function EducationDetailPage() {
                 {school.scholarshipAvailable && <span className="ed-tag-chip purple">🎓 Scholarship Available</span>}
                 {school.onlineClasses && <span className="ed-tag-chip blue">💻 Online Classes</span>}
                 <span className="ed-tag-chip" style={{ cursor: "pointer" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" stroke="#888" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <FiShare2 size={12} color="#888" />
                   Save
                 </span>
                 <span className="ed-tag-chip" style={{ cursor: "pointer" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z" stroke="#888" strokeWidth="1.8" /></svg>
+                  <FiHeart size={12} color="#888" />
                   Save
                 </span>
               </div>
 
               {/* Fee */}
-              <p className="ed-fee-label">Sarting From</p>
+              <p className="ed-fee-label">Starting From</p>
               <p className="ed-fee">{school.feeStarting}</p>
 
               {/* CTA */}
@@ -891,7 +886,7 @@ export default function EducationDetailPage() {
                   onClick={() => setApplied(!applied)}
                 >
                   {applied ? (
-                    <><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Applied!</>
+                    <><FiCheck size={15} color="#fff" /> Applied!</>
                   ) : (
                     <>Apply Now</>
                   )}
@@ -900,10 +895,11 @@ export default function EducationDetailPage() {
                   className="ed-btn-chat"
                   onClick={() => setMsgSent(true)}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#6d28d9" strokeWidth="1.8" strokeLinejoin="round"/></svg>
+                  <FiMessageSquare size={15} color="#6d28d9" />
                   {msgSent ? "Message Sent!" : "Chat with Employer"}
                 </button>
               </div>
+
 
               {/* FACILITIES */}
               <div className="ed-facilities-bar">
@@ -1019,19 +1015,19 @@ export default function EducationDetailPage() {
 
               <div className="ed-institute-btns">
                 <button className="ed-btn-call">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.52 12 19.79 19.79 0 0 1 1.44 3.4 2 2 0 0 1 3.41 1.23h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <FiPhone size={14} color="#fff" />
                   Call Institute
                 </button>
                 <button className="ed-btn-outline">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#6d28d9" strokeWidth="1.8"/><path d="M12 8v4l3 3" stroke="#6d28d9" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                  <FiClock size={14} color="#6d28d9" />
                   View Company Profile
                 </button>
                 <button className="ed-btn-outline email">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#555" strokeWidth="1.8" strokeLinejoin="round"/><polyline points="22,6 12,13 2,6" stroke="#555" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                  <FiMail size={14} color="#555" />
                   Send Email
                 </button>
                 <a href={school.website} target="_blank" rel="noopener noreferrer" className="ed-btn-outline web" style={{ textDecoration: "none" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#0369a1" strokeWidth="1.8"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="#0369a1" strokeWidth="1.8"/></svg>
+                  <FiGlobe size={14} color="#0369a1" />
                   Visit Website
                 </a>
               </div>
@@ -1050,7 +1046,7 @@ export default function EducationDetailPage() {
               </div>
               <p className="ed-map-city">Lazimpat,Kathmandu, Nepal</p>
               <a href="#" className="ed-map-link">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#6d28d9"/></svg>
+                <FiMapPin size={12} color="#6d28d9" />
                 View on Map
               </a>
             </div>

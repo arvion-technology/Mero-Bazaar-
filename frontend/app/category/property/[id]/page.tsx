@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { FiShare2, FiHeart, FiMapPin, FiClock, FiCheckCircle, FiPhone, FiMessageSquare, FiMaximize, FiDroplet, FiLayers, FiCoffee } from "react-icons/fi";
+import { FaStar, FaRegStar, FaHeart, FaBed, FaCar } from "react-icons/fa";
 
 const galleryImages = [
   "/apartment1.jpg",
@@ -717,10 +719,7 @@ export default function PropertyDetailPage() {
             <div className="pd-info-card">
               {/* Verified */}
               <div className="pd-verified-badge">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="#1e8449" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <circle cx="12" cy="12" r="10" stroke="#1e8449" strokeWidth="2"/>
-                </svg>
+                <FiCheckCircle size={13} color="#1e8449" />
                 Verified
               </div>
 
@@ -730,12 +729,7 @@ export default function PropertyDetailPage() {
                 <div className="pd-action-btns">
                   {/* Share */}
                   <button className="pd-action-btn" aria-label="Share listing">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <circle cx="18" cy="5" r="3" stroke="#555" strokeWidth="1.8"/>
-                      <circle cx="6" cy="12" r="3" stroke="#555" strokeWidth="1.8"/>
-                      <circle cx="18" cy="19" r="3" stroke="#555" strokeWidth="1.8"/>
-                      <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="#555" strokeWidth="1.8" strokeLinecap="round"/>
-                    </svg>
+                    <FiShare2 size={16} color="#555" />
                   </button>
                   {/* Favourite */}
                   <button
@@ -743,14 +737,7 @@ export default function PropertyDetailPage() {
                     aria-label="Save to wishlist"
                     onClick={() => setIsFav((v) => !v)}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z"
-                        stroke={isFav ? "#e74c3c" : "#888"}
-                        strokeWidth="1.8"
-                        fill={isFav ? "#e74c3c" : "none"}
-                      />
-                    </svg>
+                    {isFav ? <FaHeart size={16} color="#e74c3c" /> : <FiHeart size={16} color="#888" />}
                   </button>
                 </div>
               </div>
@@ -761,24 +748,15 @@ export default function PropertyDetailPage() {
               {/* Location */}
               <div className="pd-loc-row">
                 <span className="pd-location">
-                  <svg width="13" height="15" viewBox="0 0 13 17" fill="none">
-                    <path d="M6.5 0C3.46 0 1 2.46 1 5.5C1 9.625 6.5 17 6.5 17C6.5 17 12 9.625 12 5.5C12 2.46 9.54 0 6.5 0ZM6.5 7.5C5.395 7.5 4.5 6.605 4.5 5.5C4.5 4.395 5.395 3.5 6.5 3.5C7.605 3.5 8.5 4.395 8.5 5.5C8.5 6.605 7.605 7.5 6.5 7.5Z" fill="#888"/>
-                  </svg>
+                  <FiMapPin size={13} color="#888" />
                   Lazimpat, Kathmandu
                 </span>
                 <span className="pd-dist">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="#aaa" strokeWidth="1.8"/>
-                    <path d="M12 6v6l4 2" stroke="#aaa" strokeWidth="1.8" strokeLinecap="round"/>
-                  </svg>
+                  <FiClock size={13} color="#aaa" />
                   1.2 km from city center
                 </span>
                 <a href="#map" className="pd-map-link">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#C0392B" opacity="0.2"/>
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="#C0392B" strokeWidth="1.8"/>
-                    <circle cx="12" cy="9" r="2.5" fill="#C0392B"/>
-                  </svg>
+                  <FiMapPin size={13} color="#C0392B" />
                   View on Map
                 </a>
               </div>
@@ -788,12 +766,7 @@ export default function PropertyDetailPage() {
                 {/* Bedrooms */}
                 <div className="pd-feat">
                   <div className="pd-feat-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <path d="M3 9V19H21V9" stroke="#4B6BFB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M3 9C3 9 5 7 12 7C19 7 21 9 21 9" stroke="#4B6BFB" strokeWidth="1.8" strokeLinecap="round"/>
-                      <rect x="6" y="11" width="5" height="4" rx="1" stroke="#4B6BFB" strokeWidth="1.5"/>
-                      <rect x="13" y="11" width="5" height="4" rx="1" stroke="#4B6BFB" strokeWidth="1.5"/>
-                    </svg>
+                    <FaBed size={22} color="#4B6BFB" />
                   </div>
                   <span className="pd-feat-val">2</span>
                   <span className="pd-feat-label">Bedrooms</span>
@@ -801,11 +774,7 @@ export default function PropertyDetailPage() {
                 {/* Bathrooms */}
                 <div className="pd-feat">
                   <div className="pd-feat-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <path d="M4 12H20V17C20 18.66 18.66 20 17 20H7C5.34 20 4 18.66 4 17V12Z" stroke="#4B6BFB" strokeWidth="1.8"/>
-                      <path d="M4 12V6C4 4.9 4.9 4 6 4H8C9.1 4 10 4.9 10 6V12" stroke="#4B6BFB" strokeWidth="1.8" strokeLinecap="round"/>
-                      <path d="M8 20v2M16 20v2" stroke="#4B6BFB" strokeWidth="1.8" strokeLinecap="round"/>
-                    </svg>
+                    <FiDroplet size={22} color="#4B6BFB" />
                   </div>
                   <span className="pd-feat-val">2</span>
                   <span className="pd-feat-label">Bathrooms</span>
@@ -813,13 +782,7 @@ export default function PropertyDetailPage() {
                 {/* Kitchen */}
                 <div className="pd-feat">
                   <div className="pd-feat-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <rect x="3" y="6" width="18" height="14" rx="2" stroke="#4B6BFB" strokeWidth="1.8"/>
-                      <path d="M3 10H21" stroke="#4B6BFB" strokeWidth="1.8"/>
-                      <circle cx="7" cy="8" r="1" fill="#4B6BFB"/>
-                      <circle cx="12" cy="8" r="1" fill="#4B6BFB"/>
-                      <path d="M8 14h8M8 17h5" stroke="#4B6BFB" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
+                    <FiCoffee size={22} color="#4B6BFB" />
                   </div>
                   <span className="pd-feat-val">1</span>
                   <span className="pd-feat-label">Kitchen</span>
@@ -827,9 +790,7 @@ export default function PropertyDetailPage() {
                 {/* Sq ft */}
                 <div className="pd-feat">
                   <div className="pd-feat-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" stroke="#4B6BFB" strokeWidth="1.8" strokeLinejoin="round"/>
-                    </svg>
+                    <FiMaximize size={22} color="#4B6BFB" />
                   </div>
                   <span className="pd-feat-val" style={{fontSize:"12px"}}>1200</span>
                   <span className="pd-feat-label">Sq. ft</span>
@@ -837,10 +798,7 @@ export default function PropertyDetailPage() {
                 {/* Floor */}
                 <div className="pd-feat">
                   <div className="pd-feat-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <path d="M3 21h18M3 17h18M3 13h18" stroke="#4B6BFB" strokeWidth="1.8" strokeLinecap="round"/>
-                      <path d="M6 13V7l6-4 6 4v6" stroke="#4B6BFB" strokeWidth="1.8" strokeLinejoin="round"/>
-                    </svg>
+                    <FiLayers size={22} color="#4B6BFB" />
                   </div>
                   <span className="pd-feat-val">2</span>
                   <span className="pd-feat-label">Floor</span>
@@ -848,12 +806,7 @@ export default function PropertyDetailPage() {
                 {/* Parking */}
                 <div className="pd-feat">
                   <div className="pd-feat-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <rect x="2" y="8" width="20" height="10" rx="3" stroke="#4B6BFB" strokeWidth="1.8"/>
-                      <path d="M5 8l3-5h8l3 5" stroke="#4B6BFB" strokeWidth="1.8" strokeLinejoin="round"/>
-                      <circle cx="7.5" cy="18" r="2" stroke="#4B6BFB" strokeWidth="1.5"/>
-                      <circle cx="16.5" cy="18" r="2" stroke="#4B6BFB" strokeWidth="1.5"/>
-                    </svg>
+                    <FaCar size={22} color="#4B6BFB" />
                   </div>
                   <span className="pd-feat-val" style={{fontSize:"10px",lineHeight:"1.2"}}>Avail.</span>
                   <span className="pd-feat-label">Parking</span>
@@ -943,14 +896,10 @@ export default function PropertyDetailPage() {
                 <div className="pd-rating-row">
                   <span className="pd-rating-num">4.8</span>
                   <div className="pd-stars">
-                    {[1,2,3,4,5].map((s) => (
-                      <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill={s <= 4 ? "#F1C40F" : "none"}>
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                          stroke="#F1C40F" strokeWidth="1.5" strokeLinejoin="round"
-                          fill={s <= 4 ? "#F1C40F" : s === 5 ? "url(#half)" : "none"}
-                        />
-                      </svg>
+                    {[1, 2, 3, 4].map((s) => (
+                      <FaStar key={s} size={14} color="#F1C40F" />
                     ))}
+                    <FaRegStar size={14} color="#F1C40F" />
                   </div>
                   <span className="pd-reviews">(26 Reviews)</span>
                 </div>
@@ -960,22 +909,15 @@ export default function PropertyDetailPage() {
             {/* Badges */}
             <div className="pd-badges">
               <span className="pd-badge pd-badge-verified">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12l2 2 4-4" stroke="#1e8449" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <circle cx="12" cy="12" r="10" stroke="#1e8449" strokeWidth="2"/>
-                </svg>
+                <FiCheckCircle size={11} color="#1e8449" style={{ marginRight: '3px' }} />
                 Verified Seller
               </span>
               <span className="pd-badge pd-badge-pro">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="#d4ac0d"/>
-                </svg>
+                <FaStar size={11} color="#d4ac0d" style={{ marginRight: '3px' }} />
                 Pro Member
               </span>
               <span className="pd-badge pd-badge-trusted">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7l3-7z" fill="#7d3c98"/>
-                </svg>
+                <FaStar size={11} color="#7d3c98" style={{ marginRight: '3px' }} />
                 Trusted
               </span>
             </div>
@@ -1007,15 +949,11 @@ export default function PropertyDetailPage() {
                 className={`pd-btn-call${callClicked ? " revealed" : ""}`}
                 onClick={() => setCallClicked(true)}
               >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                  <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1C10.61 21 3 13.39 3 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.45.57 3.57a1 1 0 01-.24 1.01l-2.21 2.21z" fill="#fff"/>
-                </svg>
+                <FiPhone size={17} color="#fff" style={{ marginRight: '5px' }} />
                 {callClicked ? "+977-98XXXXXXXX" : "Call"}
               </button>
               <button id="btn-chat-seller" className="pd-btn-chat">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" fill="rgba(255,255,255,0.25)" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round"/>
-                </svg>
+                <FiMessageSquare size={17} color="#fff" style={{ marginRight: '5px' }} />
                 Chat Now
               </button>
             </div>
@@ -1044,10 +982,7 @@ export default function PropertyDetailPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={item.img} alt={item.title} className="pd-rel-img" />
                   <span className="pd-rel-badge">
-                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none">
-                      <path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                      <circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="2.5"/>
-                    </svg>
+                    <FiCheckCircle size={8} color="#fff" style={{ marginRight: '3px' }} />
                     Verified
                   </span>
                 </div>

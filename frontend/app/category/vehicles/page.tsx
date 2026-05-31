@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import { FiSearch, FiHeart, FiCheck } from "react-icons/fi";
+import { FaHeart } from "react-icons/fa";
 
 type Vehicle = {
   id: string;
@@ -402,10 +404,7 @@ export default function VehiclesPage() {
             <h1 className="vp-hero-title">Vehicles in Nepal</h1>
             <p className="vp-hero-sub">Find the best cars, bikes and more</p>
             <div className="vp-search-wrap">
-              <svg className="vp-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="7" stroke="#aaa" strokeWidth="2" />
-                <path d="M16.5 16.5L21 21" stroke="#aaa" strokeWidth="2" strokeLinecap="round" />
-              </svg>
+              <FiSearch className="vp-search-icon" size={16} color="#aaa" />
               <input
                 className="vp-search"
                 placeholder="Search"
@@ -539,13 +538,7 @@ export default function VehiclesPage() {
                             aria-label="Save"
                             onClick={(e) => toggleFav(v.id, e)}
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill={isFav ? "#E74C3C" : "none"}>
-                              <path
-                                d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z"
-                                stroke={isFav ? "#E74C3C" : "#999"}
-                                strokeWidth="1.8"
-                              />
-                            </svg>
+                            {isFav ? <FaHeart size={14} color="#E74C3C" /> : <FiHeart size={14} color="#999" />}
                           </button>
                         </div>
 
@@ -558,9 +551,7 @@ export default function VehiclesPage() {
                             {v.isVerified && (
                               <span className="vp-verified">
                                 <span className="vp-verified-icon">
-                                  <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
-                                    <path d="M2 6L5 9L10 3" stroke="#27ae60" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
+                                  <FiCheck size={9} color="#27ae60" strokeWidth={3} />
                                 </span>
                                 Verified
                               </span>

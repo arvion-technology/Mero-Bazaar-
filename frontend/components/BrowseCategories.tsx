@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { FiMoreHorizontal } from "react-icons/fi";
 
 const categories = [
   {
@@ -270,11 +271,7 @@ export default function BrowseCategories() {
                   ) : (
                     /* More Categories — dots fallback */
                     <div className="bc-more-dots">
-                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                        <circle cx="10" cy="18" r="3" fill="#aaa" />
-                        <circle cx="18" cy="18" r="3" fill="#aaa" />
-                        <circle cx="26" cy="18" r="3" fill="#aaa" />
-                      </svg>
+                      <FiMoreHorizontal size={36} color="#aaa" />
                     </div>
                   )}
                 </div>

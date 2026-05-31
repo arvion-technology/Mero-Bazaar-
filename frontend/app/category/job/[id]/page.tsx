@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
+import { FiHeart, FiShare2, FiMapPin, FiBriefcase, FiClock, FiEye, FiMessageSquare, FiUser, FiUsers, FiCalendar, FiCheckCircle, FiSend, FiPlusSquare, FiCheck } from "react-icons/fi";
+import { FaStar, FaRegStar, FaHeart, FaGraduationCap } from "react-icons/fa";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -175,11 +177,11 @@ const SIMILAR_JOBS = [
 function StarRating({ rating }: { rating: number }) {
   return (
     <span style={{ display: "flex", gap: "2px" }}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill={i <= Math.round(rating) ? "#F39C12" : "none"}>
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="#F39C12" strokeWidth="1.5" strokeLinejoin="round" />
-        </svg>
-      ))}
+      {[1, 2, 3, 4, 5].map((i) =>
+        i <= Math.round(rating)
+          ? <FaStar key={i} size={13} color="#F39C12" />
+          : <FaRegStar key={i} size={13} color="#F39C12" />
+      )}
     </span>
   );
 }
@@ -602,7 +604,7 @@ export default function JobDetailPage() {
               <div className="jd-badges-row">
                 {job.isVerified && (
                   <span className="jd-badge-verified">
-                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="#1e8449" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <FiCheckCircle size={10} color="#1e8449" />
                     Verified Job
                   </span>
                 )}
@@ -618,9 +620,7 @@ export default function JobDetailPage() {
                     aria-label="Save job"
                     title="Save"
                   >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill={isFav ? "#E74C3C" : "none"}>
-                      <path d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z" stroke={isFav ? "#E74C3C" : "#999"} strokeWidth="1.8" />
-                    </svg>
+                    {isFav ? <FaHeart size={15} color="#E74C3C" /> : <FiHeart size={15} color="#999" />}
                   </button>
                   <button
                     className="jd-action-btn"
@@ -628,12 +628,7 @@ export default function JobDetailPage() {
                     title="Share"
                     onClick={() => navigator.clipboard?.writeText(window.location.href).catch(() => {})}
                   >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                      <circle cx="18" cy="5" r="3" stroke="#666" strokeWidth="1.8"/>
-                      <circle cx="6" cy="12" r="3" stroke="#666" strokeWidth="1.8"/>
-                      <circle cx="18" cy="19" r="3" stroke="#666" strokeWidth="1.8"/>
-                      <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="#666" strokeWidth="1.8"/>
-                    </svg>
+                    <FiShare2 size={15} color="#666" />
                   </button>
                 </div>
               </div>
@@ -642,22 +637,22 @@ export default function JobDetailPage() {
 
               <div className="jd-meta-row">
                 <span className="jd-meta-item">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#bbb"/></svg>
+                  <FiMapPin size={13} color="#bbb" />
                   {job.location}
                 </span>
                 <span className="jd-meta-dot" />
                 <span className="jd-meta-item">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="20" height="14" rx="2" stroke="#bbb" strokeWidth="1.8"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke="#bbb" strokeWidth="1.8"/></svg>
+                  <FiBriefcase size={13} color="#bbb" />
                   {job.type}
                 </span>
                 <span className="jd-meta-dot" />
                 <span className="jd-meta-item">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#bbb" strokeWidth="1.8"/><path d="M12 7v5l3 3" stroke="#bbb" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                  <FiClock size={13} color="#bbb" />
                   Posted {job.postedDaysAgo} Day{job.postedDaysAgo > 1 ? "s" : ""} ago
                 </span>
                 <span className="jd-meta-dot" />
                 <span className="jd-meta-item" style={{ color: "#aaa" }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#bbb" strokeWidth="1.8"/><circle cx="12" cy="12" r="3" stroke="#bbb" strokeWidth="1.8"/></svg>
+                  <FiEye size={13} color="#bbb" />
                   {job.views} views
                 </span>
               </div>
@@ -669,13 +664,13 @@ export default function JobDetailPage() {
                   onClick={() => setApplied(!applied)}
                 >
                   {applied ? (
-                    <><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Applied!</>
+                    <><FiCheck size={15} color="#fff" /> Applied!</>
                   ) : (
-                    <><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Apply Now</>
+                    <><FiSend size={15} color="#fff" /> Apply Now</>
                   )}
                 </button>
                 <button className="jd-btn-chat">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#1a5fd4" strokeWidth="1.8" strokeLinejoin="round"/></svg>
+                  <FiMessageSquare size={15} color="#1a5fd4" />
                   Chat with Employer
                 </button>
               </div>
@@ -683,37 +678,27 @@ export default function JobDetailPage() {
               {/* SPECS */}
               <div className="jd-specs-bar">
                 <div className="jd-spec-chip">
-                  <div className="jd-spec-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#1a5fd4" strokeWidth="1.8"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#1a5fd4" strokeWidth="1.8" strokeLinecap="round"/></svg>
-                  </div>
+                  <div className="jd-spec-icon"><FiUser size={18} color="#1a5fd4" /></div>
                   <span className="jd-spec-val">{job.experience}</span>
                   <span className="jd-spec-label">Experience</span>
                 </div>
                 <div className="jd-spec-chip">
-                  <div className="jd-spec-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="20" height="14" rx="2" stroke="#1a5fd4" strokeWidth="1.8"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke="#1a5fd4" strokeWidth="1.8"/></svg>
-                  </div>
+                  <div className="jd-spec-icon"><FiBriefcase size={18} color="#1a5fd4" /></div>
                   <span className="jd-spec-val">{job.type}</span>
                   <span className="jd-spec-label">Employment Type</span>
                 </div>
                 <div className="jd-spec-chip">
-                  <div className="jd-spec-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 10v6M2 10l10-7 10 7M5 19.5V10.3M19 19.5V10.3" stroke="#1a5fd4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </div>
+                  <div className="jd-spec-icon"><FaGraduationCap size={18} color="#1a5fd4" /></div>
                   <span className="jd-spec-val">{job.education}</span>
                   <span className="jd-spec-label">Education</span>
                 </div>
                 <div className="jd-spec-chip">
-                  <div className="jd-spec-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#1a5fd4" strokeWidth="1.8" strokeLinecap="round"/><circle cx="9" cy="7" r="4" stroke="#1a5fd4" strokeWidth="1.8"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="#1a5fd4" strokeWidth="1.8" strokeLinecap="round"/></svg>
-                  </div>
+                  <div className="jd-spec-icon"><FiUsers size={18} color="#1a5fd4" /></div>
                   <span className="jd-spec-val">{job.vacancies} openings</span>
                   <span className="jd-spec-label">Vacancies</span>
                 </div>
                 <div className="jd-spec-chip">
-                  <div className="jd-spec-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#1a5fd4" strokeWidth="1.8"/><path d="M16 2v4M8 2v4M3 10h18" stroke="#1a5fd4" strokeWidth="1.8" strokeLinecap="round"/></svg>
-                  </div>
+                  <div className="jd-spec-icon"><FiCalendar size={18} color="#1a5fd4" /></div>
                   <span className="jd-spec-val">{job.postedDate}</span>
                   <span className="jd-spec-label">Posted</span>
                 </div>
@@ -811,7 +796,7 @@ export default function JobDetailPage() {
                 </div>
               </div>
               <button className="jd-btn-profile">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#1a5fd4" strokeWidth="1.8"/><path d="M8 12h8M12 8v8" stroke="#1a5fd4" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                <FiPlusSquare size={14} color="#1a5fd4" />
                 View Company Profile
               </button>
             </div>
@@ -829,7 +814,7 @@ export default function JobDetailPage() {
               </div>
               <p className="jd-map-city">Lalitpur, Nepal</p>
               <a href="#" className="jd-map-link">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#1a5fd4"/></svg>
+                <FiMapPin size={12} color="#1a5fd4" />
                 View on Map
               </a>
             </div>
@@ -852,7 +837,7 @@ export default function JobDetailPage() {
                   </div>
                   {job.postedBy.isVerified && (
                     <span className="jd-poster-badge">
-                      <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="#1e8449" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <FiCheck size={9} color="#1e8449" />
                       Verified employer
                     </span>
                   )}
@@ -863,9 +848,9 @@ export default function JobDetailPage() {
                 onClick={() => setMsgSent(!msgSent)}
               >
                 {msgSent ? (
-                  <><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1e8449" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Message Sent!</>
+                  <><FiCheck size={14} color="#1e8449" /> Message Sent!</>
                 ) : (
-                  <><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#555" strokeWidth="1.8" strokeLinejoin="round"/></svg> Send Message</>
+                  <><FiMessageSquare size={14} color="#555" /> Send Message</>
                 )}
               </button>
             </div>

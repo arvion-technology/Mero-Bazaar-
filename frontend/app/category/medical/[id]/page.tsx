@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
+import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
+import { FiShare2, FiHeart, FiMapPin, FiClock, FiBriefcase, FiEye, FiCheckCircle, FiMail, FiMessageSquare, FiChevronRight } from "react-icons/fi";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -269,13 +271,11 @@ const SIMILAR = [
 function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
   return (
     <span style={{ display: "inline-flex", gap: 1 }}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <svg key={i} width={size} height={size} viewBox="0 0 24 24"
-          fill={i <= Math.round(rating) ? "#F5A623" : "none"}>
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-            stroke="#F5A623" strokeWidth="1.5" strokeLinejoin="round" />
-        </svg>
-      ))}
+      {[1, 2, 3, 4, 5].map((i) =>
+        i <= Math.round(rating)
+          ? <FaStar key={i} size={size} color="#F5A623" />
+          : <FaRegStar key={i} size={size} color="#F5A623" />
+      )}
     </span>
   );
 }
@@ -734,10 +734,7 @@ export default function MedicalDetailPage() {
               <div className="md2-badge-row">
                 {listing.isVerified && (
                   <span className="md2-badge-verified">
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none">
-                      <path d="M9 12l2 2 4-4" stroke="#1a7a43" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <circle cx="12" cy="12" r="10" stroke="#1a7a43" strokeWidth="2" />
-                    </svg>
+                    <FiCheckCircle size={9} color="#1a7a43" />
                     VerifiedJob
                   </span>
                 )}
@@ -746,12 +743,7 @@ export default function MedicalDetailPage() {
                 )}
                 <div className="md2-badge-spacer" />
                 <button className="md2-share-btn" onClick={handleShare} id="share-btn">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                    <circle cx="18" cy="5" r="3" stroke="#555" strokeWidth="1.8" />
-                    <circle cx="6" cy="12" r="3" stroke="#555" strokeWidth="1.8" />
-                    <circle cx="18" cy="19" r="3" stroke="#555" strokeWidth="1.8" />
-                    <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="#555" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
+                  <FiShare2 size={13} color="#555" />
                   {copied ? "Copied!" : "Share"}
                 </button>
                 <button
@@ -759,10 +751,7 @@ export default function MedicalDetailPage() {
                   onClick={() => setIsFav((v) => !v)}
                   id="save-btn"
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill={isFav ? "#e74c3c" : "none"}>
-                    <path d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z"
-                      stroke={isFav ? "#e74c3c" : "#888"} strokeWidth="1.8" />
-                  </svg>
+                  {isFav ? <FaHeart size={13} color="#e74c3c" /> : <FiHeart size={13} color="#888" />}
                   Save
                 </button>
               </div>
@@ -776,30 +765,19 @@ export default function MedicalDetailPage() {
               {/* Meta */}
               <div className="md2-meta-row">
                 <span className="md2-meta-item">
-                  <svg width="11" height="13" viewBox="0 0 11 15" fill="none">
-                    <path d="M5.5 0C3.015 0 1 2.015 1 4.5C1 8.125 5.5 15 5.5 15S10 8.125 10 4.5C10 2.015 7.985 0 5.5 0ZM5.5 6.25C4.535 6.25 3.75 5.465 3.75 4.5C3.75 3.535 4.535 2.75 5.5 2.75C6.465 2.75 7.25 3.535 7.25 4.5C7.25 5.465 6.465 6.25 5.5 6.25Z" fill="#888" />
-                  </svg>
+                  <FiMapPin size={11} color="#888" />
                   {listing.location}
                 </span>
                 <span className="md2-meta-item">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <rect x="2" y="7" width="20" height="14" rx="2" stroke="#888" strokeWidth="1.8" />
-                    <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" stroke="#888" strokeWidth="1.8" />
-                  </svg>
+                  <FiBriefcase size={12} color="#888" />
                   {listing.type}
                 </span>
                 <span className="md2-meta-item">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="9" stroke="#bbb" strokeWidth="1.8" />
-                    <path d="M12 7v5l3 2" stroke="#bbb" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
+                  <FiClock size={12} color="#bbb" />
                   Posted {listing.postedDaysAgo} Day{listing.postedDaysAgo !== 1 ? "s" : ""} ago
                 </span>
                 <span className="md2-meta-item">
-                  <svg width="13" height="12" viewBox="0 0 24 20" fill="none">
-                    <path d="M1 10C1 10 5 3 12 3C19 3 23 10 23 10C23 10 19 17 12 17C5 17 1 10 1 10Z" stroke="#bbb" strokeWidth="1.8" />
-                    <circle cx="12" cy="10" r="3" stroke="#bbb" strokeWidth="1.8" />
-                  </svg>
+                  <FiEye size={12} color="#bbb" />
                   {listing.views}views
                 </span>
               </div>
@@ -810,10 +788,7 @@ export default function MedicalDetailPage() {
                   Apply Now
                 </button>
                 <button className="md2-btn-chat" id="chat-btn">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"
-                      stroke="#1a5fd4" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
-                  </svg>
+                  <FiMessageSquare size={14} color="#1a5fd4" style={{ marginRight: '5px' }} />
                   Chat with Employer
                 </button>
               </div>
@@ -933,10 +908,7 @@ export default function MedicalDetailPage() {
                   <span className="md2-map-place-sub">{listing.mapCity.split(",")[1]?.trim() || "Nepal"}</span>
                 </div>
                 <div className="md2-map-pin-anim">
-                  <svg width="22" height="28" viewBox="0 0 28 36" fill="none">
-                    <path d="M14 0C6.27 0 0 6.27 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.27 21.73 0 14 0Z" fill="#C0392B" />
-                    <circle cx="14" cy="14" r="6" fill="#fff" />
-                  </svg>
+                  <FiMapPin size={28} color="#C0392B" />
                 </div>
               </div>
               <div className="md2-location-info">
@@ -950,11 +922,7 @@ export default function MedicalDetailPage() {
                 rel="noopener noreferrer"
                 className="md2-map-link"
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#C0392B" opacity="0.18" />
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="#C0392B" strokeWidth="1.8" />
-                  <circle cx="12" cy="9" r="2.5" fill="#C0392B" />
-                </svg>
+                <FiMapPin size={12} color="#C0392B" style={{ marginRight: '4px' }} />
                 View on Map
               </a>
             </div>
@@ -981,19 +949,12 @@ export default function MedicalDetailPage() {
               </div>
               {listing.postedBy.isVerified && (
                 <div className="md2-verified-tag">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 12l2 2 4-4" stroke="#0b8a6b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                    <circle cx="12" cy="12" r="10" stroke="#0b8a6b" strokeWidth="2" />
-                  </svg>
+                  <FiCheckCircle size={10} color="#0b8a6b" style={{ marginRight: '4px' }} />
                   Verified employer
                 </div>
               )}
               <button className="md2-send-msg" id="send-msg-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
-                    stroke="#555" strokeWidth="1.7" strokeLinejoin="round" />
-                  <path d="M22 6l-10 7L2 6" stroke="#555" strokeWidth="1.7" strokeLinecap="round" />
-                </svg>
+                <FiMail size={14} color="#555" style={{ marginRight: '5px' }} />
                 Send Message
               </button>
             </div>
@@ -1007,9 +968,7 @@ export default function MedicalDetailPage() {
             <h2 className="md2-similar-title">Similar Jobs</h2>
             <Link href="/category/medical" className="md2-similar-all">
               View All
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                <path d="M9 18l6-6-6-6" stroke="#C0392B" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <FiChevronRight size={12} color="#C0392B" />
             </Link>
           </div>
           <div className="md2-similar-row">
@@ -1023,9 +982,7 @@ export default function MedicalDetailPage() {
                   <p className="md2-sim-title">{sim.title}</p>
                   <p className="md2-sim-company">{sim.company}</p>
                   <p className="md2-sim-loc">
-                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#bbb" />
-                    </svg>
+                    <FiMapPin size={8} color="#bbb" style={{ marginRight: '3px' }} />
                     {sim.location}
                   </p>
                 </div>

@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { TbGridDots } from "react-icons/tb";
+import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX } from "react-icons/fi";
 
 const categories = [
   { name: "Vehicles", slug: "vehicles" },
@@ -339,21 +341,13 @@ export default function Navbar() {
                 className={`hnb-btn${showCategories ? " active" : ""}`}
                 onClick={() => { setShowCategories(!showCategories); setShowMore(false); }}
               >
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                  <rect x="0" y="0" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
-                  <rect x="5.5" y="0" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
-                  <rect x="11" y="0" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
-                  <rect x="0" y="5.5" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
-                  <rect x="5.5" y="5.5" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
-                  <rect x="11" y="5.5" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
-                  <rect x="0" y="11" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
-                  <rect x="5.5" y="11" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
-                  <rect x="11" y="11" width="4" height="4" rx="1" fill="currentColor" opacity="0.8" />
-                </svg>
+                <TbGridDots size={16} />
                 Categories
-                <svg className={`hnb-chevron${showCategories ? " open" : ""}`} width="11" height="11" fill="none" stroke="#999" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                </svg>
+                <FiChevronDown
+                  size={13}
+                  className={`hnb-chevron${showCategories ? " open" : ""}`}
+                  color="#999"
+                />
               </button>
 
               {showCategories && (
@@ -373,9 +367,7 @@ export default function Navbar() {
                   <div className="hnb-view-all">
                     <Link href="/categories" className="hnb-view-all-link" onClick={() => setShowCategories(false)}>
                       View All Categories
-                      <svg width="11" height="11" fill="none" stroke={PRIMARY} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                      </svg>
+                      <FiChevronRight size={13} color={PRIMARY} />
                     </Link>
                   </div>
                 </div>
@@ -401,9 +393,11 @@ export default function Navbar() {
                 onClick={() => { setShowMore(!showMore); setShowCategories(false); }}
               >
                 More
-                <svg className={`hnb-chevron${showMore ? " open" : ""}`} width="11" height="11" fill="none" stroke="#999" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                </svg>
+                <FiChevronDown
+                  size={13}
+                  className={`hnb-chevron${showMore ? " open" : ""}`}
+                  color="#999"
+                />
               </button>
 
               {showMore && (
@@ -427,10 +421,7 @@ export default function Navbar() {
             <Link href="/sell" className="hnb-seller">Become a Seller</Link>
 
             <button className="hnb-bell" aria-label="Notifications">
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
+              <FiBell size={20} />
             </button>
 
             <Link href="/login" className="hnb-login">Login / Register</Link>
@@ -441,12 +432,7 @@ export default function Navbar() {
             onClick={() => setShowMobileMenu(!showMobileMenu)}
             aria-label="Toggle menu"
           >
-            <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {showMobileMenu
-                ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              }
-            </svg>
+            {showMobileMenu ? <FiX size={22} /> : <FiMenu size={22} />}
           </button>
         </div>
 
@@ -460,10 +446,11 @@ export default function Navbar() {
 
             <button className="hnb-mobile-cats-btn" onClick={() => setShowMobileCats(!showMobileCats)}>
               All Categories
-              <svg width="14" height="14" fill="none" stroke="#999" viewBox="0 0 24 24"
-                style={{ transform: showMobileCats ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <FiChevronDown
+                size={14}
+                color="#999"
+                style={{ transform: showMobileCats ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+              />
             </button>
 
             {showMobileCats && (

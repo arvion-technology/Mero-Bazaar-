@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { FiHeart, FiMapPin, FiTruck, FiHome, FiBriefcase, FiActivity, FiMonitor } from "react-icons/fi";
+import { FaHeart } from "react-icons/fa";
 
 const listings = [
   {
@@ -75,51 +77,14 @@ const categoryGradients: Record<string, string> = {
 };
 
 const CategoryIcon = ({ category }: { category: string }) => {
+  const style = { opacity: 0.85 };
   switch (category) {
-    case "vehicles":
-      return (
-        <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-          <rect x="4" y="20" width="44" height="20" rx="6" fill="#E74C3C" opacity="0.2" />
-          <rect x="4" y="20" width="44" height="20" rx="6" stroke="#E74C3C" strokeWidth="2" />
-          <path d="M8 20l6-10h24l6 10" stroke="#E74C3C" strokeWidth="2" strokeLinejoin="round" />
-          <circle cx="14" cy="40" r="5" fill="#fff" stroke="#E74C3C" strokeWidth="2" />
-          <circle cx="38" cy="40" r="5" fill="#fff" stroke="#E74C3C" strokeWidth="2" />
-        </svg>
-      );
-    case "property":
-      return (
-        <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-          <path d="M6 26L26 8l20 18" stroke="#4B6BFB" strokeWidth="2.2" strokeLinejoin="round" />
-          <rect x="12" y="26" width="28" height="20" rx="2" stroke="#4B6BFB" strokeWidth="2" />
-          <rect x="20" y="34" width="12" height="12" rx="1.5" stroke="#4B6BFB" strokeWidth="2" />
-        </svg>
-      );
-    case "jobs":
-      return (
-        <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-          <rect x="8" y="20" width="36" height="26" rx="4" stroke="#27AE60" strokeWidth="2" />
-          <path d="M20 20v-5a2 2 0 012-2h8a2 2 0 012 2v5" stroke="#27AE60" strokeWidth="2" strokeLinejoin="round" />
-          <path d="M8 32h36" stroke="#27AE60" strokeWidth="1.6" opacity="0.5" />
-          <rect x="20" y="28" width="12" height="8" rx="2" stroke="#27AE60" strokeWidth="1.8" />
-        </svg>
-      );
-    case "medical":
-      return (
-        <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-          <circle cx="26" cy="26" r="20" stroke="#2980B9" strokeWidth="2" />
-          <path d="M26 16v20M16 26h20" stroke="#2980B9" strokeWidth="3" strokeLinecap="round" />
-        </svg>
-      );
-    case "electronics":
-      return (
-        <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-          <rect x="6" y="10" width="34" height="24" rx="3.5" stroke="#2471A3" strokeWidth="2" />
-          <path d="M14 44h24M26 34v10" stroke="#2471A3" strokeWidth="2" strokeLinecap="round" />
-          <rect x="40" y="16" width="6" height="14" rx="2" stroke="#2471A3" strokeWidth="1.8" />
-        </svg>
-      );
-    default:
-      return null;
+    case "vehicles":   return <FiTruck   size={52} color="#E74C3C" style={style} />;
+    case "property":   return <FiHome    size={52} color="#4B6BFB" style={style} />;
+    case "jobs":       return <FiBriefcase size={52} color="#27AE60" style={style} />;
+    case "medical":    return <FiActivity  size={52} color="#2980B9" style={style} />;
+    case "electronics":return <FiMonitor  size={52} color="#2471A3" style={style} />;
+    default: return null;
   }
 };
 
@@ -307,7 +272,6 @@ export default function FeaturedListings() {
           font-weight: 400;
           margin: 0;
         }
-        .fl-location svg { flex-shrink: 0; }
         .fl-price {
           font-size: 14px;
           font-weight: 800;
@@ -400,14 +364,10 @@ export default function FeaturedListings() {
                     aria-label="Save to wishlist"
                     onClick={(e) => toggleFavorite(item.id, e)}
                   >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z"
-                        stroke={favorites[item.id] ? "#E74C3C" : "#999"}
-                        strokeWidth="1.8"
-                        fill={favorites[item.id] ? "#E74C3C" : "none"}
-                      />
-                    </svg>
+                    {favorites[item.id]
+                      ? <FaHeart size={14} color="#E74C3C" />
+                      : <FiHeart size={14} color="#999" />
+                    }
                   </button>
                 </div>
 
@@ -415,12 +375,7 @@ export default function FeaturedListings() {
                 <div className="fl-body">
                   <p className="fl-listing-title">{item.title}</p>
                   <p className="fl-location">
-                    <svg width="11" height="13" viewBox="0 0 11 13" fill="none">
-                      <path
-                        d="M5.5 0C3.015 0 1 2.015 1 4.5C1 7.875 5.5 13 5.5 13C5.5 13 10 7.875 10 4.5C10 2.015 7.985 0 5.5 0ZM5.5 6C4.672 6 4 5.328 4 4.5C4 3.672 4.672 3 5.5 3C6.328 3 7 3.672 7 4.5C7 5.328 6.328 6 5.5 6Z"
-                        fill="#aaa"
-                      />
-                    </svg>
+                    <FiMapPin size={11} color="#aaa" />
                     {item.location}
                   </p>
                   <p className="fl-price">{item.price}</p>

@@ -2,6 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import {
+  FiSearch, FiChevronDown,
+  FiCreditCard, FiShield, FiHeadphones,
+} from "react-icons/fi";
+import { MdVerified } from "react-icons/md";
+import { TbCubeUnfolded } from "react-icons/tb";
 
 // popular searches to show below the search bar
 const popularSearches = [
@@ -30,66 +36,31 @@ const locations = [
 const trustBadges = [
   {
     id: "verified",
-    icon: (
-      // verified sellers icon
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <circle cx="14" cy="14" r="13" stroke="#C0392B" strokeWidth="1.5" fill="#fff5f5" />
-        <path d="M14 4l2.2 6.5H23l-5.5 4 2.1 6.5L14 17l-5.6 4 2.1-6.5L5 10.5h6.8L14 4z"
-          fill="none" stroke="#C0392B" strokeWidth="1.5" strokeLinejoin="round" />
-        <path d="M10 14l2.5 2.5L18 11" stroke="#C0392B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
+    icon: <MdVerified size={28} color="#C0392B" />,
     title: "Verified Sellers",
     sub: "10,000+ Trusted",
   },
   {
     id: "blockchain",
-    icon: (
-      // blockchain icon - not sure if we actually need this one
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <rect x="1.5" y="1.5" width="25" height="25" rx="5" stroke="#4B6BFB" strokeWidth="1.5" fill="#f0f3ff" />
-        <rect x="9" y="9" width="10" height="10" rx="2" stroke="#4B6BFB" strokeWidth="1.5" fill="none" />
-        <path d="M14 9V6M14 22v-3M9 14H6M22 14h-3" stroke="#4B6BFB" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="14" cy="14" r="2" fill="#4B6BFB" />
-      </svg>
-    ),
+    icon: <TbCubeUnfolded size={28} color="#4B6BFB" />,
     title: "Blockchain Verified",
     sub: "Tamper-proof records",
   },
   {
     id: "payments",
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <rect x="1.5" y="5.5" width="25" height="17" rx="3" stroke="#27AE60" strokeWidth="1.5" fill="#f0fff5" />
-        <path d="M1.5 10.5h25" stroke="#27AE60" strokeWidth="1.5" />
-        <rect x="5" y="15" width="6" height="3" rx="1" fill="#27AE60" opacity="0.7" />
-        <rect x="13" y="15" width="4" height="3" rx="1" fill="#27AE60" opacity="0.4" />
-      </svg>
-    ),
+    icon: <FiCreditCard size={28} color="#27AE60" />,
     title: "Safe Payments",
     sub: "eSewa, Khalti, ConnectIPS",
   },
   {
     id: "protection",
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <path d="M14 2.5L4 7v7c0 6 4.5 10.5 10 11.5C19.5 24.5 24 20 24 14V7L14 2.5z"
-          stroke="#F39C12" strokeWidth="1.5" fill="#fff9f0" />
-        <path d="M10 14l2.5 2.5L18 11" stroke="#F39C12" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
+    icon: <FiShield size={28} color="#F39C12" />,
     title: "Buyer Protection",
     sub: "Escrow & Dispute Support",
   },
   {
     id: "support",
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <circle cx="14" cy="14" r="12.5" stroke="#8E44AD" strokeWidth="1.5" fill="#faf0ff" />
-        <path d="M9 12a5 5 0 0110 0v3a2 2 0 01-2 2h-1a1 1 0 01-1-1v-2a1 1 0 011-1h1" stroke="#8E44AD" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M9 12v3a2 2 0 002 2h1a1 1 0 001-1v-2a1 1 0 00-1-1H11" stroke="#8E44AD" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
+    icon: <FiHeadphones size={28} color="#8E44AD" />,
     title: "24/7 Support",
     sub: "We are here for you",
   },
@@ -435,10 +406,7 @@ export default function HeroSection() {
           <div className="hero-search-box">
             {/* search icon on the left */}
             <div className="hero-search-icon">
-              <svg width="18" height="18" fill="none" stroke="#aaa" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="7" strokeWidth="2" />
-                <path d="M21 21l-4.35-4.35" strokeWidth="2" strokeLinecap="round" />
-              </svg>
+              <FiSearch size={18} color="#aaa" />
             </div>
 
             <input
@@ -459,12 +427,11 @@ export default function HeroSection() {
                 onClick={() => setLocOpen(!locOpen)}
               >
                 {location}
-                <svg
+                <FiChevronDown
                   className={`hero-loc-chevron${locOpen ? " open" : ""}`}
-                  width="12" height="12" fill="none" stroke="#999" viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                </svg>
+                  size={13}
+                  color="#999"
+                />
               </button>
 
               {/* show location options if open */}

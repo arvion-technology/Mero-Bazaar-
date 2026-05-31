@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import { FiSearch, FiMapPin, FiHeart } from "react-icons/fi";
+import { FaHeart, FaStar, FaStethoscope } from "react-icons/fa";
 
 type MedicalListing = {
   id: string;
@@ -445,10 +447,8 @@ export default function MedicalPage() {
           <div className="mp-hero-watermark">Medical</div>
           <div className="mp-hero-inner">
             <div className="mp-hero-tag">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L13.5 8.5H20L14.5 12.5L16.5 19L12 15L7.5 19L9.5 12.5L4 8.5H10.5L12 2Z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/>
-              </svg>
-              Nepal's #1 Healthcare Directory
+              <FaStethoscope size={13} color="#fff" />
+              Nepal&apos;s #1 Healthcare Directory
             </div>
             <h1 className="mp-hero-title">
               Find The Best<br />
@@ -456,10 +456,7 @@ export default function MedicalPage() {
             </h1>
             <p className="mp-hero-sub">Trusted doctors, clinics, hospitals and medical services near you</p>
             <div className="mp-search-wrap">
-              <svg className="mp-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="7" stroke="#bbb" strokeWidth="2.2" />
-                <path d="M16.5 16.5L21 21" stroke="#bbb" strokeWidth="2.2" strokeLinecap="round" />
-              </svg>
+              <FiSearch className="mp-search-icon" size={18} color="#bbb" />
               <input
                 className="mp-search"
                 placeholder="Search doctors, clinics, hospitals..."
@@ -579,23 +576,19 @@ export default function MedicalPage() {
                             {l.isFeatured && <span className="mp-badge-featured">⭐ Featured</span>}
                           </div>
                           <button className="mp-heart" aria-label="Save" onClick={(e) => toggleFav(l.id, e)}>
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill={isFav ? "#E74C3C" : "none"}>
-                              <path d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z" stroke={isFav ? "#E74C3C" : "#999"} strokeWidth="1.8" />
-                            </svg>
+                            {isFav ? <FaHeart size={15} color="#E74C3C" /> : <FiHeart size={15} color="#999" />}
                           </button>
                         </div>
                         <div className="mp-card-body">
                           <p className="mp-card-name">{l.name}</p>
                           <p className="mp-card-specialty">{l.specialty}</p>
                           <div className="mp-card-rating">
-                            <span className="mp-card-stars">★</span>
+                            <FaStar size={12} color="#f5a623" />
                             <span className="mp-card-rating-num">{l.rating}</span>
                             <span className="mp-card-reviews">({l.reviews})</span>
                           </div>
                           <div className="mp-card-location">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#bbb"/>
-                            </svg>
+                            <FiMapPin size={11} color="#bbb" />
                             {l.location}
                           </div>
                           <div className="mp-card-footer">
