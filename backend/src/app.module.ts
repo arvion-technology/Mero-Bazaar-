@@ -21,6 +21,8 @@ import { SecondhandController } from './modules/secondhand/secondhand.controller
 import { SecondhandService } from './modules/secondhand/secondhand.service';
 import { FoodsModule } from './modules/foods/foods.module';
 import { BeautyModule } from './modules/beauty/beauty.module';
+import { ReviewsController } from './modules/reviews/reviews.controller';
+import { ReviewsModule } from './modules/reviews/reviews.module';
 
 
 @Module({
@@ -38,8 +40,9 @@ import { BeautyModule } from './modules/beauty/beauty.module';
     SecondhandModule,
     FoodsModule,
     BeautyModule,
+    ReviewsModule,
   ],
-  controllers: [AppController, RentalController, SecondhandController],
+  controllers: [AppController, RentalController, SecondhandController, ReviewsController],
   providers: [AppService, RentalService, AgricultureService, SecondhandService],
 })
 export class AppModule {}
