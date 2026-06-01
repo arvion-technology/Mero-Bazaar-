@@ -10,7 +10,7 @@ import { FaHeart, FaBolt, FaLaptop, FaGamepad } from "react-icons/fa";
 import { MdSpeaker, MdVerified } from "react-icons/md";
 import { BsShieldCheck } from "react-icons/bs";
 
-/* ─── Types ─────────────────────────────────────────────────── */
+/* Types */
 type ElectronicListing = {
   id: string;
   title: string;
@@ -28,7 +28,7 @@ type ElectronicListing = {
   badge?: "New" | "Old" | "Warranty";
 };
 
-/* ─── Listings ───────────────────────────────────────────────── */
+/*  Listings  */
 const LISTINGS: ElectronicListing[] = [
   {
     id: "iphone-13-pro-kathmandu",
@@ -178,14 +178,14 @@ const CATEGORY_DATA: { label: string; icon: React.ReactNode; count: number }[] =
   { label: "Smart Watches", icon: <FiWatch size={20} />,      count: 445  },
 ];
 
-/* ─── Badge styles ───────────────────────────────────────────── */
+/*  Badge styles */
 const badgeStyles: Record<string, { bg: string; text: string; border: string }> = {
   New:      { bg: "#eafaf1", text: "#1e8449", border: "#a9dfbf" },
   Old:      { bg: "#e0f7fa", text: "#00695c", border: "#80cbc4" },
   Warranty: { bg: "#ede7f6", text: "#6a1b9a", border: "#ce93d8" },
 };
 
-/* ─── Page Component ─────────────────────────────────────────── */
+/*  Page Component */
 export default function ElectronicsPage() {
   const [search,         setSearch]         = useState("");
   const [sort,           setSort]           = useState("newest");
@@ -237,7 +237,7 @@ export default function ElectronicsPage() {
 
       <div style={{ background: "#f2f4f7", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
 
-        {/* ══ HERO ══════════════════════════════════════════════ */}
+        {/* HERO  */}
         <section style={{ position: "relative", height: 220, overflow: "hidden", display: "flex", alignItems: "center" }}>
           {/* BG image */}
           <div style={{
@@ -288,7 +288,7 @@ export default function ElectronicsPage() {
           </div>
         </section>
 
-        {/* ══ CATEGORY STRIP ════════════════════════════════════ */}
+        {/* CATEGORY STRIP */}
         <section style={{ background: "#fff", borderBottom: "1.5px solid #eaeaea", padding: "14px 0" }}>
           <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 28px", display: "flex", gap: 10, flexWrap: "wrap" }}>
             {CATEGORY_DATA.map(({ label, icon, count }) => (
@@ -314,11 +314,11 @@ export default function ElectronicsPage() {
           </div>
         </section>
 
-        {/* ══ BODY ══════════════════════════════════════════════ */}
+        {/*  BODY  */}
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "22px 24px 60px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 20, alignItems: "start" }}>
 
-            {/* ══ SIDEBAR ══════════════════════════════════════ */}
+            {/*  SIDEBAR */}
             <aside style={{
               background: "#fff", borderRadius: 16,
               border: "1.5px solid #e4e8f0", overflow: "hidden",
@@ -494,7 +494,7 @@ export default function ElectronicsPage() {
                     return (
                       <Link
                         key={l.id}
-                        href={`/listing/${l.id}`}
+                        href={`/category/electronics/${l.id}`}
                         style={{
                           background: "#fff", borderRadius: 16,
                           border: "1.5px solid #ececec", overflow: "hidden",
