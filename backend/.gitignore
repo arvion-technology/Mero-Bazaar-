@@ -79,3 +79,6 @@ frontend/pnpm-debug.log*
 
 # allow example env
 !frontend/.env.example
+
+# TypeScript build cache
+*.tsbuildinfo
