@@ -8,24 +8,29 @@ import { WeekDay } from '@prisma/client';
 export class BeautySlotsService {
   constructor(private prisma: PrismaService) {}
 
+  private toMinutes(time: string) {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  }
+
   async create(dto: CreateBeautySlotDto) {
     const { beautyId, day, startTime, endTime } = dto;
 
     const beauty = await this.prisma.hairBeautyAndWellness.findUnique({
-      where: { id: beautyId },
+      where: { listingId: beautyId },
     });
 
     if (!beauty) {
       throw new NotFoundException('Beauty service not found');
     }
 
-    if (startTime >= endTime) {
+    if (this.toMinutes(startTime) >= this.toMinutes(endTime)) {
       throw new BadRequestException('Invalid time range');
     }
 
     const existing = await this.prisma.beautySlot.findFirst({
       where: {
-        beautyId,
+        beautyId: beauty.id,
         day: day as WeekDay,
         startTime,
         endTime,
@@ -38,7 +43,7 @@ export class BeautySlotsService {
 
     return this.prisma.beautySlot.create({
       data: {
-        beautyId,
+        beautyId: beauty.id,
         day: day as WeekDay,
         startTime,
         endTime,
@@ -46,9 +51,9 @@ export class BeautySlotsService {
     });
   }
 
-  async findAll() {
+  async findByBeauty(beautyId: string) {
     return this.prisma.beautySlot.findMany({
-      orderBy: { createdAt: 'desc' },
+      where: { beautyId },
     });
   }
 
@@ -104,4 +109,10 @@ export class BeautySlotsService {
       where: { id },
     });
   }
+
+  async debugBeauty() {
+  const allBeauty = await this.prisma.beautySlot.findMany();
+  console.log(allBeauty);
+  return allBeauty;
+}
 }

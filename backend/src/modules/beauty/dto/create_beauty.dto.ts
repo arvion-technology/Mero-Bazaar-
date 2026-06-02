@@ -21,7 +21,7 @@ export class CreateHairBeautyAndWellnessDto {
 
   @IsOptional()
   @IsArray()
-  @IsUrl({}, { each: true })
+  @IsString({ each: true })
   portfolioUrls?: string[];
 
   @IsOptional()
@@ -31,7 +31,4 @@ export class CreateHairBeautyAndWellnessDto {
   @IsOptional()
   @IsString()
   city?: string;
-
-  @IsString()
-  listingId: string;
 }

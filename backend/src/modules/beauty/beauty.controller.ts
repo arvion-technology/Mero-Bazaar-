@@ -1,4 +1,4 @@
-import { Controller, Delete, Param, Patch, Get, Post, Body } from '@nestjs/common';
+import { Controller, Delete, Param, Patch, Get, Post, Body} from '@nestjs/common';
 import { HairBeautyAndWellnessService } from './beauty.service';
 import { CreateHairBeautyAndWellnessDto } from './dto/create_beauty.dto';
 import { UpdateHairBeautyAndWellnessDto } from './dto/update_beauty.dto';

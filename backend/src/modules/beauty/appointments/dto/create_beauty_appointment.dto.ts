@@ -1,8 +1,8 @@
-import { IsDateString, IsOptional, IsString } from "class-validator";
+import { IsOptional, IsString } from "class-validator";
 
 export class CreateBeautyAppointmentDto {
   @IsString()
-  beautyId: string;
+  listingId: string;
 
   @IsString()
   slotId: string;
@@ -13,12 +13,6 @@ export class CreateBeautyAppointmentDto {
   @IsOptional()
   @IsString()
   customerId?: string;
-
-  @IsDateString()
-  startTime: string;
-
-  @IsDateString()
-  endTime: string;
 
   @IsOptional()
   @IsString()

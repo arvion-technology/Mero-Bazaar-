@@ -51,20 +51,20 @@ export class HairBeautyAndWellnessService {
   }
 
   async findOne(id: string) {
-    const listing = await this.prisma.listing.findUnique({
-      where: { id },
+    const beauty = await this.prisma.hairBeautyAndWellness.findFirst({
+      where: { listingId: id },
       include: {
-        beauty: true,
+        listing: true,
       },
     });
 
-    if (!listing || listing.category !== ListingCategory.BEAUTY) {
+    if (!beauty) {
       throw new NotFoundException('Hair Beauty & Wellness listing not found');
     }
 
-    return listing;
+    return beauty;
   }
-
+  
   async update(id: string, dto: UpdateHairBeautyAndWellnessDto) {
     await this.findOne(id);
 
