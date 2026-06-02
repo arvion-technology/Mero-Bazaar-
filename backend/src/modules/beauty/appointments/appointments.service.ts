@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateBeautyAppointmentDto } from './dto/create_beauty_appointment.dto';
 import { AppointmentStatus } from '@prisma/client';
@@ -7,25 +11,32 @@ import { AppointmentStatus } from '@prisma/client';
 export class BeautyAppointmentsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto:CreateBeautyAppointmentDto) {
-    const { beautyId, slotId, customerId, customerName, notes } = dto;
+  async create(dto: CreateBeautyAppointmentDto) {
+    const { listingId, slotId, customerId, customerName, notes } = dto;
 
-    const beauty =await this.prisma.hairBeautyAndWellness.findUnique({
-      where: { id: beautyId },
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      include: { beauty: true },
     });
-    if (!beauty) {
+
+    if (!listing?.beauty) {
       throw new NotFoundException('Beauty service not found');
     }
+
+    const beauty = listing.beauty;
 
     const slot = await this.prisma.beautySlot.findUnique({
       where: { id: slotId },
     });
+
     if (!slot) {
-      throw new NotFoundException('SLot not found!');
+      throw new NotFoundException('Slot not found');
     }
 
-    if (slot.beautyId !== beautyId) {
-      throw new BadRequestException('Slot doesnot belong to this beauty service');
+    if (slot.beautyId !== beauty.id) {
+      throw new BadRequestException(
+        'Slot does not belong to this beauty service',
+      );
     }
 
     if (slot.isBooked) {
@@ -35,12 +46,12 @@ export class BeautyAppointmentsService {
     return this.prisma.$transaction(async (tx) => {
       const appointment = await tx.beautyAppointment.create({
         data: {
-          beautyId,
+          beautyId: beauty.id,
           slotId,
           customerId,
           customerName,
-          startTime: new Date(slot.startTime),
-          endTime: new Date(slot.endTime),
+          startTime: new Date(),
+          endTime: new Date(),
           notes,
           status: AppointmentStatus.PENDING,
         },
@@ -50,16 +61,24 @@ export class BeautyAppointmentsService {
         where: { id: slotId },
         data: { isBooked: true },
       });
+
       return appointment;
     });
   }
 
-  async findByBeauty(beautyId: string) {
+  async findByBeauty(listingId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      include: { beauty: true },
+    });
+
+    if (!listing?.beauty) {
+      throw new NotFoundException('Beauty service not found');
+    }
+
     return this.prisma.beautyAppointment.findMany({
-      where: { beautyId },
-      include: {
-        slot: true,
-      },
+      where: { beautyId: listing.beauty.id },
+      include: { slot: true },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -72,10 +91,12 @@ export class BeautyAppointmentsService {
           status: AppointmentStatus.CANCELLED,
         },
       });
+
       await tx.beautySlot.update({
         where: { id: appointment.slotId },
         data: { isBooked: false },
       });
+
       return appointment;
     });
   }

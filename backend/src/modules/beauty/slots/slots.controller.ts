@@ -14,10 +14,16 @@ export class BeautySlotsController {
 
   @Get()
   findAll() {
-    return this.slotsService.findAll();
+    console.log('🔥 FINDALL HIT');
+    return { ok: true };
   }
 
-  @Get(':id')
+  @Get(':beautyId')
+  findByBeauty(@Param('beautyId') beautyId: string) {
+    return this.slotsService.findByBeauty(beautyId);
+  }
+
+  @Get('single/:id')
   findOne(@Param('id') id: string) {
     return this.slotsService.findOne(id);
   }
@@ -33,5 +39,9 @@ export class BeautySlotsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.slotsService.remove(id);
+  }
+  @Get('debug')
+  debug() {
+    return this.slotsService.debugBeauty();
   }
 }
