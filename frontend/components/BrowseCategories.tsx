@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import Image from "next/image"; 
 
 const categories = [
   {
@@ -24,7 +24,7 @@ const categories = [
     id: "jobs",
     label: "Jobs",
     count: "6,245 Listings",
-    href: "/category/jobs",
+    href: "/category/job",
     bg: "#f0fff5",
     img: "/jobs.png",
   },
@@ -40,7 +40,7 @@ const categories = [
     id: "education",
     label: "Education",
     count: "2,184 Listings",
-    href: "/category/education",
+    href: "/category/education-training",
     bg: "#f5f0ff",
     img: "/education.png",
   },
