@@ -9,21 +9,13 @@ import { SearchModule } from './search/search.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { LeadsModule } from './modules/leads/leads.module';
 import { MedicalModule } from './modules/medical/medical.module';
-import { TradesController } from './modules/trades/trades.controller';
 import { TradesModule } from './modules/trades/trades.module';
-import { RentalController } from './modules/rental/rental.controller';
-import { RentalService } from './modules/rental/rental.service';
 import { RentalModule } from './modules/rental/rental.module';
-import { AgricultureService } from './modules/agriculture/agriculture.service';
 import { AgricultureModule } from './modules/agriculture/agriculture.module';
 import { SecondhandModule } from './modules/secondhand/secondhand.module';
-import { SecondhandController } from './modules/secondhand/secondhand.controller';
-import { SecondhandService } from './modules/secondhand/secondhand.service';
 import { FoodsModule } from './modules/foods/foods.module';
 import { BeautyModule } from './modules/beauty/beauty.module';
-import { ReviewsController } from './modules/reviews/reviews.controller';
 import { ReviewsModule } from './modules/reviews/reviews.module';
-
 
 @Module({
   imports: [
@@ -42,7 +34,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
     BeautyModule,
     ReviewsModule,
   ],
-  controllers: [AppController, RentalController, SecondhandController, ReviewsController],
-  providers: [AppService, RentalService, AgricultureService, SecondhandService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
