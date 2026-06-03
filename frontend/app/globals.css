@@ -1,3 +1,6 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -38,3 +41,13 @@ img {
   display: block;
   max-width: 100%;
 }
+
+/* Hide scrollbar but keep scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Vehicle card image zoom on hover */
+.vcard:hover .vcard-img { transform: scale(1.07); }
+
+/* Checkbox accent */
+.custom-cb { accent-color: #e05c3a; width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }

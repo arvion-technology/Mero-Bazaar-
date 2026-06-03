@@ -34,7 +34,7 @@ const LISTINGS: EducationListing[] = [
     reviews: 120,
     location: "Sanepa, Lalitpur, Nepal",
     city: "Lalitpur",
-    image: "/greenfield.jpg",
+    image: "/school.jpg",
     isVerified: true,
     isFeatured: true,
     admissionOpen: true,

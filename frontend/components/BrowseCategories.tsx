@@ -2,104 +2,88 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { FiMoreHorizontal } from "react-icons/fi";
 
 const categories = [
   {
     id: "vehicles",
+    labelNp: "सवारी साधन",
     label: "Vehicles",
-    count: "12,540 Listings",
+    count: "12,000+ Listings",
     href: "/category/vehicles",
     bg: "#fff0f0",
     img: "/vehicle.png",
   },
   {
-    id: "property",
-    label: "Property",
-    count: "8,732 Listings",
-    href: "/category/property",
-    bg: "#f0f4ff",
-    img: "/property.png",
-  },
-  {
     id: "jobs",
-    label: "Jobs",
-    count: "6,245 Listings",
+    labelNp: "रोजगार",
+    label: "Jobs & Labour Hire",
+    count: "13,000+ Listings",
     href: "/category/job",
     bg: "#f0fff5",
     img: "/jobs.png",
   },
   {
     id: "medical",
-    label: "Medical",
-    count: "3,421 Listings",
+    labelNp: "स्वास्थ्य",
+    label: "Medical & Dental",
+    count: "13,600+ Listings",
     href: "/category/medical",
     bg: "#f0f8ff",
     img: "/medical.png",
   },
   {
-    id: "education",
-    label: "Education",
-    count: "2,184 Listings",
-    href: "/category/education-training",
-    bg: "#f5f0ff",
-    img: "/education.png",
-  },
-  {
     id: "construction",
-    label: "Construction",
-    count: "4,567 Listings",
+    labelNp: "घर सेवा",
+    label: "Trades & Home Repair",
+    count: "6,000+ Listings",
     href: "/category/construction",
     bg: "#fff9f0",
     img: "/construction.png",
   },
   {
-    id: "electronics",
-    label: "Electronics",
-    count: "5,231 Listings",
-    href: "/category/electronics",
+    id: "property",
+    labelNp: "घरजग्गा",
+    label: "Rent & Real Estate",
+    count: "12,500+ Listings",
+    href: "/category/property",
     bg: "#f0f4ff",
-    img: "/electronics.png",
-  },
-  {
-    id: "beauty",
-    label: "Beauty & Wellness",
-    count: "3,987 Listings",
-    href: "/category/beauty",
-    bg: "#fff0f8",
-    img: "/beauty and wellness.png",
-  },
-  {
-    id: "home-services",
-    label: "Home Services",
-    count: "4,321 Listings",
-    href: "/category/home-services",
-    bg: "#fff9f0",
-    img: "/home services.png",
+    img: "/property.png",
   },
   {
     id: "food",
-    label: "Food & Restaurants",
-    count: "2,876 Listings",
+    labelNp: "कृषि",
+    label: "Agriculture & Livestock",
+    count: "5,500+ Listings",
     href: "/category/food",
     bg: "#f0fff5",
     img: "/food and restaurants.png",
   },
   {
-    id: "travel",
-    label: "Travel & Tourism",
-    count: "1,982 Listings",
-    href: "/category/travel",
-    bg: "#f0f8ff",
-    img: "/travel and tourism.png",
+    id: "electronics",
+    labelNp: "पुराना सामान",
+    label: "Secondhand Goods",
+    count: "15,000+ Listings",
+    href: "/category/electronics",
+    bg: "#f0f4ff",
+    img: "/electronics.png",
   },
   {
-    id: "more",
-    label: "More Categories",
-    count: "Explore all",
-    href: "/categories",
-    bg: "#f5f5f5",
-    img: null,
+    id: "education",
+    labelNp: "शिक्षा र तालिम",
+    label: "Education & Training",
+    count: "5,500+ Listings",
+    href: "/category/education-training",
+    bg: "#fff9f0",
+    img: "/education.png",
+  },
+  {
+    id: "beauty",
+    labelNp: "सौन्दर्य",
+    label: "Hair, Beauty & Wellness",
+    count: "4,500+ Listings",
+    href: "/category/beauty",
+    bg: "#fff0f8",
+    img: "/beauty and wellness.png",
   },
 ];
 
@@ -111,13 +95,13 @@ export default function BrowseCategories() {
 
         .bc-section {
           background: #fff;
-          padding: 36px 0 40px;
+          padding: 36px 0 44px;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
         .bc-inner {
           max-width: 1280px;
           margin: 0 auto;
-          padding: 0 24px;
+          padding: 0 28px;
         }
 
         /* Header */
@@ -125,7 +109,7 @@ export default function BrowseCategories() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 22px;
+          margin-bottom: 20px;
         }
         .bc-title {
           font-size: 20px;
@@ -138,58 +122,47 @@ export default function BrowseCategories() {
           display: inline-flex;
           align-items: center;
           gap: 4px;
-          font-size: 13.5px;
+          font-size: 13px;
           font-weight: 600;
           color: #C0392B;
           text-decoration: none;
           transition: gap 0.2s, opacity 0.2s;
         }
-        .bc-view-all:hover {
-          opacity: 0.8;
-          gap: 8px;
-        }
-        .bc-view-all-arrow {
-          font-size: 15px;
-          transition: transform 0.2s;
-        }
-        .bc-view-all:hover .bc-view-all-arrow {
-          transform: translateX(2px);
-        }
+        .bc-view-all:hover { opacity: 0.8; gap: 8px; }
+        .bc-view-all-arrow { font-size: 15px; transition: transform 0.2s; }
+        .bc-view-all:hover .bc-view-all-arrow { transform: translateX(2px); }
 
-        /* Grid */
+        /* Grid — 3 columns matching screenshot */
         .bc-grid {
           display: grid;
-          grid-template-columns: repeat(6, 1fr);
-          gap: 14px;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
         }
 
-        /* Card */
+        /* Card — horizontal layout like the screenshot */
         .bc-card {
           display: flex;
-          flex-direction: column;
           align-items: center;
-          justify-content: center;
-          gap: 10px;
-          padding: 20px 10px 16px;
+          gap: 14px;
+          padding: 14px 18px;
           background: #fff;
           border: 1.5px solid #f0f0f0;
           border-radius: 12px;
           text-decoration: none;
           cursor: pointer;
           transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-          text-align: center;
-          min-height: 110px;
         }
         .bc-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 8px 28px rgba(0,0,0,0.1);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.09);
           border-color: #e0e0e0;
         }
 
+        /* Icon */
         .bc-icon-wrap {
-          width: 58px;
-          height: 58px;
-          border-radius: 50%;
+          width: 54px;
+          height: 54px;
+          border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -197,47 +170,43 @@ export default function BrowseCategories() {
           overflow: hidden;
           transition: transform 0.2s ease;
         }
-        .bc-card:hover .bc-icon-wrap {
-          transform: scale(1.07);
-        }
+        .bc-card:hover .bc-icon-wrap { transform: scale(1.06); }
 
+        /* Text */
+        .bc-text { flex: 1; min-width: 0; }
+        .bc-label-np {
+          font-size: 12px;
+          font-weight: 500;
+          color: #888;
+          margin: 0 0 1px;
+          line-height: 1.2;
+        }
         .bc-label {
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 700;
           color: #1a1a1a;
-          line-height: 1.3;
-          margin: 0;
+          margin: 0 0 3px;
+          line-height: 1.25;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .bc-count {
-          font-size: 11.5px;
-          color: #888;
-          font-weight: 400;
+          font-size: 12px;
+          font-weight: 600;
+          color: #C0392B;
           margin: 0;
           line-height: 1;
         }
 
-        /* More categories dots */
-        .bc-more-dots {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 4px;
-          width: 100%;
-          height: 100%;
-        }
-
         /* Responsive */
-        @media (max-width: 1024px) {
-          .bc-grid { grid-template-columns: repeat(4, 1fr); }
-        }
-        @media (max-width: 640px) {
-          .bc-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-          .bc-card { padding: 14px 8px 12px; min-height: 90px; }
-          .bc-icon-wrap { width: 48px; height: 48px; }
-          .bc-title { font-size: 17px; }
-        }
-        @media (max-width: 400px) {
+        @media (max-width: 900px) {
           .bc-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 540px) {
+          .bc-grid { grid-template-columns: 1fr; gap: 10px; }
+          .bc-inner { padding: 0 16px; }
+          .bc-title { font-size: 17px; }
         }
       `}</style>
 
@@ -256,26 +225,17 @@ export default function BrowseCategories() {
           <div className="bc-grid">
             {categories.map((cat) => (
               <Link key={cat.id} href={cat.href} className="bc-card">
-                <div
-                  className="bc-icon-wrap"
-                  style={{ background: cat.bg }}
-                >
-                  {cat.img ? (
-                    <Image
-                      src={cat.img}
-                      alt={cat.label}
-                      width={58}
-                      height={58}
-                      style={{ objectFit: "cover", width: "100%", height: "100%", borderRadius: "50%" }}
-                    />
-                  ) : (
-                    /* More Categories — dots fallback */
-                    <div className="bc-more-dots">
-                      <FiMoreHorizontal size={36} color="#aaa" />
-                    </div>
-                  )}
+                <div className="bc-icon-wrap" style={{ background: cat.bg }}>
+                  <Image
+                    src={cat.img}
+                    alt={cat.label}
+                    width={54}
+                    height={54}
+                    style={{ objectFit: "cover", width: "100%", height: "100%", borderRadius: "12px" }}
+                  />
                 </div>
-                <div>
+                <div className="bc-text">
+                  <p className="bc-label-np">{cat.labelNp}</p>
                   <p className="bc-label">{cat.label}</p>
                   <p className="bc-count">{cat.count}</p>
                 </div>

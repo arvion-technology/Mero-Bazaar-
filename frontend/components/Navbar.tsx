@@ -7,14 +7,14 @@ import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX } from "react-icons/
 
 const categories = [
   { name: "Vehicles", slug: "vehicles" },
-  { name: "Property", slug: "property" },
-  { name: "Jobs & Careers", slug: "job" },
-  { name: "Medical & Health", slug: "medical" },
-  { name: "Education & Training", slug: "education-training" },
-  { name: "Electronics", slug: "electronics" },
-  { name: "Beauty & Wellness", slug: "beauty-wellness" },
-  { name: "Trades & Maintenance", slug: "trades-maintenance" },
-  { name: "Food & Restaurants", slug: "food-restaurants" },
+  { name: "Jobs & Labour Hire", slug: "job" },
+  { name: "Medical & Dental", slug: "medical" },
+  { name: " Trades & Home Repair", slug: "construction" },
+  { name: "Rent & Real Estate", slug: "property" },
+  { name: "Agriculture & Livestock", slug: "food" },
+  { name: "Secondhand Goods", slug: "electronics" },
+  { name: "Food & Home Delivery", slug: "education-training" },
+  { name: "Hair, Beauty & Wellness", slug: "beauty" },
 ];
 
 const navLinks = [
