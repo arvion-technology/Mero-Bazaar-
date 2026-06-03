@@ -4,20 +4,24 @@ import { PrismaService } from "src/database/prisma.service";
 import { buildListingFilter } from "./builders/listings_filter.builder";
 import { buildVehicleFilter } from "./builders/vehicle_filter.builder";
 import { buildJobFilter } from "./builders/job_filter.builder";
+import { buildRentalFilter } from "./builders/rental_filter.builder";
 import { buildMedicalFilter } from "./builders/medical_filter.builder.dto";
 import { buildTradesFilter } from "./builders/trades_filter.build";
 import { buildAgricultureFilter } from "./builders/agriculture_filter.builder";
 import { buildSecondHandFilter } from "./builders/secondhand_filter.builders";
 import { buildFoodsFilter } from "./builders/foods_filter.builder";
+import { buildBeautyFilter } from "./builders/beauty_filter.builders.dto";
 
 import { ListingSearchDto } from "./dto/listing_search.dto";
 import { VehicleSearchDto } from "./dto/vehicle_search.dto";
 import { JobSearchDto } from "./dto/job_search.dto";
+import { RentalSearchDto } from "./dto/rental_search.dto";
 import { MedicalSearchDto } from "./dto/medical_search.dto";
 import { TradesSearchDto } from "./dto/trade_search.dto";
 import { AgricultureSearchDto } from "./dto/agriculture_search.dto";
 import { SecondHandSearchDto } from "./dto/secondhand_search.dto";
 import { SearchFoodsDto } from "./dto/foods_search.dto";
+import { BeautySearchDto } from "./dto/beauty_search.dto";
 
 @Injectable()
 export class SearchService {
@@ -67,7 +71,19 @@ export class SearchService {
       },
     });
   }
+  async rentalSearch(filters: RentalSearchDto) {
+    const where = buildRentalFilter(filters);
 
+    return this.prisma.listing.findMany({
+      where,
+      include: {
+        rental: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
   async medicalSearch(filters: MedicalSearchDto) {
     const where = buildMedicalFilter(filters);
 
@@ -134,5 +150,18 @@ export class SearchService {
         createdAt: 'desc',
       },
     });
+  }
+  async beautySearch(filters: BeautySearchDto) {
+    const where = buildBeautyFilter(filters);
+
+    return this.prisma.listing.findMany({
+      where,
+      include: {
+        beauty: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      }
+    })
   }
 }
