@@ -13,70 +13,117 @@ export class BeautySlotsService {
     return h * 60 + m;
   }
 
-  async create(dto: CreateBeautySlotDto) {
-    const { beautyId, day, startTime, endTime } = dto;
-
-    const beauty = await this.prisma.hairBeautyAndWellness.findUnique({
-      where: { listingId: beautyId },
+  async resolveBeautyByListingId(listingId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      include: { beauty: true },
     });
 
-    if (!beauty) {
+    if (!listing?.beauty) {
       throw new NotFoundException('Beauty service not found');
     }
 
-    if (this.toMinutes(startTime) >= this.toMinutes(endTime)) {
-      throw new BadRequestException('Invalid time range');
+    return listing.beauty;
+  }
+
+  async create(dto: CreateBeautySlotDto) {
+    const beauty = await this.resolveBeautyByListingId(dto.beautyId);
+
+    if (this.toMinutes(dto.startTime) >= this.toMinutes(dto.endTime)) {
+      throw new BadRequestException('startTime must be before endTime');
     }
 
     const existing = await this.prisma.beautySlot.findFirst({
       where: {
         beautyId: beauty.id,
-        day: day as WeekDay,
-        startTime,
-        endTime,
+        day: dto.day as WeekDay,
+        startTime: dto.startTime,
+        endTime: dto.endTime,
       },
     });
 
     if (existing) {
-      throw new BadRequestException('Slot already exists');
+      throw new BadRequestException('Slot already exists for this day and time');
     }
 
     return this.prisma.beautySlot.create({
       data: {
         beautyId: beauty.id,
-        day: day as WeekDay,
-        startTime,
-        endTime,
+        day: dto.day as WeekDay,
+        startTime: dto.startTime,
+        endTime: dto.endTime,
       },
     });
   }
 
-  async findByBeauty(beautyId: string) {
+  async findAll() {
     return this.prisma.beautySlot.findMany({
-      where: { beautyId },
+      orderBy: { day: 'asc' },
+      select: {
+        id: true,
+        day: true,
+        startTime: true,
+        endTime: true,
+        isBooked: true,
+        beauty: {
+          select: {
+            id: true,
+            serviceType: true,
+            price: true,
+            city: true,
+            listingId: true,
+            listing: {
+              select: {
+                title: true,
+                images: true,
+              },
+            },
+          },
+        },
+      },
     });
   }
 
-  async findOne(id: string) {
-    const slot = await this.prisma.beautySlot.findUnique({
-      where: { id },
-    });
+  async findByListing(listingId: string) {
+    const beauty = await this.resolveBeautyByListingId(listingId);
 
-    if (!slot) {
-      throw new NotFoundException('Slot not found');
-    }
+    return this.prisma.beautySlot.findMany({
+      where: { beautyId: beauty.id },
+      orderBy: { day: 'asc' },
+      select: {
+        id: true,
+        day: true,
+        startTime: true,
+        endTime: true,
+        isBooked: true,
+        beauty: {
+          select: {
+            id: true,
+            serviceType: true,
+            price: true,
+            city: true,
+            listingId: true,
+            listing: {
+              select: {
+                title: true,
+                images: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+  async findOne(id: string) {
+    const slot = await this.prisma.beautySlot.findUnique({ where: { id } });
+
+    if (!slot) throw new NotFoundException('Slot not found');
 
     return slot;
   }
 
   async update(id: string, dto: UpdateBeautySlotDto) {
-    const slot = await this.prisma.beautySlot.findUnique({
-      where: { id },
-    });
-
-    if (!slot) {
-      throw new NotFoundException('Slot not found');
-    }
+    const slot = await this.findOne(id);
 
     if (slot.isBooked) {
       throw new BadRequestException('Cannot update a booked slot');
@@ -93,26 +140,12 @@ export class BeautySlotsService {
   }
 
   async remove(id: string) {
-    const slot = await this.prisma.beautySlot.findUnique({
-      where: { id },
-    });
-
-    if (!slot) {
-      throw new NotFoundException('Slot not found');
-    }
+    const slot = await this.findOne(id);
 
     if (slot.isBooked) {
-      throw new BadRequestException('Cannot delete booked slot');
+      throw new BadRequestException('Cannot delete a booked slot');
     }
 
-    return this.prisma.beautySlot.delete({
-      where: { id },
-    });
+    return this.prisma.beautySlot.delete({ where: { id } });
   }
-
-  async debugBeauty() {
-  const allBeauty = await this.prisma.beautySlot.findMany();
-  console.log(allBeauty);
-  return allBeauty;
-}
 }

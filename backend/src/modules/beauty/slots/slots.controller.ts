@@ -8,40 +8,32 @@ export class BeautySlotsController {
   constructor(private readonly slotsService: BeautySlotsService) {}
 
   @Post()
-  create(@Body() createBeautySlotDto: CreateBeautySlotDto) {
-    return this.slotsService.create(createBeautySlotDto);
+  create(@Body() dto: CreateBeautySlotDto) {
+    return this.slotsService.create(dto);
   }
 
   @Get()
   findAll() {
-    console.log('🔥 FINDALL HIT');
-    return { ok: true };
+    return this.slotsService.findAll();
   }
 
-  @Get(':beautyId')
-  findByBeauty(@Param('beautyId') beautyId: string) {
-    return this.slotsService.findByBeauty(beautyId);
+  @Get('listing-id/:listingId')
+  findByListing(@Param('listingId') listingId: string) {
+    return this.slotsService.findByListing(listingId);
   }
 
-  @Get('single/:id')
+  @Get(':id')
   findOne(@Param('id') id: string) {
     return this.slotsService.findOne(id);
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateBeautySlotDto: UpdateBeautySlotDto,
-  ) {
-    return this.slotsService.update(id, updateBeautySlotDto);
+  update(@Param('id') id: string, @Body() dto: UpdateBeautySlotDto) {
+    return this.slotsService.update(id, dto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.slotsService.remove(id);
-  }
-  @Get('debug')
-  debug() {
-    return this.slotsService.debugBeauty();
   }
 }

@@ -8,7 +8,11 @@ import { BeautyAppointmentsService } from './appointments/appointments.service';
 import { BeautySlotsService } from './slots/slots.service';
 
 @Module({
-  controllers: [HairBeautyAndWellnessController, BeautySlotsController, BeautyAppointmentsController],
+  controllers: [
+    BeautySlotsController,
+    BeautyAppointmentsController,
+    HairBeautyAndWellnessController,
+  ],
   providers: [HairBeautyAndWellnessService, PrismaService, BeautySlotsService, BeautyAppointmentsService],
 })
 export class BeautyModule {}
