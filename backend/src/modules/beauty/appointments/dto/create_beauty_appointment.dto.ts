@@ -12,9 +12,5 @@ export class CreateBeautyAppointmentDto {
 
   @IsOptional()
   @IsString()
-  customerId?: string;
-
-  @IsOptional()
-  @IsString()
   notes?: string;
 }

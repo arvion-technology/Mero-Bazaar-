@@ -32,7 +32,7 @@ export class RentalSearchDto {
   @IsOptional()
   @IsString()
   city?: string;
-   
+
   @IsOptional()
   @IsString()
   area?: string;
