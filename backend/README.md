@@ -31,4 +31,10 @@ PORT=3000
 -Vehicle module (CRUD APIs)<br>
 -Listings system <br>
 -Search and filter by fields<br>
--jobs module<br>
+-Jobs module<br>
+-Leads<br>
+-Medical and Dental<br>
+-Trades and home repair<br>
+-Rental and real Estate<br>
+-Agriculture and livestock<br>
+-Secondhand goods<br>
