@@ -40,9 +40,4 @@ export class CreateListingDto {
   @Type(() => Number)
   @IsNumber()
   longitude?: number;
-
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => CreateVehicleDto)
-  vehicle?: CreateVehicleDto;
 }
