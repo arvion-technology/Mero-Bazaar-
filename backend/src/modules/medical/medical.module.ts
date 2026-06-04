@@ -9,6 +9,10 @@ import { AppointmentsController } from '../appointments/appointments.controller'
 
 import { VerificationService } from '../verification/verification.service';
 import { VerificationController } from '../verification/verification.controller';
+import { MedicalAppointmentsController } from './appointments/appointments.controller';
+import { MedicalSlotsController } from './slots/slots.controller';
+import { MedicalSlotsService } from './slots/slots.service';
+import { MedicalAppointmentsService } from './appointments/appointments.service';
 
 @Module({
   imports: [PrismaModule],
@@ -16,11 +20,15 @@ import { VerificationController } from '../verification/verification.controller'
     MedicalController,
     AppointmentsController,
     VerificationController,
+    MedicalAppointmentsController,
+    MedicalSlotsController,
   ],
   providers: [
     MedicalService,
     AppointmentsService,
     VerificationService,
+    MedicalSlotsService,
+    MedicalAppointmentsService,
   ],
 })
 export class MedicalModule {}
