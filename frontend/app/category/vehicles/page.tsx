@@ -29,7 +29,7 @@ const VEHICLES: Vehicle[] = [
   {
     id: "honda-shine",
     title: "Honda Shine",
-    price: "NPR 8,50,000",
+    price: "NPR 1,95,000",
     location: "Kathmandu",
     image: "/honda.jpg",
     km: "12,500 KM",
@@ -47,7 +47,7 @@ const VEHICLES: Vehicle[] = [
   {
     id: "bajaj-pulsar-n160",
     title: "Bajaj Pulsar N160",
-    price: "NPR 8,50,000",
+    price: "NPR 3,45,000",
     location: "Kathmandu",
     image: "/bajaj.avif",
     km: "12,500 KM",
@@ -65,7 +65,7 @@ const VEHICLES: Vehicle[] = [
   {
     id: "hero-splendor",
     title: "Hero Splendor Plus",
-    price: "NPR 8,50,000",
+    price: "NPR 1,65,000",
     location: "Kathmandu",
     image: "/Harley-Davidson.jpg",
     km: "12,500 KM",
@@ -88,7 +88,7 @@ const VEHICLES: Vehicle[] = [
     image: "/car1.jpg",
     km: "35,000 KM",
     year: 2020,
-    brand: "Yamaha",
+    brand: "Toyota",
     condition: "Used",
     fuelType: "Diesel",
     category: "Car",
@@ -105,7 +105,7 @@ const VEHICLES: Vehicle[] = [
     image: "/Hundai Creta 2022.jpg",
     km: "18,200 KM",
     year: 2022,
-    brand: "Honda",
+    brand: "Hyundai",
     condition: "Used",
     fuelType: "Petrol",
     category: "Car",
@@ -139,14 +139,15 @@ const EV_FEATURED = {
   badge: "Bluebook Verified",
 };
 
-const BRANDS = ["Hero", "Honda", "Yamaha", "Bajaj"];
+const BRANDS = ["Hero", "Honda", "Yamaha", "Bajaj", "Toyota", "Hyundai"];
 const PRICE_RANGES = [
   { label: "0–250K", min: 0, max: 250000 },
   { label: "250–500K", min: 250000, max: 500000 },
   { label: "500–750K", min: 500000, max: 750000 },
   { label: "750K–1M", min: 750000, max: 1000000 },
+  { label: "1M+", min: 1000000, max: 200000000 },
 ];
-const CONDITIONS = ["New", "Used", "Refurb"];
+const CONDITIONS = ["New", "Used", "Refurbished"];
 const FUEL_TYPES = ["Petrol", "Diesel", "Electric", "Hybrid"];
 const SUB_CATS = ["All Vehicles", "Car", "Trucks", "Bike", "Scooter", "Buses", "Others"];
 
@@ -175,6 +176,7 @@ export default function VehiclesPage() {
     setSelectedConditions([]);
     setSelectedFuels([]);
     setActiveCat("All Vehicles");
+    setSearch("");
   };
 
   const displayed = VEHICLES.filter((v) => {
@@ -202,192 +204,188 @@ export default function VehiclesPage() {
   return (
     <>
       <style>{`
-        .vp-wrap { background: #f4f5f7; min-height: 100vh; font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        .vp-wrap { background: #f2f4f7; min-height: 100vh; font-family: 'Inter', sans-serif; }
 
         /* ── HERO ── */
         .vp-hero {
-          position: relative; height: 240px; overflow: hidden;
+          position: relative; height: 280px; overflow: hidden;
           display: flex; align-items: center;
         }
         .vp-hero-bg {
           position: absolute; inset: 0;
-          background: url('/car of hero section.jpg') center / cover no-repeat;
-          filter: brightness(0.6);
+          background: url('/car of hero section.jpg') center center / cover no-repeat;
+          filter: brightness(0.42);
         }
         .vp-hero-overlay {
           position: absolute; inset: 0;
-          background: linear-gradient(135deg, rgba(180,40,40,0.62) 0%, rgba(50,10,10,0.45) 100%);
+          background: linear-gradient(135deg, rgba(185,28,28,0.78) 0%, rgba(31,41,55,0.6) 100%);
         }
         .vp-hero-wm {
-          position: absolute; bottom: -10px; left: 32px;
-          font-size: clamp(60px,10vw,110px); font-weight: 900;
-          color: rgba(255,255,255,0.055); line-height: 1;
-          pointer-events: none; user-select: none; letter-spacing: -3px;
+          position: absolute; bottom: -18px; left: 28px;
+          font-size: clamp(56px, 11vw, 100px); font-weight: 900;
+          color: rgba(255,255,255,0.05); letter-spacing: -3px;
+          pointer-events: none; user-select: none; line-height: 1; z-index: 1;
         }
         .vp-hero-inner {
           position: relative; z-index: 2;
-          max-width: 1200px; margin: 0 auto; padding: 0 24px; width: 100%;
+          max-width: 1200px; margin: 0 auto; padding: 0 28px; width: 100%;
         }
         .vp-breadcrumb {
           display: flex; align-items: center; gap: 6px;
-          font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 10px;
+          font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 12px;
         }
         .vp-breadcrumb span.active { color: #fff; font-weight: 600; }
         .vp-hero h1 {
-          font-size: clamp(26px,4vw,42px); font-weight: 900; color: #fff;
-          margin: 0 0 6px; line-height: 1.2;
+          font-size: clamp(26px, 4vw, 44px); font-weight: 900; color: #fff;
+          margin: 0 0 6px; line-height: 1.15;
           text-shadow: 0 2px 16px rgba(0,0,0,0.4);
         }
-        .vp-hero p { color: rgba(255,255,255,0.78); font-size: 14px; margin: 0 0 20px; }
-        .vp-search-wrap { position: relative; max-width: 500px; }
+        .vp-hero p { color: rgba(255,255,255,0.78); font-size: 14px; margin: 0 0 22px; }
+        .vp-search-wrap { position: relative; max-width: 520px; }
         .vp-search-icon {
           position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-          color: #aaa; pointer-events: none;
+          pointer-events: none;
         }
         .vp-search {
-          width: 100%; padding: 13px 16px 13px 44px;
-          background: rgba(255,255,255,0.96); border: none; border-radius: 12px;
+          width: 100%; padding: 14px 16px 14px 46px;
+          background: rgba(255,255,255,0.97); border: none; border-radius: 14px;
           font-size: 14px; color: #333; outline: none;
-          box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+          box-shadow: 0 6px 28px rgba(0,0,0,0.22);
           font-family: inherit; transition: box-shadow 0.2s;
         }
-        .vp-search:focus { box-shadow: 0 6px 28px rgba(0,0,0,0.28); }
-        .vp-search::placeholder { color: #bbb; }
+        .vp-search:focus { box-shadow: 0 6px 34px rgba(0,0,0,0.3); }
 
         /* ── TAB BAR ── */
         .vp-tabs-bar {
-          background: #fff; border-bottom: 1.5px solid #e8e8f0;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+          background: #fff; border-bottom: 1.5px solid #eaeaea;
           position: sticky; top: 0; z-index: 30;
         }
         .vp-tabs-inner {
-          max-width: 1200px; margin: 0 auto; padding: 0 24px;
-          display: flex; overflow-x: auto; gap: 0;
+          max-width: 1200px; margin: 0 auto; padding: 0 28px;
+          display: flex; overflow-x: auto; gap: 8px;
           scrollbar-width: none;
         }
         .vp-tabs-inner::-webkit-scrollbar { display: none; }
         .vp-tab {
-          flex-shrink: 0; padding: 14px 20px;
-          font-size: 13px; font-weight: 600; cursor: pointer;
+          flex-shrink: 0; padding: 16px 22px;
+          font-size: 13px; font-weight: 700; cursor: pointer;
           border: none; background: none; font-family: inherit;
-          border-bottom: 2.5px solid transparent;
+          border-bottom: 3px solid transparent;
           color: #666; white-space: nowrap;
-          transition: color 0.18s, border-color 0.18s;
+          transition: all 0.18s;
         }
-        .vp-tab:hover { color: #333; }
-        .vp-tab.active { color: #e05c3a; border-bottom-color: #e05c3a; }
+        .vp-tab:hover { color: #111; }
+        .vp-tab.active { color: #b91c1c; border-bottom-color: #b91c1c; }
 
         /* ── BODY ── */
-        .vp-body { max-width: 1200px; margin: 0 auto; padding: 24px 24px 80px; }
-        .vp-layout { display: flex; gap: 22px; align-items: flex-start; }
+        .vp-body { max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px; }
+        .vp-layout { display: grid; grid-template-columns: 280px 1fr; gap: 22px; align-items: start; }
 
         /* ── SIDEBAR ── */
         .vp-sidebar {
-          width: 230px; flex-shrink: 0;
-          background: #fff; border-radius: 16px;
-          border: 1.5px solid #e8e8f0;
-          overflow: hidden; position: sticky; top: 56px;
-          box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+          background: #fff; border-radius: 18px;
+          border: 1.5px solid #e4e8f0; overflow: hidden;
+          position: sticky; top: 82px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.06);
         }
         .vsb-head {
           display: flex; align-items: center; justify-content: space-between;
-          padding: 14px 16px;
-          background: linear-gradient(90deg, #e05c3a, #c0392b);
+          padding: 18px 18px 14px; border-bottom: 1.5px solid #f2f4f8;
         }
-        .vsb-head-title { font-size: 15px; font-weight: 800; color: #fff; }
+        .vsb-head-title { font-size: 17px; font-weight: 800; color: #1a1a1a; margin: 0; }
         .vsb-reset {
-          font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.85);
-          background: rgba(255,255,255,0.2); border: none; cursor: pointer;
-          padding: 4px 10px; border-radius: 20px; font-family: inherit;
-          transition: background 0.18s;
+          font-size: 13px; font-weight: 700; color: #b91c1c;
+          background: none; border: none; cursor: pointer; padding: 0; transition: opacity 0.2s;
         }
-        .vsb-reset:hover { background: rgba(255,255,255,0.35); }
+        .vsb-reset:hover { opacity: 0.7; }
 
-        .vsb-section { padding: 12px 16px; border-bottom: 1.5px solid #f2f2f5; }
+        .vsb-section { padding: 16px 18px; border-bottom: 1.5px solid #f2f4f8; }
         .vsb-section:last-of-type { border-bottom: none; }
         .vsb-section-title {
-          font-size: 11px; font-weight: 700; color: #999;
-          text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+          font-size: 11.5px; font-weight: 700; color: #888;
+          text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px;
         }
-        .vsb-rows { display: flex; flex-direction: column; gap: 6px; }
-        .vsb-row {
-          display: flex; align-items: center; gap: 9px;
-          cursor: pointer; font-size: 13.5px; color: #444; font-weight: 500;
+        
+        .vsb-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+        .vsb-chip {
+          padding: 6px 14px; border-radius: 100px; font-size: 12px; font-weight: 600;
+          border: 1.5px solid #e0e4f0; background: #fff; color: #555;
+          cursor: pointer; transition: all 0.18s; font-family: inherit;
         }
-        .vsb-row input[type=checkbox] { accent-color: #e05c3a; width: 15px; height: 15px; cursor: pointer; }
-        .vsb-row.checked { color: #e05c3a; font-weight: 600; }
+        .vsb-chip:hover { border-color: #b91c1c; color: #b91c1c; }
+        .vsb-chip.active { background: #b91c1c; color: #fff; border-color: #b91c1c; box-shadow: 0 2px 10px rgba(185,28,28,0.3); }
 
-        .vsb-price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .vsb-price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
         .vsb-price-chip {
-          display: flex; align-items: center; gap: 5px;
-          padding: 6px 8px; border-radius: 8px; cursor: pointer;
-          border: 1.5px solid #e8e8f0; font-size: 11.5px; font-weight: 500;
-          color: #666; background: #fafafa; transition: all 0.15s;
+          display: flex; align-items: center; justify-content: center;
+          padding: 8px; border-radius: 10px; cursor: pointer;
+          border: 1.5px solid #e8e8f0; font-size: 12px; font-weight: 600;
+          color: #555; background: #fafafa; transition: all 0.15s;
+          text-align: center; font-family: inherit;
         }
-        .vsb-price-chip input[type=checkbox] { accent-color: #e05c3a; width: 13px; height: 13px; }
-        .vsb-price-chip.active { border-color: #e05c3a; background: #fff4f2; color: #e05c3a; font-weight: 600; }
+        .vsb-price-chip:hover { border-color: #b91c1c; }
+        .vsb-price-chip.active { border-color: #b91c1c; background: #fef2f2; color: #b91c1c; }
 
         .vsb-apply {
-          display: block; width: calc(100% - 32px); margin: 12px 16px;
-          padding: 11px; text-align: center;
-          background: linear-gradient(90deg, #e05c3a, #c0392b);
-          color: #fff; font-size: 13.5px; font-weight: 800; border: none;
-          border-radius: 10px; cursor: pointer; font-family: inherit;
-          box-shadow: 0 4px 14px rgba(192,57,43,0.35);
-          transition: opacity 0.18s;
+          display: block; width: calc(100% - 36px); margin: 4px 18px 18px;
+          padding: 13px; text-align: center;
+          background: linear-gradient(90deg, #b91c1c, #991b1b);
+          color: #fff; font-size: 14px; font-weight: 800; border: none;
+          border-radius: 12px; cursor: pointer; font-family: inherit;
+          box-shadow: 0 4px 18px rgba(185,28,28,0.32);
+          transition: opacity 0.18s, transform 0.18s;
         }
-        .vsb-apply:hover { opacity: 0.88; }
+        .vsb-apply:hover { opacity: 0.88; transform: translateY(-1px); }
 
         /* ── RIGHT COLUMN ── */
         .vp-right { flex: 1; min-width: 0; }
         .vp-results-bar {
           display: flex; align-items: center; justify-content: space-between;
-          margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+          margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
         }
         .vp-count { font-size: 14px; color: #666; font-weight: 500; }
         .vp-count strong { color: #111; font-weight: 800; }
         .vp-sort-wrap { position: relative; }
         .vp-sort {
-          appearance: none; padding: 9px 32px 9px 12px;
-          border: 1.5px solid #e0e0ec; border-radius: 10px;
+          padding: 9px 36px 9px 14px; border: 1.5px solid #e0e4f0; border-radius: 10px;
           font-size: 13px; font-weight: 600; color: #333;
-          background: #fff; outline: none; cursor: pointer;
-          font-family: inherit; box-shadow: 0 1px 5px rgba(0,0,0,0.06);
-          transition: border-color 0.2s;
+          background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+          appearance: none; outline: none; cursor: pointer;
+          font-family: inherit; box-shadow: 0 1px 6px rgba(0,0,0,0.06); transition: border-color 0.2s;
         }
-        .vp-sort:focus { border-color: #e05c3a; }
-        .vp-sort-chevron {
-          position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-          pointer-events: none; color: #888;
-        }
+        .vp-sort:focus { border-color: #b91c1c; }
 
         /* ── CARD GRID ── */
         .vp-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-          gap: 16px;
+          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+          gap: 18px;
         }
 
         /* ── CARD ── */
         .vp-card {
-          background: #fff; border-radius: 16px;
-          border: 1.5px solid #ebebf0; overflow: hidden;
+          background: #fff; border-radius: 18px;
+          border: 1.5px solid #ececec; overflow: hidden;
           text-decoration: none; color: inherit;
           display: flex; flex-direction: column;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.055);
+          box-shadow: 0 2px 12px rgba(0,0,0,0.05);
           transition: transform 0.22s ease, box-shadow 0.22s ease;
           position: relative;
         }
-        .vp-card:hover { transform: translateY(-4px); box-shadow: 0 14px 36px rgba(0,0,0,0.12); }
+        .vp-card:hover { transform: translateY(-5px); box-shadow: 0 18px 44px rgba(0,0,0,0.12); }
+        
         .vp-card-img-wrap {
           position: relative; width: 100%;
-          aspect-ratio: 16/11; overflow: hidden; background: #eee;
+          aspect-ratio: 16/11; overflow: hidden; background: #e8eaf0;
         }
         .vp-card-img {
           width: 100%; height: 100%; object-fit: cover;
           transition: transform 0.32s ease;
         }
         .vp-card:hover .vp-card-img { transform: scale(1.06); }
+        
         .vp-card-cat {
           position: absolute; top: 9px; left: 9px;
           background: rgba(0,0,0,0.52); color: #fff;
@@ -396,80 +394,75 @@ export default function VehiclesPage() {
         }
         .vp-heart {
           position: absolute; top: 9px; right: 9px;
-          width: 30px; height: 30px; border-radius: 50%;
-          background: rgba(255,255,255,0.92); border: none; cursor: pointer;
+          width: 32px; height: 32px; border-radius: 50%;
+          background: rgba(255,255,255,0.94); border: none; cursor: pointer;
           display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          box-shadow: 0 2px 10px rgba(0,0,0,0.16);
           transition: transform 0.18s; z-index: 3;
+          padding: 0;
         }
-        .vp-heart:hover { transform: scale(1.15); background: #fff; }
+        .vp-heart:hover { transform: scale(1.18); background: #fff; }
 
-        .vp-card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 7px; }
+        .vp-card-body { padding: 14px; display: flex; flex-direction: column; gap: 5px; }
         .vp-card-title {
-          font-size: 14px; font-weight: 700; color: #111;
+          font-size: 14.5px; font-weight: 700; color: #1a1a1a;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;
         }
-        .vp-card-price { font-size: 16px; font-weight: 900; color: #c0392b; margin: 0; }
+        .vp-card-price { font-size: 16px; font-weight: 900; color: #b91c1c; margin: 2px 0 4px; }
         .vp-card-meta {
           display: flex; align-items: center; gap: 8px;
-          font-size: 11.5px; color: #888; font-weight: 500;
+          font-size: 12px; color: #777; font-weight: 500;
         }
-        .vp-card-meta-sep { width: 1px; height: 12px; background: #ddd; }
+        .vp-card-meta-sep { width: 1px; height: 12px; background: #e2e8f0; }
         .vp-card-meta span { display: flex; align-items: center; gap: 3px; }
-        .vp-card-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+        .vp-card-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+        
         .vp-badge {
-          display: inline-flex; align-items: center; gap: 4px;
-          padding: 3px 7px; border-radius: 6px;
-          font-size: 10px; font-weight: 600;
+          display: inline-flex; align-items: center; gap: 3px;
+          padding: 3px 8px; border-radius: 6px;
+          font-size: 9.5px; font-weight: 700;
         }
-
-        /* ── EMPTY ── */
-        .vp-empty { text-align: center; padding: 60px 20px; color: #aaa; }
-        .vp-empty-icon { font-size: 52px; margin-bottom: 14px; }
-        .vp-empty p { font-size: 16px; font-weight: 700; color: #555; margin: 0 0 6px; }
 
         /* ── EV SECTION ── */
-        .vp-ev { margin-top: 28px; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .vp-ev { margin-top: 28px; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: 1.5px solid #eaeaea; }
         .vp-ev-header {
           display: flex; align-items: center; gap: 10px;
-          padding: 13px 20px;
+          padding: 14px 20px;
           background: linear-gradient(90deg, #16a34a, #15803d);
         }
-        .vp-ev-header-title { font-size: 15px; font-weight: 800; color: #fff; }
-        .vp-ev-header-sub { margin-left: auto; font-size: 12px; color: rgba(255,255,255,0.8); font-weight: 500; }
+        .vp-ev-header-title { font-size: 16px; font-weight: 800; color: #fff; }
+        .vp-ev-header-sub { margin-left: auto; font-size: 12px; color: rgba(255,255,255,0.85); font-weight: 600; }
         .vp-ev-body { display: flex; background: #fff; }
-        .vp-ev-info { padding: 20px; flex: 0 0 42%; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
-        .vp-ev-price { font-size: 24px; font-weight: 900; color: #111; margin: 0; }
-        .vp-ev-divider { width: 40px; height: 2px; background: #eee; margin: 4px 0; }
-        .vp-ev-spec { font-size: 13px; color: #555; font-weight: 500; display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+        .vp-ev-info { padding: 22px; flex: 0 0 42%; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
+        .vp-ev-price { font-size: 26px; font-weight: 900; color: #111; margin: 0; }
+        .vp-ev-divider { width: 40px; height: 2.5px; background: #16a34a; margin: 4px 0; }
+        .vp-ev-spec { font-size: 13.5px; color: #444; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
         .vp-ev-spec svg { color: #16a34a; }
         .vp-ev-badge {
           display: inline-flex; align-items: center; gap: 6px;
-          background: #16a34a; color: #fff;
-          font-size: 11.5px; font-weight: 700; padding: 6px 14px; border-radius: 8px;
+          background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0;
+          font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 8px;
         }
         .vp-ev-link {
           display: inline-flex; align-items: center; gap: 5px;
-          font-size: 12px; font-weight: 600; color: #16a34a;
-          text-decoration: none; margin-top: 6px;
+          font-size: 13px; font-weight: 700; color: #16a34a;
+          text-decoration: none; margin-top: 8px; transition: color 0.2s;
         }
+        .vp-ev-link:hover { color: #15803d; }
         .vp-ev-img-wrap { flex: 1; position: relative; overflow: hidden; min-height: 210px; }
         .vp-ev-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
-        .vp-ev-img-wrap::after {
-          content: ''; position: absolute; inset: 0;
-          background: linear-gradient(to right, rgba(255,255,255,0.5), transparent 50%);
-        }
 
         /* responsive */
-        @media (max-width: 900px) {
+        @media (max-width: 960px) {
+          .vp-layout { grid-template-columns: 1fr; }
           .vp-sidebar { display: none; }
           .vp-ev-body { flex-direction: column; }
           .vp-ev-img-wrap { min-height: 180px; }
         }
-        @media (max-width: 600px) {
+        @media (max-width: 640px) {
           .vp-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-          .vp-body { padding: 16px 14px 60px; }
-          .vp-hero { height: 210px; }
+          .vp-body { padding: 20px 16px 40px; }
+          .vp-hero { height: 220px; }
         }
         @media (max-width: 380px) {
           .vp-grid { grid-template-columns: 1fr; }
@@ -492,7 +485,7 @@ export default function VehiclesPage() {
             <h1>Vehicles in Nepal</h1>
             <p>Find the best cars, bikes, scooters and more across Nepal</p>
             <div className="vp-search-wrap">
-              <FiSearch className="vp-search-icon" size={17} />
+              <FiSearch className="vp-search-icon" size={17} color="#bbb" />
               <input
                 className="vp-search"
                 placeholder="Search by name, brand, location…"
@@ -532,16 +525,15 @@ export default function VehiclesPage() {
               {/* Brand */}
               <div className="vsb-section">
                 <p className="vsb-section-title">Brand</p>
-                <div className="vsb-rows">
+                <div className="vsb-chips">
                   {BRANDS.map((b) => (
-                    <label key={b} className={`vsb-row${selectedBrands.includes(b) ? " checked" : ""}`}>
-                      <input
-                        type="checkbox"
-                        checked={selectedBrands.includes(b)}
-                        onChange={() => toggle(selectedBrands, b, setSelectedBrands)}
-                      />
+                    <button
+                      key={b}
+                      className={`vsb-chip${selectedBrands.includes(b) ? " active" : ""}`}
+                      onClick={() => toggle(selectedBrands, b, setSelectedBrands)}
+                    >
                       {b}
-                    </label>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -551,17 +543,13 @@ export default function VehiclesPage() {
                 <p className="vsb-section-title">Price Range</p>
                 <div className="vsb-price-grid">
                   {PRICE_RANGES.map((r) => (
-                    <label
+                    <button
                       key={r.label}
                       className={`vsb-price-chip${selectedPriceRanges.includes(r.label) ? " active" : ""}`}
+                      onClick={() => toggle(selectedPriceRanges, r.label, setSelectedPriceRanges)}
                     >
-                      <input
-                        type="checkbox"
-                        checked={selectedPriceRanges.includes(r.label)}
-                        onChange={() => toggle(selectedPriceRanges, r.label, setSelectedPriceRanges)}
-                      />
                       {r.label}
-                    </label>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -569,27 +557,25 @@ export default function VehiclesPage() {
               {/* Year */}
               <div className="vsb-section">
                 <p className="vsb-section-title">Year</p>
-                <div className="vsb-rows">
-                  <label className="vsb-row">
-                    <input type="checkbox" />
+                <div className="vsb-chips">
+                  <button className="vsb-chip active">
                     2020–2026
-                  </label>
+                  </button>
                 </div>
               </div>
 
               {/* Condition */}
               <div className="vsb-section">
                 <p className="vsb-section-title">Condition</p>
-                <div className="vsb-rows">
+                <div className="vsb-chips">
                   {CONDITIONS.map((c) => (
-                    <label key={c} className={`vsb-row${selectedConditions.includes(c) ? " checked" : ""}`}>
-                      <input
-                        type="checkbox"
-                        checked={selectedConditions.includes(c)}
-                        onChange={() => toggle(selectedConditions, c, setSelectedConditions)}
-                      />
+                    <button
+                      key={c}
+                      className={`vsb-chip${selectedConditions.includes(c) ? " active" : ""}`}
+                      onClick={() => toggle(selectedConditions, c, setSelectedConditions)}
+                    >
                       {c}
-                    </label>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -597,16 +583,15 @@ export default function VehiclesPage() {
               {/* Fuel Type */}
               <div className="vsb-section">
                 <p className="vsb-section-title">Fuel Type</p>
-                <div className="vsb-rows">
+                <div className="vsb-chips">
                   {FUEL_TYPES.map((f) => (
-                    <label key={f} className={`vsb-row${selectedFuels.includes(f) ? " checked" : ""}`}>
-                      <input
-                        type="checkbox"
-                        checked={selectedFuels.includes(f)}
-                        onChange={() => toggle(selectedFuels, f, setSelectedFuels)}
-                      />
+                    <button
+                      key={f}
+                      className={`vsb-chip${selectedFuels.includes(f) ? " active" : ""}`}
+                      onClick={() => toggle(selectedFuels, f, setSelectedFuels)}
+                    >
                       {f}
-                    </label>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -619,7 +604,7 @@ export default function VehiclesPage() {
               {/* Results bar */}
               <div className="vp-results-bar">
                 <span className="vp-count">
-                  <strong>{displayed.length * 154}</strong> results found
+                  <strong>{displayed.length}</strong> vehicles found
                 </span>
                 <div className="vp-sort-wrap">
                   <select
@@ -631,7 +616,6 @@ export default function VehiclesPage() {
                     <option value="price_asc">Price: Low → High</option>
                     <option value="price_desc">Price: High → Low</option>
                   </select>
-                  <FiChevronDown size={13} className="vp-sort-chevron" />
                 </div>
               </div>
 
@@ -640,7 +624,7 @@ export default function VehiclesPage() {
                 <div className="vp-empty">
                   <div className="vp-empty-icon">🔍</div>
                   <p>No vehicles found</p>
-                  <span style={{ fontSize: 13 }}>Try adjusting your filters or search term</span>
+                  <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters or search term</span>
                 </div>
               ) : (
                 <>
@@ -660,7 +644,7 @@ export default function VehiclesPage() {
                               onClick={(e) => toggleFav(v.id, e)}
                             >
                               {isFav
-                                ? <FaHeart size={13} color="#e05c3a" />
+                                ? <FaHeart size={13} color="#b91c1c" />
                                 : <FiHeart size={13} color="#999" />}
                             </button>
                           </div>
@@ -681,16 +665,26 @@ export default function VehiclesPage() {
 
                             {/* Badges */}
                             <div className="vp-card-badges">
-                              {v.badges.map((b) => (
-                                <span
-                                  key={b.label}
-                                  className="vp-badge"
-                                  style={{ background: b.bg, color: b.color }}
-                                >
-                                  <BsShieldCheck size={9} />
-                                  {b.label}
-                                </span>
-                              ))}
+                              {v.badges.map((b) => {
+                                const isGreen = b.bg.includes("16a34a") || b.label.toLowerCase().includes("verified");
+                                const isBlue = b.bg.includes("2563eb") || b.label.toLowerCase().includes("transfer");
+                                const isOrange = b.bg.includes("d97706") || b.label.toLowerCase().includes("inspection");
+
+                                const softBg = isGreen ? "#d1fae5" : isBlue ? "#dbeafe" : isOrange ? "#fef3c7" : "#f1f3f5";
+                                const softColor = isGreen ? "#065f46" : isBlue ? "#1e40af" : isOrange ? "#92400e" : "#374151";
+                                const softBorder = isGreen ? "1px solid #a7f3d0" : isBlue ? "1px solid #bfdbfe" : isOrange ? "1px solid #fde68a" : "1px solid #e5e7eb";
+
+                                return (
+                                  <span
+                                    key={b.label}
+                                    className="vp-badge"
+                                    style={{ background: softBg, color: softColor, border: softBorder }}
+                                  >
+                                    <BsShieldCheck size={9} style={{ marginRight: "3px" }} />
+                                    {b.label}
+                                  </span>
+                                );
+                              })}
                             </div>
                           </div>
                         </Link>
@@ -722,7 +716,7 @@ export default function VehiclesPage() {
                             <BsShieldCheck size={11} /> {EV_FEATURED.badge}
                           </span>
                           <Link href={`/listing/${EV_FEATURED.id}`} className="vp-ev-link">
-                            View Details <BsArrowRight size={11} />
+                            View Details <BsArrowRight size={11} style={{ marginLeft: "3px" }} />
                           </Link>
                         </div>
                       </div>

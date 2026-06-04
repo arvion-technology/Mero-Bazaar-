@@ -24,21 +24,21 @@ type MedicalDetail = {
   availableToday: boolean;
   images: string[];
   experience: string;
-  employmentType: string;
-  education: string;
-  vacancies: number;
+  employmentType: string; // Maps to Specialty/Specialization
+  education: string;      // Maps to Qualifications
+  vacancies: number;      // Maps to Available Slots
   postedDate: string;
   description: string;
-  requirements: string[];
-  benefits: string[];
+  requirements: string[]; // Maps to Services Offered
+  benefits: string[];     // Maps to Facilities & Amenities
   breadcrumbs: string[];
   company: {
     name: string;
     logo: string;
     rating: number;
     reviewCount: number;
-    industry: string;
-    size: string;
+    industry: string;     // Maps to Category
+    size: string;         // Maps to Capacity/Details
     website: string;
     location: string;
   };
@@ -58,212 +58,643 @@ type MedicalDetail = {
 // ─── Data ────────────────────────────────────────────────────────────────────
 
 const MEDICAL_DATA: Record<string, MedicalDetail> = {
-  "staff-nurse": {
-    id: "staff-nurse",
-    listingId: "#MED784512",
-    title: "Staff Nurse",
-    subtitle: "MedLife Hospital",
-    fee: "Rs. 30,000–50,000/month",
-    type: "Full-Time",
-    location: "Kathmandu, Nepal",
+  "dr-sudhil-thapa": {
+    id: "dr-sudhil-thapa",
+    listingId: "#DR-8591",
+    title: "Dr. Sudhil Thapa",
+    subtitle: "Senior Cardiologist",
+    fee: "Rs. 1,000 Consultation Fee",
+    type: "Doctors",
+    location: "Putalisadak, Kathmandu",
     postedDaysAgo: 2,
-    views: 35,
+    views: 128,
     isVerified: true,
     isFeatured: true,
     availableToday: true,
     images: [
-      "/medical banner.jpg",
+      "/sudhil.jpg",
       "/medical room.jpg",
-      "/hospital.png",
-      "/daignostic centre.jpg",
-      "/nervic.jpg",
-      "/dr anisha.jpg",
-      "/Dental Checkup & Cleaning.avif",
-      "/lady.jpg",
+      "/medical banner.jpg",
+      "/hospital.png"
     ],
-    experience: "1–3years",
-    employmentType: "Full-time",
-    education: "Bachelor's",
-    vacancies: 2,
-    postedDate: "May 10, 2025",
+    experience: "15+ years",
+    employmentType: "Cardiologist",
+    education: "MBBS, MD (Cardiology)",
+    vacancies: 5,
+    postedDate: "May 15, 2025",
     description:
-      "We are looking for a compassionate and dedicated Staff Nurse to provide high-quality patient care and support in a professional healthcare environment. The ideal candidate should have strong clinical knowledge, excellent communication skills, and the ability to work closely with doctors and healthcare teams to ensure the best treatment and patient experience. You will be responsible for monitoring patients, administering medications, maintaining medical records, and delivering safe and efficient nursing care.",
+      "Dr. Sudhil Thapa is a senior consultant Cardiologist with over 15 years of experience in clinical cardiology and cardiac care. He specializes in interventional cardiology, management of hypertension, ischemic heart disease, and preventive cardiac wellness. He has previously served in several prestigious medical centers in Nepal and India, and is dedicated to delivering patient-centric heart treatments.",
     requirements: [
-      "Registered Nurse qualification",
-      "Valid Nepali Nursing council",
-      "Basic computer skills",
-      "Good problem solving skills",
-      "Experince in hospital",
+      "Cardiovascular Consultation & Screening",
+      "Electrocardiogram (ECG) Analysis",
+      "Echocardiography (ECHO)",
+      "Holter Monitoring & Stress Test",
+      "Hypertension & Lipid Management"
     ],
     benefits: [
-      "Competitive Salary",
-      "health Insurance",
-      "Paid leave",
-      "Traning opportunities",
-      "Friendly Enviroment",
+      "Modern Cardiac Diagnostic Setup",
+      "Emergency Cardiac Response Team Linkage",
+      "Comfortable Private OPD Cabin",
+      "Multi-lingual (English, Nepali, Hindi)",
+      "Digital Health Records System"
     ],
-    breadcrumbs: ["Job", "Medical & Health"],
+    breadcrumbs: ["Medical", "Doctors", "Cardiology"],
     company: {
-      name: "MedLife Hospital",
+      name: "Nepal Heart Care Center",
       logo: "/hospital.png",
-      rating: 4.5,
-      reviewCount: 126,
-      industry: "Medical & HealthCare",
-      size: "200-500 employees",
-      website: "https://share.google/vPS08HJpek059wMGH",
-      location: "Kathmandu, Nepal",
+      rating: 4.8,
+      reviewCount: 42,
+      industry: "Cardiac Healthcare Services",
+      size: "10-25 Employees",
+      website: "www.nepalheartcare.org.np",
+      location: "Putalisadak, Kathmandu",
     },
     mapImage: "/medical room.jpg",
-    mapLocation: "Balkumari lalitpur",
-    mapDistance: "2.5km from Lagankhel",
-    mapCity: "Balkumari Lalitpur, Nepal",
+    mapLocation: "Putalisadak, Kathmandu",
+    mapDistance: "1.5km from Durbar Marg",
+    mapCity: "Kathmandu, Nepal",
     postedBy: {
-      name: "Anita KC",
-      avatar: "/dr anisha.jpg",
+      name: "Dr. Thapa's Desk",
+      avatar: "/sudhil.jpg",
       rating: 4.8,
-      reviewCount: 126,
+      reviewCount: 128,
       isVerified: true,
     },
   },
-  "dr-anisha-shah": {
-    id: "dr-anisha-shah",
-    listingId: "#MED123456",
-    title: "Senior Cardiologist",
-    subtitle: "Norvic International Hospital",
-    fee: "Rs. 1,500–2,500 per visit",
-    type: "Full-Time",
+  "dr-anisha-karki": {
+    id: "dr-anisha-karki",
+    listingId: "#DR-4482",
+    title: "Dr. Anisha Karki",
+    subtitle: "Dental Surgeon (BDS)",
+    fee: "Rs. 800 Consultation Fee",
+    type: "Doctors",
     location: "Lalitpur, Nepal",
     postedDaysAgo: 1,
-    views: 54,
+    views: 95,
     isVerified: true,
-    isFeatured: true,
-    availableToday: false,
+    isFeatured: false,
+    availableToday: true,
     images: [
-      "/dr anisha.jpg",
-      "/medical banner.jpg",
-      "/nervic.jpg",
+      "/anisha.jpg",
+      "/Dental Checkup & Cleaning.avif",
       "/medical room.jpg",
-      "/hospital.png",
-      "/daignostic centre.jpg",
+      "/medical banner.jpg"
     ],
-    experience: "15+years",
-    employmentType: "Full-time",
-    education: "MBBS, MD",
-    vacancies: 1,
-    postedDate: "May 15, 2025",
+    experience: "8+ years",
+    employmentType: "Dentist (BDS)",
+    education: "BDS (Dental Surgery)",
+    vacancies: 8,
+    postedDate: "May 16, 2025",
     description:
-      "Dr. Anisha Shah is a highly experienced and dedicated Cardiologist with over 15 years of expertise in diagnosing and treating heart-related conditions. She completed her MBBS from Tribhuvan University and her MD in Cardiology from AIIMS, India. She is known for her compassionate care and patient-centered approach. Dr. Shah specializes in interventional cardiology, echocardiography, and preventive heart health. She has treated thousands of patients across Nepal and is widely regarded as one of the top cardiologists in the Kathmandu Valley.",
+      "Dr. Anisha Karki is a dental surgeon specializing in cosmetic dentistry, pediatric dentistry, and root canal therapy. She focuses on providing gentle, stress-free dental care to patients of all ages using advanced dentistry techniques. She is a registered member of the Nepal Medical Council and takes pride in restoring beautiful smiles.",
     requirements: [
-      "MBBS degree from recognized university",
-      "MD in Cardiology preferred",
-      "Valid NMC registration",
-      "3+ years clinical experience",
-      "Strong communication skills",
+      "Root Canal Treatment (RCT)",
+      "Dental Crown & Bridge Placement",
+      "Teeth Whitening & Laser Scaling",
+      "Pediatric Dental Checkups & Fillings",
+      "Cosmetic Dentistry Consultations"
     ],
     benefits: [
-      "Competitive Salary",
-      "Health Insurance",
-      "Paid Leave",
-      "Training & CME",
-      "Modern Equipment",
+      "Sterilized & Hygienic Dental Setup",
+      "Advanced Intraoral Cameras",
+      "Orthodontic Support Available",
+      "Friendly Staff and Child-friendly Setup",
+      "Painless Dental Treatment Methods"
     ],
-    breadcrumbs: ["Job", "Medical & Health"],
+    breadcrumbs: ["Medical", "Doctors", "Dentistry"],
+    company: {
+      name: "Apex Dental Care Clinic",
+      logo: "/hospital.png",
+      rating: 4.9,
+      reviewCount: 64,
+      industry: "Dental Care Services",
+      size: "5-15 Employees",
+      website: "www.apexdental.com.np",
+      location: "Lagankhel, Lalitpur",
+    },
+    mapImage: "/Dental Checkup & Cleaning.avif",
+    mapLocation: "Lagankhel, Lalitpur",
+    mapDistance: "0.5km from Lagankhel Buspark",
+    mapCity: "Lalitpur, Nepal",
+    postedBy: {
+      name: "Apex Dental Desk",
+      avatar: "/anisha.jpg",
+      rating: 4.9,
+      reviewCount: 64,
+      isVerified: true,
+    },
+  },
+  "dr-rajan-shah": {
+    id: "dr-rajan-shah",
+    listingId: "#DR-9821",
+    title: "Dr. Rajan Shah",
+    subtitle: "Senior Pediatrician",
+    fee: "Rs. 900 Consultation Fee",
+    type: "Doctors",
+    location: "Putalisadak, Kathmandu",
+    postedDaysAgo: 3,
+    views: 110,
+    isVerified: true,
+    isFeatured: false,
+    availableToday: true,
+    images: [
+      "/rajan.jpg",
+      "/medical room.jpg",
+      "/medical banner.jpg"
+    ],
+    experience: "12+ years",
+    employmentType: "Pediatrician",
+    education: "MBBS, MD (Pediatrics)",
+    vacancies: 6,
+    postedDate: "May 14, 2025",
+    description:
+      "Dr. Rajan Shah is a highly experienced Pediatrician specializing in newborn care, child development assessment, childhood immunizations, and the treatment of common childhood illnesses. He is committed to providing comprehensive healthcare for infants, children, and adolescents, ensuring their healthy growth and developmental milestones.",
+    requirements: [
+      "Newborn Care & Health Screenings",
+      "Child Growth & Development Monitoring",
+      "Routine Childhood Immunizations",
+      "Treatment of Pediatric Infections",
+      "Nutritional Counseling for Children"
+    ],
+    benefits: [
+      "Child-friendly Examination Cabin",
+      "All Major Vaccines Available",
+      "Emergency Advisory Support",
+      "Spacious Play Area for Kids",
+      "Nebulization & Basic Pediatric Care Setup"
+    ],
+    breadcrumbs: ["Medical", "Doctors", "Pediatrics"],
+    company: {
+      name: "Kids Clinic Nepal",
+      logo: "/hospital.png",
+      rating: 4.7,
+      reviewCount: 38,
+      industry: "Pediatric Healthcare",
+      size: "5-10 Employees",
+      website: "www.kidsclinic.com.np",
+      location: "Putalisadak, Kathmandu",
+    },
+    mapImage: "/medical room.jpg",
+    mapLocation: "Putalisadak, Kathmandu",
+    mapDistance: "1.5km from Durbar Marg",
+    mapCity: "Kathmandu, Nepal",
+    postedBy: {
+      name: "Kids Clinic Desk",
+      avatar: "/rajan.jpg",
+      rating: 4.8,
+      reviewCount: 128,
+      isVerified: true,
+    },
+  },
+  "dr-prativa-malla": {
+    id: "dr-prativa-malla",
+    listingId: "#DR-3329",
+    title: "Dr. Prativa Malla",
+    subtitle: "Consultant Dermatologist",
+    fee: "Rs. 1,000 Consultation Fee",
+    type: "Doctors",
+    location: "Putalisadak, Kathmandu",
+    postedDaysAgo: 2,
+    views: 152,
+    isVerified: true,
+    isFeatured: false,
+    availableToday: true,
+    images: [
+      "/prativa.jpg",
+      "/medical room.jpg",
+      "/medical banner.jpg"
+    ],
+    experience: "10+ years",
+    employmentType: "Dermatologist",
+    education: "MBBS, MD (Dermatology)",
+    vacancies: 4,
+    postedDate: "May 15, 2025",
+    description:
+      "Dr. Prativa Malla is a consultant dermatologist and laser specialist. She offers clinical dermatology treatments for acne, eczema, hair loss, and skin aging, alongside cosmetic skin care and laser procedures, helping patients achieve healthy and glowing skin.",
+    requirements: [
+      "Clinical Acne & Eczema Treatments",
+      "Hair Fall & Alopecia Solutions",
+      "Anti-aging Skin Consultations",
+      "Laser Skin Rejuvenation",
+      "Skin Biopsy & Minor Dermato-surgery"
+    ],
+    benefits: [
+      "State-of-the-Art Laser Machine Setup",
+      "Advanced Skin Diagnostic Tools",
+      "High-Quality Derma Care Products Store",
+      "Comfortable, Private Consultation Suite",
+      "Qualified Support Estheticians"
+    ],
+    breadcrumbs: ["Medical", "Doctors", "Dermatology"],
+    company: {
+      name: "DermaCare Skin Clinic",
+      logo: "/hospital.png",
+      rating: 4.8,
+      reviewCount: 56,
+      industry: "Dermatology & Cosmetology",
+      size: "10-20 Employees",
+      website: "www.dermacare.com.np",
+      location: "Putalisadak, Kathmandu",
+    },
+    mapImage: "/medical room.jpg",
+    mapLocation: "Putalisadak, Kathmandu",
+    mapDistance: "1.5km from Durbar Marg",
+    mapCity: "Kathmandu, Nepal",
+    postedBy: {
+      name: "DermaCare Desk",
+      avatar: "/prativa.jpg",
+      rating: 4.8,
+      reviewCount: 128,
+      isVerified: true,
+    },
+  },
+  "norvic-hospital": {
+    id: "norvic-hospital",
+    listingId: "#HOSP-8812",
+    title: "Norvic International Hospital",
+    subtitle: "Multi-Specialty Corporate Hospital",
+    fee: "Rs. 1,500 Consultation Fee",
+    type: "Hospitals",
+    location: "Thapathali, Kathmandu",
+    postedDaysAgo: 4,
+    views: 520,
+    isVerified: true,
+    isFeatured: true,
+    availableToday: true,
+    images: [
+      "/nervic.jpg",
+      "/hospital.png",
+      "/medical banner.jpg",
+      "/medical room.jpg"
+    ],
+    experience: "Established 1993",
+    employmentType: "Multi-Specialty",
+    education: "ISO 9001:2015 Certified",
+    vacancies: 150,
+    postedDate: "May 12, 2025",
+    description:
+      "Norvic International Hospital is a world-class multi-specialty hospital in Thapathali, Kathmandu. It is highly regarded for its state-of-the-art cardiology, gastroenterology, orthopedics, and neurology departments, providing compassionate healthcare services with international standards.",
+    requirements: [
+      "24/7 Emergency & ICU Services",
+      "Interventional Cardiology & Cath Lab",
+      "Advanced Joint Replacement & Orthopedics",
+      "Comprehensive Wellness Packages",
+      "Neurological Surgery & Diagnostic Center"
+    ],
+    benefits: [
+      "Over 200+ Premium Inpatient Beds",
+      "Highly Experienced Medical Staff",
+      "Advanced Robotic Surgery Center",
+      "In-house 24/7 Emergency Pharmacy",
+      "Valet Parking & Patient Cafe Services"
+    ],
+    breadcrumbs: ["Medical", "Hospitals", "Corporate"],
     company: {
       name: "Norvic International Hospital",
       logo: "/hospital.png",
       rating: 4.7,
-      reviewCount: 98,
-      industry: "Medical & HealthCare",
-      size: "500+ employees",
-      website: "www.norvic.com.np",
-      location: "Kathmandu, Nepal",
+      reviewCount: 320,
+      industry: "Hospital & Clinical Services",
+      size: "500+ Employees",
+      website: "www.norvichospital.com",
+      location: "Thapathali, Kathmandu",
     },
-    mapImage: "/medical banner.jpg",
+    mapImage: "/nervic.jpg",
     mapLocation: "Thapathali, Kathmandu",
-    mapDistance: "1.2km from City Center",
+    mapDistance: "1.2km from Tripureshwor",
     mapCity: "Kathmandu, Nepal",
     postedBy: {
-      name: "Anita KC",
-      avatar: "/lady.jpg",
-      rating: 4.8,
-      reviewCount: 126,
+      name: "Norvic Desk",
+      avatar: "/hospital.png",
+      rating: 4.7,
+      reviewCount: 320,
       isVerified: true,
     },
   },
-  "dental-checkup-clinic": {
-    id: "dental-checkup-clinic",
-    listingId: "#MED654321",
-    title: "Dental Surgeon",
-    subtitle: "SmileCare Dental Clinic",
-    fee: "Rs. 500–3,000 per visit",
-    type: "Full-Time",
-    location: "Kathmandu, Nepal",
+  "kmc-hospital": {
+    id: "kmc-hospital",
+    listingId: "#HOSP-3456",
+    title: "Kathmandu Medical College (KMC)",
+    subtitle: "Teaching Hospital & General Healthcare",
+    fee: "Rs. 500 Consultation Fee",
+    type: "Hospitals",
+    location: "Sinamangal, Kathmandu",
     postedDaysAgo: 3,
-    views: 22,
+    views: 380,
+    isVerified: true,
+    isFeatured: false,
+    availableToday: true,
+    images: [
+      "/hospital.png",
+      "/medical banner.jpg",
+      "/medical room.jpg"
+    ],
+    experience: "Teaching Hospital",
+    employmentType: "General Hospital",
+    education: "Affiliated with KU",
+    vacancies: 250,
+    postedDate: "May 13, 2025",
+    description:
+      "Kathmandu Medical College (KMC) is a premier teaching hospital in Sinamangal, Kathmandu. It delivers affordable, high-quality medical services and education. KMC features comprehensive outpatient services, advanced neonatal care, and general surgery.",
+    requirements: [
+      "General OPD & Specialist Consultations",
+      "KU-Affiliated Medical Education Programs",
+      "NICU, PICU & General Ward Services",
+      "Major and Minor Surgical Operations",
+      "24 Hours Emergency & Trauma Care"
+    ],
+    benefits: [
+      "Highly Affordable Consultations & Bed Charges",
+      "Modern Laboratory & Diagnostics Center",
+      "24/7 Pharmacy Service",
+      "Academic Research & Training Facility",
+      "Central Kathmandu Location"
+    ],
+    breadcrumbs: ["Medical", "Hospitals", "Teaching"],
+    company: {
+      name: "Kathmandu Medical College",
+      logo: "/hospital.png",
+      rating: 4.5,
+      reviewCount: 450,
+      industry: "Medical Education & Healthcare",
+      size: "500+ Employees",
+      website: "www.kmc.edu.np",
+      location: "Sinamangal, Kathmandu",
+    },
+    mapImage: "/hospital.png",
+    mapLocation: "Sinamangal, Kathmandu",
+    mapDistance: "0.5km from Tribhuvan International Airport",
+    mapCity: "Kathmandu, Nepal",
+    postedBy: {
+      name: "KMC Patient Desk",
+      avatar: "/hospital.png",
+      rating: 4.5,
+      reviewCount: 450,
+      isVerified: true,
+    },
+  },
+  "city-dental-clinic": {
+    id: "city-dental-clinic",
+    listingId: "#CLINIC-7742",
+    title: "City Dental Clinic & Care",
+    subtitle: "Orthodontics & General Dentistry",
+    fee: "Rs. 800 Consultation Fee",
+    type: "Clinics",
+    location: "Sanepa, Lalitpur",
+    postedDaysAgo: 2,
+    views: 198,
     isVerified: true,
     isFeatured: false,
     availableToday: true,
     images: [
       "/Dental Checkup & Cleaning.avif",
       "/medical room.jpg",
-      "/medical banner.jpg",
-      "/hospital.png",
-      "/daignostic centre.jpg",
+      "/medical banner.jpg"
     ],
-    experience: "2–5years",
-    employmentType: "Full-time",
-    education: "BDS",
-    vacancies: 2,
-    postedDate: "May 8, 2025",
+    experience: "10+ years",
+    employmentType: "Dental Clinic",
+    education: "BDS, MDS Specialists",
+    vacancies: 10,
+    postedDate: "May 14, 2025",
     description:
-      "SmileCare Dental Clinic is looking for an experienced Dental Surgeon to join our growing team. You will provide comprehensive dental care including checkups, cleanings, fillings, extractions, and cosmetic procedures. The ideal candidate is passionate about oral health and committed to delivering exceptional patient experiences in a modern clinic environment.",
+      "City Dental Clinic & Care provides advanced general and cosmetic dentistry services in Sanepa, Lalitpur. With highly qualified dental surgeons, we specialize in root canal therapies, dental implants, teeth alignment (braces), and general checkups.",
     requirements: [
-      "BDS from recognized university",
-      "Valid NDA registration",
-      "1+ year clinical experience",
-      "Knowledge of dental software",
-      "Excellent patient communication",
+      "Comprehensive Dental Checkup & Hygiene",
+      "Dental Implants & Prosthetics",
+      "Braces & Orthodontic Care",
+      "Root Canal Treatments (RCT)",
+      "Teeth Whitening & Scaling"
     ],
     benefits: [
-      "Competitive Salary",
-      "Health Insurance",
-      "Paid Leave",
-      "Modern Dental Equipment",
-      "Friendly Environment",
+      "Digital X-Ray and Orthopantomogram (OPG)",
+      "Sterilized & Hygienic Clinical Setup",
+      "Comfortable, Relaxing Dental Chairs",
+      "Weekend Consultations Available",
+      "Ample Visitor Parking Space"
     ],
-    breadcrumbs: ["Job", "Medical & Health"],
+    breadcrumbs: ["Medical", "Clinics", "Dental"],
     company: {
-      name: "SmileCare Dental Clinic",
+      name: "City Dental Clinic & Care",
       logo: "/hospital.png",
       rating: 4.9,
-      reviewCount: 87,
-      industry: "Dental & HealthCare",
-      size: "10-50 employees",
-      website: "www.smilecare.com.np",
-      location: "Thamel, Kathmandu",
+      reviewCount: 88,
+      industry: "Dental Healthcare Services",
+      size: "10-20 Employees",
+      website: "www.citydentalnepal.com",
+      location: "Sanepa, Lalitpur",
     },
-    mapImage: "/daignostic centre.jpg",
-    mapLocation: "Thamel, Kathmandu",
-    mapDistance: "0.8km from Thamel Chowk",
-    mapCity: "Kathmandu, Nepal",
+    mapImage: "/Dental Checkup & Cleaning.avif",
+    mapLocation: "Sanepa, Lalitpur",
+    mapDistance: "1.5km from Patan Dhoka",
+    mapCity: "Lalitpur, Nepal",
     postedBy: {
-      name: "Dr. Rajan Shrestha",
-      avatar: "/lady.jpg",
+      name: "City Dental Desk",
+      avatar: "/hospital.png",
       rating: 4.9,
-      reviewCount: 87,
+      reviewCount: 88,
       isVerified: true,
     },
   },
+  "srl-diagnostics": {
+    id: "srl-diagnostics",
+    listingId: "#LAB-4819",
+    title: "SRL Diagnostics Centre",
+    subtitle: "ISO Certified Diagnostic & Lab Centre",
+    fee: "Rs. 600 Basic Registration Fee",
+    type: "Diagnostic",
+    location: "Maharajgunj, Kathmandu",
+    postedDaysAgo: 2,
+    views: 145,
+    isVerified: true,
+    isFeatured: false,
+    availableToday: true,
+    images: [
+      "/daignostic centre.jpg",
+      "/medical room.jpg",
+      "/medical banner.jpg"
+    ],
+    experience: "ISO 9001:2015",
+    employmentType: "Pathology Lab",
+    education: "Accredited Diagnostics",
+    vacancies: 25,
+    postedDate: "May 14, 2025",
+    description:
+      "SRL Diagnostics Centre is an ISO-certified clinical laboratory in Maharajgunj, Kathmandu. We provide an extensive range of pathology, radiology, biochemistry, and microbiology testing, delivering highly precise reports with fast turnaround times.",
+    requirements: [
+      "Hematology, Immunology & Pathology Tests",
+      "Digital X-Ray & Ultrasound (USG)",
+      "Comprehensive Health Checkup Packages",
+      "Home Sample Collection Service",
+      "Pre-Employment & Visa Health Screenings"
+    ],
+    benefits: [
+      "Automated Diagnostics Instruments",
+      "Online Test Report Download Access",
+      "Highly Experienced Lab Technologists",
+      "Fast Turnaround on Reports",
+      "Home Sample Pickup Facility"
+    ],
+    breadcrumbs: ["Medical", "Diagnostic", "Lab"],
+    company: {
+      name: "SRL Diagnostics Centre",
+      logo: "/hospital.png",
+      rating: 4.6,
+      reviewCount: 156,
+      industry: "Pathology & Radiology Labs",
+      size: "20-50 Employees",
+      website: "www.srldiagnostics.com.np",
+      location: "Maharajgunj, Kathmandu",
+    },
+    mapImage: "/daignostic centre.jpg",
+    mapLocation: "Maharajgunj, Kathmandu",
+    mapDistance: "0.3km from Maharajgunj Chowk",
+    mapCity: "Kathmandu, Nepal",
+    postedBy: {
+      name: "SRL Lab Desk",
+      avatar: "/hospital.png",
+      rating: 4.6,
+      reviewCount: 156,
+      isVerified: true,
+    },
+  },
+  "sajha-pharmacy": {
+    id: "sajha-pharmacy",
+    listingId: "#PHARM-1123",
+    title: "Sajha Swasthya Sewa Cooperative",
+    subtitle: "24/7 Pharmacy & Medicine Supply",
+    fee: "Rs. 0 (Free Entry/Walk-in)",
+    type: "Pharmacy",
+    location: "Maharajgunj, Kathmandu",
+    postedDaysAgo: 1,
+    views: 260,
+    isVerified: true,
+    isFeatured: false,
+    availableToday: true,
+    images: [
+      "/medical room.jpg",
+      "/medical banner.jpg"
+    ],
+    experience: "Established 1964",
+    employmentType: "General Pharmacy",
+    education: "Cooperative Society",
+    vacancies: 12,
+    postedDate: "May 15, 2025",
+    description:
+      "Sajha Swasthya Sewa Cooperative is one of Nepal's oldest and most trusted pharmacies. Located in Maharajgunj, Kathmandu, it operates 24/7, offering authentic medicines, surgical supplies, and health accessories at highly subsidized cooperative rates.",
+    requirements: [
+      "24 Hours Medicine Dispensing",
+      "Subsidized Life-saving Drug Supplies",
+      "Surgical and Orthopedic Equipment Sales",
+      "Vaccine and Cold Chain Drug Storage",
+      "OTC and Prescription Drug Guidance"
+    ],
+    benefits: [
+      "Open 24/7, 365 Days a Year",
+      "Authentic Medicines Directly from Manufacturers",
+      "Government-approved Subsidized Rates",
+      "In-depth Pharmacist Advice",
+      "Wheelchair Accessible Entrance"
+    ],
+    breadcrumbs: ["Medical", "Pharmacy", "24/7"],
+    company: {
+      name: "Sajha Swasthya Sewa",
+      logo: "/hospital.png",
+      rating: 4.8,
+      reviewCount: 92,
+      industry: "Pharmaceuticals Supply",
+      size: "50-100 Employees",
+      website: "www.sajhahealth.org.np",
+      location: "Maharajgunj, Kathmandu",
+    },
+    mapImage: "/medical room.jpg",
+    mapLocation: "Maharajgunj, Kathmandu",
+    mapDistance: "0.2km from Maharajgunj Chowk",
+    mapCity: "Kathmandu, Nepal",
+    postedBy: {
+      name: "Sajha Patient Service",
+      avatar: "/hospital.png",
+      rating: 4.8,
+      reviewCount: 92,
+      isVerified: true,
+    },
+  },
+  "redcross-ambulance": {
+    id: "redcross-ambulance",
+    listingId: "#AMB-9988",
+    title: "Nepal Red Cross Society Ambulance",
+    subtitle: "Emergency Medical Transportation",
+    fee: "Charge based on distance",
+    type: "Ambulance",
+    location: "Red Cross Marg, Kathmandu",
+    postedDaysAgo: 1,
+    views: 412,
+    isVerified: true,
+    isFeatured: false,
+    availableToday: true,
+    images: [
+      "/medical room.jpg",
+      "/medical banner.jpg"
+    ],
+    experience: "24/7 Support",
+    employmentType: "Ambulance Service",
+    education: "First Aid Certified Staff",
+    vacancies: 15,
+    postedDate: "May 15, 2025",
+    description:
+      "Nepal Red Cross Society Ambulance Service provides rapid emergency medical transportation across the Kathmandu Valley. Equipped with oxygen, stretchers, and emergency first aid kits, our ambulances are staffed by first-aid-certified personnel to transport patients safely and quickly.",
+    requirements: [
+      "24/7 Emergency Patient Transportation",
+      "First Aid and Resuscitation Support",
+      "Oxygen and Stretcher Care Services",
+      "Specialized Hospital-to-Hospital Transfers",
+      "National Hotline Support integration"
+    ],
+    benefits: [
+      "Fast Response Time within Kathmandu Valley",
+      "Staffed with Certified First Aid Experts",
+      "Equipped with Essential Lifesaving Tools",
+      "Extremely Affordable Non-profit Service Fee",
+      "Direct Coordination with Major Emergency Rooms"
+    ],
+    breadcrumbs: ["Medical", "Ambulance", "Emergency"],
+    company: {
+      name: "Nepal Red Cross Society",
+      logo: "/hospital.png",
+      rating: 4.9,
+      reviewCount: 120,
+      industry: "Emergency Medical Response",
+      size: "200-500 Employees",
+      website: "www.nrcs.org",
+      location: "Red Cross Marg, Kathmandu",
+    },
+    mapImage: "/medical room.jpg",
+    mapLocation: "Red Cross Marg, Kathmandu",
+    mapDistance: "1.8km from City Center",
+    mapCity: "Kathmandu, Nepal",
+    postedBy: {
+      name: "Red Cross Emergency",
+      avatar: "/hospital.png",
+      rating: 4.9,
+      reviewCount: 120,
+      isVerified: true,
+    },
+  }
 };
 
-const FALLBACK = MEDICAL_DATA["staff-nurse"];
+const FALLBACK = MEDICAL_DATA["dr-sudhil-thapa"];
 
 const SIMILAR = [
-  { id: "staff-nurse", title: "Staff Nurse", company: "MedLife Hospital", image: "/medical banner.jpg", location: "Kathmandu" },
-  { id: "dr-anisha-shah", title: "Senior Cardiologist", company: "Norvic Hospital", image: "/dr anisha.jpg", location: "Lalitpur" },
-  { id: "dental-checkup-clinic", title: "Dental Surgeon", company: "SmileCare Clinic", image: "/Dental Checkup & Cleaning.avif", location: "Kathmandu" },
-  { id: "lab-technician", title: "Medical Lab Technician", company: "Om Diagnostic", image: "/daignostic centre.jpg", location: "Bhaktapur" },
-  { id: "general-physician", title: "General Physician", company: "Sunrise Medical", image: "/medical room.jpg", location: "Pokhara" },
+  { id: "dr-sudhil-thapa", title: "Dr. Sudhil Thapa", company: "Nepal Heart Care Center", image: "/sudhil.jpg", location: "Kathmandu" },
+  { id: "dr-anisha-karki", title: "Dr. Anisha Karki", company: "Apex Dental Clinic", image: "/anisha.jpg", location: "Lalitpur" },
+  { id: "norvic-hospital", title: "Norvic International Hospital", company: "Norvic Corp", image: "/nervic.jpg", location: "Kathmandu" },
+  { id: "srl-diagnostics", title: "SRL Diagnostics Centre", company: "SRL Labs", image: "/daignostic centre.jpg", location: "Kathmandu" },
+];
+
+const TIME_SLOTS = [
+  { time: "10:00", period: "AM" },
+  { time: "11:00", period: "AM", selected: true },
+  { time: "12:00", period: "PM" },
+  { time: "02:00", period: "PM" },
 ];
 
 // ─── Star Rating ──────────────────────────────────────────────────────────────
@@ -330,12 +761,12 @@ export default function MedicalDetailPage() {
           display: flex; align-items: center; gap: 4px;
           font-size: 12.5px; color: #888; flex-wrap: wrap;
         }
-        .md2-bc-link { color: #C0392B; text-decoration: none; font-weight: 500; }
+        .md2-bc-link { color: #0d9488; text-decoration: none; font-weight: 500; }
         .md2-bc-link:hover { text-decoration: underline; }
         .md2-bc-sep { color: #ccc; font-size: 11px; margin: 0 1px; }
         .md2-bc-cur { color: #444; font-weight: 500; }
         .md2-lid { font-size: 12px; color: #999; font-weight: 500; }
-        .md2-report { font-size: 12px; color: #C0392B; font-weight: 600; text-decoration: none; }
+        .md2-report { font-size: 12px; color: #0d9488; font-weight: 600; text-decoration: none; }
         .md2-report:hover { text-decoration: underline; }
 
         /* ── Container ── */
@@ -372,7 +803,7 @@ export default function MedicalDetailPage() {
           border: 2px solid transparent; transition: border-color 0.2s, transform 0.15s;
         }
         .md2-thumb:hover { transform: translateY(-2px); }
-        .md2-thumb.on { border-color: #C0392B; }
+        .md2-thumb.on { border-color: #0d9488; }
         .md2-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .md2-thumb-more {
           position: absolute; inset: 0; background: rgba(0,0,0,0.55);
@@ -411,8 +842,8 @@ export default function MedicalDetailPage() {
           background: #fff; border-radius: 14px; padding: 18px 20px 20px;
           box-shadow: 0 2px 12px rgba(0,0,0,0.07); border: 1px solid #e8e8e8;
         }
-        .md2-title { font-size: 20px; font-weight: 800; color: #1a1a1a; margin: 0 0 4px; }
-        .md2-fee { font-size: 22px; font-weight: 900; color: #1a1a1a; margin: 4px 0 8px; }
+        .md2-title { font-size: 20px; font-weight: 850; color: #1a1a1a; margin: 0 0 4px; }
+        .md2-fee { font-size: 22px; font-weight: 900; color: #0d9488; margin: 4px 0 8px; }
         .md2-meta-row {
           display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
           font-size: 12.5px; color: #666; padding-bottom: 14px;
@@ -422,20 +853,20 @@ export default function MedicalDetailPage() {
         .md2-cta-row { display: flex; gap: 10px; margin-bottom: 16px; }
         .md2-btn-apply {
           flex: 1; padding: 12px 20px; border-radius: 9px; border: none;
-          background: linear-gradient(135deg, #1a5fd4 0%, #0d3d9e 100%);
+          background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
           color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
-          font-family: inherit; box-shadow: 0 4px 14px rgba(26,95,212,0.3);
+          font-family: inherit; box-shadow: 0 4px 14px rgba(13,148,136,0.3);
           transition: opacity 0.2s, transform 0.15s;
         }
         .md2-btn-apply:hover { opacity: 0.9; transform: translateY(-1px); }
         .md2-btn-chat {
           flex: 1; padding: 12px 20px; border-radius: 9px;
-          border: 1.5px solid #1a5fd4; background: #fff;
-          color: #1a5fd4; font-size: 14px; font-weight: 700; cursor: pointer;
+          border: 1.5px solid #0d9488; background: #fff;
+          color: #0d9488; font-size: 14px; font-weight: 700; cursor: pointer;
           font-family: inherit; display: flex; align-items: center; justify-content: center;
           gap: 7px; transition: background 0.18s;
         }
-        .md2-btn-chat:hover { background: #f0f5ff; }
+        .md2-btn-chat:hover { background: #f0fdfa; }
 
         /* ── Stats Chips ── */
         .md2-chips-row {
@@ -448,7 +879,7 @@ export default function MedicalDetailPage() {
           padding: 10px 6px 9px; border: 1px solid #eef0f3; text-align: center;
           transition: background 0.2s;
         }
-        .md2-chip:hover { background: #f0f4ff; }
+        .md2-chip:hover { background: #f0fdfa; }
         .md2-chip-icon {
           width: 30px; height: 30px; display: flex; align-items: center;
           justify-content: center; background: #fff; border-radius: 7px;
@@ -470,7 +901,7 @@ export default function MedicalDetailPage() {
         }
         .md2-see-more {
           display: inline-block; margin-top: 6px; font-size: 12.5px;
-          font-weight: 600; color: #1a5fd4; background: none; border: none;
+          font-weight: 600; color: #0d9488; background: none; border: none;
           cursor: pointer; padding: 0; font-family: inherit;
         }
         .md2-see-more:hover { text-decoration: underline; }
@@ -481,7 +912,6 @@ export default function MedicalDetailPage() {
           box-shadow: 0 2px 12px rgba(0,0,0,0.07); border: 1px solid #e8e8e8;
         }
         .md2-req-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
-        .md2-req-col {}
         .md2-req-col-title { font-size: 14px; font-weight: 800; color: #1a1a1a; margin: 0 0 10px; }
         .md2-req-item {
           display: flex; align-items: flex-start; gap: 8px;
@@ -491,7 +921,7 @@ export default function MedicalDetailPage() {
         .md2-req-item:last-child { border-bottom: none; }
         .md2-req-dot {
           width: 6px; height: 6px; border-radius: 50%;
-          background: #1a5fd4; flex-shrink: 0; margin-top: 6px;
+          background: #0d9488; flex-shrink: 0; margin-top: 6px;
         }
         .md2-ben-dot {
           width: 6px; height: 6px; border-radius: 50%;
@@ -553,7 +983,7 @@ export default function MedicalDetailPage() {
         }
         .md2-map-overlay {
           position: absolute; inset: 0;
-          background: rgba(11,138,107,0.15);
+          background: rgba(13,148,136,0.15);
           display: flex; flex-direction: column;
           align-items: center; justify-content: center; gap: 4px;
         }
@@ -579,11 +1009,11 @@ export default function MedicalDetailPage() {
         .md2-loc-city { font-size: 11.5px; color: #666; margin: 0 0 6px; }
         .md2-map-link {
           display: flex; align-items: center; justify-content: center; gap: 4px;
-          font-size: 12.5px; font-weight: 600; color: #C0392B;
+          font-size: 12.5px; font-weight: 600; color: #0d9488;
           text-decoration: none; border-top: 1px solid #f0f0f0;
           padding: 9px 16px; transition: background 0.18s;
         }
-        .md2-map-link:hover { background: #fff5f5; }
+        .md2-map-link:hover { background: #f0fdfa; }
 
         /* ── Posted By Card ── */
         .md2-posted-card {
@@ -628,7 +1058,7 @@ export default function MedicalDetailPage() {
         }
         .md2-similar-title { font-size: 17px; font-weight: 800; color: #1a1a1a; margin: 0; }
         .md2-similar-all {
-          font-size: 13px; font-weight: 600; color: #C0392B;
+          font-size: 13px; font-weight: 600; color: #0d9488;
           text-decoration: none; display: flex; align-items: center; gap: 3px;
         }
         .md2-similar-all:hover { text-decoration: underline; }
@@ -684,14 +1114,14 @@ export default function MedicalDetailPage() {
                   <span className="md2-bc-sep">›</span>
                   {i === listing.breadcrumbs.length - 1
                     ? <span className="md2-bc-cur">{crumb}</span>
-                    : <Link href="/category/job" className="md2-bc-link">{crumb}</Link>
+                    : <Link href="/category/medical" className="md2-bc-link">{crumb}</Link>
                   }
                 </span>
               ))}
             </nav>
             <span className="md2-bc-cur" style={{ fontWeight: 700, color: "#333", fontSize: 13 }}>{listing.title}</span>
-            <span className="md2-lid">Job ID: {listing.listingId}</span>
-            <a href="#report" className="md2-report">Report This Job</a>
+            <span className="md2-lid">Listing ID: {listing.listingId}</span>
+            <a href="#report" className="md2-report">Report This Listing</a>
           </div>
         </div>
 
@@ -735,7 +1165,7 @@ export default function MedicalDetailPage() {
                 {listing.isVerified && (
                   <span className="md2-badge-verified">
                     <FiCheckCircle size={9} color="#1a7a43" />
-                    VerifiedJob
+                    Verified Listing
                   </span>
                 )}
                 {listing.isFeatured && (
@@ -774,22 +1204,22 @@ export default function MedicalDetailPage() {
                 </span>
                 <span className="md2-meta-item">
                   <FiClock size={12} color="#bbb" />
-                  Posted {listing.postedDaysAgo} Day{listing.postedDaysAgo !== 1 ? "s" : ""} ago
+                  Listed {listing.postedDaysAgo} day{listing.postedDaysAgo !== 1 ? "s" : ""} ago
                 </span>
                 <span className="md2-meta-item">
                   <FiEye size={12} color="#bbb" />
-                  {listing.views}views
+                  {listing.views} views
                 </span>
               </div>
 
               {/* CTA Buttons */}
               <div className="md2-cta-row">
                 <button className="md2-btn-apply" id="apply-btn" onClick={() => setCallRevealed(true)}>
-                  Apply Now
+                  {callRevealed ? "Call: +977-9800000000" : "Book Appointment / Call"}
                 </button>
                 <button className="md2-btn-chat" id="chat-btn">
-                  <FiMessageSquare size={14} color="#1a5fd4" style={{ marginRight: '5px' }} />
-                  Chat with Employer
+                  <FiMessageSquare size={14} color="#0d9488" style={{ marginRight: '5px' }} />
+                  Chat with Provider
                 </button>
               </div>
 
@@ -801,42 +1231,42 @@ export default function MedicalDetailPage() {
                   <span className="md2-chip-label">Experience</span>
                 </div>
                 <div className="md2-chip">
-                  <div className="md2-chip-icon">💼</div>
+                  <div className="md2-chip-icon">🩺</div>
                   <span className="md2-chip-val">{listing.employmentType}</span>
-                  <span className="md2-chip-label">Employment Type</span>
+                  <span className="md2-chip-label">Specialization</span>
                 </div>
                 <div className="md2-chip">
                   <div className="md2-chip-icon">🎓</div>
                   <span className="md2-chip-val">{listing.education}</span>
-                  <span className="md2-chip-label">Education</span>
+                  <span className="md2-chip-label">Credentials</span>
                 </div>
                 <div className="md2-chip">
                   <div className="md2-chip-icon">👥</div>
-                  <span className="md2-chip-val">{listing.vacancies} openings</span>
-                  <span className="md2-chip-label">Vacancies</span>
+                  <span className="md2-chip-val">{listing.vacancies > 0 ? `${listing.vacancies} slots` : "Walk-in"}</span>
+                  <span className="md2-chip-label">Availability</span>
                 </div>
                 <div className="md2-chip">
                   <div className="md2-chip-icon">📅</div>
                   <span className="md2-chip-val" style={{ fontSize: 9 }}>{listing.postedDate}</span>
-                  <span className="md2-chip-label">Posted</span>
+                  <span className="md2-chip-label">Listed On</span>
                 </div>
               </div>
             </div>
 
             {/* Description */}
             <div className="md2-desc-card">
-              <h2 className="md2-sec-title">Job Description</h2>
+              <h2 className="md2-sec-title">Description & Profile</h2>
               <p className={`md2-desc-text${!showFull ? " clip" : ""}`}>{listing.description}</p>
               <button className="md2-see-more" onClick={() => setShowFull((v) => !v)} id="desc-toggle">
                 {showFull ? "See Less" : "See More"}
               </button>
             </div>
 
-            {/* Requirements + Benefits */}
+            {/* Services + Facilities */}
             <div className="md2-req-card">
               <div className="md2-req-grid">
                 <div className="md2-req-col">
-                  <h2 className="md2-req-col-title">Requirements</h2>
+                  <h2 className="md2-req-col-title">Services & Specializations</h2>
                   {listing.requirements.map((r, i) => (
                     <div className="md2-req-item" key={i}>
                       <span className="md2-req-dot" />
@@ -845,7 +1275,7 @@ export default function MedicalDetailPage() {
                   ))}
                 </div>
                 <div className="md2-req-col">
-                  <h2 className="md2-req-col-title">Benefits</h2>
+                  <h2 className="md2-req-col-title">Facilities & Amenities</h2>
                   {listing.benefits.map((b, i) => (
                     <div className="md2-req-item" key={i}>
                       <span className="md2-ben-dot" />
@@ -863,7 +1293,7 @@ export default function MedicalDetailPage() {
 
             {/* Company Information */}
             <div className="md2-company-card">
-              <p className="md2-company-card-title">Company information</p>
+              <p className="md2-company-card-title">Organization Details</p>
               <div className="md2-company-top">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={listing.company.logo} alt={listing.company.name} className="md2-company-logo" />
@@ -878,28 +1308,37 @@ export default function MedicalDetailPage() {
               </div>
               <div className="md2-company-info">
                 <div className="md2-ci-row">
-                  <span className="md2-ci-label">Industry</span>
+                  <span className="md2-ci-label">Category</span>
                   <span className="md2-ci-val">{listing.company.industry}</span>
                 </div>
                 <div className="md2-ci-row">
-                  <span className="md2-ci-label">Company Size</span>
+                  <span className="md2-ci-label">Capacity</span>
                   <span className="md2-ci-val">{listing.company.size}</span>
                 </div>
                 <div className="md2-ci-row">
                   <span className="md2-ci-label">Website</span>
-                  <span className="md2-ci-val" style={{ color: "#1a5fd4", fontSize: 11 }}>{listing.company.website}</span>
+                  <span className="md2-ci-val" style={{ color: "#0d9488", fontSize: 11 }}>{listing.company.website}</span>
                 </div>
                 <div className="md2-ci-row">
-                  <span className="md2-ci-label">Location</span>
+                  <span className="md2-ci-label">Address</span>
                   <span className="md2-ci-val">{listing.company.location}</span>
                 </div>
               </div>
-              <button className="md2-view-profile" id="view-profile-btn">View Company Profile</button>
+              <a
+                href={listing.company.website.startsWith("http") ? listing.company.website : `https://${listing.company.website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="md2-view-profile"
+                id="view-profile-btn"
+                style={{ display: "block", textDecoration: "none" }}
+              >
+                Visit Website
+              </a>
             </div>
 
             {/* Location */}
             <div className="md2-location-card" id="location">
-              <p className="md2-location-card-title">Location</p>
+              <p className="md2-location-card-title">Location Map</p>
               <div className="md2-map-area">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={listing.mapImage} alt="Location" className="md2-map-img" />
@@ -908,7 +1347,7 @@ export default function MedicalDetailPage() {
                   <span className="md2-map-place-sub">{listing.mapCity.split(",")[1]?.trim() || "Nepal"}</span>
                 </div>
                 <div className="md2-map-pin-anim">
-                  <FiMapPin size={28} color="#C0392B" />
+                  <FiMapPin size={28} color="#0d9488" />
                 </div>
               </div>
               <div className="md2-location-info">
@@ -922,14 +1361,14 @@ export default function MedicalDetailPage() {
                 rel="noopener noreferrer"
                 className="md2-map-link"
               >
-                <FiMapPin size={12} color="#C0392B" style={{ marginRight: '4px' }} />
+                <FiMapPin size={12} color="#0d9488" style={{ marginRight: '4px' }} />
                 View on Map
               </a>
             </div>
 
             {/* Posted By */}
             <div className="md2-posted-card">
-              <p className="md2-posted-card-title">Posted By</p>
+              <p className="md2-posted-card-title">Listed By</p>
               <div className="md2-poster-top">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -950,7 +1389,7 @@ export default function MedicalDetailPage() {
               {listing.postedBy.isVerified && (
                 <div className="md2-verified-tag">
                   <FiCheckCircle size={10} color="#0b8a6b" style={{ marginRight: '4px' }} />
-                  Verified employer
+                  Verified Provider
                 </div>
               )}
               <button className="md2-send-msg" id="send-msg-btn">
@@ -962,13 +1401,13 @@ export default function MedicalDetailPage() {
           </div>
         </div>
 
-        {/* ── Similar Jobs ── */}
+        {/* ── Similar Healthcare Services ── */}
         <div className="md2-similar">
           <div className="md2-similar-hdr">
-            <h2 className="md2-similar-title">Similar Jobs</h2>
+            <h2 className="md2-similar-title">Similar Healthcare Services</h2>
             <Link href="/category/medical" className="md2-similar-all">
               View All
-              <FiChevronRight size={12} color="#C0392B" />
+              <FiChevronRight size={12} color="#0d9488" />
             </Link>
           </div>
           <div className="md2-similar-row">
