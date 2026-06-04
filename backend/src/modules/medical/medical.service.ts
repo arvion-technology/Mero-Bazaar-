@@ -12,17 +12,18 @@ export class MedicalService {
     return this.prisma.listing.create({
       data: {
         category: ListingCategory.MEDICAL,
-        title: `${dto.doctorName} - ${dto.specialty}`,
+        title: dto.doctorName,
 
         medical: {
           create: {
             doctorName: dto.doctorName,
-            specialty: dto.specialty,
             nmcLicenseNumber: dto.nmcLicenseNumber,
             appointmentFee: dto.appointmentFee,
-            availableSlots: dto.availableSlots,
             clinicAddress: dto.clinicAddress,
             city: dto.city,
+
+            homeVisitAvailable: dto.homeVisitAvailable ?? false,
+
             latitude: dto.latitude ?? null,
             longitude: dto.longitude ?? null,
           },
@@ -41,9 +42,17 @@ export class MedicalService {
 
         medical: {
           is: {
-            ...(query.city && { city: query.city }),
-            ...(query.specialty && { specialty: query.specialty }),
-            ...(query.doctorName && { doctorName: query.doctorName }),
+            ...(query.city && {
+              city: query.city,
+            }),
+
+            ...(query.doctorName && {
+              doctorName: {
+                contains: query.doctorName,
+                mode: 'insensitive',
+              },
+            }),
+
             ...(query.homeVisitAvailable !== undefined && {
               homeVisitAvailable: query.homeVisitAvailable,
             }),
@@ -56,6 +65,7 @@ export class MedicalService {
       },
     });
   }
+
   async findOne(id: string) {
     return this.prisma.listing.findFirst({
       where: {

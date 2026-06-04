@@ -4,9 +4,6 @@ import { PrismaModule } from 'src/database/prisma.module';
 import { MedicalService } from './medical.service';
 import { MedicalController } from './medical.controller';
 
-import { AppointmentsService } from '../appointments/appointments.service';
-import { AppointmentsController } from '../appointments/appointments.controller';
-
 import { VerificationService } from '../verification/verification.service';
 import { VerificationController } from '../verification/verification.controller';
 import { MedicalAppointmentsController } from './appointments/appointments.controller';
@@ -18,14 +15,13 @@ import { MedicalAppointmentsService } from './appointments/appointments.service'
   imports: [PrismaModule],
   controllers: [
     MedicalController,
-    AppointmentsController,
     VerificationController,
     MedicalAppointmentsController,
     MedicalSlotsController,
   ],
+  
   providers: [
     MedicalService,
-    AppointmentsService,
     VerificationService,
     MedicalSlotsService,
     MedicalAppointmentsService,

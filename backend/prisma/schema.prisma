@@ -216,6 +216,7 @@ model MedicalAppointment {
 
   status    AppointmentStatus @default(PENDING)
   createdAt DateTime          @default(now())
+
   Listing   Listing?          @relation(fields: [listingId], references: [id])
   listingId String?
 
