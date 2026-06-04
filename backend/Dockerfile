@@ -1,14 +1,14 @@
 FROM node:24-alpine
 
-WORKDIR /app
+WORKDIR /app/backend
 
 RUN apk add --no-cache openssl
 
-COPY package*.json ./
+COPY backend/package*.json ./
 
 RUN npm install
 
-COPY . .
+COPY backend ./
 
 RUN npx prisma generate
 
