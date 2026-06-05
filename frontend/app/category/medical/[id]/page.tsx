@@ -735,7 +735,7 @@ export default function MedicalDetailPage() {
                 {listing.isVerified && (
                   <span className="md2-badge-verified">
                     <FiCheckCircle size={9} color="#1a7a43" />
-                    VerifiedJob
+                    Verified Listing
                   </span>
                 )}
                 {listing.isFeatured && (
@@ -774,11 +774,11 @@ export default function MedicalDetailPage() {
                 </span>
                 <span className="md2-meta-item">
                   <FiClock size={12} color="#bbb" />
-                  Posted {listing.postedDaysAgo} Day{listing.postedDaysAgo !== 1 ? "s" : ""} ago
+                  Listed {listing.postedDaysAgo} day{listing.postedDaysAgo !== 1 ? "s" : ""} ago
                 </span>
                 <span className="md2-meta-item">
                   <FiEye size={12} color="#bbb" />
-                  {listing.views}views
+                  {listing.views} views
                 </span>
               </div>
 
@@ -788,8 +788,8 @@ export default function MedicalDetailPage() {
                   Apply Now
                 </button>
                 <button className="md2-btn-chat" id="chat-btn">
-                  <FiMessageSquare size={14} color="#1a5fd4" style={{ marginRight: '5px' }} />
-                  Chat with Employer
+                  <FiMessageSquare size={14} color="#0d9488" style={{ marginRight: '5px' }} />
+                  Chat with Provider
                 </button>
               </div>
 
@@ -922,7 +922,7 @@ export default function MedicalDetailPage() {
                 rel="noopener noreferrer"
                 className="md2-map-link"
               >
-                <FiMapPin size={12} color="#C0392B" style={{ marginRight: '4px' }} />
+                <FiMapPin size={12} color="#0d9488" style={{ marginRight: '4px' }} />
                 View on Map
               </a>
             </div>
@@ -950,7 +950,7 @@ export default function MedicalDetailPage() {
               {listing.postedBy.isVerified && (
                 <div className="md2-verified-tag">
                   <FiCheckCircle size={10} color="#0b8a6b" style={{ marginRight: '4px' }} />
-                  Verified employer
+                  Verified Provider
                 </div>
               )}
               <button className="md2-send-msg" id="send-msg-btn">
@@ -968,7 +968,7 @@ export default function MedicalDetailPage() {
             <h2 className="md2-similar-title">Similar Jobs</h2>
             <Link href="/category/medical" className="md2-similar-all">
               View All
-              <FiChevronRight size={12} color="#C0392B" />
+              <FiChevronRight size={12} color="#0d9488" />
             </Link>
           </div>
           <div className="md2-similar-row">

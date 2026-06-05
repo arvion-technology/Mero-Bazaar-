@@ -3,8 +3,25 @@
 import { useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiHeart } from "react-icons/fi";
-import { FaHeart, FaStar, FaStethoscope } from "react-icons/fa";
+import {
+  FiSearch,
+  FiMapPin,
+  FiHeart,
+  FiChevronDown,
+  FiCheckCircle,
+  FiCalendar,
+  FiStar,
+  FiHome,
+  FiClock,
+  FiPhone,
+  FiAward,
+  FiFilter,
+  FiX,
+} from "react-icons/fi";
+
+import {
+  FaHeart, FaStethoscope, FaHospital, FaClinicMedical, FaPills, FaAmbulance, FaFlask
+} from "react-icons/fa";
 
 type MedicalListing = {
   id: string;
@@ -447,7 +464,7 @@ export default function MedicalPage() {
           <div className="mp-hero-watermark">Medical</div>
           <div className="mp-hero-inner">
             <div className="mp-hero-tag">
-              <FaStethoscope size={13} color="#fff" />
+              <FaStethoscope size={12} />
               Nepal&apos;s #1 Healthcare Directory
             </div>
             <h1 className="mp-hero-title">
@@ -456,7 +473,7 @@ export default function MedicalPage() {
             </h1>
             <p className="mp-hero-sub">Trusted doctors, clinics, hospitals and medical services near you</p>
             <div className="mp-search-wrap">
-              <FiSearch className="mp-search-icon" size={18} color="#bbb" />
+              <FiSearch className="mp-search-icon" size={18} color="#aaa" />
               <input
                 className="mp-search"
                 placeholder="Search doctors, clinics, hospitals..."
@@ -575,21 +592,43 @@ export default function MedicalPage() {
                             {l.isVerified && <span className="mp-badge-verified">✓ Verified</span>}
                             {l.isFeatured && <span className="mp-badge-featured">⭐ Featured</span>}
                           </div>
-                          <button className="mp-heart" aria-label="Save" onClick={(e) => toggleFav(l.id, e)}>
-                            {isFav ? <FaHeart size={15} color="#E74C3C" /> : <FiHeart size={15} color="#999" />}
-                          </button>
+                           {l.languages && (
+                            <div className="mp-detail-item">
+                              <FiPhone size={13} style={{ transform: "rotate(90deg)" }} />
+                              <div className="mp-languages">
+                                {l.languages.map((lang) => (
+                                  <span key={lang} className="mp-lang-tag">{lang}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <div className="mp-card-body">
-                          <p className="mp-card-name">{l.name}</p>
-                          <p className="mp-card-specialty">{l.specialty}</p>
-                          <div className="mp-card-rating">
-                            <FaStar size={12} color="#f5a623" />
-                            <span className="mp-card-rating-num">{l.rating}</span>
-                            <span className="mp-card-reviews">({l.reviews})</span>
+
+                        <hr className="mp-divider" />
+
+                        <div className="mp-card-footer">
+                          <div className="mp-footer-row">
+                            <div>
+                              <p className="mp-price-label">Consultation Fee</p>
+                              <p className="mp-price-val">{l.consultationFee}</p>
+                            </div>
+                            <div className="mp-status-badges">
+                              {l.availableToday && <span className="mp-status-badge mp-status-avail">✓ Available Today</span>}
+                              {l.type === "Doctors" && <span className="mp-status-badge mp-status-home">Home Visit</span>}
+                            </div>
                           </div>
-                          <div className="mp-card-location">
-                            <FiMapPin size={11} color="#bbb" />
-                            {l.location}
+
+                          {/* Time Slots */}
+                          <div className="mp-slots-grid">
+                            {TIME_SLOTS.map((slot) => (
+                              <div
+                                key={slot.time}
+                                className={`mp-slot-btn${slot.selected ? " selected" : ""}`}
+                              >
+                                <div>{slot.time}</div>
+                                <div style={{ fontSize: "9px", opacity: 0.8 }}>{slot.period}</div>
+                              </div>
+                            ))}
                           </div>
                           <div className="mp-card-footer">
                             {l.availableToday ? (
