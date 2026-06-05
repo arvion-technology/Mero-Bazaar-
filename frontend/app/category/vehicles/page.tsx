@@ -385,7 +385,6 @@ export default function VehiclesPage() {
           transition: transform 0.32s ease;
         }
         .vp-card:hover .vp-card-img { transform: scale(1.06); }
-
         .vp-card-cat {
           position: absolute; top: 9px; left: 9px;
           background: rgba(0,0,0,0.52); color: #fff;
@@ -520,8 +519,8 @@ export default function VehiclesPage() {
               <div className="vsb-head">
                 <span className="vsb-head-title">Filters</span>
                 <button className="vsb-reset" onClick={resetFilters}>Reset All</button>
-                
-             </div>
+
+              </div>
 
               {/* Brand */}
               <div className="vsb-section">
