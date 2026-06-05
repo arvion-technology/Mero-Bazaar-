@@ -1,19 +1,6 @@
-import {
-  IsEnum,
-  IsBoolean,
-  IsInt,
-  IsString,
-  Min,
-  IsOptional,
-} from "class-validator";
-
+import { IsEnum, IsBoolean, IsInt, IsString, Min, IsOptional } from "class-validator"; 
 import { Type } from "class-transformer";
-import {
-  BluebookStatus,
-  FuelType,
-  VehicleCondition,
-  VehicleType,
-} from "src/common/enums/vehicle.enum";
+import { BluebookStatus, FuelType, VehicleCondition, VehicleType } from "src/common/enums/vehicle.enum";
 
 export class CreateVehicleDto {
   @IsEnum(VehicleType)

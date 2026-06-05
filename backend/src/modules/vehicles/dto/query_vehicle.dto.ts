@@ -2,7 +2,7 @@ import { IsOptional, IsString, IsEnum, IsNumber } from "class-validator";
 import { Type } from "class-transformer";
 import { VehicleType, VehicleCondition, FuelType } from "@prisma/client";
 
-export class VehicleSearchDto {
+export class QueryVehicleDto {
   @IsOptional()
   @IsString()
   query?: string;
