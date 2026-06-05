@@ -385,6 +385,7 @@ export default function VehiclesPage() {
           transition: transform 0.32s ease;
         }
         .vp-card:hover .vp-card-img { transform: scale(1.06); }
+        
         .vp-card-cat {
           position: absolute; top: 9px; left: 9px;
           background: rgba(0,0,0,0.52); color: #fff;
@@ -400,7 +401,7 @@ export default function VehiclesPage() {
           transition: transform 0.18s; z-index: 3;
           padding: 0;
         }
-        .vp-heart:hover { transform: scale(1.15); background: #fff; }
+        .vp-heart:hover { transform: scale(1.18); background: #fff; }
 
         .vp-card-body { padding: 14px; display: flex; flex-direction: column; gap: 5px; }
         .vp-card-title {
@@ -519,7 +520,6 @@ export default function VehiclesPage() {
               <div className="vsb-head">
                 <span className="vsb-head-title">Filters</span>
                 <button className="vsb-reset" onClick={resetFilters}>Reset All</button>
-
               </div>
 
               {/* Brand */}
@@ -697,7 +697,7 @@ export default function VehiclesPage() {
                     <div className="vp-ev-header">
                       <FiZap size={16} color="#fde047" />
                       <span className="vp-ev-header-title">Electric Vehicle</span>
-                      <span className="vp-ev-header-sub">🌱 Zero Emissions</span>
+                      <span className="vp-ev-header-sub"> Zero Emissions</span>
                     </div>
                     <div className="vp-ev-body">
                       <div className="vp-ev-info">
