@@ -672,9 +672,9 @@ export default function PropertyDetailPage() {
           <div className="pd-breadcrumb-inner">
             <Link href="/" className="pd-bc-link">Home</Link>
             <span className="pd-bc-sep">›</span>
-            <Link href="/category/property" className="pd-bc-link">Property</Link>
+            <Link href="/category/rent-and-real-estate" className="pd-bc-link">Property</Link>
             <span className="pd-bc-sep">›</span>
-            <Link href="/category/property" className="pd-bc-link">Apartment</Link>
+            <Link href="/category/rent-and-real-estate" className="pd-bc-link">Apartment</Link>
             <span className="pd-bc-sep">›</span>
             <span className="pd-bc-current">2BKH Modern Apartment in Lazimpat</span>
           </div>
@@ -964,7 +964,7 @@ export default function PropertyDetailPage() {
         <div className="pd-related-section">
           <div className="pd-related-header">
             <h2 className="pd-related-title">Related Listings</h2>
-            <Link href="/category/property" className="pd-related-viewall">View All →</Link>
+            <Link href="/category/rent-and-real-estate" className="pd-related-viewall">View All →</Link>
           </div>
           <div className="pd-related-scroll">
             {[

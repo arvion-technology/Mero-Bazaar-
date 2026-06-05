@@ -697,7 +697,7 @@ export default function VehiclesPage() {
                     <div className="vp-ev-header">
                       <FiZap size={16} color="#fde047" />
                       <span className="vp-ev-header-title">Electric Vehicle</span>
-                      <span className="vp-ev-header-sub">🌱 Zero Emissions</span>
+                      <span className="vp-ev-header-sub"> Zero Emissions</span>
                     </div>
                     <div className="vp-ev-body">
                       <div className="vp-ev-info">

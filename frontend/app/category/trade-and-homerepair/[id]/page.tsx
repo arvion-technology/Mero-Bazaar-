@@ -629,7 +629,7 @@ export default function ConstructionDetailPage() {
                   <span className="cd-bc-sep">›</span>
                   {i === listing.breadcrumbs.length - 1
                     ? <span className="cd-bc-cur">{crumb}</span>
-                    : <Link href="/category/construction" className="cd-bc-link">{crumb}</Link>
+                    : <Link href="/category/trade-and-homerepair" className="cd-bc-link">{crumb}</Link>
                   }
                 </span>
               ))}
@@ -926,14 +926,14 @@ export default function ConstructionDetailPage() {
         <div className="cd-similar">
           <div className="cd-similar-hdr">
             <h2 className="cd-similar-title">Similar Devices</h2>
-            <Link href="/category/construction" className="cd-similar-all">
+            <Link href="/category/trade-and-homerepair" className="cd-similar-all">
               View All
               <FiChevronRight size={12} color="#C0392B" />
             </Link>
           </div>
           <div className="cd-similar-row">
             {SIMILAR.filter((s) => s.id !== listing.id).map((sim) => (
-              <Link key={sim.id} href={`/category/construction/${sim.id}`} className="cd-sim-card">
+              <Link key={sim.id} href={`/category/trade-and-homerepair/${sim.id}`} className="cd-sim-card">
                 <div className="cd-sim-img-wrap">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={sim.image} alt={sim.title} className="cd-sim-img" />
