@@ -149,20 +149,37 @@ model Lead {
   listingId String
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
+  userId    String?
+
   leadType  LeadType
   createdAt DateTime @default(now())
+
+  status    LeadStatus @default(PENDING)
+  message   String?
 
   contactedAt DateTime?
   respondedAt DateTime?
 
   @@index([listingId])
   @@index([leadType])
+  @@index([status])
+  @@index([userId])
 }
 
 enum LeadType {
   CALL
   CHAT
   APPLY
+}
+
+enum LeadStatus {
+  PENDING
+  VIEWED
+  SHORTLISTED
+  INTERVIEWED
+  REJECTED
+  HIRED
+  WITHDRAWN
 }
 
 model MedicalAndDental {
@@ -201,8 +218,8 @@ model MedicalAndDental {
 model MedicalAppointment {
   id String @id @default(cuid())
 
-  doctorId String
-  doctor   MedicalAndDental @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  medicalId String
+  medical   MedicalAndDental @relation(fields: [medicalId], references: [id], onDelete: Cascade)
 
   slotId String
   slot   MedicalSlot @relation(fields: [slotId], references: [id])
@@ -216,11 +233,12 @@ model MedicalAppointment {
 
   status    AppointmentStatus @default(PENDING)
   createdAt DateTime          @default(now())
+
   Listing   Listing?          @relation(fields: [listingId], references: [id])
   listingId String?
 
   @@index([status])
-  @@index([doctorId])
+  @@index([medicalId])
 }
 
 model MedicalSlot {
