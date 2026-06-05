@@ -149,20 +149,37 @@ model Lead {
   listingId String
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
+  userId    String?
+
   leadType  LeadType
   createdAt DateTime @default(now())
+
+  status    LeadStatus @default(PENDING)
+  message   String?
 
   contactedAt DateTime?
   respondedAt DateTime?
 
   @@index([listingId])
   @@index([leadType])
+  @@index([status])
+  @@index([userId])
 }
 
 enum LeadType {
   CALL
   CHAT
   APPLY
+}
+
+enum LeadStatus {
+  PENDING
+  VIEWED
+  SHORTLISTED
+  INTERVIEWED
+  REJECTED
+  HIRED
+  WITHDRAWN
 }
 
 model MedicalAndDental {

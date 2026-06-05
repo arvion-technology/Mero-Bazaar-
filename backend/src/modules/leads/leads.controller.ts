@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Query } from '@nestjs/common';
 import { LeadsService } from './leads.service';
 import { CreateLeadDto } from './dto/create_lead.dto';
+import { LeadStatus, ListingCategory } from '@prisma/client';
 
 @Controller('leads')
 export class LeadsController {
@@ -12,7 +13,18 @@ export class LeadsController {
   }
 
   @Get()
-  findAll() {
-    return this.leadsService.findAll();
+  findAll(
+    @Query('category') category?: ListingCategory,
+    @Query('status') status?: LeadStatus,
+  ) {
+    return this.leadsService.findAll({ category, status });
+  }
+
+  @Patch(':id/status')
+  updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: LeadStatus,
+  ) {
+    return this.leadsService.updateStatus(id, status);
   }
 }
