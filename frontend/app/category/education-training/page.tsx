@@ -3,6 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import { FiSearch, FiMapPin, FiHeart } from "react-icons/fi";
+import { FaHeart, FaStar } from "react-icons/fa";
+import { MdSchool } from "react-icons/md";
 
 type EducationListing = {
   id: string;
@@ -31,7 +34,7 @@ const LISTINGS: EducationListing[] = [
     reviews: 120,
     location: "Sanepa, Lalitpur, Nepal",
     city: "Lalitpur",
-    image: "/greenfield.jpg",
+    image: "/school.jpg",
     isVerified: true,
     isFeatured: true,
     admissionOpen: true,
@@ -446,9 +449,7 @@ export default function EducationPage() {
           <div className="ep-hero-watermark">Education</div>
           <div className="ep-hero-inner">
             <div className="ep-hero-tag">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z" fill="#fff" />
-              </svg>
+              <MdSchool size={14} color="#fff" />
               Nepal&apos;s #1 Education Directory
             </div>
             <h1 className="ep-hero-title">
@@ -457,10 +458,7 @@ export default function EducationPage() {
             </h1>
             <p className="ep-hero-sub">Schools, Colleges, Courses, Tuitions &amp; Training Programs near you</p>
             <div className="ep-search-wrap">
-              <svg className="ep-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="7" stroke="#bbb" strokeWidth="2.2" />
-                <path d="M16.5 16.5L21 21" stroke="#bbb" strokeWidth="2.2" strokeLinecap="round" />
-              </svg>
+              <FiSearch className="ep-search-icon" size={18} color="#bbb" />
               <input
                 className="ep-search"
                 placeholder="Search schools, colleges, courses............"
@@ -580,23 +578,19 @@ export default function EducationPage() {
                             {l.isFeatured && <span className="ep-badge-featured">⭐ Featured</span>}
                           </div>
                           <button className="ep-heart" aria-label="Save" onClick={(e) => toggleFav(l.id, e)}>
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill={isFav ? "#E74C3C" : "none"}>
-                              <path d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.91 3.81 13 5.09C14.09 3.81 15.76 3 17.5 3C20.58 3 23 5.42 23 8.5C23 14.5 14 21 12 21Z" stroke={isFav ? "#E74C3C" : "#999"} strokeWidth="1.8" />
-                            </svg>
+                            {isFav ? <FaHeart size={15} color="#E74C3C" /> : <FiHeart size={15} color="#999" />}
                           </button>
                         </div>
                         <div className="ep-card-body">
                           <p className="ep-card-name">{l.name}</p>
                           <p className="ep-card-cat">{l.category}</p>
                           <div className="ep-card-rating">
-                            <span className="ep-card-stars">★</span>
+                            <FaStar size={12} color="#f5a623" />
                             <span className="ep-card-rating-num">{l.rating}</span>
                             <span className="ep-card-reviews">({l.reviews})</span>
                           </div>
                           <div className="ep-card-location">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#bbb" />
-                            </svg>
+                            <FiMapPin size={11} color="#bbb" />
                             {l.location}
                           </div>
                           <div className="ep-card-footer">

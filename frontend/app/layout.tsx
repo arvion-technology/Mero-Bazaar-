@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "HamroNepal Bazaar – Buy, Sell, Book Trusted Services Across Nepal",
@@ -14,16 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ne">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body suppressHydrationWarning>
+    <html lang="ne" className={inter.variable}>
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         <Navbar />
         {children}
       </body>

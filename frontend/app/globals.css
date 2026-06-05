@@ -2,28 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* * {
+* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -45,7 +24,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -62,4 +41,20 @@ button {
 img {
   display: block;
   max-width: 100%;
-} */
+}
+
+/* Hide scrollbar but keep scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Vehicle card image zoom on hover */
+.vcard:hover .vcard-img { transform: scale(1.07); }
+
+/* Checkbox accent */
+.custom-cb {
+  accent-color: #e05c3a;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
