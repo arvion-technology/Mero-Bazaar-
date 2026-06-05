@@ -18,10 +18,7 @@ import {
   FiFilter,
   FiX,
 } from "react-icons/fi";
-
-import {
-  FaHeart, FaStethoscope, FaHospital, FaClinicMedical, FaPills, FaAmbulance, FaFlask
-} from "react-icons/fa";
+import { FaHeart, FaStethoscope, FaHospital, FaClinicMedical, FaPills, FaAmbulance, FaFlask } from "react-icons/fa";
 
 type MedicalListing = {
   id: string;
@@ -592,7 +589,7 @@ export default function MedicalPage() {
                             {l.isVerified && <span className="mp-badge-verified">✓ Verified</span>}
                             {l.isFeatured && <span className="mp-badge-featured">⭐ Featured</span>}
                           </div>
-                           {l.languages && (
+                          {l.languages && (
                             <div className="mp-detail-item">
                               <FiPhone size={13} style={{ transform: "rotate(90deg)" }} />
                               <div className="mp-languages">

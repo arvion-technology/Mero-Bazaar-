@@ -908,7 +908,7 @@ export default function MedicalDetailPage() {
                   <span className="md2-map-place-sub">{listing.mapCity.split(",")[1]?.trim() || "Nepal"}</span>
                 </div>
                 <div className="md2-map-pin-anim">
-                  <FiMapPin size={28} color="#C0392B" />
+                  <FiMapPin size={28} color="#0d9488" />
                 </div>
               </div>
               <div className="md2-location-info">
