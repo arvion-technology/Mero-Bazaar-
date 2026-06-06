@@ -9,8 +9,8 @@ const categories = [
   { name: "Vehicles", slug: "vehicles" },
   { name: "Jobs & Labour Hire", slug: "job" },
   { name: "Medical & Dental", slug: "medical" },
-  { name: " Trades & Home Repair", slug: "construction" },
-  { name: "Rent & Real Estate", slug: "property" },
+  { name: " Trades & Home Repair", slug: "trade-and-homerepair" },
+  { name: "Rent & Real Estate", slug: "rent-and-real-estate" },
   { name: "Agriculture & Livestock", slug: "food" },
   { name: "Secondhand Goods", slug: "electronics" },
   { name: "Food & Home Delivery", slug: "education-training" },
@@ -22,7 +22,7 @@ const navLinks = [
   { label: "Services", href: "/services" },
   { label: "Jobs", href: "/category/job" },
   { label: "Medical", href: "/category/medical" },
-  { label: "Property", href: "/category/property" },
+  { label: "Property", href: "/category/rent-and-real-estate" },
 ];
 
 const moreLinks = [
