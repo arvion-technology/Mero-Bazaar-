@@ -1,10 +1,14 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
-import * as bcrypt from "bcrypt";
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+  ) {}
 
   async register(dto: any) {
     const hash = await bcrypt.hash(dto.password, 10);
@@ -15,14 +19,11 @@ export class AuthService {
         password: hash,
         name: dto.name,
         phone: dto.phone,
-        role: dto.role || "USER",
+        role: dto.role || 'USER',
       },
     });
 
-    return {
-      id: user.id,
-      email: user.email,
-    };
+    return this.signToken(user.id, user.email, user.role);
   }
 
   async login(dto: any) {
@@ -30,24 +31,22 @@ export class AuthService {
       where: { email: dto.email },
     });
 
-    if (!user) {
-      throw new UnauthorizedException("User not found");
-    }
+    if (!user) throw new UnauthorizedException('User not found');
 
     const valid = await bcrypt.compare(dto.password, user.password);
+    if (!valid) throw new UnauthorizedException('Invalid credentials!');
 
-    if (!valid) {
-      throw new UnauthorizedException("Invalid credentials!");
-    }
-
-    return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-    };
+    return this.signToken(user.id, user.email, user.role);
   }
 
   async logout(userId: string) {
-    return { message: "Logged out successfully!"};
+    return { message: 'Logged out successfully!' };
+  }
+
+  private signToken(userId: string, email: string, role: any) {
+    return {
+      access_token: this.jwtService.sign({ sub: userId, email, role }),
+      user: { id: userId, email, role },
+    };
   }
 }
