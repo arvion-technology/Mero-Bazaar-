@@ -54,7 +54,7 @@ const categories = [
     labelNp: "कृषि",
     label: "Agriculture & Livestock",
     count: "5,500+ Listings",
-    href: "/category/food",
+    href: "/category/agriculture-and-livestock",
     bg: "#f0fff5",
     img: "/food and restaurants.png",
   },

@@ -11,7 +11,7 @@ const categories = [
   { name: "Medical & Dental", slug: "medical" },
   { name: " Trades & Home Repair", slug: "trade-and-homerepair" },
   { name: "Rent & Real Estate", slug: "rent-and-real-estate" },
-  { name: "Agriculture & Livestock", slug: "food" },
+  { name: "Agriculture & Livestock", slug: "agriculture-and-livestock" },
   { name: "Secondhand Goods", slug: "electronics" },
   { name: "Food & Home Delivery", slug: "education-training" },
   { name: "Hair, Beauty & Wellness", slug: "beauty" },
