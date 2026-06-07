@@ -7,8 +7,106 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id         String    @id @default(cuid())
+  email      String    @unique
+  phone      String?   @unique
+  password   String
+  name       String?
+  role       UserRole? @default(USER)
+  isActive   Boolean   @default(true)
+  isVerified Boolean   @default(false)
+
+  emailVerifiedAt DateTime?
+  phoneVerifiedAt DateTime?
+
+  refreshTokenHash String?
+  lastLoginAt      DateTime?
+
+  vendorProfile VendorProfile?
+  doctorProfile DoctorProfile?
+
+  leads    Lead[]
+  orders   Order[]
+  reviews  Review[]
+  listings Listing[]
+  sessions Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+}
+
+enum UserRole {
+  USER
+  VENDOR
+  DOCTOR
+  ADMIN
+}
+
+model VendorProfile {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  businessName String
+  businessType VendorType
+  description  String?
+  address      String?
+  isVerified   Boolean    @default(false)
+  rating       Float      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum VendorType {
+  INDIVIDUAL
+  COMPANY
+  AGENCY
+}
+
+model DoctorProfile {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  doctorName         String
+  nmcLicenseNumber   String             @unique
+  specialization     MedicalServiceType
+  verificationStatus VerificationStatus @default(PENDING)
+
+  clinicAddress String?
+  clinicName    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  refreshTokenHash String
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 model Listing {
   id          String          @id @default(cuid())
+
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   title       String
   description String?
   price       Int?
@@ -40,6 +138,7 @@ model Listing {
   orders              Order[]
   reviews             Review[]
 
+  @@index(userId)
   @@index([category])
   @@index([latitude, longitude])
 }
@@ -145,17 +244,18 @@ enum ContractType {
 }
 
 model Lead {
-  id        String  @id @default(cuid())
+  id     String  @id @default(cuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
   listingId String
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-
-  userId    String?
 
   leadType  LeadType
   createdAt DateTime @default(now())
 
-  status    LeadStatus @default(PENDING)
-  message   String?
+  status  LeadStatus @default(PENDING)
+  message String?
 
   contactedAt DateTime?
   respondedAt DateTime?
@@ -234,7 +334,7 @@ model MedicalAppointment {
   status    AppointmentStatus @default(PENDING)
   createdAt DateTime          @default(now())
 
-  Listing   Listing?          @relation(fields: [listingId], references: [id])
+  Listing   Listing? @relation(fields: [listingId], references: [id])
   listingId String?
 
   @@index([status])
@@ -526,7 +626,11 @@ model FoodsAndHomeDelivery {
 }
 
 model Review {
-  id        String  @id @default(cuid())
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
   listingId String
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
@@ -538,11 +642,16 @@ model Review {
   HairBeautyAndWellness   HairBeautyAndWellness? @relation(fields: [hairBeautyAndWellnessId], references: [id])
   hairBeautyAndWellnessId String?
 
+  @@index(userId)
   @@index([listingId])
 }
 
 model Order {
-  id        String  @id @default(cuid())
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
   listingId String
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
@@ -557,6 +666,7 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index(userId)
   @@index([listingId])
   @@index([status])
   @@index([deliveryDate])
