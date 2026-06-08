@@ -8,7 +8,7 @@ import { ListingCategory } from '@prisma/client';
 export class HairBeautyAndWellnessService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateHairBeautyAndWellnessDto) {
+  async create(dto: CreateHairBeautyAndWellnessDto, userId: string) {
     return this.prisma.listing.create({
       data: {
         title: `${dto.serviceType} Service`,
@@ -17,7 +17,11 @@ export class HairBeautyAndWellnessService {
           ? `${dto.serviceType} available in ${dto.city}`
           : `${dto.serviceType} service`,
         images: dto.portfolioUrls ?? [],
-
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
         beauty: {
           create: {
             serviceType: dto.serviceType,
@@ -65,11 +69,11 @@ export class HairBeautyAndWellnessService {
     return beauty;
   }
   
-  async update(id: string, dto: UpdateHairBeautyAndWellnessDto) {
+  async update(id: string, dto: UpdateHairBeautyAndWellnessDto, userId: string) {
     await this.findOne(id);
 
     return this.prisma.listing.update({
-      where: { id },
+      where: { id, userId },
       data: {
         description: dto.city
           ? `${dto.serviceType ?? ''} available in ${dto.city}`
@@ -97,11 +101,11 @@ export class HairBeautyAndWellnessService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
     await this.findOne(id);
 
     return this.prisma.listing.delete({
-      where: { id },
+      where: { id, userId },
     });
   }
 }

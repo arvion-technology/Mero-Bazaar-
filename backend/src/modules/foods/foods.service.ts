@@ -9,7 +9,7 @@ import { UpdateFoodsAndHomeDeliveryDto } from './dto/update_foods.dto';
 export class FoodsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateFoodsAndHomeDeliveryDto) {
+  async create(dto: CreateFoodsAndHomeDeliveryDto, userId: string) {
     return this.prisma.listing.create({
       data: {
         title: `${dto.foodType || 'Food'} Delivery`,
@@ -17,7 +17,11 @@ export class FoodsService {
         description: `Food delivery service`,
         price: dto.price,
         images: [],
-
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
       foods: {
           create: {
             foodType: dto.foodType,
@@ -75,11 +79,11 @@ export class FoodsService {
     }
     return listing;
   }
-  async update(id: string, dto: UpdateFoodsAndHomeDeliveryDto) {
+  async update(id: string, dto: UpdateFoodsAndHomeDeliveryDto, userId: string) {
     await this.findOne(id);
 
     return this.prisma.listing.update({
-      where: { id },
+      where: { id, userId },
       data: {
         price: dto.price,
       foods: {
@@ -99,11 +103,11 @@ export class FoodsService {
       },
     });
   }
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
     await this.findOne(id);
 
     return this.prisma.listing.delete({
-      where: { id },
+      where: { id, userId },
     });
   }
 }

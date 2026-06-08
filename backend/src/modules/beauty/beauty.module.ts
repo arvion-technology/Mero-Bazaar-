@@ -6,8 +6,10 @@ import { BeautySlotsController } from './slots/slots.controller';
 import { BeautyAppointmentsController } from './appointments/appointments.controller';
 import { BeautyAppointmentsService } from './appointments/appointments.service';
 import { BeautySlotsService } from './slots/slots.service';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
+  imports: [AuthModule],
   controllers: [
     BeautySlotsController,
     BeautyAppointmentsController,

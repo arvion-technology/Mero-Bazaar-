@@ -8,9 +8,10 @@ import { UpdateReviewDto } from './dto/update_review.dto';
 export class ReviewsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateReviewDto) {
+  async create(dto: CreateReviewDto, userId: string) {
     return this.prisma.review.create({
       data: {
+        userId,
         listingId: dto.listingId,
         reviewerName: dto.reviewerName,
         rating: dto.rating,
@@ -56,16 +57,16 @@ export class ReviewsService {
     });
 }
 
-  async update(id: string, dto: UpdateReviewDto) {
+  async update(id: string, dto: UpdateReviewDto, userId: string) {
     return this.prisma.review.update({
-      where: { id },
+      where: { id, userId },
       data: dto,
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
     return this.prisma.review.delete({
-      where: { id },
+      where: { id, userId },
     });
   }
 }

@@ -9,14 +9,18 @@ import { ListingCategory } from '@prisma/client';
 export class JobsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateJobDto) {
+  async create(dto: CreateJobDto, userId: string) {
     return this.prisma.listing.create({
       data: {
         title: `${dto.role} in ${dto.city}`,
         description: `Hiring for ${dto.role} position in ${dto.city}`,
         category: ListingCategory.JOB,
         images: [],
-
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
         job: {
           create: {
             role: dto.role,
@@ -80,11 +84,11 @@ export class JobsService {
     return listing;
   }
 
-  async update(id: string, dto: UpdateJobDto) {
+  async update(id: string, dto: UpdateJobDto, userId: string) {
     await this.findOne(id);
 
     return this.prisma.listing.update({
-      where: { id },
+      where: { id, userId },
       data: {
         title: `${dto.role} in ${dto.city}`,
         description: `Hiring for ${dto.role} position in ${dto.city}`,
@@ -108,11 +112,11 @@ export class JobsService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
     await this.findOne(id);
 
     return this.prisma.listing.delete({
-      where: { id },
+      where: { id, userId },
     });
   }
 }
