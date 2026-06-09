@@ -15,7 +15,8 @@ export class VehiclesService {
         title: `${dto.brand} ${dto.model} ${dto.year}`,
         category: ListingCategory.VEHICLE,
         description: `${dto.brand} ${dto.model}`,
-        price: undefined,
+        price: dto.price,
+        images: dto.images ?? [],
         user: {
           connect: {
             id: userId,
