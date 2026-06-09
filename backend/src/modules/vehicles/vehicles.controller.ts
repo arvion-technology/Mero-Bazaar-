@@ -16,8 +16,9 @@ export class VehiclesController {
   }
 
   @Get()
-  findAll(@Query() query: QueryVehicleDto) {
-    return this.vehiclesService.findAll(query);
+  async findAll(@Query() query: QueryVehicleDto) {
+    const data = await this.vehiclesService.findAll(query);
+    return { data };
   }
 
   @Get(':id')
