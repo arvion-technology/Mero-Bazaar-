@@ -55,16 +55,16 @@ const listings = [
     category: "medical",
   },
   {
-    id: "iphone-13",
-    title: "iPhone 13 128GB (Used)",
-    location: "Bhaktapur, Bagmati",
-    price: "Rs. 65,000",
+    id: "swift-ac-repair-ktm",
+    title: "Swift AC & Appliance Repair",
+    location: "Chabahil, Kathmandu, Nepal",
+    price: "Rs. 600",
     meta: ["Like New"],
     badge: "VERIFIED",
     badgeColor: "#27AE60",
-    href: "/listing/iphone-13",
-    image: "/iphone-13.avif",
-    category: "electronics",
+    href: "/listing/swift-ac-repair-ktm",
+    image: "/ac.webp",
+    category: "trade-and-homerepair",
   },
 ];
 
