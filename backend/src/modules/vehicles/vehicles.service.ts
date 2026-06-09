@@ -9,13 +9,18 @@ import { QueryVehicleDto } from './dto/query_vehicle.dto';
 export class VehiclesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateVehicleDto) {
+  async create(dto: CreateVehicleDto, userId: string) {
     return this.prisma.listing.create({
       data: {
         title: `${dto.brand} ${dto.model} ${dto.year}`,
         category: ListingCategory.VEHICLE,
         description: `${dto.brand} ${dto.model}`,
         price: undefined,
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
 
         vehicle: {
           create: {

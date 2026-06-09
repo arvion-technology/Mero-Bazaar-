@@ -9,12 +9,13 @@ import { buildListingFilter } from '../../search/builders/listings_filter.builde
 export class ListingsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateListingDto) {
+  async create(dto: CreateListingDto, userId: string) {
     return this.prisma.listing.create({
       data: {
         title: dto.title,
         description: dto.description,
         price: dto.price,
+        userId,
         category: dto.category,
         images: dto.images,
         latitude: dto.latitude,
@@ -44,9 +45,9 @@ export class ListingsService {
     });
   }
 
-  async update(id: string, dto: UpdateListingDto) {
+  async update(id: string, dto: UpdateListingDto, userId: string) {
     return this.prisma.listing.update({
-      where: { id },
+      where: { id, userId },
       data: {
         ...(dto.title && { title: dto.title }),
         ...(dto.description && { description: dto.description }),
@@ -58,9 +59,9 @@ export class ListingsService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
     return this.prisma.listing.delete({
-      where: { id },
+      where: { id, userId },
     });
   }
 

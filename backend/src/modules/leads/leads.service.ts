@@ -1,13 +1,13 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateLeadDto } from './dto/create_lead.dto';
-import { LeadStatus, ListingCategory, LeadType } from '@prisma/client';
+import { LeadStatus, ListingCategory } from '@prisma/client';
 
 @Injectable()
 export class LeadsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateLeadDto) {
+  async create(dto: CreateLeadDto, userId: string) {
     const listing = await this.prisma.listing.findUnique({
       where: { id: dto.listingId },
       select: { category: true },
@@ -17,33 +17,37 @@ export class LeadsService {
       throw new BadRequestException('Listing not found');
     }
 
-    if (
-      listing.category !== ListingCategory.JOB &&
-      listing.category !== ListingCategory.RENTAL
-    ) {
+    const allowedCategories: ListingCategory[] = [
+      ListingCategory.JOB,
+      ListingCategory.RENTAL,
+      ListingCategory.TRADES,
+    ];
+
+    if (!allowedCategories.includes(listing.category)) {
       throw new BadRequestException(
-        'Leads are only allowed for JOB and RENTAL categories for now',
+        'Leads are only allowed for JOB, RENTAL, and TRADES categories',
       );
     }
 
+    // prevent duplicate leads
     const existing = await this.prisma.lead.findFirst({
       where: {
         listingId: dto.listingId,
-        userId: dto.userId,
+        userId,
         leadType: dto.leadType,
       },
     });
 
     if (existing) {
       throw new BadRequestException(
-        'You already applied for this listing',
+        'You already submitted a lead for this listing',
       );
     }
 
     return this.prisma.lead.create({
       data: {
         listingId: dto.listingId,
-        userId: dto.userId, //hardcorded untill userauth is created
+        userId,
         leadType: dto.leadType,
         message: dto.message ?? null,
         status: LeadStatus.PENDING,
@@ -62,17 +66,9 @@ export class LeadsService {
   }) {
     return this.prisma.lead.findMany({
       where: {
-        ...(filters?.status && {
-          status: filters.status,
-        }),
-
-        ...(filters?.userId && {
-          userId: filters.userId,
-        }),
-
-        ...(filters?.listingId && {
-          listingId: filters.listingId,
-        }),
+        ...(filters?.status && { status: filters.status }),
+        ...(filters?.userId && { userId: filters.userId }),
+        ...(filters?.listingId && { listingId: filters.listingId }),
 
         listing: filters?.category
           ? {
@@ -83,15 +79,14 @@ export class LeadsService {
                 in: [
                   ListingCategory.JOB,
                   ListingCategory.RENTAL,
+                  ListingCategory.TRADES,
                 ],
               },
             },
       },
-
       include: {
         listing: true,
       },
-
       orderBy: {
         createdAt: 'desc',
       },
@@ -109,7 +104,6 @@ export class LeadsService {
 
     return this.prisma.lead.update({
       where: { id },
-
       data: {
         status,
 
@@ -121,7 +115,6 @@ export class LeadsService {
           respondedAt: new Date(),
         }),
       },
-
       include: {
         listing: true,
       },

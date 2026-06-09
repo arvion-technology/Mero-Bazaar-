@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateSecondHandDto } from './dto/create_secondhand.dto';
 import { ListingCategory, ListingStatus, SecondHandCategory, SecondHandCondition } from '@prisma/client';
@@ -9,7 +9,7 @@ import { UpdateSecondHandDto } from './dto/update_secondhand.dto';
 export class SecondhandService {
   constructor(private prisma: PrismaService) {}
   
-    async create(dto: CreateSecondHandDto) {
+    async create(dto: CreateSecondHandDto, userId: string) {
       return this.prisma.listing.create({
         data: {
           title: dto.itemName,
@@ -17,7 +17,11 @@ export class SecondhandService {
           description: dto.description,
           price: dto.price,
           images: dto.photos,
-
+          user: {
+            connect: {
+              id: userId,
+            },
+          },
           secondhand: {
             create: {
                 category: dto.category,
@@ -76,49 +80,60 @@ export class SecondhandService {
         },
       });
       if (!listing || listing.category !== ListingCategory.SECONDHAND) {
-        throw new NotFoundException('Secondhand listing not found');
+        throw new ForbiddenException('Secondhand listing not found');
       }
       return listing;
     }
 
-    async update(id: string, dto: UpdateSecondHandDto) {
-      await this.findOne(id);
+    async update(id: string, dto: UpdateSecondHandDto, userId: string) {
+      const listing = await this.prisma.listing.findUnique({
+        where: { id },
+      });
+
+      if (!listing || listing.userId !== userId) {
+        throw new ForbiddenException('Unauthorized');
+      }
 
       return this.prisma.listing.update({
         where: { id },
         data: {
-            title: dto.itemName,
-            description: dto.description,
-            price: dto.price,
-            images: dto.photos,
+          title: dto.itemName,
+          description: dto.description,
+          price: dto.price,
+          images: dto.photos,
 
-            secondhand: {
-              update: {
-                category: dto.category,
-                condition: dto.condition,
-                itemName: dto.itemName,
-                price: dto.price,
-                isNegotiable: dto.isNegotiable,
-                photos: dto.photos,
-                city: dto.city,
-                description: dto.description,
-                ...(dto.expiresAt && {
-                  expiresAt: new Date(dto.expiresAt),
-                }),
-              },
+          secondhand: {
+            update: {
+              category: dto.category,
+              condition: dto.condition,
+              itemName: dto.itemName,
+              price: dto.price,
+              isNegotiable: dto.isNegotiable,
+              photos: dto.photos,
+              city: dto.city,
+              description: dto.description,
+              ...(dto.expiresAt && {
+                expiresAt: new Date(dto.expiresAt),
+              }),
             },
+          },
         },
         include: {
           secondhand: true,
         },
       });
     }
-    async remove(id: string) {
-      await this.findOne(id);
-       
+    async remove(id: string, userId: string) {
+      const listing = await this.prisma.listing.findUnique({
+        where: { id },
+      });
+
+      if (!listing || listing.userId !== userId) {
+        throw new ForbiddenException('Unauthorized');
+      }
+
       return this.prisma.listing.delete({
         where: { id },
       });
     }
-  }
-
+}

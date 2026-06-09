@@ -1,17 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { ListingCategory } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 
 import { CreateTradesDto } from './dto/create_trades.dto';
 import { QueryTradesDto } from './dto/query_trades.dto';
-import { CreateLeadDto } from './dto/lead.dto';
+import { CreateLeadDto } from '../leads/dto/create_lead.dto';
 import { UpdateTradesDto } from './dto/update_trades.dto';
 
 @Injectable()
 export class TradesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateTradesDto) {
+  async create(dto: CreateTradesDto, userId: string) {
     return this.prisma.listing.create({
       data: {
         category: ListingCategory.TRADES,
@@ -20,6 +20,11 @@ export class TradesService {
         latitude: dto.latitude,
         longitude: dto.longitude,
         images: [],
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
         trades: {
           create: {
             city: dto.city,
@@ -69,11 +74,12 @@ export class TradesService {
     });
   }
 
-  async createLead(listingId: string, dto: CreateLeadDto) {
+  async createLead(listingId: string, dto: CreateLeadDto, userId: string) {
     return this.prisma.lead.create({
       data: {
         listingId,
         leadType: dto.leadType,
+        userId,
       },
     });
   }
@@ -112,7 +118,15 @@ export class TradesService {
     });
   }
 
-  async update(id: string, dto: UpdateTradesDto) {
+  async update(id: string, dto: UpdateTradesDto, userId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+    });
+
+    if (!listing || listing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
     return this.prisma.listing.update({
       where: { id },
       data: {
@@ -135,9 +149,17 @@ export class TradesService {
       },
     });
   }
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+    });
+
+    if (!listing || listing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
     return this.prisma.listing.delete({
       where: { id },
     });
   }
-  }
+}

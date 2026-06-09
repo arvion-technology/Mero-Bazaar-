@@ -16,6 +16,8 @@ import { SecondhandModule } from './modules/secondhand/secondhand.module';
 import { FoodsModule } from './modules/foods/foods.module';
 import { BeautyModule } from './modules/beauty/beauty.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
     FoodsModule,
     BeautyModule,
     ReviewsModule,
+    AuthModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

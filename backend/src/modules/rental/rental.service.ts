@@ -10,7 +10,7 @@ import { QueryRentalDto } from './dto/query_rental.dto';
 export class RentalService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateRentalDto) {
+  async create(dto: CreateRentalDto, userId: string) {
     return this.prisma.listing.create({
       data: {
         title: `${dto.propertyType} in ${dto.city}`,
@@ -18,6 +18,11 @@ export class RentalService {
         description: dto.description,
         price: dto.price,
         images: dto.images ?? [],
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
 
         rental: {
           create: {
@@ -139,11 +144,11 @@ export class RentalService {
     return listing;
   }
 
-  async update(id: string, dto: UpdateRentalDto) {
+  async update(id: string, dto: UpdateRentalDto, userId: string) {
     await this.findOne(id);
 
     return this.prisma.listing.update({
-      where: { id },
+      where: { id, userId },
       data: {
         description: dto.description,
         price: dto.price,
@@ -190,11 +195,11 @@ export class RentalService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
     await this.findOne(id);
 
     return this.prisma.listing.delete({
-      where: { id },
+      where: { id, userId },
     });
   }
 }

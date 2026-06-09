@@ -10,16 +10,16 @@ import { MedicalAppointmentsController } from './appointments/appointments.contr
 import { MedicalSlotsController } from './slots/slots.controller';
 import { MedicalSlotsService } from './slots/slots.service';
 import { MedicalAppointmentsService } from './appointments/appointments.service';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AuthModule],
   controllers: [
     MedicalController,
     VerificationController,
     MedicalAppointmentsController,
     MedicalSlotsController,
   ],
-  
   providers: [
     MedicalService,
     VerificationService,

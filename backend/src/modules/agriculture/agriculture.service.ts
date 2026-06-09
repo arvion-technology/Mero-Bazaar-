@@ -9,7 +9,7 @@ import { QueryAgricultureDto } from './dto/query_agriculture.dto';
 export class AgricultureService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateAgricultureDto) {
+  async create(dto: CreateAgricultureDto, userId: string) {
     return this.prisma.listing.create({
       data: {
         title: `${dto.listingType} in ${dto.district}`,
@@ -17,6 +17,11 @@ export class AgricultureService {
         description: dto.location,
         price: dto.pricePerUnit,
         images: [],
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
 
         agriculture: {
           create: {
