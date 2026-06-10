@@ -22,6 +22,8 @@ type Vehicle = {
   price: string;
   location: string;
   images: string[];
+  latitude?: number;
+  longitude?: number;
 
   vehicle: {
     brand: string;
@@ -31,6 +33,7 @@ type Vehicle = {
     fuel_type: string;
     year: number;
     km_driven: number;
+    bluebook_status?: string;
   };
 };
 
@@ -93,7 +96,7 @@ export default function VehiclesPage() {
     })();
   }, []);
 
-  const generateBadges = (v: any) => {
+  const generateBadges = (v: Vehicle) => {
   const vehicle = v.vehicle;
   const badges: { label: string; type: "green" | "blue" | "orange" | "gray" }[] = [];
 
@@ -606,7 +609,7 @@ const displayed = vehicles.filter((v) => {
                               style={{ cursor: "pointer", color: "#2563eb" }}
                               onClick={(e) => {
                                 e.preventDefault();
-                                if (!v.latitude || !v.longitude) return;
+                                if (v.latitude == null || v.longitude == null) return;
 
                                 window.open(
                                   `https://www.google.com/maps?q=${v.latitude},${v.longitude}`,
