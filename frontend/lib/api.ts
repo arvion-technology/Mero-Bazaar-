@@ -1,3 +1,5 @@
+import type { DBListing, Vehicle } from "../app/types/listing";
+
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 async function get<T>(path: string): Promise<T> {
@@ -7,11 +9,6 @@ async function get<T>(path: string): Promise<T> {
 }
 
 export const api = {
-  getListings:   () => get<Listing[]>('/listings'),
-  getVehicles:   () => get<any[]>('/vehicles'),
-  getJobs:       () => get<any[]>('/jobs'),
-  getRentals:    () => get<any[]>('/rental'),
-  getFoods:      () => get<any[]>('/foods'),
-  getSecondhand: () => get<any[]>('/secondhand'),
-  search:        (q: string) => get<any[]>(`/search?q=${q}`), 
+  getListings:   () => get<DBListing[]>('/listings'),
+  getVehicles:   () => get<Vehicle[]>('/vehicles'), 
 };

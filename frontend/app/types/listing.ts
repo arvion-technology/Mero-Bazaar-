@@ -99,3 +99,5 @@ export type RelatedListing = {
   image: string;
   verified: boolean;
 };
+
+export type Vehicle = NonNullable<DBListing["vehicle"]>;
