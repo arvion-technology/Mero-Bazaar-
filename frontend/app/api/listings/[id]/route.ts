@@ -1,27 +1,22 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
 
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const listing = await prisma.listing.findUnique({
-      where: { id: params.id },
-      include: {
-        user: true,
-        reviews: true,
-        vehicle: true,
-      },
-    });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/${params.id}`)
 
-    if (!listing) {
-      return NextResponse.json(null, { status: 404 });
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: "Listing not found" },
+        { status: res.status }
+      );
     }
 
-    return NextResponse.json(listing);
+    const data = await res.json();
+
+    return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json(
       { error: "Failed to fetch listing" },

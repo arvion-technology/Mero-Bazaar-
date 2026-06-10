@@ -1,11 +1,7 @@
-// ─── DB-aligned primitive types ──────────────────────────────────────────────
-
 export type VehicleType    = "bike" | "scooter" | "car" | "ev" | "truck" | "spare_parts";
 export type VehicleCondition = "new" | "used" | "refurb";
 export type BluebookStatus = "verified" | "pending" | "none";
 export type FuelType       = "petrol" | "diesel" | "electric" | "hybrid";
-
-// ─── Raw DB shape (what the API / Prisma returns) ─────────────────────────────
 
 export type DBListing = {
   id: string;
@@ -42,8 +38,6 @@ export type DBListing = {
   };
   reviews: { rating: number }[];
 };
-
-// ─── UI shape (what components actually consume) ──────────────────────────────
 
 export type ListingDetail = {
   id: string;
@@ -96,8 +90,6 @@ export type ListingDetail = {
     phone: string;
   };
 };
-
-// ─── Related listing card (used by RelatedListings component) ─────────────────
 
 export type RelatedListing = {
   id: string;

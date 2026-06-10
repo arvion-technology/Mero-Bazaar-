@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import Footer from "@/components/Footer";
 
-// All CSS lives here so page.tsx and every _component stay style-free.
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 

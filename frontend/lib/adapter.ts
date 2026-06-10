@@ -5,8 +5,7 @@ import type {
   ListingDetail,
 } from "../app/types/listing";
 
-// ─── Label maps ─────────────────────────────────────────────
-
+//Label maps
 export const FUEL_LABEL: Record<FuelType, string> = {
   petrol: "Petrol",
   diesel: "Diesel",
@@ -23,14 +22,13 @@ export const TYPE_LABEL: Record<VehicleType, string> = {
   spare_parts: "Spare Parts",
 };
 
-// ─── Helpers ───────────────────────────────────────────────
-
+//Helpers
 export function formatPrice(p: number | null): string {
   if (p == null) return "Price on request";
   return `Rs. ${p.toLocaleString("en-IN")}`;
 }
 
-// ─── Main adapter ───────────────────────────────────────────
+//Main adapter
 export function adaptListing(db: DBListing): ListingDetail {
   const v = db.vehicle ?? null;
 
@@ -55,7 +53,6 @@ export function adaptListing(db: DBListing): ListingDetail {
       (1000 * 60 * 60 * 24)
   );
 
-  // ✅ FIXED (NO db.user HERE)
   const memberSince = new Date(user.createdAt).toLocaleDateString(
     "en-US",
     {
