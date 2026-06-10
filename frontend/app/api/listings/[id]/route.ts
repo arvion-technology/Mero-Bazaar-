@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+  req: NextRequest,
+{ params }: { params: Promise<{ id: string }> }) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/${params.id}`)
+    const { id } = await params;
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/${id}`);
 
     if (!res.ok) {
       return NextResponse.json(
