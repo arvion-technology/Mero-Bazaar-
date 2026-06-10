@@ -19,9 +19,9 @@ export default async function ListingDetailPage({ params }: PageProps) {
   const { id } = await params;
 
   const listing = await fetchListing(id);
-  const related = await fetchRelatedListings(id);
-
   if (!listing) notFound();
+
+  const related = await fetchRelatedListings(listing.category, listing.id);
 
   return (
     <>
