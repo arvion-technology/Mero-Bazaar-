@@ -17,6 +17,8 @@ export class VehiclesService {
         description: `${dto.brand} ${dto.model}`,
         price: dto.price,
         images: dto.images ?? [],
+        latitude: dto.latitude,
+        longitude: dto.longitude,
         user: {
           connect: {
             id: userId,
@@ -43,48 +45,59 @@ export class VehiclesService {
     });
   }
 
-  async findAll(query: QueryVehicleDto) {
-    return this.prisma.listing.findMany({
-      where: {
-        category: ListingCategory.VEHICLE,
+async findAll(query: QueryVehicleDto) {
+  const listings = await this.prisma.listing.findMany({
+    where: {
+      category: ListingCategory.VEHICLE,
 
-        vehicle: {
-          is: {
-            ...(query.brand && { brand: query.brand }),
-            ...(query.model && { model: query.model }),
-            ...(query.type && { type: query.type }),
-            ...(query.condition && { condition: query.condition }),
-            ...(query.fuelType && { fuel_type: query.fuelType }),
+      vehicle: {
+        is: {
+          ...(query.brand && { brand: query.brand }),
+          ...(query.model && { model: query.model }),
+          ...(query.type && { type: query.type }),
+          ...(query.condition && { condition: query.condition }),
+          ...(query.fuelType && { fuel_type: query.fuelType }),
 
-            ...(query.minYear || query.maxYear
-              ? {
-                  year: {
-                    gte: query.minYear,
-                    lte: query.maxYear,
-                  },
-                }
-              : {}),
+          ...(query.minYear || query.maxYear
+            ? {
+                year: {
+                  ...(query.minYear && { gte: query.minYear }),
+                  ...(query.maxYear && { lte: query.maxYear }),
+                },
+              }
+            : {}),
 
-            ...(query.minKm || query.maxKm
-              ? {
-                  km_driven: {
-                    gte: query.minKm,
-                    lte: query.maxKm,
-                  },
-                }
-              : {}),
-          },
+          ...(query.minKm || query.maxKm
+            ? {
+                km_driven: {
+                  ...(query.minKm && { gte: query.minKm }),
+                  ...(query.maxKm && { lte: query.maxKm }),
+                },
+              }
+            : {}),
         },
       },
-      include: {
-        vehicle: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-  }
+    },
+    include: {
+      vehicle: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
 
+  const filters = {
+    brands: [...new Set(listings.map(l => l.vehicle?.brand).filter(Boolean))],
+    conditions: [...new Set(listings.map(l => l.vehicle?.condition).filter(Boolean))],
+    fuelTypes: [...new Set(listings.map(l => l.vehicle?.fuel_type).filter(Boolean))],
+    categories: [...new Set(listings.map(l => l.vehicle?.type).filter(Boolean))],
+  };
+
+  return {
+    data: listings,
+    filters,
+  };
+}
   async findOne(id: string) {
     const listing = await this.prisma.listing.findUnique({
       where: { id },
@@ -109,6 +122,9 @@ export class VehiclesService {
         title: dto.brand && dto.model && dto.year
           ? `${dto.brand} ${dto.model} ${dto.year}`
           : undefined,
+          
+        latitude: dto.latitude,
+        longitude: dto.longitude,
 
         vehicle: {
           update: {
