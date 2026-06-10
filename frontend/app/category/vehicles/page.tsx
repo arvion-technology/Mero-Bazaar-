@@ -139,7 +139,7 @@ const displayed = vehicles.filter((v) => {
   }
   return true;
 
-}).sort((a, b) => { const getPrice = (p) =>typeof p === "number" ? p : parseInt(String(p).replace(/[^\d]/g, ""));
+}).sort((a, b) => { const getPrice = (p: number | string ) =>typeof p === "number" ? p : parseInt(String(p).replace(/[^\d]/g, ""));
   if (sort === "price_asc")return getPrice(a.price) - getPrice(b.price);
   if (sort === "price_desc")return getPrice(b.price) - getPrice(a.price);
   return 0;
