@@ -8,6 +8,7 @@ export type DBListing = {
   title: string;
   description: string | null;
   price: number | null;
+  category: string;
   latitude: number | null;
   longitude: number | null;
   images: string[];
@@ -28,7 +29,6 @@ export type DBListing = {
     name: string;
     image: string | null;
     createdAt: Date;
-    // Optional fields — extend your User model as needed:
     phone?: string | null;
     isPro?: boolean;
     isTrusted?: boolean;
@@ -55,6 +55,9 @@ export type ListingDetail = {
   images: string[];
   description: string;
   googleMapsUrl: string;
+  latitude: number | null;
+  longitude: number | null;
+ 
   specs: {
     make: string;
     model: string;

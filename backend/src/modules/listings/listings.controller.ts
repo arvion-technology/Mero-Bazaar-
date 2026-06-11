@@ -4,6 +4,7 @@ import { CreateListingDto } from './dto/create_listing.dto';
 import { UpdateListingDto } from './dto/update_listing.dto';
 import { SearchListingDto } from './dto/search_listing.dto';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
+import { ListingCategory } from '@prisma/client';
 
 @Controller('listings')
 export class ListingsController {
@@ -19,6 +20,15 @@ export class ListingsController {
   findAll(@Query() query: SearchListingDto) {
     return this.listingsService.search(query);
   } 
+  
+  @Get('related')
+  getRelated(
+  @Query('category') category: ListingCategory,
+  @Query('exclude') exclude: string,
+  @Query('limit') limit: number = 8,
+  ) {
+  return this.listingsService.getRelated(category, exclude, Number(limit));
+ }
 
   @Get(':id')
   findOne(@Param('id') id: string) {

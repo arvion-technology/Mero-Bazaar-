@@ -5,7 +5,6 @@ import ImageGallery from "../../listing/[id]/components/shared/ImageGallery";
 import ListingInfo from "../../listing/[id]/components/shared/ListingInfo";
 import ListingDescription from "../../listing/[id]/components/shared/ListingDescription";
 import SellerCard from "../../listing/[id]/components/shared/SellerCard";
-import LocationCard from "../../listing/[id]/components/shared/LocationCard";
 import RelatedListings from "../../listing/[id]/components/shared/RelatedListings";
 import VehicleDetails from "../../listing/[id]/components/category-detail/VehicleDetails";
 
@@ -25,7 +24,6 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
   return (
     <>
-      {/* ── Top bar: breadcrumb + listing id + report link ── */}
       <div className="ld-topbar">
         <div className="ld-topbar-inner">
           <nav className="ld-breadcrumb" aria-label="Breadcrumb">
@@ -46,7 +44,6 @@ export default async function ListingDetailPage({ params }: PageProps) {
             </span>
           </nav>
 
-          <span className="ld-listing-id">Listing ID: {listing.listingId}</span>
           <a href="#report" className="ld-report">Report this listing</a>
         </div>
       </div>
@@ -61,11 +58,13 @@ export default async function ListingDetailPage({ params }: PageProps) {
             title={listing.title}
             price={listing.price}
             negotiable={listing.negotiable}
-            location={listing.location}
+            // location={listing.location}
             driven={listing.driven}
             postedDaysAgo={listing.postedDaysAgo}
             isVerified={listing.isVerified}
             specs={listing.specs}
+            latitude={listing.latitude}
+            longitude={listing.longitude}
           />
 
           <ListingDescription description={listing.description} />
@@ -75,11 +74,11 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
         <div className="ld-right">
           <SellerCard seller={listing.seller} />
-          <LocationCard
+          {/* <LocationCard
             location={listing.location}
             distanceFrom={listing.distanceFrom}
             googleMapsUrl={listing.googleMapsUrl}
-          />
+          /> */}
         </div>
       </div>
 

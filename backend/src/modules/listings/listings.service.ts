@@ -4,6 +4,7 @@ import { CreateListingDto } from './dto/create_listing.dto';
 import { UpdateListingDto } from './dto/update_listing.dto';
 import { SearchListingDto } from './dto/search_listing.dto';
 import { buildListingFilter } from '../../search/builders/listings_filter.builder';
+import { ListingCategory } from '@prisma/client';
 
 @Injectable()
 export class ListingsService {
@@ -65,16 +66,46 @@ export class ListingsService {
     });
   }
 
-  async search(query: SearchListingDto) {
-    const where = buildListingFilter(query);
+async search(query: SearchListingDto) {
+  const where = buildListingFilter(query);
 
-    return this.prisma.listing.findMany({
-      where,
-      include: {
-        vehicle: true,
-        job: true,
-        medical: true,
-      },
-    });
-  }
+  const page = query.page ?? 1;
+  const limit = query.limit ?? 10;
+
+  return this.prisma.listing.findMany({
+    where: {
+      ...where,
+
+      id: query.exclude
+        ? { not: query.exclude }
+        : undefined,
+    },
+
+    include: {
+      vehicle: true,
+      job: true,
+      medical: true,
+    },
+
+    orderBy: {
+      createdAt: "desc",
+    },
+
+    take: limit,
+    skip: (page - 1) * limit,
+  });
+}
+
+async getRelated(category: ListingCategory, exclude: string, limit: number) {
+  return this.prisma.listing.findMany({
+    where: {
+      category,
+      id: exclude ? { not: exclude } : undefined,
+    },
+    take: limit,
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}
 }
