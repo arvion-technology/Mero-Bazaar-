@@ -1,4 +1,4 @@
-import { IsEnum, IsBoolean, IsInt, IsString, Min, IsOptional, IsArray, IsUrl } from "class-validator"; 
+import { IsEnum, IsBoolean, IsInt, IsString, Min,IsNumber, IsOptional, IsArray, IsUrl } from "class-validator"; 
 import { Type } from "class-transformer";
 import { BluebookStatus, FuelType, VehicleCondition, VehicleType } from "src/common/enums/vehicle.enum";
 
@@ -46,4 +46,14 @@ export class CreateVehicleDto {
   @IsArray()
   @IsString({ each: true })
   images?: string[];
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  longitude?: number;
 }

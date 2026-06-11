@@ -17,10 +17,9 @@ export class VehiclesController {
 
   @Get()
   async findAll(@Query() query: QueryVehicleDto) {
-    const data = await this.vehiclesService.findAll(query);
-    return { data };
+    return this.vehiclesService.findAll(query);
   }
-
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.vehiclesService.findOne(id);
