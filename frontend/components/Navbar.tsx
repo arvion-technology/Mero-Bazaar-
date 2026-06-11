@@ -424,7 +424,7 @@ export default function Navbar() {
               <FiBell size={20} />
             </button>
 
-            <Link href="/login" className="hnb-login">Login / Register</Link>
+            <Link href="/register" className="hnb-login">Login / Register</Link>
           </div>
 
           <button
@@ -467,7 +467,7 @@ export default function Navbar() {
               <Link href="/sell" style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 500, color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "9px 0", textDecoration: "none" }}>
                 Become a Seller
               </Link>
-              <Link href="/login" style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 600, color: "#fff", background: PRIMARY, borderRadius: 8, padding: "9px 0", textDecoration: "none" }}>
+              <Link href="/register" style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 600, color: "#fff", background: PRIMARY, borderRadius: 8, padding: "9px 0", textDecoration: "none" }}>
                 Login / Register
               </Link>
             </div>
