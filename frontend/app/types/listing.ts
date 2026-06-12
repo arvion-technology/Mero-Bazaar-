@@ -38,7 +38,12 @@ export type DBListing = {
     avgResponseTime?: string | null;
     _count?: { listings: number };
   };
-  reviews: { rating: number }[];
+  reviews: { 
+    rating: number;
+    comment?: string | null;
+    reviewerName?: string | null;
+    createdAt?: Date;  
+  }[];
 };
 
 export type ListingDetail = {
@@ -85,6 +90,12 @@ export type ListingDetail = {
     avgResponseTime: string;
     phone: string;
   };
+    reviews: {
+    reviewerName: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+  }[];
 };
 
 export type RelatedListing = {

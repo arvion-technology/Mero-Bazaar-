@@ -76,7 +76,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
         </div>
 
         <div className="ld-right">
-          <SellerCard seller={listing.seller} />
+          <SellerCard seller={listing.seller}  reviews={listing.reviews}/>
           {/* <LocationCard
             location={listing.location}
             distanceFrom={listing.distanceFrom}

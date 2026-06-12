@@ -112,21 +112,24 @@ export function adaptListing(db: DBListing): ListingDetail {
     seller: {
       name: user.name,
       avatar: user.image ?? "/placeholder-avatar.png",
-
       rating: avgRating,
       reviewCount: reviews.length,
-
       isVerified: true,
       isPro: db.user?.isPro ?? false,
       isTrusted: db.user?.isTrusted ?? false,
-
       memberSince,
-
       totalListing: user._count?.listings ?? 0,
-
       responseRate: db.user?.responseRate ?? "N/A",
       avgResponseTime: db.user?.avgResponseTime ?? "N/A",
       phone: db.user?.phone ?? "N/A",
     },
+    reviews: reviews.map((r) => ({
+      reviewerName: r.reviewerName ?? "Anonymous",
+      rating: r.rating,
+      comment: r.comment ?? null,
+      createdAt: r.createdAt
+        ? new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+        : "N/A",
+    })),
   };
 }
