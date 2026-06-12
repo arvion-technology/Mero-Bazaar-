@@ -32,12 +32,19 @@ export async function fetchListing(id: string): Promise<ListingDetail | null> {
 
 // Fetch related listings
 export async function fetchRelatedListings(
-  category: string,
+  category: string | null | undefined,
   excludeId: string
 ): Promise<RelatedListing[]> {
   try {
+    if (!category){console.warn("[fetchRelatedListings] missing category");
+    return [];
+    };
+
+    const safeCategory = category.toUpperCase();
+    const query = new URLSearchParams({ category: safeCategory, exclude: excludeId, limit: "8"});
+
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/listings?category=${category}&exclude=${excludeId}&limit=8`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/listings?${query.toString()}`,
       {
         next: { revalidate: 60 },
       }

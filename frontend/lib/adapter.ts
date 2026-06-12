@@ -86,7 +86,7 @@ export function adaptListing(db: DBListing): ListingDetail {
 
     driven: v ? `${v.km_driven.toLocaleString()} km` : "N/A",
     isVerified: v?.bluebook_status === "verified",
-    category: categoryLabel,
+    category: db.category ?? null,
 
     breadcrumbs: ["Vehicles", categoryLabel, v?.brand ?? ""].filter(Boolean),
 
@@ -94,6 +94,8 @@ export function adaptListing(db: DBListing): ListingDetail {
 
     description: db.description ?? "No description provided.",
     googleMapsUrl,
+    latitude: db.latitude,
+    longitude: db.longitude,
 
     specs: {
       make: v?.brand ?? "N/A",

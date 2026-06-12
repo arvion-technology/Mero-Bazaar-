@@ -33,7 +33,7 @@ const STYLES = `
     display: grid; grid-template-columns: 1fr 330px; gap: 22px; align-items: start;
   }
   .ld-left  { display: flex; flex-direction: column; gap: 16px; }
-  .ld-right { display: flex; flex-direction: column; gap: 16px; }
+  .ld-right { display: flex; flex-direction: column; gap: 16px; justify-content: flex-end;}
 
   /* ── Image gallery ── */
   .ld-img-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,.07); }
@@ -93,7 +93,7 @@ const STYLES = `
   .ld-detail-val { color: #1a1a1a; font-weight: 700; text-align: right; }
 
   /* ── Seller card ── */
-  .ld-seller-card { background: #fff; border-radius: 16px; padding: 20px 18px; box-shadow: 0 2px 14px rgba(0,0,0,.08); position: sticky; top: 80px; }
+  .ld-seller-card { background: #fff; border-radius: 16px; padding: 20px 18px; box-shadow: 0 2px 14px rgba(0,0,0,.08); }
   .ld-seller-card-title { font-size: 14px; font-weight: 800; color: #1a1a1a; margin: 0 0 14px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
   .ld-seller-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
   .ld-seller-avatar-wrap { position: relative; flex-shrink: 0; }
@@ -170,7 +170,7 @@ const STYLES = `
   @media (max-width: 960px) {
     .ld-container { grid-template-columns: 1fr; }
     .ld-seller-card { position: static; }
-    .ld-right { order: -1; }
+    .ld-right { order: 1; }
     .ld-specs-bar { grid-template-columns: repeat(3,1fr); }
     .ld-details-grid { grid-template-columns: 1fr; }
     .ld-details-divider { display: none; }

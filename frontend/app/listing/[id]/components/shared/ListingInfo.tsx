@@ -12,11 +12,10 @@ import type { ListingDetail } from "../../../../types/listing";
 
 type Props = Pick<
   ListingDetail,
-  "title" | "price" | "negotiable" | "location" | "driven" | "postedDaysAgo" | "isVerified" | "specs"
->;
+  | "title" | "price" | "negotiable" | "driven" | "postedDaysAgo" | "isVerified" | "specs" |"latitude" | "longitude" >;
 
 export default function ListingInfo({
-  title, price, negotiable, location, driven, postedDaysAgo, isVerified, specs,
+  title, price, negotiable, driven, postedDaysAgo, isVerified, specs, latitude, longitude,
 }: Props) {
   const [isFav, setIsFav]     = useState(false);
   const [copied, setCopied]   = useState(false);
@@ -62,10 +61,6 @@ export default function ListingInfo({
 
       {/* Meta row */}
       <div className="ld-meta-row">
-        <span className="ld-loc">
-          <FiMapPin size={12} color="#888" />
-          {location}
-        </span>
         <span className="ld-driven-meta">
           <FiClock size={13} color="#bbb" />
           {driven}
@@ -73,10 +68,17 @@ export default function ListingInfo({
         <span className="ld-posted">
           Posted {postedDaysAgo} day{postedDaysAgo !== 1 ? "s" : ""} ago
         </span>
-        <a href="#location" className="ld-map-link">
-          <FiMapPin size={13} color="#C0392B" />
-          View on Map
-        </a>
+        <span style={{ cursor: "pointer", color: "#2563eb" }}
+          onClick={(e) => { e.preventDefault();
+            if (latitude == null || longitude == null) return;
+            window.open(
+              `https://www.google.com/maps?q=${latitude},${longitude}`,
+              "_blank"
+            );
+          }}
+        >
+          <FiMapPin size={11} /> View on map
+        </span> 
       </div>
 
       {/* Specs bar */}
