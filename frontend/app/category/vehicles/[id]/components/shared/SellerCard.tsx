@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FiPhone, FiMessageSquare, FiMail } from "react-icons/fi";
 import { FaStar, FaRegStar } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
-import type { ListingDetail } from "../../../../types/listing";
+import type { ListingDetail } from "../../../../../types/listing";
 
 type Props = {
   seller: ListingDetail["seller"];

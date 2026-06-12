@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { fetchListing, fetchRelatedListings } from "../../../lib/fetcher";
+import { fetchListing, fetchRelatedListings } from "../../../../lib/fetcher";
 
-import ImageGallery from "../../listing/[id]/components/shared/ImageGallery";
-import ListingInfo from "../../listing/[id]/components/shared/ListingInfo";
-import ListingDescription from "../../listing/[id]/components/shared/ListingDescription";
-import SellerCard from "../../listing/[id]/components/shared/SellerCard";
-import RelatedListings from "../../listing/[id]/components/shared/RelatedListings";
-import VehicleDetails from "../../listing/[id]/components/category-detail/VehicleDetails";
+import ImageGallery from "./components/shared/ImageGallery";
+import ListingInfo from "./components/shared/ListingInfo";
+import ListingDescription from "./components/shared/ListingDescription";
+import SellerCard from "./components/shared/SellerCard";
+import RelatedListings from "./components/shared/RelatedListings";
+import VehicleDetails from "./components/category-detail/VehicleDetails";
 
 import { notFound } from "next/navigation";
 
@@ -18,6 +18,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
   const { id } = await params;
 
   const listing = await fetchListing(id);
+  console.log("ID:", id);
+  console.log("Listing:", listing);
   if (!listing) notFound();
 
   const related = await fetchRelatedListings(listing.category, listing.id);
@@ -58,7 +60,6 @@ export default async function ListingDetailPage({ params }: PageProps) {
             title={listing.title}
             price={listing.price}
             negotiable={listing.negotiable}
-            // location={listing.location}
             driven={listing.driven}
             postedDaysAgo={listing.postedDaysAgo}
             isVerified={listing.isVerified}
@@ -69,7 +70,9 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
           <ListingDescription description={listing.description} />
 
-          <VehicleDetails details={listing.details} />
+          <VehicleDetails 
+          type={listing.vehicleType ?? undefined}
+          details={listing.details ?? {}} />
         </div>
 
         <div className="ld-right">

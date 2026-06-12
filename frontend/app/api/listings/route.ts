@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     if (exclude) query.set("exclude", exclude);
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/listings/related?${query.toString()}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/vehicles/related?${query.toString()}`
     );
 
     if (!res.ok) {

@@ -8,7 +8,7 @@ import {
 import { FaHeart } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import { TbManualGearbox } from "react-icons/tb";
-import type { ListingDetail } from "../../../../types/listing";
+import type { ListingDetail } from "../../../../../types/listing";
 
 type Props = Pick<
   ListingDetail,

@@ -2,6 +2,7 @@ export type VehicleType    = "bike" | "scooter" | "car" | "ev" | "truck" | "spar
 export type VehicleCondition = "new" | "used" | "refurb";
 export type BluebookStatus = "verified" | "pending" | "none";
 export type FuelType       = "petrol" | "diesel" | "electric" | "hybrid";
+export type VehicleDetails = Record<string, unknown>; 
 
 export type DBListing = {
   id: string;
@@ -23,6 +24,7 @@ export type DBListing = {
     bluebook_status: BluebookStatus;
     fuel_type: FuelType | null;
     ownership_transfer_ready: boolean;
+    details?: VehicleDetails;
   } | null;
   user: {
     id: string;
@@ -66,18 +68,9 @@ export type ListingDetail = {
     transmission: string;
     driven: string;
   };
-  details: {
-    driveType: string;
-    bodyType: string;
-    exteriorColor: string;
-    mileage: string;
-    interiorColor: string;
-    fuelType: string;
-    ownership: string;
-    transmission: string;
-    registration: string;
-    engine: string;
-  };
+  details: VehicleDetails;
+  vehicleType: VehicleType | null;
+  
   seller: {
     name: string;
     avatar: string;

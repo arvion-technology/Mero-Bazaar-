@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { FiHeart, FiMapPin, FiChevronRight, FiCheckCircle } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
-import type { RelatedListing } from "../../../../types/listing";
+import type { RelatedListing } from "../../../../../types/listing";
 
 type Props = {
   listings: RelatedListing[];
@@ -29,7 +29,7 @@ export default function RelatedListings({ listings }: Props) {
         {listings.map((rel) => {
           const isFavRel = !!favRelated[rel.id];
           return (
-            <Link key={rel.id} href={`/listing/${rel.id}`} className="ld-rel-card">
+            <Link key={rel.id} href={`/category/vehicles/${rel.id}`} className="ld-rel-card">
               <div className="ld-rel-img-wrap">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={rel.image} alt={rel.title} className="ld-rel-img" />

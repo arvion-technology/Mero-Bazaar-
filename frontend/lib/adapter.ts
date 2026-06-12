@@ -106,20 +106,8 @@ export function adaptListing(db: DBListing): ListingDetail {
       driven: v ? `${v.km_driven.toLocaleString()} km` : "N/A",
     },
 
-    details: {
-      driveType: "N/A",
-      bodyType: v ? TYPE_LABEL[v.type] : "N/A",
-      exteriorColor: "N/A",
-      mileage: v ? `${v.km_driven.toLocaleString()} km` : "N/A",
-      interiorColor: "N/A",
-      fuelType: v?.fuel_type ? FUEL_LABEL[v.fuel_type] : "N/A",
-      ownership: v?.ownership_transfer_ready
-        ? "Transfer Ready"
-        : "Not Transfer Ready",
-      transmission: "N/A",
-      registration: "N/A",
-      engine: "N/A",
-    },
+    details: v?.details ?? {},
+    vehicleType: v?.type ?? null,
 
     seller: {
       name: user.name,

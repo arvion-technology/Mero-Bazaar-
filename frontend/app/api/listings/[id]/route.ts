@@ -6,7 +6,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/${id}`);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/vehicles/${id}`);
 
     if (!res.ok) {
       return NextResponse.json(
