@@ -4,12 +4,18 @@ import { CreateVehicleDto } from './dto/create_vehicle.dto';
 import { UpdateVehicleDto } from './dto/update_vehicle.dto';
 import { ListingCategory } from '@prisma/client';
 import { QueryVehicleDto } from './dto/query_vehicle.dto';
+import { sanitizeVehicleDetails } from 'src/common/utils/vehicle_details.util';
 
 @Injectable()
 export class VehiclesService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateVehicleDto, userId: string) {
+    const cleanDetails = sanitizeVehicleDetails(
+      dto.type,
+      dto.details ?? {},
+    );
+
     return this.prisma.listing.create({
       data: {
         title: `${dto.brand} ${dto.model} ${dto.year}`,
@@ -36,6 +42,7 @@ export class VehiclesService {
             bluebook_status: dto.bluebook_status,
             fuel_type: dto.fuel_type,
             ownership_transfer_ready: dto.ownership_transfer_ready ?? false,
+            details: cleanDetails,
           },
         },
       },
@@ -113,11 +120,18 @@ async findAll(query: QueryVehicleDto) {
     return listing;
   }
 
-  async update(id: string, dto: UpdateVehicleDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateVehicleDto, userId: string) {    
+    const existing = await this.findOne(id);
+
+    const vehicleType = dto.type ?? existing.vehicle?.type;
+
+    const cleanDetails =
+      dto.details && vehicleType
+        ? sanitizeVehicleDetails(vehicleType, dto.details)
+        : undefined;
 
     return this.prisma.listing.update({
-      where: { id },
+      where: { id, userId },
       data: {
         title: dto.brand && dto.model && dto.year
           ? `${dto.brand} ${dto.model} ${dto.year}`
@@ -137,6 +151,7 @@ async findAll(query: QueryVehicleDto) {
             bluebook_status: dto.bluebook_status,
             fuel_type: dto.fuel_type,
             ownership_transfer_ready: dto.ownership_transfer_ready,
+            ...(cleanDetails && { details: cleanDetails }),
           },
         },
       },
@@ -146,11 +161,11 @@ async findAll(query: QueryVehicleDto) {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string,userId: string) {
     await this.findOne(id);
 
     return this.prisma.listing.delete({
-      where: { id },
+      where: { id,userId },
     });
   }
 }

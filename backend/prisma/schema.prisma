@@ -168,7 +168,8 @@ model Vehicle {
   condition                VehicleCondition
   bluebook_status          BluebookStatus
   fuel_type                FuelType?
-  ownership_transfer_ready Boolean          @default(false)
+  details                  Json?
+  ownership_transfer_ready Boolean @default(false)
 
   createdAt DateTime @default(now())
 }
