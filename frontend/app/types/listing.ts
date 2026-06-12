@@ -2,6 +2,7 @@ export type VehicleType    = "bike" | "scooter" | "car" | "ev" | "truck" | "spar
 export type VehicleCondition = "new" | "used" | "refurb";
 export type BluebookStatus = "verified" | "pending" | "none";
 export type FuelType       = "petrol" | "diesel" | "electric" | "hybrid";
+export type VehicleDetails = Record<string, unknown>; 
 
 export type DBListing = {
   id: string;
@@ -23,6 +24,7 @@ export type DBListing = {
     bluebook_status: BluebookStatus;
     fuel_type: FuelType | null;
     ownership_transfer_ready: boolean;
+    details?: VehicleDetails;
   } | null;
   user: {
     id: string;
@@ -36,7 +38,12 @@ export type DBListing = {
     avgResponseTime?: string | null;
     _count?: { listings: number };
   };
-  reviews: { rating: number }[];
+  reviews: { 
+    rating: number;
+    comment?: string | null;
+    reviewerName?: string | null;
+    createdAt?: Date;  
+  }[];
 };
 
 export type ListingDetail = {
@@ -66,18 +73,9 @@ export type ListingDetail = {
     transmission: string;
     driven: string;
   };
-  details: {
-    driveType: string;
-    bodyType: string;
-    exteriorColor: string;
-    mileage: string;
-    interiorColor: string;
-    fuelType: string;
-    ownership: string;
-    transmission: string;
-    registration: string;
-    engine: string;
-  };
+  details: VehicleDetails;
+  vehicleType: VehicleType | null;
+  
   seller: {
     name: string;
     avatar: string;
@@ -92,6 +90,12 @@ export type ListingDetail = {
     avgResponseTime: string;
     phone: string;
   };
+    reviews: {
+    reviewerName: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+  }[];
 };
 
 export type RelatedListing = {

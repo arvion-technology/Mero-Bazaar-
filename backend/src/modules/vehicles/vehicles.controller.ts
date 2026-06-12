@@ -27,13 +27,13 @@ export class VehiclesController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateVehicleDto) {
-    return this.vehiclesService.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: UpdateVehicleDto, @Request() req) {
+    return this.vehiclesService.update(id, dto, req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.vehiclesService.remove(id);
+  remove(@Param('id') id: string, @Request() req) {
+    return this.vehiclesService.remove(id, req.user.id);
   }
 }

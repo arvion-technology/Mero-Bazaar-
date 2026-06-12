@@ -4,10 +4,11 @@ import { useState } from "react";
 import { FiPhone, FiMessageSquare, FiMail } from "react-icons/fi";
 import { FaStar, FaRegStar } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
-import type { ListingDetail } from "../../../../types/listing";
+import type { ListingDetail } from "../../../../../types/listing";
 
 type Props = {
   seller: ListingDetail["seller"];
+  reviews: ListingDetail["reviews"];
 };
 
 function StarRating({ rating }: { rating: number }) {
@@ -22,7 +23,7 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-export default function SellerCard({ seller }: Props) {
+export default function SellerCard({ seller, reviews }: Props) {
   const [callRevealed, setCallRevealed] = useState(false);
 
   return (
@@ -86,11 +87,9 @@ export default function SellerCard({ seller }: Props) {
       {/* CTA buttons */}
       <div className="ld-cta-btns">
         <button
-          className="ld-btn-call"
-          onClick={() => setCallRevealed(true)}
-        >
+          className="ld-btn-call" onClick={() => setCallRevealed(true)}>
           <FiPhone size={16} />
-          {callRevealed ? seller.phone : "Show Phone Number"}
+          {callRevealed ? seller.phone : "Call Seller"}
         </button>
 
         <button className="ld-btn-chat">
@@ -103,6 +102,22 @@ export default function SellerCard({ seller }: Props) {
           Send Message
         </button>
       </div>
+
+       {reviews.length > 0 && (
+          <div className="ld-reviews-section">
+            <p className="ld-section-title">Reviews</p>
+            {reviews.map((r, i) => (
+              <div key={i} className="ld-review-row">
+                <div className="ld-review-header">
+                  <span className="ld-review-name">{r.reviewerName}</span>
+                  <StarRating rating={r.rating} />
+                  <span className="ld-review-date">{r.createdAt}</span>
+                </div>
+                {r.comment && <p className="ld-review-comment">{r.comment}</p>}
+              </div>
+            ))}
+          </div>
+        )}
     </div>
   );
 }

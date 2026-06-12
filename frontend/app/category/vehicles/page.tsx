@@ -581,7 +581,7 @@ const displayed = vehicles.filter((v) => {
                       const vehicle = v.vehicle;
 
                       return (
-                        <Link key={v.id} href={`/listing/${v.id}`} className="vp-card">
+                        <Link key={v.id} href={`/category/vehicles/${v.id}`} className="vp-card">
                           {/* Image */}
                           <div className="vp-card-img-wrap">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -644,41 +644,6 @@ const displayed = vehicles.filter((v) => {
                         </Link>
                       );
                     })}
-                  </div>
-
-                  {/* ── EV FEATURED ── */}
-                  <div className="vp-ev">
-                    <div className="vp-ev-header">
-                      <FiZap size={16} color="#fde047" />
-                      <span className="vp-ev-header-title">Electric Vehicle</span>
-                      <span className="vp-ev-header-sub"> Zero Emissions</span>
-                    </div>
-                    <div className="vp-ev-body">
-                      <div className="vp-ev-info">
-                        <div>
-                          <p className="vp-ev-price">{EV_FEATURED.price}</p>
-                          <div className="vp-ev-divider" />
-                          <p className="vp-ev-spec">
-                            <FiZap size={13} /> Range: {EV_FEATURED.range}
-                          </p>
-                          <p className="vp-ev-spec">
-                            <MdOutlineSwapHoriz size={15} /> {EV_FEATURED.charging}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="vp-ev-badge">
-                            <BsShieldCheck size={11} /> {EV_FEATURED.badge}
-                          </span>
-                          <Link href={`/listing/${EV_FEATURED.id}`} className="vp-ev-link">
-                            View Details <BsArrowRight size={11} style={{ marginLeft: "3px" }} />
-                          </Link>
-                        </div>
-                      </div>
-                      <div className="vp-ev-img-wrap">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={EV_FEATURED.image} alt="Electric Vehicle" />
-                      </div>
-                    </div>
                   </div>
                 </>
               )}

@@ -106,39 +106,30 @@ export function adaptListing(db: DBListing): ListingDetail {
       driven: v ? `${v.km_driven.toLocaleString()} km` : "N/A",
     },
 
-    details: {
-      driveType: "N/A",
-      bodyType: v ? TYPE_LABEL[v.type] : "N/A",
-      exteriorColor: "N/A",
-      mileage: v ? `${v.km_driven.toLocaleString()} km` : "N/A",
-      interiorColor: "N/A",
-      fuelType: v?.fuel_type ? FUEL_LABEL[v.fuel_type] : "N/A",
-      ownership: v?.ownership_transfer_ready
-        ? "Transfer Ready"
-        : "Not Transfer Ready",
-      transmission: "N/A",
-      registration: "N/A",
-      engine: "N/A",
-    },
+    details: v?.details ?? {},
+    vehicleType: v?.type ?? null,
 
     seller: {
       name: user.name,
       avatar: user.image ?? "/placeholder-avatar.png",
-
       rating: avgRating,
       reviewCount: reviews.length,
-
       isVerified: true,
       isPro: db.user?.isPro ?? false,
       isTrusted: db.user?.isTrusted ?? false,
-
       memberSince,
-
       totalListing: user._count?.listings ?? 0,
-
       responseRate: db.user?.responseRate ?? "N/A",
       avgResponseTime: db.user?.avgResponseTime ?? "N/A",
       phone: db.user?.phone ?? "N/A",
     },
+    reviews: reviews.map((r) => ({
+      reviewerName: r.reviewerName ?? "Anonymous",
+      rating: r.rating,
+      comment: r.comment ?? null,
+      createdAt: r.createdAt
+        ? new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+        : "N/A",
+    })),
   };
 }
