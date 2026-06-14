@@ -16,6 +16,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { api } from "../../lib/api";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
@@ -24,7 +25,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ emailOrPhone: "", password: "", remember: false });
-  
+  const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,6 +50,16 @@ export default function LoginPage() {
     } finally {
     setLoading(false);
   };
+};
+
+const handleGoogle = async () => {
+  setGoogleLoading(true);
+  try {
+    await signIn("google", { callbackUrl: "/" });
+  }catch {
+    toast.error("Google sign-in failed. Please try again.");
+    setGoogleLoading(false);
+  }
 };
 
   return (
@@ -438,9 +449,23 @@ export default function LoginPage() {
             <div className="login-divider-line" />
 
             <div className="login-social-row">
-              <button type="button" className="login-social-btn">
-                <FcGoogle size={16} />
-                Google
+
+              <button type="button" className="login-social-btn"
+              onClick={handleGoogle} disabled={googleLoading}
+              >
+                {googleLoading ? (
+                      <div style={{
+                        width: 14, height: 14,
+                        border: "2px solid rgba(0,0,0,0.15)",
+                        borderTopColor: "#555",
+                        borderRadius: "50%",
+                        animation: "spin 0.7s linear infinite"
+                      }} />
+                    ) : (
+                    <FcGoogle size={16} />
+
+                )}  
+                { googleLoading ? "Logging in..." : "Google" }
               </button>
               <button type="button" className="login-social-btn">
                 <FaFacebook size={16} color="#1877F2" />

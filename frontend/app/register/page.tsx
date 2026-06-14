@@ -20,6 +20,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import { api } from "../../lib/api";
 import type { RegisterPayload } from "../types/auth";
+import { signIn } from "next-auth/react";
 
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
@@ -31,6 +32,7 @@ export default function RegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -68,6 +70,7 @@ export default function RegisterPage() {
       name: form.fullName,
       phone: form.phone,
       role: accountType === "seller" ? "VENDOR" : "USER",
+      district: form.district,
     };
     const data = await api.register(payload);
     localStorage.setItem("token",data.access_token);
@@ -79,6 +82,21 @@ export default function RegisterPage() {
     setLoading(false);
   }
 };
+
+const handleGoogle =async () => {
+  if (!accountType) {
+    toast.warn("Please select role first!");
+    return;
+  }
+  setGoogleLoading(true);
+  try {
+    await signIn("google", { callbackUrl: "/" });
+  } catch {
+    toast.error("Google Sign-in failed. Please try again.");
+    setGoogleLoading(false);
+  }
+};
+
   const districts = [
     "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal",
     "Biratnagar", "Birgunj", "Dhangadhi", "Nepalgunj", "Hetauda", "Dharan",
@@ -645,10 +663,15 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="reg-social-row" style={{ marginBottom: 12 }}>
-                    <button type="button" className="reg-social-btn">
-                      <FcGoogle size={16} />
-                      Google
+
+                    <button type="button" className="reg-social-btn reg-social-btn--google"
+                      onClick={handleGoogle} disabled={googleLoading || !accountType} >
+                        {googleLoading ? (<div className="reg-spinner reg-spinner--sm" 
+                    />
+                      ) : (<FcGoogle size={16} />)}
+                     {googleLoading ? "Signing in..." : "Google"}
                     </button>
+
                     <button type="button" className="reg-social-btn">
                       <FaFacebook size={16} color="#1877F2" />
                       Facebook
