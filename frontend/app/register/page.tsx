@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   FiUser,
   FiMail,
@@ -16,6 +18,8 @@ import {
 } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
+import { api } from "../../lib/api";
+import type { RegisterPayload } from "../types/auth";
 
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
@@ -47,13 +51,34 @@ export default function RegisterPage() {
     setStep(2);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agreed) return;
+    if (!agreed) { toast.warn("Please accept the terms");
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+  try {
     setLoading(true);
-    setTimeout(() => setLoading(false), 2000);
-  };
-
+    const payload: RegisterPayload = {
+      email: form.email,
+      password: form.password,
+      name: form.fullName,
+      phone: form.phone,
+      role: accountType === "seller" ? "VENDOR" : "USER",
+    };
+    const data = await api.register(payload);
+    localStorage.setItem("token",data.access_token);
+    localStorage.setItem("user",JSON.stringify(data.user));
+    toast.success("Account created successfully!");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : " Something went wrong");
+  }finally {
+    setLoading(false);
+  }
+};
   const districts = [
     "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal",
     "Biratnagar", "Birgunj", "Dhangadhi", "Nepalgunj", "Hetauda", "Dharan",
@@ -62,6 +87,14 @@ export default function RegisterPage() {
 
   return (
     <>
+    <ToastContainer
+      position="top-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      closeOnClick
+      pauseOnHover
+      theme="colored"
+    />
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
