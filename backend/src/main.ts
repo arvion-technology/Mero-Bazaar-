@@ -3,6 +3,9 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
+  console.log('JWT_SECRET:', process.env.JWT_SECRET);
+  console.log('ENV FILE LOADED:', !!process.env.JWT_SECRET);
+  
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({

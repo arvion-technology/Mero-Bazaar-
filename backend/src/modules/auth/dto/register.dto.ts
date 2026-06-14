@@ -5,7 +5,7 @@ export class RegisterDto {
   @IsEmail()
   email: string;
 
-  @IsOptional()
+  @IsString()
   @MinLength(6)
   password: string;
 
@@ -20,4 +20,8 @@ export class RegisterDto {
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
+
+  @IsOptional()
+  @IsString()
+  district?: string;
 }

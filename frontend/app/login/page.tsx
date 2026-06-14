@@ -12,6 +12,11 @@ import {
 } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { api } from "../../lib/api";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
@@ -20,20 +25,66 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ emailOrPhone: "", password: "", remember: false });
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [facebookLoading, setFacebookLoading] = useState(false);
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setForm({ ...form, [name]: type === "checkbox" ? checked : value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setTimeout(() => setLoading(false), 2000);
+    try{
+      setLoading(true);
+      const data = await api.login({
+        email: form.emailOrPhone,
+        password: form.password,
+      });
+      localStorage.setItem("toekn", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      toast.success("Logged in successfully!");
+      router.push("/");
+    }catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
+    } finally {
+    setLoading(false);
+  };
+};
+
+//googleauth
+const handleGoogle = async () => {
+  setGoogleLoading(true);
+  try {
+    await signIn("google", { callbackUrl: "/" });
+  }catch {
+    toast.error("Google sign-in failed. Please try again.");
+    setGoogleLoading(false);
+  }
+};
+
+//facebookauth
+  const handleFacebook = async () => {
+    setFacebookLoading(true);
+    try {
+      await signIn("facebook", { callbackUrl: "/" });
+    } catch {
+      toast.error("Facebook Sign-in failed. Please try again.");
+      setFacebookLoading(false);
+    }
   };
 
   return (
     <>
+      <ToastContainer
+      position="top-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      closeOnClick
+      pauseOnHover
+      theme="colored"
+    />
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -411,13 +462,41 @@ export default function LoginPage() {
             <div className="login-divider-line" />
 
             <div className="login-social-row">
-              <button type="button" className="login-social-btn">
-                <FcGoogle size={16} />
-                Google
+
+              <button type="button" className="login-social-btn"
+              onClick={handleGoogle} disabled={googleLoading}
+              >
+                {googleLoading ? (
+                      <div style={{
+                        width: 14, height: 14,
+                        border: "2px solid rgba(0,0,0,0.15)",
+                        borderTopColor: "#555",
+                        borderRadius: "50%",
+                        animation: "spin 0.7s linear infinite"
+                      }} />
+                    ) : (<FcGoogle size={16} />
+                )}  
+                { googleLoading ? "Logging in..." : "Google" }
               </button>
-              <button type="button" className="login-social-btn">
-                <FaFacebook size={16} color="#1877F2" />
-                Facebook
+
+              <button
+                type="button"
+                className="login-social-btn"
+                onClick={handleFacebook}
+                disabled={facebookLoading}
+              >
+                {facebookLoading ? (
+                  <div style={{
+                    width: 14, height: 14,
+                    border: "2px solid rgba(0,0,0,0.15)",
+                    borderTopColor: "#1877F2",
+                    borderRadius: "50%",
+                    animation: "spin 0.7s linear infinite"
+                  }} />
+                ) : (
+                  <FaFacebook size={16} color="#1877F2" />
+                )}
+                {facebookLoading ? "Logging in..." : "Facebook"}
               </button>
             </div>
 
