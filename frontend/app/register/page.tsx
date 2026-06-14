@@ -33,6 +33,8 @@ export default function RegisterPage() {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [facebookLoading, setFacebookLoading] = useState(false);
+
 
   const [form, setForm] = useState({
     fullName: "",
@@ -83,6 +85,7 @@ export default function RegisterPage() {
   }
 };
 
+//googleauth
 const handleGoogle =async () => {
   if (!accountType) {
     toast.warn("Please select role first!");
@@ -97,6 +100,20 @@ const handleGoogle =async () => {
   }
 };
 
+//facebookauth
+  const handleFacebook = async () => {
+    if (!accountType) {
+      toast.warn("Please select role first!");
+      return;
+    }
+    setFacebookLoading(true);
+    try {
+      await signIn("facebook", { callbackUrl: "/" });
+    } catch {
+      toast.error("Facebook Sign-in failed. Please try again.");
+      setFacebookLoading(false);
+    }
+  };
   const districts = [
     "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal",
     "Biratnagar", "Birgunj", "Dhangadhi", "Nepalgunj", "Hetauda", "Dharan",
@@ -663,18 +680,32 @@ const handleGoogle =async () => {
                   </div>
 
                   <div className="reg-social-row" style={{ marginBottom: 12 }}>
-
-                    <button type="button" className="reg-social-btn reg-social-btn--google"
-                      onClick={handleGoogle} disabled={googleLoading || !accountType} >
-                        {googleLoading ? (<div className="reg-spinner reg-spinner--sm" 
-                    />
-                      ) : (<FcGoogle size={16} />)}
-                     {googleLoading ? "Signing in..." : "Google"}
+                    <button
+                      type="button"
+                      className="reg-social-btn reg-social-btn--google"
+                      onClick={handleGoogle}
+                      disabled={googleLoading || !accountType}
+                    >
+                      {googleLoading ? (
+                        <div className="reg-spinner reg-spinner--sm" />
+                      ) : (
+                        <FcGoogle size={16} />
+                      )}
+                      {googleLoading ? "Signing in..." : "Google"}
                     </button>
 
-                    <button type="button" className="reg-social-btn">
-                      <FaFacebook size={16} color="#1877F2" />
-                      Facebook
+                    <button
+                      type="button"
+                      className="reg-social-btn reg-social-btn--facebook"
+                      onClick={handleFacebook}
+                      disabled={facebookLoading || !accountType}
+                    >
+                      {facebookLoading ? (
+                        <div className="reg-spinner reg-spinner--sm" />
+                      ) : (
+                        <FaFacebook size={16} color="#1877F2" />
+                      )}
+                      {facebookLoading ? "Signing in..." : "Facebook"}
                     </button>
                   </div>
 

@@ -26,6 +26,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ emailOrPhone: "", password: "", remember: false });
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [facebookLoading, setFacebookLoading] = useState(false);
   const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,6 +53,7 @@ export default function LoginPage() {
   };
 };
 
+//googleauth
 const handleGoogle = async () => {
   setGoogleLoading(true);
   try {
@@ -61,6 +63,17 @@ const handleGoogle = async () => {
     setGoogleLoading(false);
   }
 };
+
+//facebookauth
+  const handleFacebook = async () => {
+    setFacebookLoading(true);
+    try {
+      await signIn("facebook", { callbackUrl: "/" });
+    } catch {
+      toast.error("Facebook Sign-in failed. Please try again.");
+      setFacebookLoading(false);
+    }
+  };
 
   return (
     <>
@@ -461,15 +474,29 @@ const handleGoogle = async () => {
                         borderRadius: "50%",
                         animation: "spin 0.7s linear infinite"
                       }} />
-                    ) : (
-                    <FcGoogle size={16} />
-
+                    ) : (<FcGoogle size={16} />
                 )}  
                 { googleLoading ? "Logging in..." : "Google" }
               </button>
-              <button type="button" className="login-social-btn">
-                <FaFacebook size={16} color="#1877F2" />
-                Facebook
+
+              <button
+                type="button"
+                className="login-social-btn"
+                onClick={handleFacebook}
+                disabled={facebookLoading}
+              >
+                {facebookLoading ? (
+                  <div style={{
+                    width: 14, height: 14,
+                    border: "2px solid rgba(0,0,0,0.15)",
+                    borderTopColor: "#1877F2",
+                    borderRadius: "50%",
+                    animation: "spin 0.7s linear infinite"
+                  }} />
+                ) : (
+                  <FaFacebook size={16} color="#1877F2" />
+                )}
+                {facebookLoading ? "Logging in..." : "Facebook"}
               </button>
             </div>
 
