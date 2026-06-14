@@ -52,6 +52,8 @@ type ConstructionDetail = {
   mapLocation: string;
   mapDistance: string;
   mapCity: string;
+  lat: number;
+  lng: number;
   postedBy: {
     name: string;
     role: string;
@@ -129,6 +131,8 @@ const CONSTRUCTION_DATA: Record<string, ConstructionDetail> = {
     mapLocation: "Balkumari lalitpur",
     mapDistance: "2.9km from FunPark",
     mapCity: "Lazimpat,Kathmandu, Nepal",
+    lat: 27.7172,
+    lng: 85.3240,
     postedBy: {
       name: "Anita KC",
       role: "Project Manager",
@@ -197,6 +201,8 @@ const CONSTRUCTION_DATA: Record<string, ConstructionDetail> = {
     mapLocation: "Jawalakhel, Lalitpur",
     mapDistance: "1.5km from Lagankhel",
     mapCity: "Lalitpur, Nepal",
+    lat: 27.6710,
+    lng: 85.3131,
     postedBy: {
       name: "Ramesh Shrestha",
       role: "HR Manager",
@@ -266,6 +272,8 @@ const CONSTRUCTION_DATA: Record<string, ConstructionDetail> = {
     mapLocation: "New Baneshwor, Kathmandu",
     mapDistance: "0.9km from City Center",
     mapCity: "Kathmandu, Nepal",
+    lat: 27.7070,
+    lng: 85.3337,
     postedBy: {
       name: "Sita Tamang",
       role: "Recruitment Officer",
@@ -861,16 +869,15 @@ export default function ConstructionDetailPage() {
             {/* Location */}
             <div className="cd-location-card" id="location">
               <p className="cd-location-card-title">Location</p>
-              <div className="cd-map-area">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={listing.mapImage} alt="Location" className="cd-map-img" />
-                <div className="cd-map-overlay">
-                  <span className="cd-map-place-name">{listing.mapCity.split(",")[0]}</span>
-                  <span className="cd-map-place-sub">{listing.mapCity.split(",")[1]?.trim() || "Nepal"}</span>
-                </div>
-                <div className="cd-map-pin-anim">
-                  <FiMapPin size={28} color="#C0392B" />
-                </div>
+              <div style={{ height: 160, overflow: "hidden" }}>
+                <iframe
+                  title="Trade Location Map"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0, display: "block" }}
+                  loading="lazy"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${listing.lng - 0.015}%2C${listing.lat - 0.010}%2C${listing.lng + 0.015}%2C${listing.lat + 0.010}&layer=mapnik&marker=${listing.lat}%2C${listing.lng}`}
+                />
               </div>
               <div className="cd-location-info">
                 <p className="cd-loc-name">{listing.mapLocation}</p>
@@ -878,13 +885,13 @@ export default function ConstructionDetailPage() {
                 <p className="cd-loc-city">{listing.mapCity}</p>
               </div>
               <a
-                href={`https://www.google.com/maps/search/${encodeURIComponent(listing.mapLocation + " Nepal")}`}
+                href={`https://www.openstreetmap.org/?mlat=${listing.lat}&mlon=${listing.lng}#map=15/${listing.lat}/${listing.lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="cd-map-link"
               >
                 <FiMapPin size={12} color="#C0392B" style={{ marginRight: 4 }} />
-                View on Map
+                View Full Map
               </a>
             </div>
 
@@ -925,7 +932,7 @@ export default function ConstructionDetailPage() {
         {/* Similar Listings */}
         <div className="cd-similar">
           <div className="cd-similar-hdr">
-            <h2 className="cd-similar-title">Similar Devices</h2>
+            <h2 className="cd-similar-title">Similar Trades</h2>
             <Link href="/category/trade-and-homerepair" className="cd-similar-all">
               View All
               <FiChevronRight size={12} color="#C0392B" />

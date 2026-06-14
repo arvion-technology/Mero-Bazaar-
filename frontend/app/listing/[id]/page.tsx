@@ -19,7 +19,7 @@ const LISTING_DATA: Record<string, ListingDetail> = {
   "toyota-land-cruiser-prado-2020": {
     id: "toyota-land-cruiser-prado-2020",
     listingId: "#VH765812",
-    title: "Toypta land Cruiser Prado TXL 2020",
+    title: "Toyota Land Cruiser Prado TXL 2020",
     price: "Rs. 1,50,00,000",
     negotiable: true,
     location: "Lalitpur, Bagmati",
@@ -28,12 +28,14 @@ const LISTING_DATA: Record<string, ListingDetail> = {
     driven: "15,000km",
     isVerified: true,
     category: "Cars",
-    breadcrumbs: ["Vehicles", "Cars", "Tyota"],
+    breadcrumbs: ["Vehicles", "Cars", "Toyota"],
     images: ["/car1.jpg", "/car2.jpg", "/car3.jpg", "/car4.jpg", "/car5.jpg", "/car6.jpg", "/car7.jpg", "/car8.jpg"],
-    description: "Excellent condition Toyota Land Cruiser Pardo TXL 2020 for sale . Well maintained, origional paints, full service from authorized service center Luxury SUV with powerful performance and premium cofort. This vehicle has been meticulously maintained with full service history. All original parts, never been in an accident. Ready to drive. Serious buyers only please.",
+    description: "Excellent condition Toyota Land Cruiser Prado TXL 2020 for sale. Well maintained, original paint, full service from authorized service center. Luxury SUV with powerful performance and premium comfort. This vehicle has been meticulously maintained with full service history. All original parts, never been in an accident. Ready to drive. Serious buyers only please.",
+    lat: 27.6588,
+    lng: 85.3247,
     specs: {
       make: "Toyota",
-      model: "Land Cruiser Parda",
+      model: "Land Cruiser Prado",
       year: "2020",
       fuel: "Diesel",
       transmission: "Automatic",
@@ -48,7 +50,7 @@ const LISTING_DATA: Record<string, ListingDetail> = {
       fuelType: "Diesel",
       ownership: "1st Owner",
       transmission: "Automatic",
-      registration: "Bagmati,2020",
+      registration: "Bagmati, 2020",
       engine: "2755cc",
     },
     seller: {
@@ -59,17 +61,17 @@ const LISTING_DATA: Record<string, ListingDetail> = {
       isVerified: true,
       isPro: true,
       isTrusted: true,
-      memberSince: "Jan2022",
+      memberSince: "Jan 2022",
       totalListing: 24,
       responseRate: "98%",
-      avgResponseTime: "10min",
+      avgResponseTime: "10 min",
       phone: "+977-9841000000",
     },
   },
   "hundai-creta-2022": {
     id: "hundai-creta-2022",
     listingId: "#VH123456",
-    title: "Hundai Creta 2022",
+    title: "Hyundai Creta 2022",
     price: "Rs. 32,50,000",
     negotiable: true,
     location: "Kathmandu, Bagmati",
@@ -80,7 +82,9 @@ const LISTING_DATA: Record<string, ListingDetail> = {
     category: "Cars",
     breadcrumbs: ["Vehicles", "Cars", "Hyundai"],
     images: ["/Hundai Creta 2022.jpg", "/car3.jpg", "/car5.jpg", "/car7.jpg"],
-    description: "Well maintained Hyundai Creta 2022 in excellent condition. Single owner, all service records available. Fuel efficient and comfortable for city and highway driving.",
+    description: "Well maintained Hyundai Creta 2022 in excellent condition. Single owner, all service records available. Fuel efficient and comfortable for city and highway driving. Comes with all original accessories and warranty still valid.",
+    lat: 27.7172,
+    lng: 85.3240,
     specs: {
       make: "Hyundai",
       model: "Creta",
@@ -98,7 +102,7 @@ const LISTING_DATA: Record<string, ListingDetail> = {
       fuelType: "Petrol",
       ownership: "1st Owner",
       transmission: "Automatic",
-      registration: "Bagmati,2022",
+      registration: "Bagmati, 2022",
       engine: "1497cc",
     },
     seller: {
@@ -109,10 +113,10 @@ const LISTING_DATA: Record<string, ListingDetail> = {
       isVerified: true,
       isPro: false,
       isTrusted: true,
-      memberSince: "Mar2021",
+      memberSince: "Mar 2021",
       totalListing: 8,
       responseRate: "95%",
-      avgResponseTime: "20min",
+      avgResponseTime: "20 min",
       phone: "+977-9841000001",
     },
   },
@@ -130,7 +134,9 @@ const LISTING_DATA: Record<string, ListingDetail> = {
     category: "Bikes",
     breadcrumbs: ["Vehicles", "Bikes", "Bajaj"],
     images: ["/bajaj.avif", "/car6.jpg", "/car8.jpg"],
-    description: "Bajaj Pulsar N160 Dual Channel ABS in pristine condition. Powerful 160cc engine, dual channel ABS, great mileage. Perfect for daily commute and weekend rides.",
+    description: "Bajaj Pulsar N160 Dual Channel ABS in pristine condition. Powerful 160cc engine, dual channel ABS, great mileage. Perfect for daily commute and weekend rides. All documents clear, single owner bike.",
+    lat: 27.7172,
+    lng: 85.3240,
     specs: {
       make: "Bajaj",
       model: "Pulsar N160",
@@ -140,7 +146,7 @@ const LISTING_DATA: Record<string, ListingDetail> = {
       driven: "12,000km",
     },
     details: {
-      driveType: "Chain",
+      driveType: "Chain Drive",
       bodyType: "Naked Bike",
       exteriorColor: "Red",
       mileage: "12000km",
@@ -148,7 +154,7 @@ const LISTING_DATA: Record<string, ListingDetail> = {
       fuelType: "Petrol",
       ownership: "1st Owner",
       transmission: "Manual 6-Speed",
-      registration: "Bagmati,2023",
+      registration: "Bagmati, 2023",
       engine: "160cc",
     },
     seller: {
@@ -159,11 +165,219 @@ const LISTING_DATA: Record<string, ListingDetail> = {
       isVerified: true,
       isPro: false,
       isTrusted: false,
-      memberSince: "Jun2023",
+      memberSince: "Jun 2023",
       totalListing: 3,
       responseRate: "90%",
-      avgResponseTime: "30min",
+      avgResponseTime: "30 min",
       phone: "+977-9841000002",
+    },
+  },
+  "bajaj-pulsar-n160": {
+    id: "bajaj-pulsar-n160",
+    listingId: "#VH654322",
+    title: "Bajaj Pulsar N160 2023",
+    price: "Rs. 3,45,000",
+    negotiable: true,
+    location: "Kathmandu, Bagmati",
+    distanceFrom: "1.0km from Chabahil",
+    postedDaysAgo: 3,
+    driven: "12,500km",
+    isVerified: true,
+    category: "Bikes",
+    breadcrumbs: ["Vehicles", "Bikes", "Bajaj"],
+    images: ["/bajaj.avif", "/car6.jpg", "/car8.jpg"],
+    description: "Bajaj Pulsar N160 in excellent condition. Well maintained with all service records. Dual channel ABS, LED headlights and modern instrument cluster. Ideal for long rides and daily commuting.",
+    lat: 27.7200,
+    lng: 85.3450,
+    specs: {
+      make: "Bajaj",
+      model: "Pulsar N160",
+      year: "2023",
+      fuel: "Petrol",
+      transmission: "Manual",
+      driven: "12,500km",
+    },
+    details: {
+      driveType: "Chain Drive",
+      bodyType: "Naked Bike",
+      exteriorColor: "Blue/Black",
+      mileage: "12500km",
+      interiorColor: "N/A",
+      fuelType: "Petrol",
+      ownership: "1st Owner",
+      transmission: "Manual 6-Speed",
+      registration: "Bagmati, 2023",
+      engine: "160cc",
+    },
+    seller: {
+      name: "Hari Bahadur",
+      avatar: "/lady.jpg",
+      rating: 4.3,
+      reviewCount: 6,
+      isVerified: true,
+      isPro: false,
+      isTrusted: false,
+      memberSince: "Aug 2023",
+      totalListing: 2,
+      responseRate: "88%",
+      avgResponseTime: "25 min",
+      phone: "+977-9841000005",
+    },
+  },
+  "honda-shine": {
+    id: "honda-shine",
+    listingId: "#VH112233",
+    title: "Honda Shine 2023",
+    price: "NPR 1,95,000",
+    negotiable: true,
+    location: "Kathmandu, Bagmati",
+    distanceFrom: "1.5km from Maharajgunj",
+    postedDaysAgo: 3,
+    driven: "12,500km",
+    isVerified: true,
+    category: "Bikes",
+    breadcrumbs: ["Vehicles", "Bikes", "Honda"],
+    images: ["/honda.jpg", "/car6.jpg", "/car8.jpg"],
+    description: "Honda Shine 2023 in excellent condition. Well maintained with all service records. Smooth ride and excellent fuel economy. Perfect for city commuting. Single owner, all documents clear and ready for transfer.",
+    lat: 27.7350,
+    lng: 85.3300,
+    specs: {
+      make: "Honda",
+      model: "Shine",
+      year: "2023",
+      fuel: "Petrol",
+      transmission: "Manual",
+      driven: "12,500km",
+    },
+    details: {
+      driveType: "Chain Drive",
+      bodyType: "Commuter Bike",
+      exteriorColor: "Blue",
+      mileage: "12500km",
+      interiorColor: "N/A",
+      fuelType: "Petrol",
+      ownership: "1st Owner",
+      transmission: "Manual 5-Speed",
+      registration: "Bagmati, 2023",
+      engine: "125cc",
+    },
+    seller: {
+      name: "Bibek Thapa",
+      avatar: "/lady.jpg",
+      rating: 4.4,
+      reviewCount: 10,
+      isVerified: true,
+      isPro: false,
+      isTrusted: true,
+      memberSince: "Feb 2023",
+      totalListing: 5,
+      responseRate: "92%",
+      avgResponseTime: "15 min",
+      phone: "+977-9841000003",
+    },
+  },
+  "hero-splendor": {
+    id: "hero-splendor",
+    listingId: "#VH998877",
+    title: "Hero Splendor Plus 2023",
+    price: "NPR 1,65,000",
+    negotiable: false,
+    location: "Kathmandu, Bagmati",
+    distanceFrom: "2km from Baneshwor",
+    postedDaysAgo: 4,
+    driven: "12,500km",
+    isVerified: true,
+    category: "Bikes",
+    breadcrumbs: ["Vehicles", "Bikes", "Hero"],
+    images: ["/Harley-Davidson.jpg", "/car7.jpg", "/car5.jpg"],
+    description: "Hero Splendor Plus 2023, brand new condition with very low usage. Excellent fuel efficiency, smooth engine. One of Nepal's best-selling bikes. Great for daily commuting with low maintenance costs. Documents complete.",
+    lat: 27.7030,
+    lng: 85.3390,
+    specs: {
+      make: "Hero",
+      model: "Splendor Plus",
+      year: "2023",
+      fuel: "Petrol",
+      transmission: "Manual",
+      driven: "12,500km",
+    },
+    details: {
+      driveType: "Chain Drive",
+      bodyType: "Commuter Bike",
+      exteriorColor: "Black/Red",
+      mileage: "12500km",
+      interiorColor: "N/A",
+      fuelType: "Petrol",
+      ownership: "1st Owner",
+      transmission: "Manual 4-Speed",
+      registration: "Bagmati, 2023",
+      engine: "97.2cc",
+    },
+    seller: {
+      name: "Anita Gurung",
+      avatar: "/lady.jpg",
+      rating: 4.6,
+      reviewCount: 15,
+      isVerified: true,
+      isPro: false,
+      isTrusted: true,
+      memberSince: "May 2022",
+      totalListing: 7,
+      responseRate: "97%",
+      avgResponseTime: "12 min",
+      phone: "+977-9841000004",
+    },
+  },
+  "scooter": {
+    id: "scooter",
+    listingId: "#VH445566",
+    title: "Honda Activa Scooter 2024",
+    price: "NPR 1,85,000",
+    negotiable: true,
+    location: "Bhaktapur, Bagmati",
+    distanceFrom: "0.5km from Durbar Square",
+    postedDaysAgo: 2,
+    driven: "5,400km",
+    isVerified: true,
+    category: "Scooter",
+    breadcrumbs: ["Vehicles", "Scooter", "Honda"],
+    images: ["/Scooter.jpg", "/car4.jpg", "/car6.jpg"],
+    description: "Honda Activa 2024 almost brand new scooter. Very low mileage, kept in garage. Ideal for daily city commuting. Automatic transmission — no gear shifting needed. Excellent for both men and women. All documents ready for transfer.",
+    lat: 27.6710,
+    lng: 85.4298,
+    specs: {
+      make: "Honda",
+      model: "Activa",
+      year: "2024",
+      fuel: "Petrol",
+      transmission: "Automatic",
+      driven: "5,400km",
+    },
+    details: {
+      driveType: "Belt Drive",
+      bodyType: "Scooter",
+      exteriorColor: "White",
+      mileage: "5400km",
+      interiorColor: "N/A",
+      fuelType: "Petrol",
+      ownership: "1st Owner",
+      transmission: "CVT Automatic",
+      registration: "Bagmati, 2024",
+      engine: "109.51cc",
+    },
+    seller: {
+      name: "Priya Maharjan",
+      avatar: "/lady.jpg",
+      rating: 4.7,
+      reviewCount: 9,
+      isVerified: true,
+      isPro: false,
+      isTrusted: true,
+      memberSince: "Jan 2024",
+      totalListing: 2,
+      responseRate: "96%",
+      avgResponseTime: "8 min",
+      phone: "+977-9841000006",
     },
   },
 };
@@ -196,6 +410,8 @@ type ListingDetail = {
   breadcrumbs: string[];
   images: string[];
   description: string;
+  lat: number;
+  lng: number;
   specs: {
     make: string;
     model: string;
@@ -636,7 +852,14 @@ export default function ListingDetailPage() {
         .ld-detail-val { color: #1a1a1a; font-weight: 700; text-align: right; }
 
         /* ── RIGHT COLUMN ── */
-        .ld-right { display: flex; flex-direction: column; gap: 16px; }
+        .ld-right {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          position: sticky;
+          top: 80px;
+          align-self: start;
+        }
 
         /* ── Seller Card ── */
         .ld-seller-card {
@@ -644,8 +867,6 @@ export default function ListingDetailPage() {
           border-radius: 16px;
           padding: 20px 18px;
           box-shadow: 0 2px 14px rgba(0,0,0,0.08);
-          position: sticky;
-          top: 80px;
         }
         .ld-seller-card-title {
           font-size: 14px;
@@ -1070,7 +1291,7 @@ export default function ListingDetailPage() {
             grid-template-columns: 1fr;
           }
           .ld-seller-card { position: static; }
-          .ld-right { order: -1; }
+          .ld-right { order: -1; position: static; }
           .ld-specs-bar { grid-template-columns: repeat(3, 1fr); }
           .ld-details-grid { grid-template-columns: 1fr; }
           .ld-details-divider { display: none; }
@@ -1435,19 +1656,29 @@ export default function ListingDetailPage() {
             {/* Location Card */}
             <div className="ld-location-card" id="location">
               <p className="ld-location-card-title">Location</p>
-              <div className="ld-map-area">
-                <div className="ld-map-pin">
-                  <FiMapPin size={28} color="#C0392B" />
-                  <span className="ld-map-label">{listing.location}</span>
-                </div>
+              {/* Real OpenStreetMap embed — no API key needed */}
+              <div className="ld-map-area" style={{ height: 220, position: "relative", overflow: "hidden" }}>
+                <iframe
+                  title="Map"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0, display: "block" }}
+                  loading="lazy"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${listing.lng - 0.015}%2C${listing.lat - 0.010}%2C${listing.lng + 0.015}%2C${listing.lat + 0.010}&layer=mapnik&marker=${listing.lat}%2C${listing.lng}`}
+                />
               </div>
               <div className="ld-location-info">
                 <p className="ld-location-name">{listing.location}</p>
                 <p className="ld-location-dist">{listing.distanceFrom}</p>
                 <p className="ld-location-extra">{listing.location.split(",")[0]}, Nepal</p>
               </div>
-              <a href="https://www.google.com/maps/place/Lalitpur/@27.6574688,85.323152,10330m/data=!3m2!1e3!4b1!4m6!3m5!1s0x39eb19d3cf18ca51:0xd10ec3d53656e18f!8m2!3d27.6587525!4d85.3247183!16zL20vMDRtX3h0?entry=ttu&g_ep=EgoyMDI2MDUxNy4wIKXMDSoASAFQAw%3D%3D" target="" rel="noopener noreferrer" className="ld-map-view-link">
-                View on Map
+              <a
+                href={`https://www.openstreetmap.org/?mlat=${listing.lat}&mlon=${listing.lng}#map=15/${listing.lat}/${listing.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ld-map-view-link"
+              >
+                <FiMapPin size={13} color="#C0392B" /> View Full Map
               </a>
             </div>
 
