@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiHeart, FiMapPin, FiChevronDown, FiZap } from "react-icons/fi";
+import {
+  FiSearch,
+  FiHeart,
+  FiMapPin,
+  FiChevronDown,
+  FiZap,
+} from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 import { IoSpeedometerOutline } from "react-icons/io5";
 import { BsCalendar3, BsShieldCheck, BsArrowRight } from "react-icons/bs";
@@ -15,120 +21,21 @@ type Vehicle = {
   title: string;
   price: string;
   location: string;
-  image: string;
-  km: string;
-  year: number;
-  brand: string;
-  condition: string;
-  fuelType: string;
-  category: string;
-  badges: Badge[];
-};
+  images: string[];
+  latitude?: number;
+  longitude?: number;
 
-const VEHICLES: Vehicle[] = [
-  {
-    id: "honda-shine",
-    title: "Honda Shine",
-    price: "NPR 1,95,000",
-    location: "Kathmandu",
-    image: "/honda.jpg",
-    km: "12,500 KM",
-    year: 2023,
-    brand: "Honda",
-    condition: "Used",
-    fuelType: "Petrol",
-    category: "Bike",
-    badges: [
-      { label: "Bluebook Verified", color: "#fff", bg: "#16a34a" },
-      { label: "Transfer Ready", color: "#fff", bg: "#2563eb" },
-      { label: "Inspection Passed", color: "#fff", bg: "#d97706" },
-    ],
-  },
-  {
-    id: "bajaj-pulsar-n160",
-    title: "Bajaj Pulsar N160",
-    price: "NPR 3,45,000",
-    location: "Kathmandu",
-    image: "/bajaj.avif",
-    km: "12,500 KM",
-    year: 2023,
-    brand: "Bajaj",
-    condition: "Used",
-    fuelType: "Petrol",
-    category: "Bike",
-    badges: [
-      { label: "Bluebook Verified", color: "#fff", bg: "#16a34a" },
-      { label: "Transfer Ready", color: "#fff", bg: "#2563eb" },
-      { label: "Inspection Passed", color: "#fff", bg: "#d97706" },
-    ],
-  },
-  {
-    id: "hero-splendor",
-    title: "Hero Splendor Plus",
-    price: "NPR 1,65,000",
-    location: "Kathmandu",
-    image: "/Harley-Davidson.jpg",
-    km: "12,500 KM",
-    year: 2023,
-    brand: "Hero",
-    condition: "New",
-    fuelType: "Petrol",
-    category: "Bike",
-    badges: [
-      { label: "Bluebook Verified", color: "#fff", bg: "#16a34a" },
-      { label: "Transfer Ready", color: "#fff", bg: "#2563eb" },
-      { label: "Inspection Passed", color: "#fff", bg: "#d97706" },
-    ],
-  },
-  {
-    id: "toyota-land-cruiser-prado-2020",
-    title: "Toyota Land Cruiser Prado TXL 2020",
-    price: "NPR 1,50,00,000",
-    location: "Lalitpur",
-    image: "/car1.jpg",
-    km: "35,000 KM",
-    year: 2020,
-    brand: "Toyota",
-    condition: "Used",
-    fuelType: "Diesel",
-    category: "Car",
-    badges: [
-      { label: "Bluebook Verified", color: "#fff", bg: "#16a34a" },
-      { label: "Transfer Ready", color: "#fff", bg: "#2563eb" },
-    ],
-  },
-  {
-    id: "hundai-creta-2022",
-    title: "Hyundai Creta 2022",
-    price: "NPR 32,50,000",
-    location: "Kathmandu",
-    image: "/Hundai Creta 2022.jpg",
-    km: "18,200 KM",
-    year: 2022,
-    brand: "Hyundai",
-    condition: "Used",
-    fuelType: "Petrol",
-    category: "Car",
-    badges: [
-      { label: "Bluebook Verified", color: "#fff", bg: "#16a34a" },
-      { label: "Inspection Passed", color: "#fff", bg: "#d97706" },
-    ],
-  },
-  {
-    id: "scooter",
-    title: "Honda Activa Scooter",
-    price: "NPR 1,85,000",
-    location: "Bhaktapur",
-    image: "/Scooter.jpg",
-    km: "5,400 KM",
-    year: 2024,
-    brand: "Honda",
-    condition: "New",
-    fuelType: "Petrol",
-    category: "Scooter",
-    badges: [{ label: "Bluebook Verified", color: "#fff", bg: "#16a34a" }],
-  },
-];
+  vehicle: {
+    brand: string;
+    model: string;
+    type: string;
+    condition: string;
+    fuel_type: string;
+    year: number;
+    km_driven: number;
+    bluebook_status?: string;
+  };
+};
 
 const EV_FEATURED = {
   id: "electric-scooter",
@@ -139,7 +46,6 @@ const EV_FEATURED = {
   badge: "Bluebook Verified",
 };
 
-const BRANDS = ["Hero", "Honda", "Yamaha", "Bajaj", "Toyota", "Hyundai"];
 const PRICE_RANGES = [
   { label: "0–250K", min: 0, max: 250000 },
   { label: "250–500K", min: 250000, max: 500000 },
@@ -147,11 +53,17 @@ const PRICE_RANGES = [
   { label: "750K–1M", min: 750000, max: 1000000 },
   { label: "1M+", min: 1000000, max: 200000000 },
 ];
-const CONDITIONS = ["New", "Used", "Refurbished"];
-const FUEL_TYPES = ["Petrol", "Diesel", "Electric", "Hybrid"];
-const SUB_CATS = ["All Vehicles", "Car", "Trucks", "Bike", "Scooter", "Buses", "Others"];
 
 export default function VehiclesPage() {
+  const [brands, setBrands] = useState<string[]>([]);
+  const [conditions, setConditions] = useState<string[]>([]);
+  const [fuelTypes, setFuelTypes] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
@@ -160,6 +72,38 @@ export default function VehiclesPage() {
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [selectedFuels, setSelectedFuels] = useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/vehicles");
+        if (!res.ok) throw new Error("Failed to fetch");
+
+        const json = await res.json();
+
+        setVehicles(json.data || []);
+        setBrands(json.filters?.brands || []);
+        setConditions(json.filters?.conditions || []);
+        setFuelTypes(json.filters?.fuelTypes || []);
+        setCategories(["All Vehicles", ...(json.filters?.categories || [])]);
+
+      } catch (err) {
+        console.error(err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const generateBadges = (v: Vehicle) => {
+  const vehicle = v.vehicle;
+  const badges: { label: string; type: "green" | "blue" | "orange" | "gray" }[] = [];
+
+  if (vehicle?.bluebook_status === "verified") {badges.push({ label: "Bluebook Verified", type: "green" });}
+  if (vehicle?.fuel_type) {badges.push({label: vehicle.fuel_type.toUpperCase(),type: vehicle.fuel_type === "electric" ? "green" : "blue",});}
+  return badges;
+  };
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -179,27 +123,30 @@ export default function VehiclesPage() {
     setSearch("");
   };
 
-  const displayed = VEHICLES.filter((v) => {
-    const s = search.toLowerCase();
-    if (s && !v.title.toLowerCase().includes(s) && !v.location.toLowerCase().includes(s)) return false;
-    if (activeCat !== "All Vehicles" && v.category !== activeCat) return false;
-    if (selectedBrands.length && !selectedBrands.includes(v.brand)) return false;
-    if (selectedConditions.length && !selectedConditions.map(c => c.toLowerCase()).includes(v.condition.toLowerCase())) return false;
-    if (selectedFuels.length && !selectedFuels.map(f => f.toLowerCase()).includes(v.fuelType.toLowerCase())) return false;
-    const price = parseInt(v.price.replace(/[^\d]/g, ""));
-    if (selectedPriceRanges.length) {
-      const match = selectedPriceRanges.some(lbl => {
-        const r = PRICE_RANGES.find(x => x.label === lbl);
-        return r ? price >= r.min && price <= r.max : false;
-      });
-      if (!match) return false;
-    }
-    return true;
-  }).sort((a, b) => {
-    if (sort === "price_asc") return parseInt(a.price.replace(/[^\d]/g, "")) - parseInt(b.price.replace(/[^\d]/g, ""));
-    if (sort === "price_desc") return parseInt(b.price.replace(/[^\d]/g, "")) - parseInt(a.price.replace(/[^\d]/g, ""));
-    return 0;
-  });
+const displayed = vehicles.filter((v) => {
+  const s = search.toLowerCase();
+  const vehicle = v.vehicle;
+  if (s && !v.title.toLowerCase().includes(s) && !vehicle.brand.toLowerCase().includes(s)) return false;
+  if (activeCat !== "All Vehicles" && vehicle.type !== activeCat.toLowerCase()) return false;
+  if (selectedBrands.length && !selectedBrands.includes(vehicle.brand)) return false;
+  if (selectedConditions.length && !selectedConditions.map((c) => c.toLowerCase()).includes(vehicle.condition.toLowerCase())) return false;
+  if (selectedFuels.length && !selectedFuels.map((f) => f.toLowerCase()).includes(vehicle.fuel_type.toLowerCase())) return false;
+
+  const price =typeof v.price === "number" ? v.price: parseInt(String(v.price).replace(/[^\d]/g, ""));
+
+  if (selectedPriceRanges.length) {
+    const match = selectedPriceRanges.some((lbl) => {
+      const r = PRICE_RANGES.find((x) => x.label === lbl);
+      return r ? price >= r.min && price <= r.max : false;});
+    if (!match) return false;
+  }
+  return true;
+
+}).sort((a, b) => { const getPrice = (p: number | string ) =>typeof p === "number" ? p : parseInt(String(p).replace(/[^\d]/g, ""));
+  if (sort === "price_asc")return getPrice(a.price) - getPrice(b.price);
+  if (sort === "price_desc")return getPrice(b.price) - getPrice(a.price);
+  return 0;
+});
 
   return (
     <>
@@ -499,7 +446,7 @@ export default function VehiclesPage() {
         {/* ── TAB BAR ── */}
         <div className="vp-tabs-bar">
           <div className="vp-tabs-inner">
-            {SUB_CATS.map((cat) => (
+            {categories.map((cat) => (
               <button
                 key={cat}
                 className={`vp-tab${activeCat === cat ? " active" : ""}`}
@@ -526,7 +473,7 @@ export default function VehiclesPage() {
               <div className="vsb-section">
                 <p className="vsb-section-title">Brand</p>
                 <div className="vsb-chips">
-                  {BRANDS.map((b) => (
+                  {brands.map((b) => (
                     <button
                       key={b}
                       className={`vsb-chip${selectedBrands.includes(b) ? " active" : ""}`}
@@ -568,7 +515,7 @@ export default function VehiclesPage() {
               <div className="vsb-section">
                 <p className="vsb-section-title">Condition</p>
                 <div className="vsb-chips">
-                  {CONDITIONS.map((c) => (
+                  {conditions.map((c) => (
                     <button
                       key={c}
                       className={`vsb-chip${selectedConditions.includes(c) ? " active" : ""}`}
@@ -584,7 +531,7 @@ export default function VehiclesPage() {
               <div className="vsb-section">
                 <p className="vsb-section-title">Fuel Type</p>
                 <div className="vsb-chips">
-                  {FUEL_TYPES.map((f) => (
+                  {fuelTypes.map((f) => (
                     <button
                       key={f}
                       className={`vsb-chip${selectedFuels.includes(f) ? " active" : ""}`}
@@ -631,18 +578,16 @@ export default function VehiclesPage() {
                   <div className="vp-grid">
                     {displayed.map((v) => {
                       const isFav = !!favorites[v.id];
+                      const vehicle = v.vehicle;
+
                       return (
-                        <Link key={v.id} href={`/listing/${v.id}`} className="vp-card">
+                        <Link key={v.id} href={`/category/vehicles/${v.id}`} className="vp-card">
                           {/* Image */}
                           <div className="vp-card-img-wrap">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={v.image} alt={v.title} className="vp-card-img" />
-                            <span className="vp-card-cat">{v.category}</span>
-                            <button
-                              className="vp-heart"
-                              aria-label="Save"
-                              onClick={(e) => toggleFav(v.id, e)}
-                            >
+                            <img src={v.images?.[0] || "/placeholder.png"} alt={v.title} className="vp-card-img" />
+                            <span className="vp-card-cat">{vehicle.type}</span>
+                            <button className="vp-heart" aria-label="Save" onClick={(e) => toggleFav(v.id, e)}>
                               {isFav
                                 ? <FaHeart size={13} color="#b91c1c" />
                                 : <FiHeart size={13} color="#999" />}
@@ -656,30 +601,39 @@ export default function VehiclesPage() {
 
                             {/* Meta */}
                             <div className="vp-card-meta">
-                              <span><IoSpeedometerOutline size={12} /> {v.km}</span>
+                              <span><IoSpeedometerOutline size={12} /> {vehicle.km_driven}</span>
                               <span className="vp-card-meta-sep" />
-                              <span><BsCalendar3 size={11} /> {v.year}</span>
+                              <span><BsCalendar3 size={11} /> {vehicle.year}</span>
                               <span className="vp-card-meta-sep" />
-                              <span><FiMapPin size={11} /> {v.location}</span>
+                            <span
+                              style={{ cursor: "pointer", color: "#2563eb" }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (v.latitude == null || v.longitude == null) return;
+
+                                window.open(
+                                  `https://www.google.com/maps?q=${v.latitude},${v.longitude}`,
+                                  "_blank"
+                                );
+                              }}
+                            >
+                              <FiMapPin size={11} /> View on map
+                            </span>            
                             </div>
 
                             {/* Badges */}
                             <div className="vp-card-badges">
-                              {v.badges.map((b) => {
-                                const isGreen = b.bg.includes("16a34a") || b.label.toLowerCase().includes("verified");
-                                const isBlue = b.bg.includes("2563eb") || b.label.toLowerCase().includes("transfer");
-                                const isOrange = b.bg.includes("d97706") || b.label.toLowerCase().includes("inspection");
-
-                                const softBg = isGreen ? "#d1fae5" : isBlue ? "#dbeafe" : isOrange ? "#fef3c7" : "#f1f3f5";
-                                const softColor = isGreen ? "#065f46" : isBlue ? "#1e40af" : isOrange ? "#92400e" : "#374151";
-                                const softBorder = isGreen ? "1px solid #a7f3d0" : isBlue ? "1px solid #bfdbfe" : isOrange ? "1px solid #fde68a" : "1px solid #e5e7eb";
+                              {generateBadges(v).map((b) => {
+                                const colorMap = {
+                                  green: {bg: "#d1fae5",color: "#065f46",border: "1px solid #a7f3d0"},                                    
+                                  blue: {bg: "#dbeafe",color: "#1e40af",border: "1px solid #bfdbfe"},
+                                  orange: {bg: "#fef3c7",color: "#92400e",border: "1px solid #fde68a"},
+                                 gray: {bg: "#f1f3f5",color: "#374151",border: "1px solid #e5e7eb"},
+                                };
+                                const style = colorMap[b.type || "gray"];
 
                                 return (
-                                  <span
-                                    key={b.label}
-                                    className="vp-badge"
-                                    style={{ background: softBg, color: softColor, border: softBorder }}
-                                  >
+                                  <span key={b.label} className="vp-badge" style={{ background: style.bg,color: style.color,border: style.border}}>
                                     <BsShieldCheck size={9} style={{ marginRight: "3px" }} />
                                     {b.label}
                                   </span>
@@ -690,41 +644,6 @@ export default function VehiclesPage() {
                         </Link>
                       );
                     })}
-                  </div>
-
-                  {/* ── EV FEATURED ── */}
-                  <div className="vp-ev">
-                    <div className="vp-ev-header">
-                      <FiZap size={16} color="#fde047" />
-                      <span className="vp-ev-header-title">Electric Vehicle</span>
-                      <span className="vp-ev-header-sub"> Zero Emissions</span>
-                    </div>
-                    <div className="vp-ev-body">
-                      <div className="vp-ev-info">
-                        <div>
-                          <p className="vp-ev-price">{EV_FEATURED.price}</p>
-                          <div className="vp-ev-divider" />
-                          <p className="vp-ev-spec">
-                            <FiZap size={13} /> Range: {EV_FEATURED.range}
-                          </p>
-                          <p className="vp-ev-spec">
-                            <MdOutlineSwapHoriz size={15} /> {EV_FEATURED.charging}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="vp-ev-badge">
-                            <BsShieldCheck size={11} /> {EV_FEATURED.badge}
-                          </span>
-                          <Link href={`/listing/${EV_FEATURED.id}`} className="vp-ev-link">
-                            View Details <BsArrowRight size={11} style={{ marginLeft: "3px" }} />
-                          </Link>
-                        </div>
-                      </div>
-                      <div className="vp-ev-img-wrap">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={EV_FEATURED.image} alt="Electric Vehicle" />
-                      </div>
-                    </div>
                   </div>
                 </>
               )}

@@ -1,19 +1,6 @@
-import {
-  IsEnum,
-  IsBoolean,
-  IsInt,
-  IsString,
-  Min,
-  IsOptional,
-} from "class-validator";
-
+import { IsEnum, IsBoolean, IsInt, IsString, Min,IsNumber, IsOptional, IsArray, IsObject } from "class-validator"; 
 import { Type } from "class-transformer";
-import {
-  BluebookStatus,
-  FuelType,
-  VehicleCondition,
-  VehicleType,
-} from "src/common/enums/vehicle.enum";
+import { BluebookStatus, FuelType, VehicleCondition, VehicleType } from "src/common/enums/vehicle.enum";
 
 export class CreateVehicleDto {
   @IsEnum(VehicleType)
@@ -48,4 +35,29 @@ export class CreateVehicleDto {
   @Type(() => Boolean)
   @IsBoolean()
   ownership_transfer_ready?: boolean;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  price?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  longitude?: number;
+
+  @IsOptional()
+  @IsObject()
+  details: Record<string, any>;
 }

@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 * {
   box-sizing: border-box;
@@ -35,15 +37,23 @@ a {
 button {
   font-family: inherit;
 }
-
 img {
   display: block;
   max-width: 100%;
 }
 
+/* Hide scrollbar but keep scroll */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* Vehicle card image zoom on hover */
 .vcard:hover .vcard-img { transform: scale(1.07); }
 
-.custom-cb { accent-color: #e05c3a; width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+/* Checkbox accent */
+.custom-cb {
+  accent-color: #e05c3a;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
