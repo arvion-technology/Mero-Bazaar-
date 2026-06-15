@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   FiUser,
@@ -13,6 +14,7 @@ import {
   FiArrowLeft,
   FiShoppingBag,
   FiBriefcase,
+  FiPhone,
 } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
@@ -20,13 +22,22 @@ import { FaFacebook } from "react-icons/fa";
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
 
-export default function RegisterPage() {
+function RegisterPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<1 | 2>(1);
-  const [accountType, setAccountType] = useState<"buyer" | "seller" | "">("");
+  const [accountType, setAccountType] = useState<"buyer" | "seller" | "">("")
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Auto-select seller if coming from "Become a Seller" link
+  useEffect(() => {
+    if (searchParams.get("seller") === "true") {
+      setAccountType("seller");
+    }
+  }, [searchParams]);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -34,7 +45,7 @@ export default function RegisterPage() {
     phone: "",
     password: "",
     confirmPassword: "",
-    district: "",
+    address: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -51,14 +62,15 @@ export default function RegisterPage() {
     e.preventDefault();
     if (!agreed) return;
     setLoading(true);
-    setTimeout(() => setLoading(false), 2000);
+    setTimeout(() => {
+      setLoading(false);
+      if (accountType === "seller") {
+        router.push("/kyc");
+      }
+    }, 1500);
   };
 
-  const districts = [
-    "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal",
-    "Biratnagar", "Birgunj", "Dhangadhi", "Nepalgunj", "Hetauda", "Dharan",
-    "Itahari", "Janakpur", "Lumbini", "Gorkha", "Mustang", "Solukhumbu",
-  ];
+
 
   return (
     <>
@@ -67,7 +79,7 @@ export default function RegisterPage() {
 
         .reg-page {
           min-height: 100vh;
-          background: #e8d5e8;
+          background: #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -83,7 +95,8 @@ export default function RegisterPage() {
           border-radius: 32px;
           overflow: hidden;
           display: flex;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+          border: 1px solid #f0f0f0;
         }
 
         .reg-left {
@@ -508,7 +521,7 @@ export default function RegisterPage() {
         }
 
         .reg-error-msg {
-          fontSize: 11.5px;
+          font-size: 11.5px;
           color: #ef4444;
           margin-top: 2px;
         }
@@ -557,7 +570,7 @@ export default function RegisterPage() {
       <div className="reg-page">
         <div className="reg-card">
           <aside className="reg-left">
-            <h1 className="reg-left-title">Welcome Back!</h1>
+            <h1 className="reg-left-title">Welcome to HamroNepal Bazaar</h1>
             <p className="reg-left-sub">
               Enter your details to use all of site features
             </p>
@@ -685,25 +698,42 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="reg-field">
-                    <label className="reg-label" htmlFor="reg-district">District</label>
+                    <label className="reg-label" htmlFor="reg-phone">Phone Number</label>
                     <div className="reg-input-wrap">
-                      <span className="reg-input-icon" style={{ left: 12 }}>
-                        <FiMapPin size={15} />
+                      <span className="reg-input-icon">
+                        <FiPhone size={15} />
                       </span>
-                      <select
-                        id="reg-district"
-                        name="district"
-                        className="reg-select"
-                        style={{ paddingLeft: 40 }}
-                        value={form.district}
+                      <input
+                        id="reg-phone"
+                        name="phone"
+                        type="tel"
+                        placeholder="Enter your phone number"
+                        className="reg-input with-icon"
+                        value={form.phone}
                         onChange={handleChange}
                         required
-                      >
-                        <option value="" disabled>Select your district</option>
-                        {districts.map((d) => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
-                      </select>
+                        autoComplete="tel"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="reg-field">
+                    <label className="reg-label" htmlFor="reg-address">Address</label>
+                    <div className="reg-input-wrap">
+                      <span className="reg-input-icon">
+                        <FiMapPin size={15} />
+                      </span>
+                      <input
+                        id="reg-address"
+                        name="address"
+                        type="text"
+                        placeholder="Enter your address"
+                        className="reg-input with-icon"
+                        value={form.address}
+                        onChange={handleChange}
+                        required
+                        autoComplete="street-address"
+                      />
                     </div>
                   </div>
 
@@ -855,4 +885,16 @@ function getStrength(pw: string): number {
   if (/[0-9]/.test(pw)) score++;
   if (/[^A-Za-z0-9]/.test(pw)) score++;
   return Math.max(1, score);
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        Loading...
+      </div>
+    }>
+      <RegisterPageContent />
+    </Suspense>
+  );
 }
