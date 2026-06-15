@@ -5,8 +5,10 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params;
+
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/jobs/${params.id}`
+      `${process.env.NEXT_PUBLIC_API_URL}/jobs/${id}`
     );
 
     if (!res.ok) {
