@@ -44,7 +44,6 @@ export class JobsService {
     return this.prisma.listing.findMany({
       where: {
         category: ListingCategory.JOB,
-
         job: {
           is: {
             ...(query.role?.trim() && {
@@ -59,11 +58,18 @@ export class JobsService {
             ...(query.isUrgent !== undefined && {
               isUrgent: query.isUrgent,
             }),
+            ...(query.skill?.trim() && {
+            skillTags: { has: query.skill.trim() },
+          }),
+          ...(query.minSalary !== undefined && {
+            salaryMin: { gte: query.minSalary },
+          }),
           },
         },
       },
       include: {
         job: true,
+      //  user: {include: { vendorProfile: true },},
       },
       orderBy: {
         createdAt: 'desc',
@@ -90,18 +96,19 @@ export class JobsService {
     return this.prisma.listing.update({
       where: { id, userId },
       data: {
-        title: `${dto.role} in ${dto.city}`,
-        description: `Hiring for ${dto.role} position in ${dto.city}`,
-
+        ...(dto.role && dto.city && {
+          title: `${dto.role} in ${dto.city}`,
+          description: `Hiring for ${dto.role} position in ${dto.city}`,
+        }),
         job: {
           update: {
-            role: dto.role,
-            salaryMin: dto.salaryMin,
-            salaryMax: dto.salaryMax,
-            payPeriod: dto.payPeriod,
-            city: dto.city,
-            skillTags: dto.skillTags?.map(s => s.trim()) ?? [],
-            contractType: dto.contractType,
+            ...(dto.role && { role: dto.role }),
+            ...(dto.salaryMin !== undefined && { salaryMin: dto.salaryMin }),
+            ...(dto.salaryMax !== undefined && { salaryMax: dto.salaryMax }),
+            ...(dto.payPeriod && { payPeriod: dto.payPeriod }),
+            ...(dto.city && { city: dto.city }),
+            ...(dto.skillTags && { skillTags: dto.skillTags.map(s => s.trim()) }),
+            ...(dto.contractType && { contractType: dto.contractType }),
             ...(dto.isUrgent !== undefined && { isUrgent: dto.isUrgent }),
           },
         },

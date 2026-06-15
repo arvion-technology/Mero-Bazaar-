@@ -1,556 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
 import { FiHeart, FiShare2, FiMapPin, FiBriefcase, FiClock, FiEye, FiMessageSquare, FiUser, FiUsers, FiCalendar, FiCheckCircle, FiSend, FiPlusSquare, FiCheck } from "react-icons/fi";
 import { FaStar, FaRegStar, FaHeart, FaGraduationCap } from "react-icons/fa";
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-type JobDetail = {
-  id: string;
-  jobId: string;
-  title: string;
-  salary: string;
-  location: string;
-  distanceFrom: string;
-  type: string;
-  postedDaysAgo: number;
-  views: number;
-  experience: string;
-  education: string;
-  vacancies: number;
-  postedDate: string;
-  isVerified: boolean;
-  isFeatured: boolean;
-  breadcrumbs: string[];
-  images: string[];
-  description: string;
-  requirements: string[];
-  benefits: string[];
-  lat: number;
-  lng: number;
-  company: {
-    name: string;
-    logo: string;
-    rating: number;
-    reviewCount: number;
-    industry: string;
-    size: string;
-    website: string;
-    location: string;
-  };
-  postedBy: {
-    name: string;
-    avatar: string;
-    rating: number;
-    reviewCount: number;
-    isVerified: boolean;
-  };
-};
-
-// ─── Data ────────────────────────────────────────────────────────────────────
-
-const JOB_DATA: Record<string, JobDetail> = {
-  "software-developer-frontend": {
-    id: "software-developer-frontend",
-    jobId: "#JOB784512",
-    title: "Software Developer (Frontend)",
-    salary: "Rs. 70,000–100,000/month",
-    location: "Kathmandu, Nepal",
-    distanceFrom: "2.5km from Thamel",
-    type: "Full-Time",
-    postedDaysAgo: 2,
-    views: 36,
-    experience: "1–2 years",
-    education: "Bachelor's",
-    vacancies: 2,
-    postedDate: "May 10, 2025",
-    isVerified: true,
-    isFeatured: true,
-    breadcrumbs: ["Job", "IT & Software"],
-    images: ["/job1.jpg", "/job2.jpg", "/job3.jpg", "/job4.jpg", "/job5.jpg"],
-    description: "We are looking for a passionate Frontend Developer to build responsive, user-friendly web applications using modern technologies. You will work closely with designers and backend developers to create amazing products. This is a great opportunity to work with a fast-growing technology company and gain hands-on experience with cutting-edge tools and frameworks.",
-    requirements: [
-      "1–3 years of experience in HTML, CSS, JavaScript",
-      "Responsive design skills",
-      "Git & version control",
-      "Good problem solving skills",
-      "Bachelor's degree in CSE or related field",
-      "Strong knowledge of React.js",
-    ],
-    benefits: [
-      "Competitive Salary",
-      "Health Insurance",
-      "Flexible working Hours",
-      "Career Growth",
-      "Friendly Environment",
-      "Paid Leave",
-    ],
-    lat: 27.7172,
-    lng: 85.3240,
-    company: {
-      name: "Aarovin Technology",
-      logo: "/job1.jpg",
-      rating: 4.6,
-      reviewCount: 126,
-      industry: "IT & Software",
-      size: "50–150 employees",
-      website: "https://www.aarovintechnology.com/",
-      location: "Kathmandu, Nepal",
-    },
-    postedBy: {
-      name: "Anita KC",
-      avatar: "/lady.jpg",
-      rating: 4.8,
-      reviewCount: 126,
-      isVerified: true,
-    },
-  },
-  "senior-backend-engineer": {
-    id: "senior-backend-engineer",
-    jobId: "#JOB123789",
-    title: "Senior Backend Engineer",
-    salary: "Rs. 1,20,000–1,80,000/month",
-    location: "Lalitpur, Nepal",
-    distanceFrom: "1.2km from Pulchowk",
-    type: "Full-Time",
-    postedDaysAgo: 1,
-    views: 52,
-    experience: "3–5 years",
-    education: "Bachelor's",
-    vacancies: 1,
-    postedDate: "May 12, 2025",
-    isVerified: true,
-    isFeatured: false,
-    breadcrumbs: ["Job", "IT & Software"],
-    images: ["/job2.jpg", "/job3.jpg", "/job4.jpg", "/job5.jpg", "/job1.jpg"],
-    description: "We are hiring a Senior Backend Engineer to design and build scalable backend systems using Node.js and cloud services. You will lead architecture decisions and mentor junior engineers in a collaborative, fast-paced environment.",
-    requirements: [
-      "3–5 years of backend experience",
-      "Node.js, Python or Go expertise",
-      "Database design (PostgreSQL, MongoDB)",
-      "REST & GraphQL API design",
-      "AWS or GCP experience",
-      "Strong problem-solving skills",
-    ],
-    benefits: [
-      "Premium Salary Package",
-      "Full Health & Dental Insurance",
-      "Remote-friendly",
-      "Stock Options",
-      "Annual Bonus",
-      "Learning Budget",
-    ],
-    lat: 27.6588,
-    lng: 85.3247,
-    company: {
-      name: "CloudNine Solutions",
-      logo: "/job2.jpg",
-      rating: 4.8,
-      reviewCount: 89,
-      industry: "IT & Software",
-      size: "100–300 employees",
-      website: "https://www.cloudnine.com.np/",
-      location: "Lalitpur, Nepal",
-    },
-    postedBy: {
-      name: "Rohit Shrestha",
-      avatar: "/lady.jpg",
-      rating: 4.6,
-      reviewCount: 74,
-      isVerified: true,
-    },
-  },
-  "sales-executive": {
-    id: "sales-executive",
-    jobId: "#JOB100001",
-    title: "Sales Executive",
-    salary: "NPR 30,000–45,000/month",
-    location: "Kathmandu, Nepal",
-    distanceFrom: "1.0km from New Baneshwor",
-    type: "Full-Time",
-    postedDaysAgo: 1,
-    views: 48,
-    experience: "0–2 years",
-    education: "Intermediate",
-    vacancies: 5,
-    postedDate: "Jun 13, 2025",
-    isVerified: true,
-    isFeatured: false,
-    breadcrumbs: ["Job", "Sales"],
-    images: ["/job1.jpg", "/job3.jpg", "/job5.jpg"],
-    description: "XYZ Corporation is hiring energetic Sales Executives to expand our client base across Kathmandu. You will be responsible for identifying new business opportunities, maintaining client relationships, and achieving monthly sales targets. Freshers with good communication skills are welcome.",
-    requirements: [
-      "Strong communication and negotiation skills",
-      "Proven ability to achieve targets",
-      "Knowledge of sales techniques",
-      "Willingness to travel within the city",
-      "Minimum Intermediate (10+2) level education",
-    ],
-    benefits: [
-      "Attractive Sales Incentives",
-      "Travel Allowance",
-      "Mobile Allowance",
-      "Festival Bonus",
-      "Career Growth",
-    ],
-    lat: 27.7003,
-    lng: 85.3390,
-    company: {
-      name: "XYZ Corporation Pvt. Ltd.",
-      logo: "/job1.jpg",
-      rating: 4.1,
-      reviewCount: 34,
-      industry: "Sales & Marketing",
-      size: "200–500 employees",
-      website: "https://www.xyzcorp.com.np/",
-      location: "Kathmandu, Nepal",
-    },
-    postedBy: {
-      name: "Ramesh Khanal",
-      avatar: "/lady.jpg",
-      rating: 4.2,
-      reviewCount: 18,
-      isVerified: true,
-    },
-  },
-  "accountant": {
-    id: "accountant",
-    jobId: "#JOB100002",
-    title: "Accountant",
-    salary: "NPR 28,000–40,000/month",
-    location: "Butwal, Nepal",
-    distanceFrom: "0.5km from Traffic Chowk",
-    type: "Full-Time",
-    postedDaysAgo: 2,
-    views: 29,
-    experience: "1–3 years",
-    education: "Bachelor's",
-    vacancies: 2,
-    postedDate: "Jun 12, 2025",
-    isVerified: true,
-    isFeatured: false,
-    breadcrumbs: ["Job", "Finance"],
-    images: ["/job2.jpg", "/job4.jpg", "/job1.jpg"],
-    description: "Finance Hub Pvt. Ltd. is looking for a qualified Accountant to manage day-to-day accounting operations including bookkeeping, bank reconciliation, VAT filing, and financial reporting. Experience with Tally or similar accounting software is required.",
-    requirements: [
-      "Bachelor's degree in Accounting or Finance",
-      "Proficiency in Tally ERP",
-      "Knowledge of Nepal tax regulations",
-      "Experience with VAT/TDS filing",
-      "Strong attention to detail",
-    ],
-    benefits: [
-      "Provident Fund & Gratuity",
-      "Medical Insurance",
-      "Festival Bonus",
-      "Paid Annual Leave",
-      "Stable Work Environment",
-    ],
-    lat: 27.6933,
-    lng: 83.4545,
-    company: {
-      name: "Finance Hub Pvt. Ltd.",
-      logo: "/job2.jpg",
-      rating: 4.3,
-      reviewCount: 22,
-      industry: "Finance & Accounting",
-      size: "20–50 employees",
-      website: "https://www.financehub.com.np/",
-      location: "Butwal, Nepal",
-    },
-    postedBy: {
-      name: "Sushma Tharu",
-      avatar: "/lady.jpg",
-      rating: 4.4,
-      reviewCount: 11,
-      isVerified: true,
-    },
-  },
-  "delivery-rider": {
-    id: "delivery-rider",
-    jobId: "#JOB100003",
-    title: "Delivery Rider",
-    salary: "NPR 1,500–2,000/day",
-    location: "Kathmandu, Nepal",
-    distanceFrom: "Central Kathmandu",
-    type: "Full-Time",
-    postedDaysAgo: 3,
-    views: 61,
-    experience: "0–1 year",
-    education: "SLC/SEE",
-    vacancies: 10,
-    postedDate: "Jun 11, 2025",
-    isVerified: true,
-    isFeatured: false,
-    breadcrumbs: ["Job", "Gig/Freelance"],
-    images: ["/job3.jpg", "/job1.jpg", "/job5.jpg"],
-    description: "Pizza House is looking for reliable Delivery Riders to join our growing fleet in Kathmandu. You will deliver orders to customers on time while maintaining the highest standard of customer service. A valid driving license and a personal bike are mandatory.",
-    requirements: [
-      "Valid two-wheeler driving license",
-      "Own motorcycle or scooter",
-      "Knowledge of Kathmandu roads",
-      "Good communication skills",
-      "Punctual and reliable",
-    ],
-    benefits: [
-      "Daily Earnings + Tips",
-      "Fuel Allowance",
-      "Flexible Shifts",
-      "Accident Insurance",
-      "Performance Bonus",
-    ],
-    lat: 27.7172,
-    lng: 85.3240,
-    company: {
-      name: "Pizza House",
-      logo: "/job3.jpg",
-      rating: 3.9,
-      reviewCount: 15,
-      industry: "Food & Beverage",
-      size: "10–30 employees",
-      website: "https://www.pizzahouse.com.np/",
-      location: "Kathmandu, Nepal",
-    },
-    postedBy: {
-      name: "Bikash Adhikari",
-      avatar: "/lady.jpg",
-      rating: 4.0,
-      reviewCount: 8,
-      isVerified: false,
-    },
-  },
-  "graphics-designer": {
-    id: "graphics-designer",
-    jobId: "#JOB100004",
-    title: "Graphics Designer",
-    salary: "NPR 30,000–50,000/month",
-    location: "Kathmandu, Nepal",
-    distanceFrom: "0.8km from Durbarmarg",
-    type: "Full-Time",
-    postedDaysAgo: 2,
-    views: 44,
-    experience: "1–2 years",
-    education: "Bachelor's / Diploma",
-    vacancies: 2,
-    postedDate: "Jun 12, 2025",
-    isVerified: true,
-    isFeatured: true,
-    breadcrumbs: ["Job", "Design"],
-    images: ["/job4.jpg", "/job2.jpg", "/job3.jpg"],
-    description: "Creative Studio is seeking a talented Graphics Designer to join our dynamic team. You will create visual concepts for branding, social media, print, and digital marketing campaigns. The ideal candidate is creative, detail-oriented, and proficient in Adobe Creative Suite.",
-    requirements: [
-      "Proficiency in Adobe Photoshop & Illustrator",
-      "Strong portfolio of design work",
-      "Understanding of branding & typography",
-      "Experience with social media graphics",
-      "Ability to meet tight deadlines",
-    ],
-    benefits: [
-      "Creative Work Environment",
-      "Skill Development Budget",
-      "Health Insurance",
-      "Festival Bonus",
-      "Flexible Hours",
-    ],
-    lat: 27.7126,
-    lng: 85.3139,
-    company: {
-      name: "Creative Studio",
-      logo: "/job4.jpg",
-      rating: 4.5,
-      reviewCount: 41,
-      industry: "Design & Media",
-      size: "10–50 employees",
-      website: "https://www.creativestudio.com.np/",
-      location: "Kathmandu, Nepal",
-    },
-    postedBy: {
-      name: "Priya Tamang",
-      avatar: "/lady.jpg",
-      rating: 4.5,
-      reviewCount: 29,
-      isVerified: true,
-    },
-  },
-  "ui-ux-designer": {
-    id: "ui-ux-designer",
-    jobId: "#JOB100005",
-    title: "UI/UX Designer",
-    salary: "NPR 60,000–90,000/month",
-    location: "Kathmandu, Nepal",
-    distanceFrom: "1.5km from Lazimpat",
-    type: "Part-Time",
-    postedDaysAgo: 3,
-    views: 37,
-    experience: "2–4 years",
-    education: "Bachelor's",
-    vacancies: 1,
-    postedDate: "Jun 11, 2025",
-    isVerified: true,
-    isFeatured: false,
-    breadcrumbs: ["Job", "Design"],
-    images: ["/job3.jpg", "/job1.jpg", "/job5.jpg"],
-    description: "Kreative Studio is hiring a UI/UX Designer to craft beautiful and intuitive user experiences. You will work on mobile and web applications, conducting user research, creating wireframes, and building high-fidelity prototypes. Strong Figma skills are essential.",
-    requirements: [
-      "2+ years of UI/UX design experience",
-      "Expert-level Figma or Adobe XD skills",
-      "User research & usability testing",
-      "Strong portfolio of digital products",
-      "Understanding of mobile-first design",
-    ],
-    benefits: [
-      "Flexible Part-time Hours",
-      "Remote Work Option",
-      "Portfolio Building Projects",
-      "Skill Development",
-      "Competitive Pay",
-    ],
-    lat: 27.7289,
-    lng: 85.3178,
-    company: {
-      name: "Kreative Studio",
-      logo: "/job3.jpg",
-      rating: 4.4,
-      reviewCount: 33,
-      industry: "Design & UX",
-      size: "5–20 employees",
-      website: "https://www.kreativestudio.com.np/",
-      location: "Kathmandu, Nepal",
-    },
-    postedBy: {
-      name: "Nisha Karmacharya",
-      avatar: "/lady.jpg",
-      rating: 4.7,
-      reviewCount: 21,
-      isVerified: true,
-    },
-  },
-  "marketing-manager": {
-    id: "marketing-manager",
-    jobId: "#JOB100006",
-    title: "Digital Marketing Manager",
-    salary: "NPR 80,000–1,10,000/month",
-    location: "Pokhara, Nepal",
-    distanceFrom: "0.3km from Lakeside",
-    type: "Full-Time",
-    postedDaysAgo: 5,
-    views: 55,
-    experience: "3–5 years",
-    education: "Bachelor's",
-    vacancies: 1,
-    postedDate: "Jun 09, 2025",
-    isVerified: true,
-    isFeatured: true,
-    breadcrumbs: ["Job", "Marketing"],
-    images: ["/job4.jpg", "/job2.jpg", "/job1.jpg"],
-    description: "Nexus Media is looking for an experienced Digital Marketing Manager to lead all digital marketing efforts across SEO, SEM, social media, email campaigns, and analytics. You will manage a team of 4 marketers and report directly to the CEO. Pokhara-based candidates preferred.",
-    requirements: [
-      "3+ years in digital marketing",
-      "Expertise in Google Ads & Meta Ads",
-      "Strong SEO/SEM knowledge",
-      "Google Analytics & data-driven mindset",
-      "Team leadership experience",
-      "Bachelor's degree in Marketing or related field",
-    ],
-    benefits: [
-      "Leadership Role",
-      "High Salary + Performance Bonus",
-      "Full Health Coverage",
-      "Annual Retreats",
-      "Paid Leave",
-      "Career Advancement",
-    ],
-    lat: 28.2096,
-    lng: 83.9856,
-    company: {
-      name: "Nexus Media",
-      logo: "/job4.jpg",
-      rating: 4.6,
-      reviewCount: 58,
-      industry: "Media & Marketing",
-      size: "30–80 employees",
-      website: "https://www.nexusmedia.com.np/",
-      location: "Pokhara, Nepal",
-    },
-    postedBy: {
-      name: "Aman Gurung",
-      avatar: "/lady.jpg",
-      rating: 4.6,
-      reviewCount: 40,
-      isVerified: true,
-    },
-  },
-  "construction-worker": {
-    id: "construction-worker",
-    jobId: "#JOB100007",
-    title: "Construction Supervisor",
-    salary: "NPR 25,000–35,000/month",
-    location: "Chitwan, Nepal",
-    distanceFrom: "Near Bharatpur Hospital",
-    type: "Full-Time",
-    postedDaysAgo: 1,
-    views: 22,
-    experience: "2–5 years",
-    education: "Diploma / Bachelor's",
-    vacancies: 3,
-    postedDate: "Jun 13, 2025",
-    isVerified: true,
-    isFeatured: false,
-    breadcrumbs: ["Job", "Construction"],
-    images: ["/job2.jpg", "/job5.jpg", "/job3.jpg"],
-    description: "Nepal Build Co. is seeking Construction Supervisors to oversee residential and commercial construction projects in Chitwan. You will coordinate labor teams, manage materials, ensure quality control, and enforce safety standards on site.",
-    requirements: [
-      "2+ years in construction supervision",
-      "Knowledge of Civil Engineering basics",
-      "Ability to read construction drawings",
-      "Strong safety management skills",
-      "Good communication with labor teams",
-      "Valid driving license preferred",
-    ],
-    benefits: [
-      "Site Allowance",
-      "Travel Reimbursement",
-      "Accident Insurance",
-      "Festival Bonus",
-      "Accommodation Support",
-    ],
-    lat: 27.6752,
-    lng: 84.4304,
-    company: {
-      name: "Nepal Build Co.",
-      logo: "/job2.jpg",
-      rating: 4.0,
-      reviewCount: 19,
-      industry: "Construction",
-      size: "50–200 employees",
-      website: "https://www.nepalbuild.com.np/",
-      location: "Chitwan, Nepal",
-    },
-    postedBy: {
-      name: "Suresh Rana",
-      avatar: "/lady.jpg",
-      rating: 4.1,
-      reviewCount: 14,
-      isVerified: false,
-    },
-  },
-};
-
-const FALLBACK_JOB = JOB_DATA["software-developer-frontend"];
-
-const SIMILAR_JOBS = [
-  { id: "senior-backend-engineer", title: "Senior Backend Engineer", company: "CloudNine Solutions", salary: "Rs. 1,20,000/month", image: "/job2.jpg", type: "Full-Time" },
-  { id: "ui-ux-designer", title: "UI/UX Designer", company: "Kreative Studio", salary: "Rs. 60,000/month", image: "/job3.jpg", type: "Full-Time" },
-  { id: "marketing-manager", title: "Digital Marketing Manager", company: "Nexus Media", salary: "Rs. 80,000/month", image: "/job4.jpg", type: "Full-Time" },
-  { id: "data-analyst", title: "Data Analyst", company: "DataSphere Nepal", salary: "Rs. 90,000/month", image: "/job5.jpg", type: "Remote" },
-  { id: "devops-engineer", title: "DevOps Engineer", company: "TechBase Systems", salary: "Rs. 1,50,000/month", image: "/job1.jpg", type: "Full-Time" },
-];
-
-// ─── Star Rating ─────────────────────────────────────────────────────────────
+import { api } from "@/lib/api";                          
+import { toJobDetail, toJobCard } from "@/lib/adapter";   
+import type { JobDetail } from "@/app/types/listing";      
+import type { Job } from "@/app/types/jobs";               
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -564,19 +23,41 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-// ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function JobDetailPage() {
   const params = useParams();
   const id = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : "";
-  const job = JOB_DATA[id] ?? FALLBACK_JOB;
+  const [job, setJob] = useState<JobDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [similarJobs, setSimilarJobs] = useState<Job[]>([]);
 
   const [activeImg, setActiveImg] = useState(0);
   const [isFav, setIsFav] = useState(false);
   const [showFull, setShowFull] = useState(false);
   const [applied, setApplied] = useState(false);
   const [msgSent, setMsgSent] = useState(false);
-  const [favSimilar, setFavSimilar] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!id) return;
+    const load = async () => {
+      try {
+        const raw = await api.getJob(id);
+        setJob(toJobDetail(raw));
+
+        const similarParams = new URLSearchParams({ city: (raw as any).job?.city ?? "", limit: "5" });
+        const similar = await api.getJobs(similarParams);
+        setSimilarJobs(similar.map(toJobCard).filter(j => j.id !== id));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [id]);
+
+  if (loading) return <div style={{ padding: 40, textAlign: "center" }}>Loading...</div>;
+  if (!job) return <div style={{ padding: 40, textAlign: "center" }}>Job not found</div>;
 
   const visibleThumbs = job.images.slice(0, 5);
   const extraCount = job.images.length - 5;
@@ -1127,7 +608,7 @@ export default function JobDetailPage() {
                 <Link href="/category/job" className="jd-similar-viewall">View All</Link>
               </div>
               <div className="jd-similar-scroll">
-                {SIMILAR_JOBS.map((s) => (
+                {similarJobs.map((s) => (
                   <Link key={s.id} href={`/category/job/${s.id}`} className="jd-sim-card">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={s.image} alt={s.title} className="jd-sim-img" />

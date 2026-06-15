@@ -37,6 +37,11 @@ export class SearchService {
         job: true,
         medical: true,
         trades: true, 
+        rental: true,        
+        agriculture: true,   
+        secondhand: true,   
+        foods: true,         
+        beauty: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -65,10 +70,11 @@ export class SearchService {
       where,
       include: {
         job: true,
+      //user: { include: { vendorProfile: true } }, user card not implemented yet
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: filters.sort === 'oldest' ? 'asc' : 'desc' },
+      take: filters.limit ?? 20,  
+      skip: ((filters.page ?? 1) - 1) * (filters.limit ?? 20),
     });
   }
   async rentalSearch(filters: RentalSearchDto) {
