@@ -1,19 +1,6 @@
-import {
-  IsOptional,
-  IsString,
-  IsEnum,
-  IsNumber,
-} from "class-validator";
-
-import {
-  VehicleType,
-  VehicleCondition,
-  FuelType,
-  BluebookStatus,
-  ListingCategory,
-} from "@prisma/client";
-
+import { IsOptional, IsString, IsEnum, IsNumber } from "class-validator";
 import { Type } from "class-transformer";
+import { ListingCategory } from "@prisma/client";
 
 export class SearchListingDto {
   @IsOptional()
@@ -21,28 +8,8 @@ export class SearchListingDto {
   title?: string;
 
   @IsOptional()
-  @IsString()
-  brand?: string;
-
-  @IsOptional()
-  @IsString()
-  model?: string;
-
-  @IsOptional()
-  @IsEnum(VehicleType)
-  type?: VehicleType;
-
-  @IsOptional()
-  @IsEnum(VehicleCondition)
-  condition?: VehicleCondition;
-
-  @IsOptional()
-  @IsEnum(BluebookStatus)
-  bluebookStatus?: BluebookStatus;
-
-  @IsOptional()
-  @IsEnum(FuelType)
-  fuelType?: FuelType;
+  @IsEnum(ListingCategory)
+  category?: ListingCategory;
 
   @IsOptional()
   @Type(() => Number)
@@ -55,26 +22,16 @@ export class SearchListingDto {
   maxPrice?: number;
 
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  minYear?: number;
+  @IsString()
+  exclude?: string;
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
-  maxYear?: number;
+  limit?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
-  minKm?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  maxKm?: number;
-
-  @IsOptional()
-  @IsEnum(ListingCategory)
-  category?: ListingCategory;
+  page?: number = 1;
 }

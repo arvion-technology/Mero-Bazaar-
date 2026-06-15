@@ -7,12 +7,12 @@ const BG = "#0f1523"; // dark background color
 // footer links organized by section
 const footerLinks = {
   Company: [
-    { label: "About Us", href: "/about" },
-    { label: "Careers", href: "/careers" },
-    { label: "Press", href: "/press" },
+{ label: "About Us", href: "/footer/about-us" },
+{ label: "Careers", href: "/footer/careers"},
+    { label: "Press", href: "/footer/press" },
   ],
   Support: [
-    { label: "Help Center", href: "/help" },
+    { label: "Help Center", href: "/footer/help-center" },
     { label: "Safety Center", href: "/safety" },
     { label: "Contact Us", href: "/contact" },
   ],

@@ -1,12 +1,11 @@
-import { IsOptional, IsEnum, IsString, IsNumber } from "class-validator";
+import { IsOptional, IsString, IsEnum, IsNumber } from "class-validator";
 import { Type } from "class-transformer";
-import { VehicleType, FuelType, VehicleCondition } from "src/common/enums/vehicle.enum";
-import { BluebookStatus } from "@prisma/client";
+import { VehicleType, VehicleCondition, FuelType, BluebookStatus } from "@prisma/client";
 
 export class VehicleSearchDto {
   @IsOptional()
   @IsString()
-  title?: string;
+  query?: string;
 
   @IsOptional()
   @IsString()
@@ -19,6 +18,18 @@ export class VehicleSearchDto {
   @IsOptional()
   @IsEnum(VehicleType)
   type?: VehicleType;
+
+  @IsOptional()
+  @IsEnum(VehicleCondition)
+  condition?: VehicleCondition;
+
+  @IsOptional()
+  @IsEnum(FuelType)
+  fuelType?: FuelType;
+
+  @IsOptional()
+  @IsEnum(BluebookStatus)
+  bluebookStatus?: BluebookStatus;
 
   @IsOptional()
   @Type(() => Number)
@@ -39,26 +50,4 @@ export class VehicleSearchDto {
   @Type(() => Number)
   @IsNumber()
   maxKm?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  minPrice?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  maxPrice?: number;
-
-  @IsOptional()
-  @IsEnum(VehicleCondition)
-  condition?: VehicleCondition;
-
-  @IsOptional()
-  @IsEnum(FuelType)
-  fuelType?: FuelType;
-
-  @IsOptional()
-  @IsEnum(BluebookStatus)
-  bluebookStatus?: BluebookStatus;
 }

@@ -3,6 +3,8 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   FiUser,
   FiMail,
@@ -18,6 +20,9 @@ import {
 } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
+import { api } from "../../lib/api";
+import type { RegisterPayload } from "../types/auth";
+import { signIn } from "next-auth/react";
 
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
@@ -31,6 +36,9 @@ function RegisterPageContent() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [facebookLoading, setFacebookLoading] = useState(false);
+
 
   // Auto-select seller if coming from "Become a Seller" link
   useEffect(() => {
@@ -58,22 +66,81 @@ function RegisterPageContent() {
     setStep(2);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agreed) return;
+    if (!agreed) { toast.warn("Please accept the terms");
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+  try {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      if (accountType === "seller") {
-        router.push("/kyc");
-      }
-    }, 1500);
+    const payload: RegisterPayload = {
+      email: form.email,
+      password: form.password,
+      name: form.fullName,
+      phone: form.phone,
+      role: accountType === "seller" ? "VENDOR" : "USER",
+      district: form.district,
+    };
+    const data = await api.register(payload);
+    localStorage.setItem("token",data.access_token);
+    localStorage.setItem("user",JSON.stringify(data.user));
+    toast.success("Account created successfully!");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : " Something went wrong");
+  }finally {
+    setLoading(false);
+  }
+};
+
+//googleauth
+const handleGoogle =async () => {
+  if (!accountType) {
+    toast.warn("Please select role first!");
+    return;
+  }
+  setGoogleLoading(true);
+  try {
+    await signIn("google", { callbackUrl: "/" });
+  } catch {
+    toast.error("Google Sign-in failed. Please try again.");
+    setGoogleLoading(false);
+  }
+};
+
+//facebookauth
+  const handleFacebook = async () => {
+    if (!accountType) {
+      toast.warn("Please select role first!");
+      return;
+    }
+    setFacebookLoading(true);
+    try {
+      await signIn("facebook", { callbackUrl: "/" });
+    } catch {
+      toast.error("Facebook Sign-in failed. Please try again.");
+      setFacebookLoading(false);
+    }
   };
-
-
+  const districts = [
+    "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal",
+    "Biratnagar", "Birgunj", "Dhangadhi", "Nepalgunj", "Hetauda", "Dharan",
+    "Itahari", "Janakpur", "Lumbini", "Gorkha", "Mustang", "Solukhumbu",
+  ];
 
   return (
     <>
+    <ToastContainer
+      position="top-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      closeOnClick
+      pauseOnHover
+      theme="colored"
+    />
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -625,13 +692,32 @@ function RegisterPageContent() {
                   </div>
 
                   <div className="reg-social-row" style={{ marginBottom: 12 }}>
-                    <button type="button" className="reg-social-btn">
-                      <FcGoogle size={16} />
-                      Google
+                    <button
+                      type="button"
+                      className="reg-social-btn reg-social-btn--google"
+                      onClick={handleGoogle}
+                      disabled={googleLoading || !accountType}
+                    >
+                      {googleLoading ? (
+                        <div className="reg-spinner reg-spinner--sm" />
+                      ) : (
+                        <FcGoogle size={16} />
+                      )}
+                      {googleLoading ? "Signing in..." : "Google"}
                     </button>
-                    <button type="button" className="reg-social-btn">
-                      <FaFacebook size={16} color="#1877F2" />
-                      Facebook
+
+                    <button
+                      type="button"
+                      className="reg-social-btn reg-social-btn--facebook"
+                      onClick={handleFacebook}
+                      disabled={facebookLoading || !accountType}
+                    >
+                      {facebookLoading ? (
+                        <div className="reg-spinner reg-spinner--sm" />
+                      ) : (
+                        <FaFacebook size={16} color="#1877F2" />
+                      )}
+                      {facebookLoading ? "Signing in..." : "Facebook"}
                     </button>
                   </div>
 

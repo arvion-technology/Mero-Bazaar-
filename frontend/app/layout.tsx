@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import AuthProvider from "./providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,8 +25,10 @@ export default function RootLayout({
   return (
     <html lang="ne" className={inter.variable}>
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
-        <Navbar />
-        {children}
+        <AuthProvider>
+          <Navbar />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

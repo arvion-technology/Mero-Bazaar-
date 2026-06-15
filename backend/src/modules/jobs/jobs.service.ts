@@ -1,41 +1,122 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/database/prisma.service';
 import { CreateJobDto } from './dto/create_job.dto';
+import { UpdateJobDto } from './dto/update_jobs.dto';
+import { QueryJobDto } from './dto/query_job.dto';
+import { ListingCategory } from '@prisma/client';
 
 @Injectable()
 export class JobsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(listingId: string, dto: CreateJobDto) {
-
-    if (dto.salaryMin > dto.salaryMax) {
-      throw new BadRequestException('Minimum salary cannot be greater than maximum salary!')
-    }
-    return this.prisma.job.create({
+  async create(dto: CreateJobDto, userId: string) {
+    return this.prisma.listing.create({
       data: {
-        listingId,
-        role: dto.role.trim(),
-        salaryMin: Number(dto.salaryMin),
-        salaryMax: Number(dto.salaryMax),
-        payPeriod: dto.payPeriod,
-        city: dto.city.trim(),
-        skillTags: dto.skillTags ?? [],
-        contractType: dto.contractType,
-        isUrgent: dto.isUrgent ?? false,
+        title: `${dto.role} in ${dto.city}`,
+        description: `Hiring for ${dto.role} position in ${dto.city}`,
+        category: ListingCategory.JOB,
+        images: [],
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
+        job: {
+          create: {
+            role: dto.role,
+            salaryMin: dto.salaryMin,
+            salaryMax: dto.salaryMax,
+            payPeriod: dto.payPeriod,
+            city: dto.city,
+            skillTags: dto.skillTags?.map(s => s.trim()) ?? [],
+            contractType: dto.contractType,
+            isUrgent: dto.isUrgent ?? false,
+          },
+        },
+      },
+      include: {
+        job: true,
       },
     });
   }
 
-  async findAll() {
-    return this.prisma.job.findMany({
-      include: { listing: true },
+  async findAll(query: QueryJobDto) {
+    return this.prisma.listing.findMany({
+      where: {
+        category: ListingCategory.JOB,
+
+        job: {
+          is: {
+            ...(query.role?.trim() && {
+              role: { contains: query.role.trim(), mode: 'insensitive' },
+            }),
+            ...(query.city?.trim() && {
+              city: { contains: query.city.trim(), mode: 'insensitive' },
+            }),
+            ...(query.contractType && {
+              contractType: query.contractType,
+            }),
+            ...(query.isUrgent !== undefined && {
+              isUrgent: query.isUrgent,
+            }),
+          },
+        },
+      },
+      include: {
+        job: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 
   async findOne(id: string) {
-    return this.prisma.job.findUnique({
+    const listing = await this.prisma.listing.findUnique({
       where: { id },
-      include: { listing: true },
+      include: { job: true },
+    });
+
+    if (!listing || listing.category !== ListingCategory.JOB) {
+      throw new NotFoundException('Job listing not found');
+    }
+
+    return listing;
+  }
+
+  async update(id: string, dto: UpdateJobDto, userId: string) {
+    await this.findOne(id);
+
+    return this.prisma.listing.update({
+      where: { id, userId },
+      data: {
+        title: `${dto.role} in ${dto.city}`,
+        description: `Hiring for ${dto.role} position in ${dto.city}`,
+
+        job: {
+          update: {
+            role: dto.role,
+            salaryMin: dto.salaryMin,
+            salaryMax: dto.salaryMax,
+            payPeriod: dto.payPeriod,
+            city: dto.city,
+            skillTags: dto.skillTags?.map(s => s.trim()) ?? [],
+            contractType: dto.contractType,
+            ...(dto.isUrgent !== undefined && { isUrgent: dto.isUrgent }),
+          },
+        },
+      },
+      include: {
+        job: true,
+      },
+    });
+  }
+
+  async remove(id: string, userId: string) {
+    await this.findOne(id);
+
+    return this.prisma.listing.delete({
+      where: { id, userId },
     });
   }
 }
