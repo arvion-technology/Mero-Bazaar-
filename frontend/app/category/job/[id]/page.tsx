@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import { FiHeart, FiShare2, FiMapPin, FiBriefcase, FiClock, FiEye, FiMessageSquare, FiUser, FiUsers, FiCalendar, FiCheckCircle, FiSend, FiPlusSquare, FiCheck } from "react-icons/fi";
 import { FaStar, FaRegStar, FaHeart, FaGraduationCap } from "react-icons/fa";
 import { api } from "@/lib/api";                          
-import { toJobDetail, toJobCard } from "@/lib/";   
+import { toJobDetail, toJobCard } from "@/lib/adapter";   
 import type { JobDetail } from "@/app/types/listing";      
 import type { JobCard, JobListing } from "../../../types/jobs";
 

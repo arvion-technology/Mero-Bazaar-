@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     searchParams.forEach((value, key) => query.set(key, value));
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/search/job?${query.toString()}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/jobs?${query.toString()}`
     );
 
     if (!res.ok) {
