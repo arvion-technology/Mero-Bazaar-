@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import { FiSearch, FiMapPin, FiPhone, FiMessageSquare, FiChevronDown, FiBookmark, FiTarget } from "react-icons/fi";
 import { FaHeart, FaBriefcase } from "react-icons/fa";
 import { JOB_TYPES, CITIES, SKILLS, JobCard} from "../../types/jobs";
-import { toContractType, toJobCard } from "@/lib/adapter";
+import { toContractType, toJobCard } from "@/lib/";
 import { api } from "@/lib/api";
 
 export default function JobsPage() {
