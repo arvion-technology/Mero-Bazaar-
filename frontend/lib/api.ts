@@ -1,3 +1,4 @@
+import { JobListing } from "@/app/types/jobs";
 import type { DBListing, Vehicle, Job, JobDetail } from "../app/types/listing";
 import type { RegisterPayload, LoginPayload, AuthResponse } from "@/app/types/auth";
 
@@ -41,6 +42,6 @@ export const api = {
 
   getListings: () => get<DBListing[]>('/listings'),
   getVehicles: () => get<Vehicle[]>('/vehicles'),
-  getJobs:     (params?: URLSearchParams) => get<Job[]>('/jobs', params),
-  getJob:      (id: string) => get<JobDetail>(`/jobs/${id}`),
+  getJobs:     (params?: URLSearchParams) => get<JobListing[]>('/jobs', params),
+  getJob:      (id: string) => get<JobListing>(`/jobs/${id}`),
 };

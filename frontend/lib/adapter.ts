@@ -1,3 +1,4 @@
+import { JobCard, JobListing } from "@/app/types/jobs";
 import type {DBListing, FuelType, VehicleType, ListingDetail, Job, JobDetail} from "../app/types/listing";
 
 //Label maps
@@ -152,8 +153,7 @@ export function toTypeLabel(contractType: string): string {
   return map[contractType] ?? contractType;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function toJobCard(listing: any): Job {
+export function toJobCard(listing: JobListing): JobCard {
   const job = listing.job;
   if (!job) throw new Error(`Listing ${listing.id} has no job relation`);
 
@@ -164,18 +164,20 @@ export function toJobCard(listing: any): Job {
     salary: `NPR ${job.salaryMin.toLocaleString()}–${job.salaryMax.toLocaleString()}/${job.payPeriod.toLowerCase()}`,
     location: `${job.city}, Nepal`,
     district: job.city,
-    type: toTypeLabel(job.contractType),
+    type: job.contractType,
     thumb: listing.images?.[0] ?? "/job1.jpg",
     skills: job.skillTags ?? [],
     category: job.contractType,
     minSalary: job.salaryMin,
+    maxSalary: job.salaryMax,
     postedDaysAgo: Math.floor(
       (Date.now() - new Date(listing.createdAt).getTime()) / 86400000
     ),
+    isVerified: listing.isVerified ?? false,
+    isFeatured: listing.isFeatured ?? false,
   };
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function toJobDetail(listing: any): JobDetail {
+export function toJobDetail(listing: JobListing): JobDetail {
   const job = listing.job;
   if (!job) throw new Error(`Listing ${listing.id} has no job relation`);
 

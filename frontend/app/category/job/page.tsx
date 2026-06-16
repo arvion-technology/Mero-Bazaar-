@@ -5,10 +5,9 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import { FiSearch, FiMapPin, FiPhone, FiMessageSquare, FiChevronDown, FiBookmark, FiTarget } from "react-icons/fi";
 import { FaHeart, FaBriefcase } from "react-icons/fa";
-import { JOB_TYPES, CITIES, SKILLS} from "../../types/jobs";
+import { JOB_TYPES, CITIES, SKILLS, JobCard} from "../../types/jobs";
 import { toContractType, toJobCard } from "@/lib/adapter";
 import { api } from "@/lib/api";
-import { Job } from "../../types/listing";
 
 export default function JobsPage() {
   const [search, setSearch] = useState("");
@@ -19,7 +18,7 @@ export default function JobsPage() {
   const [minSalary, setMinSalary] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<JobCard[]>([]);
   const [loading, setLoading] = useState(false);
 
   const EXTRA_SKILLS_THRESHOLD = 2;

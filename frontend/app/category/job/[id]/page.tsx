@@ -9,7 +9,7 @@ import { FaStar, FaRegStar, FaHeart, FaGraduationCap } from "react-icons/fa";
 import { api } from "@/lib/api";                          
 import { toJobDetail, toJobCard } from "@/lib/adapter";   
 import type { JobDetail } from "@/app/types/listing";      
-import type { Job } from "@/app/types/jobs";               
+import type { JobCard, JobListing } from "../../../types/jobs";
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -23,13 +23,12 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-
 export default function JobDetailPage() {
   const params = useParams();
   const id = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : "";
   const [job, setJob] = useState<JobDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [similarJobs, setSimilarJobs] = useState<Job[]>([]);
+  const [similarJobs, setSimilarJobs] = useState<JobCard[]>([]);
 
   const [activeImg, setActiveImg] = useState(0);
   const [isFav, setIsFav] = useState(false);
@@ -41,12 +40,21 @@ export default function JobDetailPage() {
     if (!id) return;
     const load = async () => {
       try {
-        const raw = await api.getJob(id);
+        const raw = await api.getJob(id) as unknown as JobListing;
         setJob(toJobDetail(raw));
 
-        const similarParams = new URLSearchParams({ city: (raw as any).job?.city ?? "", limit: "5" });
-        const similar = await api.getJobs(similarParams);
-        setSimilarJobs(similar.map(toJobCard).filter(j => j.id !== id));
+        const similarParams = new URLSearchParams({
+          city: raw.job?.city ?? "",
+          limit: "5",
+        });
+
+        const similar = await api.getJobs(similarParams) as unknown as JobListing[];
+        setSimilarJobs(
+          similar
+            .filter(j => j.job != null)
+            .map(toJobCard)
+            .filter(j => j.id !== id)
+        );
       } catch (err) {
         console.error(err);
       } finally {
@@ -611,7 +619,7 @@ export default function JobDetailPage() {
                 {similarJobs.map((s) => (
                   <Link key={s.id} href={`/category/job/${s.id}`} className="jd-sim-card">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={s.image} alt={s.title} className="jd-sim-img" />
+                    <img src={s.thumb} alt={s.title} className="jd-sim-img" />
                     <div className="jd-sim-body">
                       <p className="jd-sim-company">{s.company}</p>
                       <p className="jd-sim-title">{s.title}</p>
