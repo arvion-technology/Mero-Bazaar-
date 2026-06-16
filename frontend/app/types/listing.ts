@@ -108,3 +108,60 @@ export type RelatedListing = {
 };
 
 export type Vehicle = NonNullable<DBListing["vehicle"]>;
+
+//jobs category
+export type Job = {
+  id: string;
+  title: string;
+  company: string;
+  salary: string;
+  location: string;
+  district: string;
+  type: string;
+  thumb: string;
+  skills: string[];
+  category: string;
+  minSalary: number;
+  postedDaysAgo: number;
+};
+export type JobDetail = {
+  id: string;
+  jobId: string;
+  title: string;
+  salary: string;
+  location: string;
+  distanceFrom: string;
+  type: string;
+  postedDaysAgo: number;
+  views: number;
+  experience: string;
+  education: string;
+  vacancies: number;
+  postedDate: string;
+  isVerified: boolean;
+  isFeatured: boolean;
+  breadcrumbs: string[];
+  images: string[];
+  description: string;
+  requirements: string[];
+  benefits: string[];
+  lat: number;
+  lng: number;
+  company: {
+    name: string;
+    logo: string;
+    rating: number;
+    reviewCount: number;
+    industry: string;
+    size: string;
+    website: string;
+    location: string;
+  };
+  postedBy: {
+    name: string;
+    avatar: string;
+    rating: number;
+    reviewCount: number;
+    isVerified: boolean;
+  };
+};
