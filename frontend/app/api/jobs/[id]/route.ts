@@ -8,7 +8,7 @@ export async function GET(
     const { id } = await params;
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/jobs/${id}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/${id}`
     );
 
     if (!res.ok) {

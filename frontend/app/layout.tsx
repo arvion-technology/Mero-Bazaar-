@@ -23,8 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ne" className={inter.variable}>
-      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
+    <html lang="ne" className={inter.variable} suppressHydrationWarning>
+      <body className={`${inter.className} antialiased`} >
         <AuthProvider>
           <Navbar />
           {children}

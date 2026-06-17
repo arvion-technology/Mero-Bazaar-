@@ -12,7 +12,7 @@ import { api } from "@/lib/api";
 export default function JobsPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [sort, setSort] = useState("newest");
+  // const [sort, setSort] = useState("newest");
   const [city, setCity] = useState("");
   const [skill, setSkill] = useState("");
   const [minSalary, setMinSalary] = useState("");
@@ -46,17 +46,20 @@ export default function JobsPage() {
       setLoading(true);
       try {
         const params = new URLSearchParams();
-        if (debouncedSearch) params.set("role", debouncedSearch);
+        if (debouncedSearch) params.set("query", debouncedSearch);
         if (city) params.set("city", city);
         if (skill) params.set("skill", skill);
         if (minSalary) params.set("minSalary", minSalary);
-        if (sort) params.set("sort", sort);
+        // if (sort) params.set("sort", sort);
         selectedTypes.forEach((t) =>
           params.append("contractType", toContractType(t))
         );
-
+        
+        console.log("Sending params:", params.toString());
         const data = await api.getJobs(params);
-        setJobs(data.map(toJobCard));
+        const mapped = data.map(toJobCard);
+        console.log("Job IDs:", mapped.map(j => j.id));
+        setJobs(mapped);       
       } catch (err) {
         console.error(err);
       } finally {
@@ -65,7 +68,7 @@ export default function JobsPage() {
     };
 
     fetchJobs();
-  }, [debouncedSearch, city, skill, minSalary, sort, selectedTypes]);
+  }, [debouncedSearch, city, skill, minSalary, selectedTypes]);
 
   return (
     <>
@@ -242,13 +245,13 @@ export default function JobsPage() {
                 <span className="jp-count">
                   <strong>{jobs.length}</strong> results found
                 </span>
-                <div className="jp-sort-wrap">
+                {/* <div className="jp-sort-wrap">
                   <select className="jp-sort" value={sort} onChange={(e) => setSort(e.target.value)}>
                     <option value="newest">Newest</option>
                     <option value="oldest">Oldest</option>
                   </select>
                   <FiChevronDown size={13} className="jp-sort-icon" />
-                </div>
+                </div> */}
               </div>
 
               {loading ? (
@@ -275,7 +278,7 @@ export default function JobsPage() {
                     const extraCount = j.skills.length - EXTRA_SKILLS_THRESHOLD;
 
                     return (
-                      <div key={j.id} className="jp-card">
+                      <Link key={j.id} href={`/category/job/${j.id}`} className="jp-card" style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", gap: "16px" }}>
                         <button
                           className="jp-card-save"
                           aria-label="Save"
@@ -320,7 +323,7 @@ export default function JobsPage() {
                             <FiMessageSquare size={14} /> Chat
                           </button>
                         </div>
-                      </div>
+                      </Link>
                     );
                   })}
                 </div>

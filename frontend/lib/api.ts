@@ -1,5 +1,5 @@
 import { JobListing } from "@/app/types/jobs";
-import type { DBListing, Vehicle, Job, JobDetail } from "../app/types/listing";
+import type { DBListing, Vehicle } from "../app/types/listing";
 import type { RegisterPayload, LoginPayload, AuthResponse } from "@/app/types/auth";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -42,6 +42,6 @@ export const api = {
 
   getListings: () => get<DBListing[]>('/listings'),
   getVehicles: () => get<Vehicle[]>('/vehicles'),
-  getJobs:     (params?: URLSearchParams) => get<JobListing[]>('/jobs', params),
-  getJob:      (id: string) => get<JobListing>(`/jobs/${id}`),
+  getJobs:     (params?: URLSearchParams) => get<JobListing[]>('/api/jobs', params),
+  getJob:      (id: string) => get<JobListing>(`/api/jobs/${id}`),
 };
