@@ -90,7 +90,7 @@ const handleGoogle = async () => {
 
         .login-page {
           min-height: 100vh;
-          background: #e8d5e8;
+          background: #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -106,7 +106,8 @@ const handleGoogle = async () => {
           border-radius: 32px;
           overflow: hidden;
           display: flex;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+          border: 1px solid #f0f0f0;
         }
 
         /* ── Left Panel ── */
@@ -218,8 +219,6 @@ const handleGoogle = async () => {
         .login-divider {
           display: flex;
           align-items: center;
-          gap: 12px;
-          margin: 12px 0 20px;
         }
 
         .login-divider-line-h {
@@ -571,11 +570,29 @@ const handleGoogle = async () => {
                 </Link>
               </div>
 
+              <div className="login-social-row">
+                <button type="button" className="login-social-btn">
+                  <FcGoogle size={16} />
+                  Google
+                </button>
+                <button type="button" className="login-social-btn">
+                  <FaFacebook size={16} color="#1877F2" />
+                  Facebook
+                </button>
+              </div>
+
+              <div className="login-divider">
+                <div className="login-divider-line-h" />
+                <span className="login-divider-text">or</span>
+                <div className="login-divider-line-h" />
+              </div>
+
               <button
                 type="submit"
                 className="login-btn-primary"
                 disabled={loading}
               >
+
                 {loading ? (
                   <><div className="login-spinner" /> Signing In...</>
                 ) : (
@@ -583,6 +600,8 @@ const handleGoogle = async () => {
                 )}
               </button>
             </form>
+
+
           </div>
         </div>
       </div>

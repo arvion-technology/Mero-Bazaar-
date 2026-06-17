@@ -4,7 +4,7 @@ export type RegisterPayload = {
   name: string;
   phone: string;
   role: "USER" | "VENDOR";
-  district: string;
+  address: string;
 };
 
 export type LoginPayload = {
