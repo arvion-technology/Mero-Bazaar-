@@ -1,26 +1,23 @@
-import type { NextConfig } from 'next';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-
-const nextConfig: NextConfig = {
+const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'images.unsplash.com'
-      }
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
     ],
   },
-  rewrites: async () => [
-    {
-      source: '/api/auth/:path*',
-      destination: '/api/auth/:path*',
-    },
-    {
-      source: '/api/:path*',
-      destination: `${API_URL}/api/:path*`,
-    },
-  ],
+
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path((?!auth(?:/|$)).*)",
+        destination: `${API_URL}/api/:path`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

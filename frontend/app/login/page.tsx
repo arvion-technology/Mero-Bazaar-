@@ -36,22 +36,24 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try{
-      setLoading(true);
-      const data = await api.login({
-        email: form.emailOrPhone,
-        password: form.password,
-      });
-      localStorage.setItem("toekn", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+
+    setLoading(true);
+
+    const res = await signIn("credentials", {
+      email: form.emailOrPhone,
+      password: form.password,
+      redirect: false,
+    });
+
+    setLoading(false);
+
+    if (res?.ok) {
       toast.success("Logged in successfully!");
       router.push("/");
-    }catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
-    } finally {
-    setLoading(false);
+    } else {
+      toast.error("Invalid email or password");
+    }
   };
-};
 
 //googleauth
 const handleGoogle = async () => {

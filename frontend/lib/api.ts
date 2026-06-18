@@ -37,8 +37,8 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 }
 
 export const api = {
-  register:    (payload: RegisterPayload) => post<AuthResponse>('/auth/register', payload),
-  login:       (payload: LoginPayload) => post<AuthResponse>('/auth/login', payload),
+  register:    (payload: RegisterPayload) => post<AuthResponse>('/api/auth/register', payload),
+  login:       (payload: LoginPayload) => post<AuthResponse>('/api/auth/login', payload),
 
   getListings: () => get<DBListing[]>('/listings'),
   getVehicles: () => get<Vehicle[]>('/vehicles'),
