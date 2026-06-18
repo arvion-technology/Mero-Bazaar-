@@ -34,7 +34,7 @@ export class AuthService {
         name: dto.name,
         phone: dto.phone,
         role: dto.role ?? UserRole.USER,
-        district: dto.district,
+        address: dto.address,
 
         ...(dto.role === UserRole.VENDOR && {
           vendorProfile: {

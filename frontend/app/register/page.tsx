@@ -23,6 +23,7 @@ import { FaFacebook } from "react-icons/fa";
 import { api } from "../../lib/api";
 import type { RegisterPayload } from "../types/auth";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
@@ -40,6 +41,7 @@ function RegisterPageContent() {
   const [accountType, setAccountType] = useState<"buyer" | "seller" | null>(
     searchParams.get("seller") === "true" ? "seller" : null
   );
+  const router = useRouter();
 
   const [form, setForm] = useState({
     fullName: "",
@@ -83,6 +85,7 @@ function RegisterPageContent() {
     localStorage.setItem("token",data.access_token);
     localStorage.setItem("user",JSON.stringify(data.user));
     toast.success("Account created successfully!");
+    router.push("/login");
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : " Something went wrong");
   }finally {

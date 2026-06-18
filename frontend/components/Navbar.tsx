@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 import { TbGridDots } from "react-icons/tb";
 import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX } from "react-icons/fi";
 
@@ -40,6 +41,7 @@ export default function Navbar() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileCats, setShowMobileCats] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const { data: session, status } = useSession();
 
   const catRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
@@ -418,15 +420,27 @@ export default function Navbar() {
           </div>
 
           <div className="hnb-right">
-            <Link href="/sell" className="hnb-seller">Become a Seller</Link>
 
             <button className="hnb-bell" aria-label="Notifications">
               <FiBell size={20} />
             </button>
 
-            <Link href="/register" className="hnb-login">Login / Register</Link>
-          </div>
 
+            {status === "loading" ? null : session ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {/*  username */}
+                <span style={{ fontSize: "13px", fontWeight: 500 }} >
+                  {session.user?.name || "User"}
+                </span>
+                <button onClick={() => signOut({ callbackUrl: "/"})}
+                 className="hnb-login" >Logout</button>
+                 </div>
+            ) : (
+              <>
+                <Link href="/register" className="hnb-login">Signup</Link>
+              </>
+            )}
+          </div>
           <button
             className="hnb-hamburger"
             onClick={() => setShowMobileMenu(!showMobileMenu)}
