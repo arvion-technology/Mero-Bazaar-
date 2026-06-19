@@ -636,7 +636,7 @@ const handleGoogle =async () => {
           <aside className="reg-left">
             <h1 className="reg-left-title">Welcome to HamroNepal Bazaar</h1>
             <p className="reg-left-sub">
-              Don't have an account? Sign up here
+              Already have an account? Sign in here
             </p>
             <Link href="/login" className="reg-left-btn">
               SIGN IN
