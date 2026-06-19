@@ -43,7 +43,7 @@ export default function StatsAndAppBanner() {
           opacity: 0.85;
         }
         .sab-stat-number {
-          font-size: 22px;
+          font-size: 17px;
           font-weight: 800;
           color: #ffffff;
           line-height: 1.1;
@@ -80,12 +80,12 @@ export default function StatsAndAppBanner() {
         }
         .sab-phone-wrap {
           flex-shrink: 0;
-          width: 110px;
+          width: 200px;
           position: relative;
           margin-bottom: -36px;
         }
         .sab-phone-img {
-          width: 110px;
+          width: 200px;
           object-fit: contain;
           filter: drop-shadow(0 8px 24px rgba(0,0,0,0.15));
         }
@@ -168,7 +168,7 @@ export default function StatsAndAppBanner() {
 
             {/* 1M+ Happy Users */}
             <div className="sab-stat-item">
-              <FiUsers className="sab-stat-icon" size={34} color="#9aa3b8" />
+              <FiUsers className="sab-stat-icon" size={25} color="#9aa3b8" />
               <div>
                 <div className="sab-stat-number">1M+</div>
                 <div className="sab-stat-label">Happy Users</div>
@@ -179,7 +179,7 @@ export default function StatsAndAppBanner() {
 
             {/* 50K+ Active Listings */}
             <div className="sab-stat-item">
-              <FiFileText className="sab-stat-icon" size={34} color="#9aa3b8" />
+              <FiFileText className="sab-stat-icon" size={25} color="#9aa3b8" />
               <div>
                 <div className="sab-stat-number">50K+</div>
                 <div className="sab-stat-label">Active Listings</div>
@@ -190,7 +190,7 @@ export default function StatsAndAppBanner() {
 
             {/* 18 Categories */}
             <div className="sab-stat-item">
-              <TbLayoutGrid className="sab-stat-icon" size={34} color="#9aa3b8" />
+              <TbLayoutGrid className="sab-stat-icon" size={25} color="#9aa3b8" />
               <div>
                 <div className="sab-stat-number">18</div>
                 <div className="sab-stat-label">Categories</div>
@@ -201,7 +201,7 @@ export default function StatsAndAppBanner() {
 
             {/* 200+ Cities & Towns */}
             <div className="sab-stat-item">
-              <FiMapPin className="sab-stat-icon" size={34} color="#9aa3b8" />
+              <FiMapPin className="sab-stat-icon" size={25} color="#9aa3b8" />
               <div>
                 <div className="sab-stat-number">200+</div>
                 <div className="sab-stat-label">Cities &amp; Towns</div>
@@ -212,7 +212,7 @@ export default function StatsAndAppBanner() {
 
             {/* Blockchain Verified */}
             <div className="sab-stat-item">
-              <TbCubeUnfolded className="sab-stat-icon" size={34} color="#9aa3b8" />
+              <TbCubeUnfolded className="sab-stat-icon" size={25} color="#9aa3b8" />
               <div>
                 <div className="sab-stat-number">100%</div>
                 <div className="sab-stat-label">Blockchain Verified</div>
@@ -230,7 +230,7 @@ export default function StatsAndAppBanner() {
           <div className="sab-phone-wrap">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/download.png"
+              src="/icon.png"
               alt="HamroNepal Bazaar App on phone"
               className="sab-phone-img"
             />
@@ -265,7 +265,7 @@ export default function StatsAndAppBanner() {
               id="app-store-btn"
               aria-label="Download on the App Store"
             >
-              <FaApple size={24} color="#fff" />
+              <FaApple size={18} color="#fff" />
               <div className="sab-store-btn-label">
                 <span className="sab-store-btn-sub">Download on the</span>
                 <span className="sab-store-btn-name">App Store</span>

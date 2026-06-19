@@ -636,7 +636,7 @@ const handleGoogle =async () => {
           <aside className="reg-left">
             <h1 className="reg-left-title">Welcome to HamroNepal Bazaar</h1>
             <p className="reg-left-sub">
-              Enter your details to use all of site features
+              Don't have an account? Sign up here
             </p>
             <Link href="/login" className="reg-left-btn">
               SIGN IN
@@ -645,7 +645,7 @@ const handleGoogle =async () => {
 
           <div className="reg-right">
             <h2 className="reg-right-title">
-              {step === 1 ? "Register" : "Complete Profile"}
+              {step === 1 ? "Sign Up" : "Complete Profile"}
             </h2>
             <p className="reg-right-sub">
               {step === 1 ? "Enter your Personal Information" : "Step 2 of 2"}

@@ -447,7 +447,7 @@ const handleGoogle = async () => {
           <aside className="login-left">
             <h1 className="login-left-title">Welcome Back!</h1>
             <p className="login-left-sub">
-              Enter your details to use all of site features
+              Already have an account? Sign in here.
             </p>
             <Link href="/register" className="login-left-btn">
               SIGN UP
@@ -458,7 +458,7 @@ const handleGoogle = async () => {
           <div className="login-right">
             <h2 className="login-right-title">Sign In</h2>
             <p className="login-right-sub">
-              Enter your Personal Information
+              Enter your email and password to access your account.
             </p>
             <div className="login-divider-line" />
 
