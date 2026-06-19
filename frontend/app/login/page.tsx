@@ -447,7 +447,7 @@ const handleGoogle = async () => {
           <aside className="login-left">
             <h1 className="login-left-title">Welcome Back!</h1>
             <p className="login-left-sub">
-              Already have an account? Sign in here.
+              Don't have an account? Sign up here.
             </p>
             <Link href="/register" className="login-left-btn">
               SIGN UP
