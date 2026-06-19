@@ -15,6 +15,10 @@ export class UpdateUserDto {
   phone?: string;
 
   @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()
   isActive?: boolean;
