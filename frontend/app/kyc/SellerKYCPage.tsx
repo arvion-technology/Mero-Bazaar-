@@ -1,18 +1,13 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
-import { FiUser, FiCalendar, FiPhone, FiMapPin, FiUpload, FiCreditCard, FiCheckCircle } from "react-icons/fi";
+import { useState, useRef } from "react";
+import { FiUser, FiCalendar, FiPhone, FiMapPin, FiUpload, FiCreditCard } from "react-icons/fi";
 
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
 
 export default function SellerKYCPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const dateInputRef = useRef<HTMLInputElement>(null);
-
   const [form, setForm] = useState({
     fullName: "",
     dateOfBirth: "",
@@ -25,6 +20,8 @@ export default function SellerKYCPage() {
 
   const [panCard, setPanCard] = useState<File | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
+  const [panCardPreview, setPanCardPreview] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,8 +30,25 @@ export default function SellerKYCPage() {
 
   const handleFileChange = (field: "panCard" | "photo") => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    if (field === "panCard") setPanCard(file);
-    else setPhoto(file);
+    if (field === "panCard") {
+      setPanCard(file);
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => setPanCardPreview(reader.result as string);
+        reader.readAsDataURL(file);
+      } else {
+        setPanCardPreview(null);
+      }
+    } else {
+      setPhoto(file);
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => setPhotoPreview(reader.result as string);
+        reader.readAsDataURL(file);
+      } else {
+        setPhotoPreview(null);
+      }
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -43,20 +57,6 @@ export default function SellerKYCPage() {
     setTimeout(() => setSubmitting(false), 2000);
   };
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/register");
-      return;
-    }
-    if (status === "authenticated" && session?.user?.role !== "VENDOR") {
-      router.push("/profile");
-      return;
-    }
-  }, [session, status, router]);
-
-  if (status === "loading" || !session) return null;
-
-
   return (
     <>
       <style>{`
@@ -64,7 +64,7 @@ export default function SellerKYCPage() {
 
         .kyc-page {
           min-height: 100vh;
-          background: ${PRIMARY};
+          background: white;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -174,8 +174,6 @@ export default function SellerKYCPage() {
           color: #bbb;
         }
 
-
-
         .kyc-date-wrapper {
           position: relative;
           flex: 1;
@@ -239,6 +237,14 @@ export default function SellerKYCPage() {
           color: #bbb;
           font-size: 24px;
           background: #fafafa;
+          overflow: hidden;
+        }
+
+        .kyc-upload-preview img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 4px;
         }
 
         .kyc-upload-label {
@@ -458,9 +464,13 @@ export default function SellerKYCPage() {
           <div className="kyc-upload-grid">
             <div className="kyc-upload-box">
               <div className="kyc-upload-preview">
-                {panCard ? <FiCheckCircle size={28} color={PRIMARY} /> : <FiCreditCard size={28} />}
+                {panCardPreview ? (
+                  <img src={panCardPreview} alt="PAN Card preview" />
+                ) : (
+                  <FiCreditCard size={28} />
+                )}
               </div>
-              <span className="kyc-upload-label">Upload PAN Card</span>
+            
               <label>
                 <input
                   type="file"
@@ -470,7 +480,7 @@ export default function SellerKYCPage() {
                 />
                 <span className="kyc-upload-btn">
                   <FiUpload size={12} />
-                  Upload Ship Front
+                  Upload PAN Card
                 </span>
               </label>
               {panCard && <span className="kyc-upload-filename">{panCard.name}</span>}
@@ -478,9 +488,13 @@ export default function SellerKYCPage() {
 
             <div className="kyc-upload-box">
               <div className="kyc-upload-preview">
-                {photo ? <FiCheckCircle size={28} color={PRIMARY} /> : <FiUser size={28} />}
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Photo preview" />
+                ) : (
+                  <FiUser size={28} />
+                )}
               </div>
-              <span className="kyc-upload-label">Passport size Photo</span>
+    
               <label>
                 <input
                   type="file"
@@ -490,7 +504,7 @@ export default function SellerKYCPage() {
                 />
                 <span className="kyc-upload-btn">
                   <FiUpload size={12} />
-                  Upload Ship Front
+                  Passport size Photo
                 </span>
               </label>
               {photo && <span className="kyc-upload-filename">{photo.name}</span>}
