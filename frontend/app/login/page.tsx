@@ -460,44 +460,9 @@ const handleGoogle = async () => {
             </p>
             <div className="login-divider-line" />
 
-            <div className="login-social-row">
 
-              <button type="button" className="login-social-btn"
-              onClick={handleGoogle} disabled={googleLoading}
-              >
-                {googleLoading ? (
-                      <div style={{
-                        width: 14, height: 14,
-                        border: "2px solid rgba(0,0,0,0.15)",
-                        borderTopColor: "#555",
-                        borderRadius: "50%",
-                        animation: "spin 0.7s linear infinite"
-                      }} />
-                    ) : (<FcGoogle size={16} />
-                )}  
-                { googleLoading ? "Logging in..." : "Google" }
-              </button>
 
-              <button
-                type="button"
-                className="login-social-btn"
-                onClick={handleFacebook}
-                disabled={facebookLoading}
-              >
-                {facebookLoading ? (
-                  <div style={{
-                    width: 14, height: 14,
-                    border: "2px solid rgba(0,0,0,0.15)",
-                    borderTopColor: "#1877F2",
-                    borderRadius: "50%",
-                    animation: "spin 0.7s linear infinite"
-                  }} />
-                ) : (
-                  <FaFacebook size={16} color="#1877F2" />
-                )}
-                {facebookLoading ? "Logging in..." : "Facebook"}
-              </button>
-            </div>
+
 
             <div className="login-divider">
               <div className="login-divider-line-h" />
@@ -570,16 +535,44 @@ const handleGoogle = async () => {
                 </Link>
               </div>
 
-              <div className="login-social-row">
-                <button type="button" className="login-social-btn">
-                  <FcGoogle size={16} />
-                  Google
-                </button>
-                <button type="button" className="login-social-btn">
+            <div className="login-social-row">
+
+              <button type="button" className="login-social-btn"
+              onClick={handleGoogle} disabled={googleLoading}
+              >
+                {googleLoading ? (
+                      <div style={{
+                        width: 14, height: 14,
+                        border: "2px solid rgba(0,0,0,0.15)",
+                        borderTopColor: "#555",
+                        borderRadius: "50%",
+                        animation: "spin 0.7s linear infinite"
+                      }} />
+                    ) : (<FcGoogle size={16} />
+                )}  
+                { googleLoading ? "Logging in..." : "Google" }
+              </button>
+
+              <button
+                type="button"
+                className="login-social-btn"
+                onClick={handleFacebook}
+                disabled={facebookLoading}
+              >
+                {facebookLoading ? (
+                  <div style={{
+                    width: 14, height: 14,
+                    border: "2px solid rgba(0,0,0,0.15)",
+                    borderTopColor: "#1877F2",
+                    borderRadius: "50%",
+                    animation: "spin 0.7s linear infinite"
+                  }} />
+                ) : (
                   <FaFacebook size={16} color="#1877F2" />
-                  Facebook
-                </button>
-              </div>
+                )}
+                {facebookLoading ? "Logging in..." : "Facebook"}
+              </button>
+            </div>
 
               <div className="login-divider">
                 <div className="login-divider-line-h" />
