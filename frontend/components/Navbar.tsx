@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { TbGridDots } from "react-icons/tb";
-import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX } from "react-icons/fi";
+import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
 
 const categories = [
   { name: "Vehicles", slug: "vehicles" },
@@ -40,16 +40,19 @@ export default function Navbar() {
   const [showMore, setShowMore] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileCats, setShowMobileCats] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const { data: session, status } = useSession();
 
   const catRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (catRef.current && !catRef.current.contains(e.target as Node)) setShowCategories(false);
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) setShowMore(false);
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfileMenu(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -307,6 +310,102 @@ export default function Navbar() {
           transition: background 0.12s, color 0.12s;
         }
         .hnb-mobile-sub-link:hover { background: #fff5f5; color: ${PRIMARY}; }
+        
+        /* Profile Dropdown & Avatar Styles */
+        .hnb-profile-container {
+          position: relative;
+        }
+        .hnb-avatar-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, ${PRIMARY}, #e74c3c);
+          color: #fff;
+          font-weight: 600;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid transparent;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          overflow: hidden;
+          padding: 0;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        .hnb-avatar-btn:hover {
+          transform: scale(1.05);
+          box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+          border-color: rgba(255,255,255,0.8);
+        }
+        .hnb-avatar-btn img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .hnb-profile-dropdown {
+          position: absolute;
+          top: calc(100% + 10px);
+          right: 0;
+          background: #fff;
+          border: 1px solid rgba(0,0,0,0.08);
+          border-radius: 12px;
+          z-index: 1000;
+          box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+          width: 220px;
+          padding: 8px;
+          animation: fadeDown 0.15s ease;
+        }
+        .hnb-profile-header {
+          padding: 10px 12px 12px;
+          border-bottom: 1px solid #f0f0f0;
+          margin-bottom: 6px;
+        }
+        .hnb-profile-header-name {
+          font-size: 13.5px;
+          font-weight: 600;
+          color: #111;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .hnb-profile-header-email {
+          font-size: 11.5px;
+          color: #666;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin-top: 2px;
+        }
+        .hnb-profile-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 9px 12px;
+          font-size: 13px;
+          font-weight: 500;
+          color: #444;
+          text-decoration: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background 0.15s, color 0.15s;
+          border: none;
+          background: none;
+          width: 100%;
+          text-align: left;
+        }
+        .hnb-profile-item:hover {
+          background: #fff5f5;
+          color: ${PRIMARY};
+        }
+        .hnb-profile-item.logout {
+          color: #d9534f;
+        }
+        .hnb-profile-item.logout:hover {
+          background: #fdf2f2;
+          color: #c9302c;
+        }
+
         @media (max-width: 900px) {
           .hnb-links { display: none !important; }
           .hnb-right  { display: none !important; }
@@ -427,14 +526,62 @@ export default function Navbar() {
 
 
             {status === "loading" ? null : session ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 {/*  username */}
-                <span style={{ fontSize: "13px", fontWeight: 500 }} >
+                <span style={{ fontSize: "13.5px", fontWeight: 500, color: "#333" }} >
                   {session.user?.name || "User"}
                 </span>
-                <button onClick={() => signOut({ callbackUrl: "/"})}
-                 className="hnb-login" >Logout</button>
-                 </div>
+
+                {/* Profile Avatar and Dropdown */}
+                <div className="hnb-profile-container" ref={profileRef}>
+                  <button 
+                    className="hnb-avatar-btn" 
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    aria-label="User profile menu"
+                    aria-haspopup="true"
+                    aria-expanded={showProfileMenu}
+                  >
+                    {session.user?.image ? (
+                      <img src={session.user.image} alt={session.user.name || "User"} />
+                    ) : (
+                      <span>
+                        {(session.user?.name?.[0] || "U").toUpperCase()}
+                      </span>
+                    )}
+                  </button>
+
+                  {showProfileMenu && (
+                    <div className="hnb-profile-dropdown">
+                      <div className="hnb-profile-header">
+                        <div className="hnb-profile-header-name">
+                          {session.user?.name || "User"}
+                        </div>
+                        <div className="hnb-profile-header-email">
+                          {session.user?.email || ""}
+                        </div>
+                      </div>
+                      <Link 
+                        href="/profile" 
+                        className="hnb-profile-item"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        <FiUser size={15} />
+                        My Account
+                      </Link>
+                      <button 
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          signOut({ callbackUrl: "/" });
+                        }}
+                        className="hnb-profile-item logout"
+                      >
+                        <FiLogOut size={15} />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             ) : (
               <>
                 <Link href="/register" className="hnb-login">Signup</Link>
@@ -477,14 +624,53 @@ export default function Navbar() {
               </div>
             )}
 
-            <div style={{ display: "flex", gap: 10, paddingTop: 14 }}>
-              <Link href="/sell" style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 500, color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "9px 0", textDecoration: "none" }}>
-                Become a Seller
-              </Link>
-              <Link href="/register" style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 600, color: "#fff", background: PRIMARY, borderRadius: 8, padding: "9px 0", textDecoration: "none" }}>
-                Login / Register
-              </Link>
-            </div>
+            {session ? (
+              <div style={{ borderTop: "1px solid #f0f0f0", marginTop: 14, paddingTop: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, paddingLeft: 4 }}>
+                  <div className="hnb-avatar-btn" style={{ cursor: "default", transform: "none", boxShadow: "none" }}>
+                    {session.user?.image ? (
+                      <img src={session.user.image} alt={session.user.name || "User"} />
+                    ) : (
+                      <span>
+                        {(session.user?.name?.[0] || "U").toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#111" }}>{session.user?.name || "User"}</div>
+                    <div style={{ fontSize: 11.5, color: "#666" }}>{session.user?.email || ""}</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <Link 
+                    href="/profile" 
+                    className="hnb-mobile-link" 
+                    onClick={() => setShowMobileMenu(false)}
+                    style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 500, color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "9px 0", textDecoration: "none", borderBottom: "1px solid #ddd" }}
+                  >
+                    My Account
+                  </Link>
+                  <button 
+                    onClick={() => {
+                      setShowMobileMenu(false);
+                      signOut({ callbackUrl: "/" });
+                    }} 
+                    style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 600, color: "#fff", background: PRIMARY, borderRadius: 8, padding: "9px 0", border: "none", cursor: "pointer" }}
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 10, paddingTop: 14 }}>
+                <Link href="/sell" style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 500, color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "9px 0", textDecoration: "none" }}>
+                  Become a Seller
+                </Link>
+                <Link href="/register" style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 600, color: "#fff", background: PRIMARY, borderRadius: 8, padding: "9px 0", textDecoration: "none" }}>
+                  Login / Register
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </nav>
