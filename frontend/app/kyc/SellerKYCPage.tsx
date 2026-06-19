@@ -1,13 +1,18 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
 import { FiUser, FiCalendar, FiPhone, FiMapPin, FiUpload, FiCreditCard, FiCheckCircle } from "react-icons/fi";
 
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
 
 export default function SellerKYCPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const dateInputRef = useRef<HTMLInputElement>(null);
+
   const [form, setForm] = useState({
     fullName: "",
     dateOfBirth: "",
@@ -37,6 +42,20 @@ export default function SellerKYCPage() {
     setSubmitting(true);
     setTimeout(() => setSubmitting(false), 2000);
   };
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/register");
+      return;
+    }
+    if (status === "authenticated" && session?.user?.role !== "VENDOR") {
+      router.push("/profile");
+      return;
+    }
+  }, [session, status, router]);
+
+  if (status === "loading" || !session) return null;
+
 
   return (
     <>

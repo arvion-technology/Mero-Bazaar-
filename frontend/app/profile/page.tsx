@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FiUser, FiMail, FiPhone, FiMapPin, FiSettings, FiShield, FiLogOut, FiArrowLeft, FiCamera } from "react-icons/fi";
 import Footer from "@/components/Footer";
+import { toast } from "react-toastify";
 
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
@@ -14,29 +15,91 @@ export default function ProfilePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("details");
 
-  // Mock form state
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "+977 9801234567",
-    address: "Kathmandu, Nepal",
+    phone: "",
+    address: "",
+    role:"",
+    isActive: true,
+    isVerified: false,
   });
+
+  const [saving, setSaving] = useState(false);
+
+  const userId = session?.user?.id;
+  const token = session?.accessToken;
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/register");
+      return;
     }
-  }, [status, router]);
 
-  useEffect(() => {
-    if (session?.user) {
-      setFormData((prev) => ({
-        ...prev,
-        name: session.user.name || "User",
-        email: session.user.email || "",
-      }));
+    if (session?.user?.role === "VENDOR") {
+      router.push("/kyc");
+      return;
     }
-  }, [session]);
+
+      if (!userId || !token) return;
+
+      fetch(`/api/user/profile/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((r) => {
+        if (!r.ok) throw new Error(`Failed to load profile (${r.status})`);
+        return r.json();
+      })
+      .then((data) => {
+        const user = data?.user ?? data ?? {};
+
+        setFormData({
+          name: user.name || "",
+          email: user.email || "",
+          phone: user.phone || "",
+          address: user.address || "",
+          role: user.role || "",
+          isActive: user.isActive ?? true,
+          isVerified: user.isVerified ?? false,
+        });
+      })
+      .catch(console.error);
+    }, [userId, token, status, router, session?.user?.role]);
+
+  const handleSave = async () => {
+    if(!userId) {
+      toast.error("You're not signed in.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await fetch("http://localhost:3001/api/user/profile/me", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          address: formData.address,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to update profile");
+      }
+      toast.success("Profile updated successfully!");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong while saving.";
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (status === "loading") {
     return (
@@ -67,8 +130,10 @@ export default function ProfilePage() {
     );
   }
 
-  if (!session) return null;
-
+  if (status === "unauthenticated") {
+    return <div>Redirecting...</div>;
+  }
+  
   const initials = formData.name ? formData.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) : "U";
 
   return (
@@ -467,7 +532,7 @@ export default function ProfilePage() {
                     <div className="form-group">
                       <label className="form-label">
                         <FiMapPin size={14} />
-                        Location
+                        Address
                       </label>
                       <div className="form-input-wrapper">
                         <FiMapPin className="form-input-icon" />
@@ -481,8 +546,8 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <button className="save-btn" onClick={() => alert("Profile updated successfully!")}>
-                    Save Changes
+                  <button className="save-btn" onClick={handleSave} disabled={saving}>
+                    {saving ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               )}
