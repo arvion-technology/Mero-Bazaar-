@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { TbGridDots } from "react-icons/tb";
 import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
+import { useRouter } from "next/navigation";
 
 const categories = [
   { name: "Vehicles", slug: "vehicles" },
@@ -43,10 +44,20 @@ export default function Navbar() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const { data: session, status } = useSession();
+  const router = useRouter();
 
   const catRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  const handleAccountClick = () => {
+  setShowProfileMenu(false);
+  if (session?.user?.role === "VENDOR") {
+    router.push("/kyc");
+  } else {
+    router.push("/profile");
+  }
+};
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -527,11 +538,6 @@ export default function Navbar() {
 
             {status === "loading" ? null : session ? (
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                {/*  username */}
-                <span style={{ fontSize: "13.5px", fontWeight: 500, color: "#333" }} >
-                  {session.user?.name || "User"}
-                </span>
-
                 {/* Profile Avatar and Dropdown */}
                 <div className="hnb-profile-container" ref={profileRef}>
                   <button 
@@ -560,14 +566,14 @@ export default function Navbar() {
                           {session.user?.email || ""}
                         </div>
                       </div>
-                      <Link 
-                        href="/profile" 
+                      <button 
+                        onClick={handleAccountClick}
                         className="hnb-profile-item"
-                        onClick={() => setShowProfileMenu(false)}
                       >
                         <FiUser size={15} />
                         My Account
-                      </Link>
+                      </button>
+
                       <button 
                         onClick={() => {
                           setShowProfileMenu(false);
@@ -642,14 +648,13 @@ export default function Navbar() {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 10 }}>
-                  <Link 
-                    href="/profile" 
+                  <button 
+                    onClick={() => { setShowMobileMenu(false); handleAccountClick(); }}
                     className="hnb-mobile-link" 
-                    onClick={() => setShowMobileMenu(false)}
                     style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 500, color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "9px 0", textDecoration: "none", borderBottom: "1px solid #ddd" }}
                   >
                     My Account
-                  </Link>
+                  </button>
                   <button 
                     onClick={() => {
                       setShowMobileMenu(false);
@@ -663,11 +668,8 @@ export default function Navbar() {
               </div>
             ) : (
               <div style={{ display: "flex", gap: 10, paddingTop: 14 }}>
-                <Link href="/sell" style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 500, color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "9px 0", textDecoration: "none" }}>
-                  Become a Seller
-                </Link>
                 <Link href="/register" style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 600, color: "#fff", background: PRIMARY, borderRadius: 8, padding: "9px 0", textDecoration: "none" }}>
-                  Login / Register
+                  Sign up
                 </Link>
               </div>
             )}

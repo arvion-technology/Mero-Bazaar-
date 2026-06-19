@@ -42,6 +42,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: data.user.id,
           name: data.user.name ?? data.user.email.split("@")[0],
           email: data.user.email,
+          role: data.user.role,
+          accessToken: data.access_token,
         };
       }
     }),
@@ -52,13 +54,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
-        token.name =
-          user.name ||
-          user.email?.split("@")[0] ||
-          "User";
+        token.name = user.name || user.email?.split("@")[0] || "User";
+        token.role = user.role;
+        token.accessToken = user.accessToken ?? token.accessToken;
+      }
+      if (account?.provider !== "credentials" && token.email && !token.role) {
+        try {
+          const res = await fetch(`http://localhost:3001/api/users/by-email?email=${token.email}`);
+          if (res.ok) {
+            const data = await res.json();
+            token.role = data.role;
+            token.id = data.id;
+            token.accessToken = data.accessToken;
+          }
+        } catch {}
       }
 
       return token;
@@ -66,10 +78,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.name = token.name as string;
+      session.user.id = (token.id as string) ?? "";
+      session.user.name = (token.name as string) ?? "";
+      session.user.role = token.role as string | undefined;
       }
-
+      session.accessToken = (token.accessToken as string) || undefined;
       return session;
     },
   },
