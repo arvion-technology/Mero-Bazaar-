@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Body, Param, Patch, Delete, Query, UseGuards, Request } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create_job.dto';
-import { QueryJobDto } from './dto/query_job.dto';
 import { UpdateJobDto } from './dto/update_jobs.dto';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
+import { JobSearchDto } from 'src/search/dto/job_search.dto';
 
 @Controller('jobs')
 export class JobsController {
@@ -16,7 +16,7 @@ export class JobsController {
   }
 
   @Get()
-  findAll(@Query() query: QueryJobDto) {
+  findAll(@Query() query: JobSearchDto) {
     return this.jobsService.findAll(query);
   }
 

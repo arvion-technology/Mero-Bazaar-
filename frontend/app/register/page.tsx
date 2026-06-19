@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -23,29 +23,25 @@ import { FaFacebook } from "react-icons/fa";
 import { api } from "../../lib/api";
 import type { RegisterPayload } from "../types/auth";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
 
 function RegisterPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState<1 | 2>(1);
-  const [accountType, setAccountType] = useState<"buyer" | "seller" | "">("")
+  // const [accountType, setAccountType] = useState<"buyer" | "seller" | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [facebookLoading, setFacebookLoading] = useState(false);
-
-
-  // Auto-select seller if coming from "Become a Seller" link
-  useEffect(() => {
-    if (searchParams.get("seller") === "true") {
-      setAccountType("seller");
-    }
-  }, [searchParams]);
+  const [accountType, setAccountType] = useState<"buyer" | "seller" | null>(
+    searchParams.get("seller") === "true" ? "seller" : null
+  );
+  const router = useRouter();
 
   const [form, setForm] = useState({
     fullName: "",
@@ -83,12 +79,13 @@ function RegisterPageContent() {
       name: form.fullName,
       phone: form.phone,
       role: accountType === "seller" ? "VENDOR" : "USER",
-      district: form.district,
+      address: form.address,
     };
     const data = await api.register(payload);
     localStorage.setItem("token",data.access_token);
     localStorage.setItem("user",JSON.stringify(data.user));
     toast.success("Account created successfully!");
+    router.push("/login");
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : " Something went wrong");
   }finally {

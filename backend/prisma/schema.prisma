@@ -14,7 +14,7 @@ model User {
   password   String
   name       String?
   role       UserRole? @default(USER)
-  district   String?
+  address    String?
   isActive   Boolean   @default(true)
   isVerified Boolean   @default(false)
 

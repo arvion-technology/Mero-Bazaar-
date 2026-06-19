@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
-import AuthProvider from "./providers";
+import AuthProvider from "../components/AuthProviders";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ne" className={inter.variable}>
+    <html lang="ne" className={inter.variable} >
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         <AuthProvider>
           <Navbar />
