@@ -11,7 +11,7 @@ const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("details");
@@ -73,6 +73,7 @@ export default function ProfilePage() {
       fetchProfile();
       }, [token, session?.user?.name, session?.user?.email]);
 
+//saving changes
   const handleSave = async () => {
     if(!userId) {
       toast.error("You're not signed in.");
@@ -92,10 +93,16 @@ export default function ProfilePage() {
           address: formData.address,
         }),
       });
+      const data = await res.json();
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Failed to update profile");
+        throw new Error(data.message || "Failed to update profile");
       }
+      await update({
+        name: data.name,
+        phone: data.phone,
+        address: data.address,
+      });
       toast.success("Profile updated successfully!");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong while saving.";
