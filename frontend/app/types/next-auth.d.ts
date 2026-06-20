@@ -6,14 +6,19 @@ declare module "next-auth" {
     id: string;
     role?: string;
     accessToken?: string;
+    phone?: string | null;
+    address?: string | null;
   }
+
   interface Session {
     accessToken?: string;
     user: {
       id: string;
       name?: string | null;
       email?: string | null;
-      image?: string | null; 
+      image?: string | null;
+      phone?: string | null;
+      address?: string | null;
       role?: string;
     };
   }
@@ -24,5 +29,19 @@ declare module "next-auth/jwt" {
     id?: string;
     role?: string;
     accessToken?: string;
+    email?: string;
+    name?: string;
+    picture?: string;
+    phone?: string | null;
+    address?: string | null;
   }
+
+  type OAuthProfile = {
+    email?: string;
+    name?: string;
+    image?: string;
+    picture?: string;
+    phone?: string | null;
+    address?: string | null;
+  };
 }

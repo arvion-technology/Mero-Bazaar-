@@ -11,10 +11,11 @@ model User {
   id         String    @id @default(cuid())
   email      String    @unique
   phone      String?   @unique
-  password   String
+  password   String?
   name       String?
   role       UserRole? @default(USER)
   address    String?
+  image      String?
   isActive   Boolean   @default(true)
   isVerified Boolean   @default(false)
 

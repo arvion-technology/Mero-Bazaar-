@@ -11,8 +11,9 @@ const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
+
   const [activeTab, setActiveTab] = useState("details");
 
   const [formData, setFormData] = useState({
@@ -22,7 +23,6 @@ export default function ProfilePage() {
     address: "",
     role:"",
     isActive: true,
-    isVerified: false,
   });
 
   const [saving, setSaving] = useState(false);
@@ -40,44 +40,49 @@ export default function ProfilePage() {
       router.push("/kyc");
       return;
     }
+  }, [status, session?.user?.role, router]);
 
-      if (!userId || !token) return;
+  useEffect(() => {
+    if (!token) return;
 
-      fetch(`/api/user/profile/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((r) => {
-        if (!r.ok) throw new Error(`Failed to load profile (${r.status})`);
-        return r.json();
-      })
-      .then((data) => {
-        const user = data?.user ?? data ?? {};
-
-        setFormData({
-          name: user.name || "",
-          email: user.email || "",
-          phone: user.phone || "",
-          address: user.address || "",
-          role: user.role || "",
-          isActive: user.isActive ?? true,
-          isVerified: user.isVerified ?? false,
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`/api/user/profile/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
-      })
-      .catch(console.error);
-    }, [userId, token, status, router, session?.user?.role]);
 
+        if (!res.ok) throw new Error("Failed to load profile");
+
+          const data = await res.json();
+          const user = data?.user ?? data ?? {};
+
+          setFormData((prev) => ({
+            ...prev,
+            name: user.name || session?.user?.name || "",
+            email: user.email || session?.user?.email || "",
+            phone: user.phone || "",
+            address: user.address || "",
+            isActive: user.isActive ?? true,
+          }));
+        } catch (err) {
+          console.error(err);
+        }
+      };
+      fetchProfile();
+      }, [token, session?.user?.name, session?.user?.email]);
+
+//saving changes
   const handleSave = async () => {
     if(!userId) {
       toast.error("You're not signed in.");
       return;
     }
-
     setSaving(true);
     try {
-      const res = await fetch("http://localhost:3001/api/user/profile/me", {
-        method: "PATCH",
+        const res = await fetch("/api/user/profile/me", {
+          method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -88,10 +93,16 @@ export default function ProfilePage() {
           address: formData.address,
         }),
       });
+      const data = await res.json();
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Failed to update profile");
+        throw new Error(data.message || "Failed to update profile");
       }
+      await update({
+        name: data.name,
+        phone: data.phone,
+        address: data.address,
+      });
       toast.success("Profile updated successfully!");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong while saving.";
