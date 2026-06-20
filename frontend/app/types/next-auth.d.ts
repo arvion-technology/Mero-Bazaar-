@@ -15,6 +15,8 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      phone?: string | null;
+      address?: string | null;
       role?: string;
     };
   }
@@ -25,10 +27,11 @@ declare module "next-auth/jwt" {
     id?: string;
     role?: string;
     accessToken?: string;
-
     email?: string;
     name?: string;
     picture?: string;
+    phone?: string | null;
+    address?: string | null;
   }
 
   type OAuthProfile = {
@@ -36,5 +39,7 @@ declare module "next-auth/jwt" {
     name?: string;
     image?: string;
     picture?: string;
+    phone?: string | null;
+    address?: string | null;
   };
 }
