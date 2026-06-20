@@ -1,9 +1,10 @@
-import { Controller, Delete, Param, Body, Get, Patch, UseGuards, Request, Query, NotFoundException } from '@nestjs/common';
+import { Controller, Delete, Param, Body, Post, Get, Patch, UseGuards, Request, Query, NotFoundException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { UpdateUserDto } from './dto/update_user.dto';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { UserService } from './user.service';
+import { OAuthSyncDto } from './dto/oauth_sync.dto';
 
 @Controller('user')
 export class UserController {
@@ -19,7 +20,12 @@ export class UserController {
     const user = await this.userService.findByEmail(email);
     if (!user) throw new NotFoundException('User not found');
     return { id: user.id, role: user.role };
-}
+  }
+
+  @Post('oauth-sync')
+  async oauthSync(@Body() dto: OAuthSyncDto) {
+    return this.userService.findOrCreateOAuthUser(dto);
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {

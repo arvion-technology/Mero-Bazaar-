@@ -93,22 +93,27 @@ function RegisterPageContent() {
   }
 };
 
-//googleauth
-const handleGoogle =async () => {
-  if (!accountType) {
-    toast.warn("Please select role first!");
-    return;
-  }
-  setGoogleLoading(true);
-  try {
-    await signIn("google", { callbackUrl: "/" });
-  } catch {
-    toast.error("Google Sign-in failed. Please try again.");
-    setGoogleLoading(false);
-  }
-};
+  //googleauth
+  const handleGoogle = async () => {
+    if (!accountType) {
+      toast.warn("Please select role first!");
+      return;
+    }
+    setGoogleLoading(true);
+    try {
+      await fetch("/api/register/set-role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: accountType === "seller" ? "VENDOR" : "USER" }),
+      });
+      await signIn("google", { callbackUrl: "/" });
+    } catch {
+      toast.error("Google Sign-in failed. Please try again.");
+      setGoogleLoading(false);
+    }
+  };
 
-//facebookauth
+  //facebookauth
   const handleFacebook = async () => {
     if (!accountType) {
       toast.warn("Please select role first!");
@@ -116,12 +121,18 @@ const handleGoogle =async () => {
     }
     setFacebookLoading(true);
     try {
+      await fetch("/api/register/set-role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: accountType === "seller" ? "VENDOR" : "USER" }),
+      });
       await signIn("facebook", { callbackUrl: "/" });
     } catch {
       toast.error("Facebook Sign-in failed. Please try again.");
       setFacebookLoading(false);
     }
   };
+
   const districts = [
     "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal",
     "Biratnagar", "Birgunj", "Dhangadhi", "Nepalgunj", "Hetauda", "Dharan",
