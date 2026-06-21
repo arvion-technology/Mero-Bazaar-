@@ -5,6 +5,7 @@ import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { UserService } from './user.service';
 import { OAuthSyncDto } from './dto/oauth_sync.dto';
+import { UpdatePasswordDto } from './dto/update_password.dto';
 
 @Controller('user')
 export class UserController {
@@ -49,5 +50,12 @@ export class UserController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
+  }
+
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('profile/password')
+  updatePassword(@Request() req, @Body() dto: UpdatePasswordDto) {
+    return this.userService.updatePassword(req.user.id, dto);
   }
 }

@@ -15,6 +15,11 @@ export default function ProfilePage() {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("details");
+  
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [issubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -154,6 +159,42 @@ export default function ProfilePage() {
     return <div>Redirecting...</div>;
   }
   
+  async function handlePasswordUpdate() {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords donot match!");
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/user/profile/password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Failed to update password.");
+      }
+      toast.success("Password updated successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
   return (
     <>
       <style>{`
@@ -596,15 +637,42 @@ export default function ProfilePage() {
                   <div className="form-grid" style={{ gridTemplateColumns: "1fr" }}>
                     <div className="form-group">
                       <label className="form-label">Current Password</label>
-                      <input type="password" className="form-input" style={{ paddingLeft: "16px" }} placeholder="••••••••" />
+                      <input 
+                      type="password" 
+                      className="form-input" 
+                      style={{ paddingLeft: "16px" }} 
+                      placeholder="••••••••" 
+                      value={currentPassword} 
+                      onChange={(e) => setCurrentPassword(e.target.value)} 
+                      autoComplete="current-password" />
                     </div>
                     <div className="form-group">
                       <label className="form-label">New Password</label>
-                      <input type="password" className="form-input" style={{ paddingLeft: "16px" }} placeholder="••••••••" />
+                      <input 
+                      type="password" 
+                      className="form-input" 
+                      style={{ paddingLeft: "16px" }} 
+                      placeholder="••••••••"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      autoComplete="new-password" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Confirm New Password</label>
+                      <input
+                        type="password"
+                        className="form-input"
+                        style={{ paddingLeft: "16px" }}
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        autoComplete="new-password"
+                      />
                     </div>
                   </div>
-                  <button className="save-btn" onClick={() => alert("Password updated successfully!")}>
-                    Update Password
+
+                  <button className="save-btn" onClick={handlePasswordUpdate} disabled={issubmitting}>
+                    {issubmitting ? "Updating..." : "Update Password"}
                   </button>
                 </div>
               )}
