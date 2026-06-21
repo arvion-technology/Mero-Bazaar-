@@ -22,6 +22,7 @@ export default function ProfilePage() {
     phone: "",
     address: "",
     role:"",
+    image: "",
     isActive: true,
   });
 
@@ -42,6 +43,12 @@ export default function ProfilePage() {
     }
   }, [status, session?.user?.role, router]);
 
+  const displayName = formData.name || session?.user?.name || "";
+  const displayImage = formData.image || session?.user?.image || "";
+  const initials = displayName
+    ? displayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "U";
+    
   useEffect(() => {
     if (!token) return;
 
@@ -62,6 +69,7 @@ export default function ProfilePage() {
             ...prev,
             name: user.name || session?.user?.name || "",
             email: user.email || session?.user?.email || "",
+            image: user.image || session?.user.image || "",
             phone: user.phone || "",
             address: user.address || "",
             isActive: user.isActive ?? true,
@@ -71,7 +79,7 @@ export default function ProfilePage() {
         }
       };
       fetchProfile();
-      }, [token, session?.user?.name, session?.user?.email]);
+      }, [token, session?.user?.name, session?.user?.email, session?.user?.image]);
 
 //saving changes
   const handleSave = async () => {
@@ -102,6 +110,7 @@ export default function ProfilePage() {
         name: data.name,
         phone: data.phone,
         address: data.address,
+        image: data.image,
       });
       toast.success("Profile updated successfully!");
     } catch (err) {
@@ -145,8 +154,6 @@ export default function ProfilePage() {
     return <div>Redirecting...</div>;
   }
   
-  const initials = formData.name ? formData.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) : "U";
-
   return (
     <>
       <style>{`
@@ -439,7 +446,12 @@ export default function ProfilePage() {
             {/* Sidebar Details */}
             <div className="profile-sidebar">
               <div className="avatar-container">
+              {displayImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={displayImage} alt={displayName} className="avatar-circle" style={{ objectFit: "cover" }} />
+              ) : (
                 <div className="avatar-circle">{initials}</div>
+              )}
                 <label className="avatar-upload-btn" title="Upload avatar">
                   <FiCamera size={14} />
                 </label>

@@ -35,11 +35,7 @@ export class UserService {
     const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
 
     const user = existing
-      ? await this.prisma.user.update({
-          where: { email: data.email },
-          data: { name: data.name, image: data.image },
-          select: { id: true, email: true, role: true },
-        })
+      ? existing // already exists — don't let OAuth login overwrite name/image
       : await this.prisma.user.create({
           data: {
             email: data.email,
@@ -53,7 +49,7 @@ export class UserService {
               },
             }),
           },
-          select: { id: true, email: true, role: true },
+          select: { id: true, email: true, role: true, phone: true, address: true, image: true, name: true },
         });
 
     const accessToken = this.jwtService.sign({
@@ -62,7 +58,7 @@ export class UserService {
       role: user.role,
     });
 
-    return { id: user.id, role: user.role, accessToken };
+    return { id: user.id, role: user.role, phone: user.phone, address: user.address, image: user.image, name: user.name, accessToken };
   }
 
   async findOne(id: string) {
@@ -75,6 +71,7 @@ export class UserService {
         phone: true,
         address: true,
         role: true,
+        image: true,
         isActive: true,
         vendorProfile: true,
         doctorProfile: true,
@@ -101,6 +98,7 @@ export class UserService {
           email: true,
           phone: true,
           address: true,
+          image: true,
         },
       });
     } catch (err: any) {

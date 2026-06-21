@@ -40,7 +40,7 @@ declare module "next-auth/jwt" {
     email?: string;
     name?: string;
     image?: string;
-    picture?: string;
+    picture?: string | { data?: { url?: string } };
     phone?: string | null;
     address?: string | null;
   };

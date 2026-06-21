@@ -84,9 +84,11 @@ export default function Navbar() {
   const notificationCount = notifications.length;
   const showNotificationBadge = notificationCount > 0;
 
-  useEffect(() => {
-  setNotifSeen(false);
-}, [notificationCount]);
+  const [prevNotificationCount, setPrevNotificationCount] = useState(notificationCount);
+  if (notificationCount !== prevNotificationCount) {
+    setPrevNotificationCount(notificationCount);
+    setNotifSeen(false);
+  }
 
   return (
     <>
