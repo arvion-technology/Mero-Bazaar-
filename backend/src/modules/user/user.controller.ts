@@ -58,4 +58,14 @@ export class UserController {
   updatePassword(@Request() req, @Body() dto: UpdatePasswordDto) {
     return this.userService.updatePassword(req.user.id, dto);
   }
+
+  @Post('forgot-password')
+  forgotPassword(@Body() body: { email: string }) {
+    return this.userService.forgotPassword(body.email);
+  }
+
+  @Post('reset-password')
+  resetPassword(@Body() body: { token: string; newPassword: string }) {
+    return this.userService.resetPassword(body.token, body.newPassword);
+  }
 }
