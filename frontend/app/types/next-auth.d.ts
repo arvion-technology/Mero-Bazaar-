@@ -20,6 +20,7 @@ declare module "next-auth" {
       phone?: string | null;
       address?: string | null;
       role?: string;
+      provider?: string;
     };
   }
 }
@@ -34,6 +35,7 @@ declare module "next-auth/jwt" {
     picture?: string;
     phone?: string | null;
     address?: string | null;
+    provider?: string;
   }
 
   type OAuthProfile = {

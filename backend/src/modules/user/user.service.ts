@@ -5,6 +5,8 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UnauthorizedException } from '@nestjs/common';
 import { UpdatePasswordDto } from './dto/update_password.dto';
+import * as crypto from 'crypto';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class UserService {
@@ -148,4 +150,59 @@ async updatePassword(id: string, dto: UpdatePasswordDto) {
 
   return { message: 'Password updated successfully' };
 }
+
+//forgot password
+  async forgotPassword(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email }});
+    if (!user || !user.password) return { message: 'If that email exists, a link has been sent.'};
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiry = new Date(Date.now() + 1000 * 60 * 60);
+
+    await this.prisma.user.update({
+      where: { email },
+      data: { passwordResetToken: token, passwordResetExpiry: expiry },
+    });
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.MAIL_USER,
+        pass:process.env.MAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"HamroNepal Bazaar" <${process.env.MAIL_USER}>`,
+      to: email,
+      subject: 'Password Reset Link',
+      html: `<p>Click <a href="${resetUrl}">here</a> to reset your password. Link expires in 1 hour.</p>`,
+    });
+    return { message: 'If that email exists, a link has been sent.'};
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        passwordResetToken: token,
+        passwordResetExpiry: { gt: new Date() },
+      },
+    });
+
+    if (!user) throw new UnauthorizedException('Invalid or expired token');
+
+    const hash = await bcrypt.hash(newPassword, 12);
+
+    await this.prisma.user.update({
+      where: {id: user.id },
+      data: {
+        password: hash,
+        passwordResetToken: null,
+        passwordResetExpiry: null,
+      },
+    });
+    return { message: 'Password reset successfully' };
+  }
 }

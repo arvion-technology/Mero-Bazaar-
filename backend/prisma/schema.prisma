@@ -25,6 +25,9 @@ model User {
   refreshTokenHash String?
   lastLoginAt      DateTime?
 
+  passwordResetToken    String?
+  passwordResetExpiry   DateTime?
+
   vendorProfile VendorProfile?
   doctorProfile DoctorProfile?
 

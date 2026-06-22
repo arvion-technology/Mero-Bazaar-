@@ -66,14 +66,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.address = session.address ?? token.address;
         return token;
       }
-      if (user && !account) {
+      if (user) {
         token.id = user.id;
-        token.name = user.name ?? undefined;
-        token.email = user.email ?? undefined;
         token.role = user.role;
         token.accessToken = user.accessToken ?? token.accessToken;      
         token.phone = user.phone ?? null;
         token.address = user.address ?? null;
+        token.provider = "credentials";
       }
       if (account && account.provider !== "credentials") {
         const p = profile as OAuthProfile;
@@ -108,6 +107,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.phone = dbUser.phone ?? null;       
           token.address = dbUser.address ?? null;
           token.picture = dbUser.image ?? image;
+          token.provider = account.provider;
           token.accessToken = dbUser.accessToken ?? dbUser.access_token ?? token.accessToken;
         }
       } else {
@@ -126,6 +126,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.image = token.picture ?? session.user.image;
         session.user.phone = (token.phone as string) ?? null;
         session.user.address = (token.address as string) ?? null;
+        session.user.provider = token.provider as string;
       }
       if (typeof token.accessToken === "string") {
         session.accessToken = token.accessToken;
