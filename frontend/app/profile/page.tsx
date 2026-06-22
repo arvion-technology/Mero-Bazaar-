@@ -35,6 +35,7 @@ export default function ProfilePage() {
 
   const userId = session?.user?.id;
   const token = session?.accessToken;
+  const isOAuthUser = session?.user?.provider !== "credentials";
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -175,7 +176,7 @@ export default function ProfilePage() {
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/user/profile/password", {
-        method: "POST",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -189,6 +190,7 @@ export default function ProfilePage() {
       toast.success("Password updated successfully!");
       setCurrentPassword("");
       setNewPassword("");
+      setConfirmPassword("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong!");
     } finally {
@@ -634,6 +636,12 @@ export default function ProfilePage() {
                     <h1 className="section-title">Security Settings</h1>
                     <p className="section-subtitle">Maintain account safety and update passwords.</p>
                   </div>
+                {isOAuthUser ? (
+                  <p style={{ color: "#888", fontSize: "14px" }}>
+                    You signed in with {session?.user?.provider}. Password is managed by your {session?.user?.provider} account.
+                  </p>
+                ) : (
+                  <>
                   <div className="form-grid" style={{ gridTemplateColumns: "1fr" }}>
                     <div className="form-group">
                       <label className="form-label">Current Password</label>
@@ -674,8 +682,10 @@ export default function ProfilePage() {
                   <button className="save-btn" onClick={handlePasswordUpdate} disabled={issubmitting}>
                     {issubmitting ? "Updating..." : "Update Password"}
                   </button>
+                </>
+                )}
                 </div>
-              )}
+              )} 
             </main>
           </div>
         </div>
