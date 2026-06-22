@@ -2,6 +2,9 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { PrismaService } from '../../database/prisma.service';
 import { UpdateUserDto } from './dto/update_user.dto';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import { UnauthorizedException } from '@nestjs/common';
+import { UpdatePasswordDto } from './dto/update_password.dto';
 
 @Injectable()
 export class UserService {
@@ -35,11 +38,7 @@ export class UserService {
     const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
 
     const user = existing
-      ? await this.prisma.user.update({
-          where: { email: data.email },
-          data: { name: data.name, image: data.image },
-          select: { id: true, email: true, role: true },
-        })
+      ? existing 
       : await this.prisma.user.create({
           data: {
             email: data.email,
@@ -53,7 +52,7 @@ export class UserService {
               },
             }),
           },
-          select: { id: true, email: true, role: true },
+          select: { id: true, email: true, role: true, phone: true, address: true, image: true, name: true },
         });
 
     const accessToken = this.jwtService.sign({
@@ -62,7 +61,7 @@ export class UserService {
       role: user.role,
     });
 
-    return { id: user.id, role: user.role, accessToken };
+    return { id: user.id, role: user.role, phone: user.phone, address: user.address, image: user.image, name: user.name, accessToken };
   }
 
   async findOne(id: string) {
@@ -75,6 +74,7 @@ export class UserService {
         phone: true,
         address: true,
         role: true,
+        image: true,
         isActive: true,
         vendorProfile: true,
         doctorProfile: true,
@@ -101,6 +101,7 @@ export class UserService {
           email: true,
           phone: true,
           address: true,
+          image: true,
         },
       });
     } catch (err: any) {
@@ -117,4 +118,34 @@ export class UserService {
       where: { id },
     });
   }
+
+async updatePassword(id: string, dto: UpdatePasswordDto) {
+  const user = await this.prisma.user.findUnique({
+    where: { id },
+    select: { id: true, password: true },
+  });
+
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  if (!user.password) {
+    // user signed up via OAuth and has no password set yet
+    throw new UnauthorizedException('Password login is not enabled for this account');
+  }
+
+  const isValid = await bcrypt.compare(dto.currentPassword, user.password);
+  if (!isValid) {
+    throw new UnauthorizedException('Current password is incorrect');
+  }
+
+  const newHash = await bcrypt.hash(dto.newPassword, 12);
+
+  await this.prisma.user.update({
+    where: { id },
+    data: { password: newHash },
+  });
+
+  return { message: 'Password updated successfully' };
+}
 }

@@ -58,22 +58,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   callbacks: {
-    async jwt({ token, user, account, profile }) {
-      if (user) {
+    async jwt({ token, user, account, profile, trigger, session }) {
+      if (trigger === "update" && session) {
+        token.name = session.name ?? token.name;
+        token.picture = session.image ?? token.picture;
+        token.phone = session.phone ?? token.phone;
+        token.address = session.address ?? token.address;
+        return token;
+      }
+      if (user && !account) {
         token.id = user.id;
         token.name = user.name ?? undefined;
         token.email = user.email ?? undefined;
         token.role = user.role;
         token.accessToken = user.accessToken ?? token.accessToken;      
-        token.phone = user.phone ?? undefined;
-        token.address = user.address ?? undefined;
+        token.phone = user.phone ?? null;
+        token.address = user.address ?? null;
       }
       if (account && account.provider !== "credentials") {
         const p = profile as OAuthProfile;
 
         const email = p?.email ?? token.email;
         const name = p?.name ?? token.name;
-        const image = p?.picture ?? p?.image ?? token.picture;
+        const image = 
+          account.provider === "facebook"
+            ? (typeof p?.picture === "object" ? p.picture?.data?.url : undefined)
+            : (typeof p?.picture === "string" ? p.picture : p?.image) ?? (token.picture as string | undefined);
 
         if (email) {
           const cookieStore = await cookies();
@@ -89,17 +99,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           );
 
           const dbUser = await res.json();
-
+          if (!res.ok) {
+            console.error("oauth-sync failed", account.provider, dbUser);
+          } else {
           token.id = dbUser.id;
+          token.name = dbUser.name;
           token.role = dbUser.role;
           token.phone = dbUser.phone ?? null;       
           token.address = dbUser.address ?? null;
+          token.picture = dbUser.image ?? image;
           token.accessToken = dbUser.accessToken ?? dbUser.access_token ?? token.accessToken;
         }
-
-        token.picture = image;
+      } else {
+        console.error(`No email from ${account.provider} profile`, p);
       }
-
+    }
       return token;
     },
 
