@@ -31,6 +31,8 @@ model User {
   vendorProfile VendorProfile?
   doctorProfile DoctorProfile?
 
+  vendorKyc     vendorKyc?
+
   leads    Lead[]
   orders   Order[]
   reviews  Review[]
@@ -65,6 +67,9 @@ model VendorProfile {
   isVerified   Boolean    @default(false)
   rating       Float      @default(0)
 
+  isOnProbation    Boolean @default(true)
+  probationEndsAt  DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -73,6 +78,64 @@ enum VendorType {
   INDIVIDUAL
   COMPANY
   AGENCY
+}
+
+model vendorKyc {
+  id                String @id @default(cuid())
+  userId            String @unique
+  user              User   @relation(fields:[userId], references: [id], onDelete: Cascade)
+
+  fullName          String
+  dateOfBirth       DateTime
+  contactNumber      String  @unique
+  address           String
+  panNumber         String @unique
+
+  panCardUrl        String?
+  photoUrl          String?
+  selfieWithPanUrl  String?
+
+  phoneVerified     Boolean @default(false)
+  phoneVerifiedAt   DateTime?
+
+  bankName          String
+  account           String
+  accountHolderName String
+
+//admin review
+  status            VerificationStatus @default(PENDING) 
+  rejectionReason   String?
+  reviewedAt        DateTime?
+  reviewedBy        String?
+
+  submittedAt       DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([status])
+  @@index([contactNumber])
+  @@index([panNumber])
+  @@index([account])
+}
+
+model PhoneOtp {
+  id         String @id @default(cuid())
+  phone      String
+  otpHash        String
+  context    OtpContext
+  expiresAt  DateTime
+  attempts   Int @default(0)
+  verified   Boolean @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([phone]) 
+  @@index([context])
+}
+
+enum OtpContext {
+  USER_REGISTRATION
+  KYC_CONTACT
+  PASSWORD_RESET
+  LOGIN
 }
 
 model DoctorProfile {
