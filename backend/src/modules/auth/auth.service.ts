@@ -57,8 +57,12 @@ export class AuthService {
 
     if (!user) throw new UnauthorizedException('User not found');
 
-    const valid = await bcrypt.compare(dto.password, user.password);
-    if (!valid) throw new UnauthorizedException('Invalid credentials!');
+    if (!user.password) {
+      throw new UnauthorizedException(
+        "This account uses Google/Facebook login. Please continue with OAuth."
+      );
+    }
+    const valid = await bcrypt.compare(dto.password, user.password);    if (!valid) throw new UnauthorizedException('Invalid credentials!');
 
     return this.signToken(user.id, user.email, user.role ?? UserRole.USER);
   }

@@ -5,38 +5,127 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FiUser, FiMail, FiPhone, FiMapPin, FiSettings, FiShield, FiLogOut, FiArrowLeft, FiCamera } from "react-icons/fi";
 import Footer from "@/components/Footer";
+import { toast } from "react-toastify";
 
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("details");
 
-  // Mock form state
+  const [activeTab, setActiveTab] = useState("details");
+  
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [issubmitting, setIsSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "+977 9801234567",
-    address: "Kathmandu, Nepal",
+    phone: "",
+    address: "",
+    role:"",
+    image: "",
+    isActive: true,
   });
+
+  const [saving, setSaving] = useState(false);
+
+  const userId = session?.user?.id;
+  const token = session?.accessToken;
+  const isOAuthUser = session?.user?.provider !== "credentials";
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/register");
+      return;
     }
-  }, [status, router]);
 
-  useEffect(() => {
-    if (session?.user) {
-      setFormData((prev) => ({
-        ...prev,
-        name: session.user.name || "User",
-        email: session.user.email || "",
-      }));
+    if (session?.user?.role === "VENDOR") {
+      router.push("/kyc");
+      return;
     }
-  }, [session]);
+  }, [status, session?.user?.role, router]);
+
+  const displayName = formData.name || session?.user?.name || "";
+  const displayImage = formData.image || session?.user?.image || "";
+  const initials = displayName
+    ? displayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "U";
+    
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`/api/user/profile/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) throw new Error("Failed to load profile");
+
+          const data = await res.json();
+          const user = data?.user ?? data ?? {};
+
+          setFormData((prev) => ({
+            ...prev,
+            name: user.name || session?.user?.name || "",
+            email: user.email || session?.user?.email || "",
+            image: user.image || session?.user.image || "",
+            phone: user.phone || "",
+            address: user.address || "",
+            isActive: user.isActive ?? true,
+          }));
+        } catch (err) {
+          console.error(err);
+        }
+      };
+      fetchProfile();
+      }, [token, session?.user?.name, session?.user?.email, session?.user?.image]);
+
+//saving changes
+  const handleSave = async () => {
+    if(!userId) {
+      toast.error("You're not signed in.");
+      return;
+    }
+    setSaving(true);
+    try {
+        const res = await fetch("/api/user/profile/me", {
+          method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          address: formData.address,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to update profile");
+      }
+      await update({
+        name: data.name,
+        phone: data.phone,
+        address: data.address,
+        image: data.image,
+      });
+      toast.success("Profile updated successfully!");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong while saving.";
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (status === "loading") {
     return (
@@ -67,10 +156,47 @@ export default function ProfilePage() {
     );
   }
 
-  if (!session) return null;
-
-  const initials = formData.name ? formData.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) : "U";
-
+  if (status === "unauthenticated") {
+    return <div>Redirecting...</div>;
+  }
+  
+  async function handlePasswordUpdate() {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords donot match!");
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/user/profile/password", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Failed to update password.");
+      }
+      toast.success("Password updated successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
   return (
     <>
       <style>{`
@@ -363,7 +489,12 @@ export default function ProfilePage() {
             {/* Sidebar Details */}
             <div className="profile-sidebar">
               <div className="avatar-container">
+              {displayImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={displayImage} alt={displayName} className="avatar-circle" style={{ objectFit: "cover" }} />
+              ) : (
                 <div className="avatar-circle">{initials}</div>
+              )}
                 <label className="avatar-upload-btn" title="Upload avatar">
                   <FiCamera size={14} />
                 </label>
@@ -467,7 +598,7 @@ export default function ProfilePage() {
                     <div className="form-group">
                       <label className="form-label">
                         <FiMapPin size={14} />
-                        Location
+                        Address
                       </label>
                       <div className="form-input-wrapper">
                         <FiMapPin className="form-input-icon" />
@@ -481,8 +612,8 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <button className="save-btn" onClick={() => alert("Profile updated successfully!")}>
-                    Save Changes
+                  <button className="save-btn" onClick={handleSave} disabled={saving}>
+                    {saving ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               )}
@@ -505,21 +636,56 @@ export default function ProfilePage() {
                     <h1 className="section-title">Security Settings</h1>
                     <p className="section-subtitle">Maintain account safety and update passwords.</p>
                   </div>
+                {isOAuthUser ? (
+                  <p style={{ color: "#888", fontSize: "14px" }}>
+                    You signed in with {session?.user?.provider}. Password is managed by your {session?.user?.provider} account.
+                  </p>
+                ) : (
+                  <>
                   <div className="form-grid" style={{ gridTemplateColumns: "1fr" }}>
                     <div className="form-group">
                       <label className="form-label">Current Password</label>
-                      <input type="password" className="form-input" style={{ paddingLeft: "16px" }} placeholder="••••••••" />
+                      <input 
+                      type="password" 
+                      className="form-input" 
+                      style={{ paddingLeft: "16px" }} 
+                      placeholder="••••••••" 
+                      value={currentPassword} 
+                      onChange={(e) => setCurrentPassword(e.target.value)} 
+                      autoComplete="current-password" />
                     </div>
                     <div className="form-group">
                       <label className="form-label">New Password</label>
-                      <input type="password" className="form-input" style={{ paddingLeft: "16px" }} placeholder="••••••••" />
+                      <input 
+                      type="password" 
+                      className="form-input" 
+                      style={{ paddingLeft: "16px" }} 
+                      placeholder="••••••••"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      autoComplete="new-password" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Confirm New Password</label>
+                      <input
+                        type="password"
+                        className="form-input"
+                        style={{ paddingLeft: "16px" }}
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        autoComplete="new-password"
+                      />
                     </div>
                   </div>
-                  <button className="save-btn" onClick={() => alert("Password updated successfully!")}>
-                    Update Password
+
+                  <button className="save-btn" onClick={handlePasswordUpdate} disabled={issubmitting}>
+                    {issubmitting ? "Updating..." : "Update Password"}
                   </button>
+                </>
+                )}
                 </div>
-              )}
+              )} 
             </main>
           </div>
         </div>
