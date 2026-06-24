@@ -561,7 +561,7 @@ export default function Navbar() {
                         </div>
                       </div>
                       <Link 
-                        href="/profile" 
+                        href="/user/dashboard" 
                         className="hnb-profile-item"
                         onClick={() => setShowProfileMenu(false)}
                       >
@@ -643,7 +643,7 @@ export default function Navbar() {
                 </div>
                 <div style={{ display: "flex", gap: 10 }}>
                   <Link 
-                    href="/profile" 
+                    href="/user/dashboard" 
                     className="hnb-mobile-link" 
                     onClick={() => setShowMobileMenu(false)}
                     style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 500, color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "9px 0", textDecoration: "none", borderBottom: "1px solid #ddd" }}
