@@ -68,7 +68,7 @@ export default function SellerKYCPage() {
     }
     setSendingOtp(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/otp/send`, {
+      const res = await fetch(`/api/otp/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone, context: "KYC_CONTACT" }),
@@ -92,7 +92,7 @@ export default function SellerKYCPage() {
     }
     setVerifyingOtp(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/otp/verify`, {
+      const res = await fetch(`/api/otp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: form.contactNumber, otp, context: "KYC_CONTACT" }),
@@ -447,7 +447,7 @@ export default function SellerKYCPage() {
 
           {/* Header */}
           <div className="kyc-header">
-            <FiShield className="kyc-header-icon" />
+            <FiUser className="kyc-header-icon" />
             <h1 className="kyc-header-title">Seller KYC Verification</h1>
           </div>
 

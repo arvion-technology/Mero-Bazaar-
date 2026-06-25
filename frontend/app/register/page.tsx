@@ -46,7 +46,7 @@ function RegisterPageContent() {
   const [form, setForm] = useState({
     fullName: "",
     email: "",
-    phone: "",
+    // phone: "",
     password: "",
     confirmPassword: "",
     address: "",
@@ -790,7 +790,7 @@ function RegisterPageContent() {
                       />
                     </div>
                   </div>
-
+{/* 
                   <div className="reg-field">
                     <label className="reg-label" htmlFor="reg-phone">Phone Number</label>
                     <div className="reg-input-wrap">
@@ -809,7 +809,7 @@ function RegisterPageContent() {
                         autoComplete="tel"
                       />
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="reg-field">
                     <label className="reg-label" htmlFor="reg-address">Address</label>

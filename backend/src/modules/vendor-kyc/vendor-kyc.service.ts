@@ -30,15 +30,7 @@ export class VendorKycService {
 
     if (existing && existing.status === VerificationStatus.VERIFIED) {
         throw new BadRequestException('KYC already verified.');
-    }
-
-    const phoneVerified = await this.prisma.phoneOtp.findFirst({
-        where: {
-             phone: dto.contactNumber,
-             context: OtpContext.KYC_CONTACT,
-             verified: true,
-        },
-    });
+    };
 
     const panCardUrl = files.panCardUrl?.[0]?.path ?? existing?.panCardUrl;
     const photoUrl = files.photoUrl?.[0]?.path ?? existing?.photoUrl;
