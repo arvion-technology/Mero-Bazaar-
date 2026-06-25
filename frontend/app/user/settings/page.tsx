@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -8,7 +8,6 @@ import {
   FiGrid,
   FiShoppingBag,
   FiHeart,
-  FiMapPin,
   FiBell,
   FiHelpCircle,
   FiSettings,
@@ -18,34 +17,77 @@ import {
   FiPhone,
   FiMail,
   FiLock,
-  FiEye,
-  FiEyeOff,
   FiMoreHorizontal,
   FiEdit2,
   FiCheck,
   FiCamera,
+  FiLogOut,
+  FiChevronDown,
+  FiMapPin,
+  FiEye,
+  FiEyeOff,
+  FiMenu,
+  FiX,
 } from "react-icons/fi";
+import { toast } from "react-toastify";
+
+const PRIMARY = "#C0392B";
 
 export default function UserSettings() {
-  const [showPassword, setShowPassword] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("settings");
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+
+  // Change Password state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+  const [isSubmittingPw, setIsSubmittingPw] = useState(false);
+
   const { data: session } = useSession();
   const router = useRouter();
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+
+  const token = session?.accessToken;
+  const isOAuthUser = session?.user?.provider !== "credentials";
 
   const sidebarItems = [
     { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/user/dashboard" },
     { id: "orders", icon: FiShoppingBag, label: "My Orders", href: "/user/orders" },
     { id: "wishlist", icon: FiHeart, label: "Wishlist", href: "/user/wishlist" },
-    { id: "address", icon: FiMapPin, label: "Addresses", href: "/user/address" },
     { id: "notification", icon: FiBell, label: "Notifications", href: "/user/notifications" },
     { id: "help", icon: FiHelpCircle, label: "Help & Support", href: "/user/help" },
     { id: "settings", icon: FiSettings, label: "Settings", href: "/user/settings" },
   ];
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target as Node)) {
+        setShowProfileDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [sidebarOpen]);
 
   async function handleDeleteAccount() {
     setDeleting(true);
@@ -65,10 +107,52 @@ export default function UserSettings() {
     }
   }
 
+  async function handlePasswordUpdate() {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match!");
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters.");
+      return;
+    }
+    setIsSubmittingPw(true);
+    try {
+      const res = await fetch("/api/user/profile/password", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Failed to update password.");
+      }
+      toast.success("Password updated successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setIsSubmittingPw(false);
+    }
+  }
+
+  const userInitials = session?.user?.name
+    ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "U";
+
   const profileFields = [
-    { icon: FiUser, label: "Full Name", value: "Siya Jaz", type: "text" },
+    { icon: FiUser, label: "Full Name", value: session?.user?.name || "—", type: "text" },
     { icon: FiPhone, label: "Phone Number", value: "+977 9834567341", type: "tel" },
-    { icon: FiMail, label: "Email Address", value: "jazsiya45@gmail.com", type: "email" },
+    { icon: FiMail, label: "Email Address", value: session?.user?.email || "—", type: "email" },
     { icon: FiMapPin, label: "Address", value: "Kathmandu, Nepal", type: "text" },
   ];
 
@@ -76,6 +160,11 @@ export default function UserSettings() {
     <>
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+          overflow-x: hidden;
+          max-width: 100vw;
+        }
 
         .ud-page {
           min-height: 100vh;
@@ -88,15 +177,19 @@ export default function UserSettings() {
         /* ── Sidebar ── */
         .ud-sidebar {
           width: 260px;
-          background: #1e1b4b;
+          background: #ffffff;
+          border-right: 1px solid #e8ecf0;
           display: flex;
           flex-direction: column;
           flex-shrink: 0;
-          transition: width 0.3s ease;
+          transition: width 0.3s ease, transform 0.3s ease;
           position: fixed;
           height: 100vh;
           height: 100dvh;
+          left: 0;
+          top: 0;
           z-index: 100;
+          box-shadow: 2px 0 8px rgba(0,0,0,0.04);
         }
 
         .ud-sidebar.collapsed {
@@ -104,40 +197,57 @@ export default function UserSettings() {
         }
 
         .ud-sidebar-header {
-          padding: 20px 24px;
+          padding: 20px 20px;
           display: flex;
           align-items: center;
-          gap: 12px;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
+          gap: 10px;
+          border-bottom: 1px solid #f0f2f5;
+          min-height: 72px;
+          overflow: hidden;
         }
 
-        .ud-sidebar-logo {
-          width: 36px;
-          height: 36px;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          border-radius: 10px;
+        .ud-sidebar-logo-wrap {
           display: flex;
           align-items: center;
-          justify-content: center;
-          color: #fff;
-          font-size: 18px;
-          font-weight: 700;
+          gap: 10px;
+          text-decoration: none;
           flex-shrink: 0;
         }
 
-        .ud-sidebar-brand {
-          font-size: 18px;
-          font-weight: 700;
-          color: #fff;
-          letter-spacing: -0.3px;
-          white-space: nowrap;
-          opacity: 1;
-          transition: opacity 0.2s;
+        .ud-sidebar-logo-icon {
+          width: 36px;
+          height: 36px;
+          flex-shrink: 0;
         }
 
-        .ud-sidebar.collapsed .ud-sidebar-brand {
+        .ud-sidebar-logo-text {
+          display: flex;
+          flex-direction: column;
+          line-height: 1.1;
+          opacity: 1;
+          transition: opacity 0.2s, width 0.2s;
+          white-space: nowrap;
+          overflow: hidden;
+        }
+
+        .ud-sidebar.collapsed .ud-sidebar-logo-text {
           opacity: 0;
           width: 0;
+        }
+
+        .ud-logo-line1 {
+          font-size: 14px;
+          font-weight: 800;
+          color: ${PRIMARY};
+          letter-spacing: -0.3px;
+        }
+
+        .ud-logo-line2 {
+          font-size: 11px;
+          font-weight: 600;
+          color: #888;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
         }
 
         .ud-nav-section {
@@ -148,10 +258,10 @@ export default function UserSettings() {
 
         .ud-nav-label {
           font-size: 10px;
-          font-weight: 600;
-          color: rgba(255,255,255,0.35);
+          font-weight: 700;
+          color: #b0b8c4;
           text-transform: uppercase;
-          letter-spacing: 1px;
+          letter-spacing: 1.2px;
           padding: 0 12px;
           margin-bottom: 8px;
           white-space: nowrap;
@@ -166,7 +276,7 @@ export default function UserSettings() {
           align-items: center;
           gap: 12px;
           padding: 10px 14px;
-          color: rgba(255,255,255,0.6);
+          color: #5a6478;
           font-size: 14px;
           font-weight: 500;
           cursor: pointer;
@@ -177,20 +287,21 @@ export default function UserSettings() {
           text-align: left;
           font-family: inherit;
           text-decoration: none;
-          border-radius: 8px;
+          border-radius: 10px;
           margin-bottom: 2px;
           position: relative;
           white-space: nowrap;
         }
 
         .ud-nav-item:hover {
-          background: rgba(255,255,255,0.06);
-          color: rgba(255,255,255,0.9);
+          background: #f4f6fb;
+          color: #1e293b;
         }
 
         .ud-nav-item.active {
-          background: rgba(99, 102, 241, 0.15);
-          color: #818cf8;
+          background: #fff5f5;
+          color: ${PRIMARY};
+          font-weight: 600;
         }
 
         .ud-nav-item.active::before {
@@ -201,7 +312,7 @@ export default function UserSettings() {
           transform: translateY(-50%);
           width: 3px;
           height: 20px;
-          background: #818cf8;
+          background: ${PRIMARY};
           border-radius: 0 3px 3px 0;
         }
 
@@ -221,11 +332,12 @@ export default function UserSettings() {
         .ud-sidebar.collapsed .ud-nav-text {
           opacity: 0;
           width: 0;
+          overflow: hidden;
         }
 
         .ud-sidebar-footer {
           padding: 16px;
-          border-top: 1px solid rgba(255,255,255,0.06);
+          border-top: 1px solid #f0f2f5;
           display: flex;
           align-items: center;
           gap: 12px;
@@ -235,7 +347,7 @@ export default function UserSettings() {
           width: 38px;
           height: 38px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          background: linear-gradient(135deg, ${PRIMARY}, #e74c3c);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -243,6 +355,7 @@ export default function UserSettings() {
           font-size: 14px;
           font-weight: 600;
           flex-shrink: 0;
+          overflow: hidden;
         }
 
         .ud-sidebar-user {
@@ -259,13 +372,21 @@ export default function UserSettings() {
         .ud-sidebar-name {
           font-size: 13px;
           font-weight: 600;
-          color: #fff;
+          color: #1e293b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 160px;
         }
 
         .ud-sidebar-role {
           font-size: 11px;
-          color: rgba(255,255,255,0.4);
+          color: #94a3b8;
           margin-top: 1px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 160px;
         }
 
         /* ── Main Area ── */
@@ -277,10 +398,13 @@ export default function UserSettings() {
           min-height: 100vh;
           min-height: 100dvh;
           transition: margin-left 0.3s ease;
+          width: calc(100% - 260px);
+          min-width: 0;
         }
 
         .ud-sidebar.collapsed ~ .ud-main-area {
           margin-left: 72px;
+          width: calc(100% - 72px);
         }
 
         /* ── Top Header ── */
@@ -295,12 +419,15 @@ export default function UserSettings() {
           position: sticky;
           top: 0;
           z-index: 50;
+          gap: 16px;
         }
 
         .ud-topbar-left {
           display: flex;
           align-items: center;
           gap: 16px;
+          flex: 1;
+          min-width: 0;
         }
 
         .ud-toggle-btn {
@@ -315,11 +442,13 @@ export default function UserSettings() {
           cursor: pointer;
           color: #64748b;
           transition: all 0.2s;
+          flex-shrink: 0;
         }
 
         .ud-toggle-btn:hover {
           background: #f8fafc;
           color: #334155;
+          border-color: #cbd5e1;
         }
 
         .ud-breadcrumb {
@@ -327,12 +456,16 @@ export default function UserSettings() {
           font-weight: 700;
           color: #1e293b;
           letter-spacing: -0.3px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .ud-topbar-right {
           display: flex;
           align-items: center;
           gap: 12px;
+          flex-shrink: 0;
         }
 
         .ud-icon-btn {
@@ -348,6 +481,8 @@ export default function UserSettings() {
           color: #64748b;
           transition: all 0.2s;
           position: relative;
+          text-decoration: none;
+          flex-shrink: 0;
         }
 
         .ud-icon-btn:hover {
@@ -373,11 +508,147 @@ export default function UserSettings() {
           border: 2px solid #fff;
         }
 
+        /* ── Profile Avatar Dropdown ── */
+        .ud-profile-wrap {
+          position: relative;
+        }
+
+        .ud-profile-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 5px 10px 5px 5px;
+          border-radius: 40px;
+          border: 1.5px solid #e2e8f0;
+          background: #fff;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-family: inherit;
+        }
+
+        .ud-profile-btn:hover {
+          border-color: #cbd5e1;
+          background: #f8fafc;
+        }
+
+        .ud-profile-btn-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, ${PRIMARY}, #e74c3c);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+          font-size: 12px;
+          font-weight: 700;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+
+        .ud-profile-btn-name {
+          font-size: 13px;
+          font-weight: 600;
+          color: #1e293b;
+          max-width: 120px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .ud-profile-chevron {
+          color: #94a3b8;
+          transition: transform 0.2s;
+          flex-shrink: 0;
+        }
+
+        .ud-profile-chevron.open {
+          transform: rotate(180deg);
+        }
+
+        .ud-profile-dropdown {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+          min-width: 200px;
+          z-index: 999;
+          overflow: hidden;
+          animation: dropdownIn 0.15s ease;
+        }
+
+        @keyframes dropdownIn {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .ud-dropdown-header {
+          padding: 14px 16px 12px;
+          border-bottom: 1px solid #f1f5f9;
+        }
+
+        .ud-dropdown-username {
+          font-size: 14px;
+          font-weight: 700;
+          color: #1e293b;
+        }
+
+        .ud-dropdown-email {
+          font-size: 12px;
+          color: #94a3b8;
+          margin-top: 2px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .ud-dropdown-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 11px 16px;
+          font-size: 14px;
+          font-weight: 500;
+          color: #475569;
+          cursor: pointer;
+          transition: all 0.15s;
+          border: none;
+          background: none;
+          width: 100%;
+          text-align: left;
+          font-family: inherit;
+          text-decoration: none;
+        }
+
+        .ud-dropdown-item:hover {
+          background: #f8fafc;
+          color: #1e293b;
+        }
+
+        .ud-dropdown-item.logout {
+          color: #ef4444;
+        }
+
+        .ud-dropdown-item.logout:hover {
+          background: #fef2f2;
+          color: #dc2626;
+        }
+
+        .ud-dropdown-divider {
+          height: 1px;
+          background: #f1f5f9;
+          margin: 0;
+        }
+
         /* ── Main Content ── */
         .ud-main {
           flex: 1;
           padding: 28px 32px;
           overflow-y: auto;
+          min-width: 0;
         }
 
         /* Profile Header */
@@ -391,6 +662,7 @@ export default function UserSettings() {
           align-items: center;
           gap: 24px;
           position: relative;
+          flex-wrap: wrap;
         }
 
         .ud-profile-avatar-wrap {
@@ -402,13 +674,14 @@ export default function UserSettings() {
           width: 80px;
           height: 80px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          background: linear-gradient(135deg, ${PRIMARY}, #e74c3c);
           display: flex;
           align-items: center;
           justify-content: center;
           color: #fff;
           font-size: 28px;
           font-weight: 700;
+          overflow: hidden;
         }
 
         .ud-avatar-edit {
@@ -429,12 +702,13 @@ export default function UserSettings() {
         }
 
         .ud-avatar-edit:hover {
-          border-color: #6366f1;
-          color: #6366f1;
+          border-color: ${PRIMARY};
+          color: ${PRIMARY};
         }
 
         .ud-profile-info {
           flex: 1;
+          min-width: 0;
         }
 
         .ud-profile-name {
@@ -454,6 +728,7 @@ export default function UserSettings() {
         .ud-profile-actions {
           display: flex;
           gap: 10px;
+          flex-shrink: 0;
         }
 
         .ud-btn {
@@ -497,6 +772,8 @@ export default function UserSettings() {
           align-items: center;
           justify-content: space-between;
           margin-bottom: 16px;
+          gap: 12px;
+          flex-wrap: wrap;
         }
 
         .ud-section-title {
@@ -513,6 +790,7 @@ export default function UserSettings() {
           border-radius: 12px;
           overflow: hidden;
           margin-bottom: 24px;
+          width: 100%;
         }
 
         .ud-form-row {
@@ -541,6 +819,7 @@ export default function UserSettings() {
           color: #475569;
           font-weight: 600;
           padding: 18px 0;
+          flex-shrink: 0;
         }
 
         .ud-form-label svg {
@@ -553,6 +832,7 @@ export default function UserSettings() {
           color: #1e293b;
           font-weight: 500;
           padding: 18px 0;
+          min-width: 0;
         }
 
         .ud-form-input {
@@ -565,43 +845,12 @@ export default function UserSettings() {
           color: #1e293b;
           outline: none;
           transition: all 0.2s;
+          min-width: 0;
         }
 
         .ud-form-input:focus {
           border-color: #6366f1;
           box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-
-        /* Password Row */
-        .ud-password-wrap {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .ud-password-text {
-          font-family: "SF Mono", "Fira Code", monospace;
-          font-size: 13px;
-          color: #1e293b;
-          letter-spacing: 0.5px;
-        }
-
-        .ud-toggle-pw {
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: #94a3b8;
-          font-size: 14px;
-          padding: 6px;
-          display: flex;
-          align-items: center;
-          border-radius: 6px;
-          transition: all 0.2s;
-        }
-
-        .ud-toggle-pw:hover {
-          color: #6366f1;
-          background: #eef2ff;
         }
 
         /* Security Card */
@@ -610,6 +859,8 @@ export default function UserSettings() {
           border: 1px solid #e2e8f0;
           border-radius: 12px;
           padding: 24px;
+          margin-bottom: 24px;
+          width: 100%;
         }
 
         .ud-security-title {
@@ -625,10 +876,18 @@ export default function UserSettings() {
           justify-content: space-between;
           padding: 14px 0;
           border-bottom: 1px solid #f8fafc;
+          gap: 12px;
+          flex-wrap: wrap;
         }
 
         .ud-security-row:last-child {
           border-bottom: none;
+          padding-bottom: 0;
+        }
+
+        .ud-security-info {
+          flex: 1;
+          min-width: 0;
         }
 
         .ud-security-info h4 {
@@ -643,13 +902,337 @@ export default function UserSettings() {
           color: #64748b;
         }
 
+        /* Change Password Card */
+        .ud-pw-card {
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 28px;
+          margin-bottom: 24px;
+          width: 100%;
+        }
+
+        .ud-pw-oauth-msg {
+          font-size: 14px;
+          color: #64748b;
+          padding: 16px 0;
+          line-height: 1.6;
+        }
+
+        .ud-pw-fields {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          margin-bottom: 20px;
+        }
+
+        .ud-pw-field-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .ud-pw-label {
+          font-size: 13px;
+          font-weight: 600;
+          color: #475569;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .ud-pw-input-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .ud-pw-input {
+          width: 100%;
+          padding: 11px 44px 11px 14px;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          font-size: 14px;
+          font-family: inherit;
+          color: #1e293b;
+          outline: none;
+          transition: all 0.2s;
+          background: #fafbfc;
+        }
+
+        .ud-pw-input:focus {
+          border-color: #6366f1;
+          background: #fff;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .ud-pw-eye-btn {
+          position: absolute;
+          right: 12px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #94a3b8;
+          padding: 4px;
+          display: flex;
+          align-items: center;
+          border-radius: 4px;
+          transition: color 0.2s;
+          font-size: 15px;
+        }
+
+        .ud-pw-eye-btn:hover {
+          color: #6366f1;
+        }
+
+        .ud-pw-submit-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 11px 24px;
+          background: ${PRIMARY};
+          color: #fff;
+          border: none;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          font-family: inherit;
+          transition: all 0.2s;
+        }
+
+        .ud-pw-submit-btn:hover:not(:disabled) {
+          background: #a93226;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(192,57,43,0.25);
+        }
+
+        .ud-pw-submit-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
         /* Delete Account sidebar button */
         .ud-nav-item.danger {
           color: rgba(239,68,68,0.7);
         }
         .ud-nav-item.danger:hover {
-          background: rgba(239,68,68,0.08);
+          background: rgba(239,68,68,0.06);
           color: #ef4444;
+        }
+
+        /* ── Backdrop (mobile overlay) ── */
+        .ud-backdrop {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(15, 23, 42, 0.45);
+          backdrop-filter: blur(2px);
+          z-index: 99;
+          animation: backdropIn 0.2s ease;
+        }
+        @keyframes backdropIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+
+        /* Mobile sidebar close button */
+        .ud-sidebar-close {
+          display: none;
+          position: absolute;
+          top: 18px;
+          right: 16px;
+          width: 32px;
+          height: 32px;
+          border: none;
+          background: #f1f5f9;
+          border-radius: 8px;
+          cursor: pointer;
+          align-items: center;
+          justify-content: center;
+          color: #64748b;
+          transition: all 0.2s;
+          z-index: 1;
+        }
+        .ud-sidebar-close:hover {
+          background: #e2e8f0;
+          color: #1e293b;
+        }
+
+        /* Hamburger - hidden on desktop */
+        .ud-hamburger {
+          display: none;
+          width: 38px;
+          height: 38px;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          background: #fff;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          color: #64748b;
+          transition: all 0.2s;
+          flex-shrink: 0;
+        }
+        .ud-hamburger:hover {
+          background: #f8fafc;
+          color: #334155;
+          border-color: #cbd5e1;
+        }
+
+        /* Desktop toggle - hidden on mobile */
+        .ud-desktop-toggle {
+          display: flex;
+        }
+
+        /* ── Responsive ── */
+
+        /* Tablet + Mobile: overlay sidebar */
+        @media (max-width: 1023px) {
+          .ud-sidebar {
+            transform: translateX(-100%);
+            width: 280px !important;
+            z-index: 200;
+          }
+          .ud-sidebar.mobile-open {
+            transform: translateX(0);
+            box-shadow: 4px 0 32px rgba(0,0,0,0.15);
+          }
+          .ud-backdrop.active {
+            display: block;
+          }
+          .ud-sidebar.mobile-open .ud-sidebar-close {
+            display: flex;
+          }
+          .ud-hamburger {
+            display: flex;
+          }
+          .ud-desktop-toggle {
+            display: none;
+          }
+          .ud-main-area {
+            margin-left: 0 !important;
+            width: 100% !important;
+          }
+          .ud-main {
+            padding: 20px 20px 32px;
+          }
+          .ud-topbar {
+            padding: 0 20px;
+          }
+        }
+
+        /* Mobile: < 768px */
+        @media (max-width: 767px) {
+          .ud-main {
+            padding: 16px;
+          }
+          .ud-topbar {
+            padding: 0 16px;
+            height: 56px;
+          }
+          .ud-breadcrumb {
+            font-size: 18px;
+          }
+
+          /* Profile header */
+          .ud-profile-header {
+            flex-direction: column;
+            text-align: center;
+            padding: 24px;
+            gap: 16px;
+          }
+          .ud-profile-avatar {
+            width: 64px;
+            height: 64px;
+            font-size: 22px;
+          }
+          .ud-profile-name {
+            font-size: 18px;
+          }
+          .ud-profile-actions {
+            width: 100%;
+            justify-content: center;
+          }
+
+          /* Form rows */
+          .ud-form-row {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 14px 16px;
+            gap: 6px;
+          }
+          .ud-form-label {
+            flex: none;
+            padding: 0;
+            font-size: 12px;
+          }
+          .ud-form-value {
+            padding: 0;
+            font-size: 13px;
+          }
+          .ud-form-input {
+            width: 100%;
+          }
+
+          /* Security rows */
+          .ud-security-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+          .ud-security-info h4 {
+            font-size: 13px;
+          }
+          .ud-security-info p {
+            font-size: 11px;
+          }
+
+          /* Password card */
+          .ud-pw-card {
+            padding: 20px;
+          }
+          .ud-pw-input {
+            padding: 10px 40px 10px 12px;
+            font-size: 13px;
+          }
+
+          /* Profile btn */
+          .ud-profile-btn-name {
+            display: none;
+          }
+        }
+
+        /* Small mobile: < 480px */
+        @media (max-width: 480px) {
+          .ud-main {
+            padding: 12px;
+          }
+          .ud-topbar {
+            padding: 0 12px;
+          }
+          .ud-profile-header {
+            padding: 20px;
+          }
+          .ud-profile-avatar {
+            width: 56px;
+            height: 56px;
+            font-size: 20px;
+          }
+          .ud-avatar-edit {
+            width: 24px;
+            height: 24px;
+          }
+          .ud-btn {
+            padding: 8px 16px;
+            font-size: 12px;
+          }
+          .ud-pw-card {
+            padding: 16px;
+          }
+          .ud-section-title {
+            font-size: 14px;
+          }
         }
 
         /* ── Delete Account Modal ── */
@@ -757,76 +1340,58 @@ export default function UserSettings() {
         }
         .ud-modal-delete:hover:not(:disabled) { background: #dc2626; }
         .ud-modal-delete:disabled { opacity: 0.7; cursor: not-allowed; }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-          .ud-sidebar {
-            transform: translateX(-100%);
-          }
-          .ud-sidebar.open {
-            transform: translateX(0);
-          }
-          .ud-main-area {
-            margin-left: 0;
-          }
-          .ud-sidebar.collapsed ~ .ud-main-area {
-            margin-left: 0;
-          }
-          .ud-main {
-            padding: 20px 16px;
-          }
-          .ud-topbar {
-            padding: 0 16px;
-          }
-          .ud-profile-header {
-            flex-direction: column;
-            text-align: center;
-            padding: 24px;
-          }
-          .ud-profile-actions {
-            width: 100%;
-            justify-content: center;
-          }
-          .ud-form-label {
-            flex: 0 0 140px;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .ud-form-row {
-            flex-direction: column;
-            align-items: flex-start;
-            padding: 16px 20px;
-          }
-          .ud-form-label {
-            flex: none;
-            padding: 0 0 6px 0;
-          }
-          .ud-form-value {
-            padding: 0;
-          }
-          .ud-form-input {
-            width: 100%;
-          }
-        }
       `}</style>
+
+      {/* ── Mobile Backdrop ── */}
+      <div
+        className={`ud-backdrop ${sidebarOpen ? "active" : ""}`}
+        onClick={() => setSidebarOpen(false)}
+        aria-hidden="true"
+      />
 
       <div className="ud-page">
         {/* ── Sidebar ── */}
-        <aside className={`ud-sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
+        <aside className={`ud-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
+          {/* Mobile close button */}
+          <button
+            type="button"
+            className="ud-sidebar-close"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close sidebar"
+          >
+            <FiX size={18} />
+          </button>
+
+          {/* Logo */}
           <div className="ud-sidebar-header">
-            <div className="ud-sidebar-logo">S</div>
-            <span className="ud-sidebar-brand">ShopDash</span>
+            <Link href="/" className="ud-sidebar-logo-wrap">
+              <svg className="ud-sidebar-logo-icon" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="38" height="38" rx="8" fill={PRIMARY} />
+                <path
+                  d="M10 10 C10 10, 14 8, 19 13 C24 18, 28 10, 28 10
+                     M10 28 C10 28, 14 30, 19 25 C24 20, 28 28, 28 28
+                     M10 10 Q10 19 10 28
+                     M28 10 Q28 19 28 28
+                     M14 19 C14 19 16 22 19 22 C22 22 24 19 24 19"
+                  stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"
+                />
+                <circle cx="19" cy="19" r="3" fill="#fff" opacity="0.9" />
+              </svg>
+              <div className="ud-sidebar-logo-text">
+                <span className="ud-logo-line1">HamroNepal</span>
+                <span className="ud-logo-line2">Bazaar</span>
+              </div>
+            </Link>
           </div>
 
           <div className="ud-nav-section">
             <div className="ud-nav-label">Menu</div>
-            {sidebarItems.slice(0, 5).map((item) => (
+            {sidebarItems.slice(0, 4).map((item) => (
               <Link
                 key={item.id}
                 href={item.href}
                 className={`ud-nav-item ${activeTab === item.id ? "active" : ""}`}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
               >
                 <span className="ud-nav-icon">
                   <item.icon size={18} />
@@ -836,12 +1401,12 @@ export default function UserSettings() {
             ))}
 
             <div className="ud-nav-label" style={{ marginTop: 16 }}>Account</div>
-            {sidebarItems.slice(5).map((item) => (
+            {sidebarItems.slice(4).map((item) => (
               <Link
                 key={item.id}
                 href={item.href}
                 className={`ud-nav-item ${activeTab === item.id ? "active" : ""}`}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
               >
                 <span className="ud-nav-icon">
                   <item.icon size={18} />
@@ -852,8 +1417,9 @@ export default function UserSettings() {
 
             {/* Delete Account */}
             <button
+              type="button"
               className="ud-nav-item danger"
-              onClick={() => setShowDeleteModal(true)}
+              onClick={() => { setShowDeleteModal(true); setSidebarOpen(false); }}
               title="Delete Account"
             >
               <span className="ud-nav-icon">
@@ -864,10 +1430,15 @@ export default function UserSettings() {
           </div>
 
           <div className="ud-sidebar-footer">
-            <div className="ud-sidebar-avatar">SJ</div>
+            <div className="ud-sidebar-avatar">
+              {session?.user?.image
+                ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                : userInitials
+              }
+            </div>
             <div className="ud-sidebar-user">
-              <div className="ud-sidebar-name">Siya Jaz</div>
-              <div className="ud-sidebar-role">Premium Member</div>
+              <div className="ud-sidebar-name">{session?.user?.name || "User"}</div>
+              <div className="ud-sidebar-role">{session?.user?.email || "Member"}</div>
             </div>
           </div>
         </aside>
@@ -877,19 +1448,76 @@ export default function UserSettings() {
           {/* Top Header */}
           <header className="ud-topbar">
             <div className="ud-topbar-left">
+              {/* Hamburger - mobile only */}
               <button
-                className="ud-toggle-btn"
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                type="button"
+                className="ud-hamburger"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open sidebar"
+              >
+                <FiMenu size={20} />
+              </button>
+              {/* Desktop toggle - desktop only */}
+              <button
+                type="button"
+                className="ud-toggle-btn ud-desktop-toggle"
+                onClick={() => setSidebarCollapsed((prev) => !prev)}
+                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               >
                 <FiMoreHorizontal size={18} />
               </button>
               <h1 className="ud-breadcrumb">Settings</h1>
             </div>
             <div className="ud-topbar-right">
-              <button className="ud-icon-btn">
+              {/* Notifications */}
+              <Link href="/user/notifications" className="ud-icon-btn" title="Notifications">
                 <FiBell size={18} />
                 <span className="ud-badge">3</span>
-              </button>
+              </Link>
+
+              {/* Profile Avatar Dropdown */}
+              <div className="ud-profile-wrap" ref={profileDropdownRef}>
+                <button
+                  type="button"
+                  className="ud-profile-btn"
+                  onClick={() => setShowProfileDropdown((prev) => !prev)}
+                >
+                  <div className="ud-profile-btn-avatar">
+                    {session?.user?.image
+                      ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : userInitials
+                    }
+                  </div>
+                  <span className="ud-profile-btn-name">{session?.user?.name || "User"}</span>
+                  <FiChevronDown size={14} className={`ud-profile-chevron ${showProfileDropdown ? "open" : ""}`} />
+                </button>
+
+                {showProfileDropdown && (
+                  <div className="ud-profile-dropdown">
+                    <div className="ud-dropdown-header">
+                      <div className="ud-dropdown-username">{session?.user?.name || "User"}</div>
+                      <div className="ud-dropdown-email">{session?.user?.email || ""}</div>
+                    </div>
+                    <Link
+                      href="/user/dashboard"
+                      className="ud-dropdown-item"
+                      onClick={() => setShowProfileDropdown(false)}
+                    >
+                      <FiUser size={15} />
+                      Dashboard
+                    </Link>
+                    <div className="ud-dropdown-divider" />
+                    <button
+                      type="button"
+                      className="ud-dropdown-item logout"
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                    >
+                      <FiLogOut size={15} />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </header>
 
@@ -898,17 +1526,23 @@ export default function UserSettings() {
             {/* Profile Header */}
             <div className="ud-profile-header">
               <div className="ud-profile-avatar-wrap">
-                <div className="ud-profile-avatar">SJ</div>
+                <div className="ud-profile-avatar">
+                  {session?.user?.image
+                    ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                    : userInitials
+                  }
+                </div>
                 <div className="ud-avatar-edit" title="Change photo">
                   <FiCamera size={12} />
                 </div>
               </div>
               <div className="ud-profile-info">
-                <div className="ud-profile-name">Siya Jaz</div>
-                <div className="ud-profile-role">Premium Member · Kathmandu, Nepal</div>
+                <div className="ud-profile-name">{session?.user?.name || "User"}</div>
+                <div className="ud-profile-role">Member · Kathmandu, Nepal</div>
               </div>
               <div className="ud-profile-actions">
                 <button
+                  type="button"
                   className={`ud-btn ${isEditing ? "ud-btn-primary" : "ud-btn-ghost"}`}
                   onClick={() => setIsEditing(!isEditing)}
                 >
@@ -925,7 +1559,7 @@ export default function UserSettings() {
               </div>
             </div>
 
-            {/* Account Details */}
+            {/* Account Details — Password field removed */}
             <div className="ud-section-header">
               <h3 className="ud-section-title">Account Information</h3>
             </div>
@@ -947,26 +1581,6 @@ export default function UserSettings() {
                   )}
                 </div>
               ))}
-              <div className="ud-form-row">
-                <div className="ud-form-label">
-                  <FiLock size={16} />
-                  Password
-                </div>
-                <div className="ud-form-value">
-                  <div className="ud-password-wrap">
-                    <span className="ud-password-text">
-                      {showPassword ? "mypassword123" : "••••••••••••"}
-                    </span>
-                    <button
-                      className="ud-toggle-pw"
-                      onClick={() => setShowPassword(!showPassword)}
-                      title={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <FiEyeOff size={14} /> : <FiEye size={14} />}
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Security Section */}
@@ -979,22 +1593,124 @@ export default function UserSettings() {
                   <h4>Two-Factor Authentication</h4>
                   <p>Add an extra layer of security to your account</p>
                 </div>
-                <button className="ud-btn ud-btn-ghost">Enable</button>
+                <button type="button" className="ud-btn ud-btn-ghost">Enable</button>
               </div>
               <div className="ud-security-row">
                 <div className="ud-security-info">
                   <h4>Active Sessions</h4>
-                  <p>Manage devices where you're currently logged in</p>
+                  <p>Manage devices where you&apos;re currently logged in</p>
                 </div>
-                <button className="ud-btn ud-btn-ghost">Manage</button>
+                <button type="button" className="ud-btn ud-btn-ghost">Manage</button>
               </div>
               <div className="ud-security-row">
                 <div className="ud-security-info">
                   <h4>Login History</h4>
                   <p>View your recent login activity</p>
                 </div>
-                <button className="ud-btn ud-btn-ghost">View</button>
+                <button type="button" className="ud-btn ud-btn-ghost">View</button>
               </div>
+            </div>
+
+            {/* Change Password Section */}
+            <div className="ud-section-header">
+              <h3 className="ud-section-title">Change Password</h3>
+            </div>
+            <div className="ud-pw-card">
+              {isOAuthUser ? (
+                <p className="ud-pw-oauth-msg">
+                  You signed in with {session?.user?.provider || "a social account"}. Password management
+                  is handled by your {session?.user?.provider || "social"} account and cannot be changed here.
+                </p>
+              ) : (
+                <>
+                  <div className="ud-pw-fields">
+                    <div className="ud-pw-field-group">
+                      <label className="ud-pw-label">
+                        <FiLock size={14} />
+                        Current Password
+                      </label>
+                      <div className="ud-pw-input-wrap">
+                        <input
+                          type={showCurrentPw ? "text" : "password"}
+                          className="ud-pw-input"
+                          placeholder="Enter current password"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          autoComplete="current-password"
+                        />
+                        <button
+                          type="button"
+                          className="ud-pw-eye-btn"
+                          onClick={() => setShowCurrentPw((p) => !p)}
+                          title={showCurrentPw ? "Hide" : "Show"}
+                        >
+                          {showCurrentPw ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="ud-pw-field-group">
+                      <label className="ud-pw-label">
+                        <FiLock size={14} />
+                        New Password
+                      </label>
+                      <div className="ud-pw-input-wrap">
+                        <input
+                          type={showNewPw ? "text" : "password"}
+                          className="ud-pw-input"
+                          placeholder="At least 8 characters"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          autoComplete="new-password"
+                        />
+                        <button
+                          type="button"
+                          className="ud-pw-eye-btn"
+                          onClick={() => setShowNewPw((p) => !p)}
+                          title={showNewPw ? "Hide" : "Show"}
+                        >
+                          {showNewPw ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="ud-pw-field-group">
+                      <label className="ud-pw-label">
+                        <FiLock size={14} />
+                        Confirm New Password
+                      </label>
+                      <div className="ud-pw-input-wrap">
+                        <input
+                          type={showConfirmPw ? "text" : "password"}
+                          className="ud-pw-input"
+                          placeholder="Repeat new password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          autoComplete="new-password"
+                        />
+                        <button
+                          type="button"
+                          className="ud-pw-eye-btn"
+                          onClick={() => setShowConfirmPw((p) => !p)}
+                          title={showConfirmPw ? "Hide" : "Show"}
+                        >
+                          {showConfirmPw ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="ud-pw-submit-btn"
+                    onClick={handlePasswordUpdate}
+                    disabled={isSubmittingPw}
+                  >
+                    <FiLock size={14} />
+                    {isSubmittingPw ? "Updating..." : "Update Password"}
+                  </button>
+                </>
+              )}
             </div>
           </main>
         </div>
@@ -1010,13 +1726,14 @@ export default function UserSettings() {
             <div className="ud-modal-title">Delete Your Account?</div>
             <div className="ud-modal-body">
               This action is <strong>permanent and irreversible</strong>. All your orders,
-              wishlist, addresses, and personal data will be permanently deleted.
+              wishlist, and personal data will be permanently deleted.
             </div>
             {deleteError && (
               <div className="ud-modal-error">{deleteError}</div>
             )}
             <div className="ud-modal-actions">
               <button
+                type="button"
                 className="ud-modal-cancel"
                 onClick={() => { setShowDeleteModal(false); setDeleteError(""); }}
                 disabled={deleting}
@@ -1024,6 +1741,7 @@ export default function UserSettings() {
                 Cancel
               </button>
               <button
+                type="button"
                 className="ud-modal-delete"
                 onClick={handleDeleteAccount}
                 disabled={deleting}

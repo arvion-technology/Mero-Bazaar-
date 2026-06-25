@@ -659,7 +659,7 @@ export default function Navbar() {
                     style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 600, color: "#fff", background: PRIMARY, borderRadius: 8, padding: "9px 0", border: "none", cursor: "pointer" }}
                   >
                     Logout
-                  </button>
+                  </button> 
                 </div>
               </div>
             ) : (
