@@ -87,8 +87,8 @@ model vendorKyc {
 
   fullName          String
   dateOfBirth       DateTime
-  contactNumber      String  @unique
-  address           String
+  contactNumber     String  @unique
+  address           String  
   panNumber         String @unique
 
   panCardUrl        String?

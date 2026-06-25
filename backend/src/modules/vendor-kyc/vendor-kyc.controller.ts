@@ -23,24 +23,24 @@ export class VendorKycController {
         { name: 'selfieWithPanUrl', maxCount: 1 },
       ],
       kycUploadconfig,
-  ),
-)
-submitKyc(
-  @Request() req,
-  @Body() dto: SubmitKycDto, 
-  @UploadedFiles()
-  files: {
-    panCardUrl?: Express.Multer.File[];
-    photoUrl?: Express.Multer.File[];
-    selfieWithPanUrl?: Express.Multer.File[];
-  },
-) {
+    ),
+  )
+  submitKyc(
+    @Request() req,
+    @Body() dto: SubmitKycDto,
+    @UploadedFiles()
+    files: {
+      panCardUrl?: Express.Multer.File[];
+      photoUrl?: Express.Multer.File[];
+      selfieWithPanUrl?: Express.Multer.File[];
+    },
+  ) {
     return this.vendorKycService.submitKyc(req.user.id, dto, files);
-}
+  }
 
   @Post('send-otp')
-  sendOtp(@Request() req) {
-    return this.vendorKycService.sendContactOtp(req.user.id);
+  sendOtp(@Request() req, @Body('phone') phone: string) {
+    return this.vendorKycService.sendContactOtp(req.user.id, phone);
   }
 
   @Post('verify-otp')
