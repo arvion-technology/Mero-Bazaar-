@@ -7,6 +7,7 @@ import { UserService } from './user.service';
 import { OAuthSyncDto } from './dto/oauth_sync.dto';
 import { UpdatePasswordDto } from './dto/update_password.dto';
 
+
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -28,9 +29,14 @@ export class UserController {
     return this.userService.findOrCreateOAuthUser(dto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
+  @Post('forgot-password')
+  forgotPassword(@Body() body: { email: string }) {
+    return this.userService.forgotPassword(body.email);
+  }
+
+  @Post('reset-password')
+  resetPassword(@Body() body: { token: string; newPassword: string }) {
+    return this.userService.resetPassword(body.token, body.newPassword);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -45,27 +51,33 @@ export class UserController {
     return this.userService.update(req.user.id, dto);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(id);
-  }
-
-
   @UseGuards(JwtAuthGuard)
   @Patch('profile/password')
   updatePassword(@Request() req, @Body() dto: UpdatePasswordDto) {
     return this.userService.updatePassword(req.user.id, dto);
   }
 
-  @Post('forgot-password')
-  forgotPassword(@Body() body: { email: string }) {
-    return this.userService.forgotPassword(body.email);
+  @UseGuards(JwtAuthGuard)
+  @Post('profile/phone/request')
+  requestPhoneUpdate(@Request() req, @Body('phone') phone: string) {
+    return this.userService.requestPhoneUpdate(req.user.id, phone);
   }
 
-  @Post('reset-password')
-  resetPassword(@Body() body: { token: string; newPassword: string }) {
-    return this.userService.resetPassword(body.token, body.newPassword);
+  @UseGuards(JwtAuthGuard)
+  @Post('profile/phone/confirm')
+  confirmPhoneUpdate(@Request() req, @Body('otp') otp: string) {
+    return this.userService.confirmPhoneUpdate(req.user.id, otp);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.userService.findOne(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.userService.remove(id);
   }
 }

@@ -5,13 +5,12 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { TbGridDots } from "react-icons/tb";
 import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
-import { useRouter } from "next/navigation";
 
 const categories = [
   { name: "Vehicles", slug: "vehicles" },
   { name: "Jobs & Labour Hire", slug: "job" },
   { name: "Medical & Dental", slug: "medical" },
-  { name: " Trades & Home Repair", slug: "trade-and-homerepair" },
+  { name: "Trades & Home Repair", slug: "trade-and-homerepair" },
   { name: "Rent & Real Estate", slug: "rent-and-real-estate" },
   { name: "Agriculture & Livestock", slug: "agriculture-and-livestock" },
   { name: "Secondhand Goods", slug: "secondhand" },
@@ -43,52 +42,21 @@ export default function Navbar() {
   const [showMobileCats, setShowMobileCats] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const [openNotif, setOpenNotif] = useState(false);
   const { data: session, status } = useSession();
-  const router = useRouter();
-  const [notifSeen, setNotifSeen] = useState(false);
 
   const catRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
-  const notifRef = useRef<HTMLDivElement>(null);
-
-  const handleAccountClick = () => {
-    setShowProfileMenu(false);
-    if (session?.user?.role === "VENDOR") {
-      router.push("/kyc");
-    } else {
-      router.push("/profile");
-    }
-  };
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (catRef.current && !catRef.current.contains(e.target as Node)) setShowCategories(false);
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) setShowMore(false);
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfileMenu(false);
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setOpenNotif(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  //notification
-  const notifications = session
-    ? ([
-        !session.user?.phone && "Add your phone number",
-        !session.user?.address && "Add your address",
-      ].filter(Boolean) as string[])
-    : [];
-
-  const notificationCount = notifications.length;
-  const showNotificationBadge = notificationCount > 0;
-
-  const [prevNotificationCount, setPrevNotificationCount] = useState(notificationCount);
-  if (notificationCount !== prevNotificationCount) {
-    setPrevNotificationCount(notificationCount);
-    setNotifSeen(false);
-  }
 
   return (
     <>
@@ -143,9 +111,9 @@ export default function Navbar() {
         .hnb-links {
           display: flex;
           align-items: center;
-          margin-left: 150px;
-          gap: 0;
           flex: 1;
+          gap: 0;
+          padding-left: 24px;
         }
         .hnb-btn {
           display: flex;
@@ -248,17 +216,7 @@ export default function Navbar() {
           margin-left: auto;
           flex-shrink: 0;
         }
-        .hnb-seller {
-          font-size: 13.5px;
-          font-weight: 500;
-          color: #333;
-          text-decoration: none;
-          white-space: nowrap;
-          transition: color 0.15s;
-        }
-        .hnb-seller:hover { color: ${PRIMARY}; }
         .hnb-bell {
-          position: relative;
           background: none;
           border: none;
           cursor: pointer;
@@ -270,56 +228,6 @@ export default function Navbar() {
           transition: background 0.15s, color 0.15s;
         }
         .hnb-bell:hover { background: #f5f5f5; color: #111; }
-        .hnb-badge {
-          position: absolute;
-          top: -4px;
-          right: -4px;
-          background: #e74c3c;
-          color: #fff;
-          font-size: 10px;
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-        }
-        .hnb-notif-dropdown {
-          position: absolute;
-          top: calc(100% + 10px);
-          right: 0;
-          background: #fff;
-          border: 1px solid #ececec;
-          border-radius: 12px;
-          z-index: 1000;
-          box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-          width: 250px;
-          padding: 8px;
-          animation: fadeDown 0.15s ease;
-        }
-        .hnb-notif-header {
-          padding: 8px 10px 10px;
-          font-size: 13px;
-          font-weight: 600;
-          color: #111;
-          border-bottom: 1px solid #f0f0f0;
-          margin-bottom: 6px;
-        }
-        .hnb-notif-item {
-          padding: 9px 10px;
-          font-size: 12.5px;
-          color: #444;
-          border-radius: 8px;
-          transition: background 0.12s;
-        }
-        .hnb-notif-item:hover { background: #fff5f5; }
-        .hnb-notif-empty {
-          padding: 16px 10px;
-          font-size: 12.5px;
-          color: #888;
-          text-align: center;
-        }
         .hnb-login {
           background: ${PRIMARY};
           color: #fff;
@@ -499,6 +407,7 @@ export default function Navbar() {
       <nav className="hnb-nav">
         <div className="hnb-inner">
 
+          {/* Logo */}
           <Link href="/" className="hnb-logo">
             <svg className="hnb-logo-icon" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="38" height="38" rx="8" fill={PRIMARY} />
@@ -518,8 +427,10 @@ export default function Navbar() {
             </div>
           </Link>
 
+          {/* Desktop Nav Links */}
           <div className="hnb-links">
 
+            {/* Categories Dropdown */}
             <div style={{ position: "relative" }} ref={catRef}>
               <button
                 className={`hnb-btn${showCategories ? " active" : ""}`}
@@ -558,6 +469,7 @@ export default function Navbar() {
               )}
             </div>
 
+            {/* Nav Links */}
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -571,6 +483,7 @@ export default function Navbar() {
               </Link>
             ))}
 
+            {/* More Dropdown */}
             <div style={{ position: "relative" }} ref={moreRef}>
               <button
                 className={`hnb-btn${showMore ? " active" : ""}`}
@@ -601,82 +514,72 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* notifications */}
+          {/* Right Section */}
           <div className="hnb-right">
-            <div ref={notifRef} style={{ position: "relative" }}>
-              <button
-                className="hnb-bell"
-                aria-label="Notifications"
-                onClick={() => {
-                  if (!session) {
-                    router.push("/register");
-                    return;
-                  }
-                  setOpenNotif((v) => !v);
-                  setNotifSeen(true);
-                }}
-              >
-                <FiBell size={20} />
-                {session && showNotificationBadge && !notifSeen && (
-                  <span className="hnb-badge">{notificationCount}</span>
-                )}
-              </button>
 
-              {session && openNotif && (
-                <div className="hnb-notif-dropdown">
-                  <div className="hnb-notif-header">Notifications</div>
-                  {notifications.length > 0 ? (
-                    notifications.map((msg, i) => (
-                      <div key={i} className="hnb-notif-item">⚠️ {msg}</div>
-                    ))
-                  ) : (
-                    <div className="hnb-notif-empty">You are all caught up</div>
+            {/* Notification Bell */}
+            <button className="hnb-bell" aria-label="Notifications">
+              <FiBell size={20} />
+            </button>
+
+            {/* Auth: Profile or Login */}
+            {status === "loading" ? null : session ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                {/* Username */}
+                <span style={{ fontSize: "13.5px", fontWeight: 500, color: "#333" }}>
+                  {session.user?.name || "User"}
+                </span>
+
+                {/* Profile Avatar + Dropdown */}
+                <div className="hnb-profile-container" ref={profileRef}>
+                  <button
+                    className="hnb-avatar-btn"
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    aria-label="User profile menu"
+                    aria-haspopup="true"
+                    aria-expanded={showProfileMenu}
+                  >
+                    {session.user?.image ? (
+                      <img src={session.user.image} alt={session.user.name || "User"} />
+                    ) : (
+                      <span>{(session.user?.name?.[0] || "U").toUpperCase()}</span>
+                    )}
+                  </button>
+
+                  {showProfileMenu && (
+                    <div className="hnb-profile-dropdown">
+                      <div className="hnb-profile-header">
+                        <div className="hnb-profile-header-name">{session.user?.name || "User"}</div>
+                        <div className="hnb-profile-header-email">{session.user?.email || ""}</div>
+                      </div>
+                      <Link
+                        href="/user/dashboard"
+                        className="hnb-profile-item"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        <FiUser size={15} />
+                        My Account
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          signOut({ callbackUrl: "/" });
+                        }}
+                        className="hnb-profile-item logout"
+                      >
+                        <FiLogOut size={15} />
+                        Logout
+                      </button>
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-
-            {status === "loading" ? null : session ? (
-              <div className="hnb-profile-container" ref={profileRef}>
-                <button 
-                  className="hnb-avatar-btn" 
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  aria-label="User profile menu"
-                  aria-haspopup="true"
-                  aria-expanded={showProfileMenu}
-                >
-                  {session.user?.image ? (
-                    <img src={session.user.image} alt={session.user.name || "User"} />
-                  ) : (
-                    <span>{(session.user?.name?.[0] || "U").toUpperCase()}</span>
-                  )}
-                </button>
-
-                {showProfileMenu && (
-                  <div className="hnb-profile-dropdown">
-                    <div className="hnb-profile-header">
-                      <div className="hnb-profile-header-name">{session.user?.name || "User"}</div>
-                      <div className="hnb-profile-header-email">{session.user?.email || ""}</div>
-                    </div>
-                    <button onClick={handleAccountClick} className="hnb-profile-item">
-                      <FiUser size={15} />
-                      My Account
-                    </button>
-                    <button 
-                      onClick={() => { setShowProfileMenu(false); signOut({ callbackUrl: "/" }); }}
-                      className="hnb-profile-item logout"
-                    >
-                      <FiLogOut size={15} />
-                      Logout
-                    </button>
-                  </div>
-                )}
               </div>
             ) : (
               <Link href="/register" className="hnb-login">Signup</Link>
             )}
           </div>
 
+          {/* Hamburger */}
           <button
             className="hnb-hamburger"
             onClick={() => setShowMobileMenu(!showMobileMenu)}
@@ -686,10 +589,16 @@ export default function Navbar() {
           </button>
         </div>
 
+        {/* Mobile Menu */}
         {showMobileMenu && (
           <div className="hnb-mobile-menu">
             {navLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="hnb-mobile-link">
+              <Link
+                key={link.href}
+                href={link.href}
+                className="hnb-mobile-link"
+                onClick={() => setShowMobileMenu(false)}
+              >
                 {link.label}
               </Link>
             ))}
@@ -706,7 +615,12 @@ export default function Navbar() {
             {showMobileCats && (
               <div style={{ paddingLeft: 4, paddingBottom: 4 }}>
                 {categories.map((cat) => (
-                  <Link key={cat.slug} href={`/category/${cat.slug}`} className="hnb-mobile-sub-link">
+                  <Link
+                    key={cat.slug}
+                    href={`/category/${cat.slug}`}
+                    className="hnb-mobile-sub-link"
+                    onClick={() => setShowMobileMenu(false)}
+                  >
                     {cat.name}
                   </Link>
                 ))}
@@ -720,9 +634,7 @@ export default function Navbar() {
                     {session.user?.image ? (
                       <img src={session.user.image} alt={session.user.name || "User"} />
                     ) : (
-                      <span>
-                        {(session.user?.name?.[0] || "U").toUpperCase()}
-                      </span>
+                      <span>{(session.user?.name?.[0] || "U").toUpperCase()}</span>
                     )}
                   </div>
                   <div>
@@ -731,13 +643,14 @@ export default function Navbar() {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 10 }}>
-                  <button
-                    onClick={() => { setShowMobileMenu(false); handleAccountClick(); }}
+                  <Link
+                    href="/user/dashboard"
                     className="hnb-mobile-link"
+                    onClick={() => setShowMobileMenu(false)}
                     style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 500, color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "9px 0", textDecoration: "none", borderBottom: "1px solid #ddd" }}
                   >
                     My Account
-                  </button>
+                  </Link>
                   <button
                     onClick={() => {
                       setShowMobileMenu(false);
@@ -751,8 +664,17 @@ export default function Navbar() {
               </div>
             ) : (
               <div style={{ display: "flex", gap: 10, paddingTop: 14 }}>
-                <Link href="/register" style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 600, color: "#fff", background: PRIMARY, borderRadius: 8, padding: "9px 0", textDecoration: "none" }}>
-                  Sign up
+                <Link
+                  href="/sell"
+                  style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 500, color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "9px 0", textDecoration: "none" }}
+                >
+                  Become a Seller
+                </Link>
+                <Link
+                  href="/register"
+                  style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 600, color: "#fff", background: PRIMARY, borderRadius: 8, padding: "9px 0", textDecoration: "none" }}
+                >
+                  Login / Register
                 </Link>
               </div>
             )}
