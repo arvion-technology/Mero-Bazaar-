@@ -46,7 +46,6 @@ function RegisterPageContent() {
   const [form, setForm] = useState({
     fullName: "",
     email: "",
-    // phone: "",
     password: "",
     confirmPassword: "",
     address: "",
@@ -77,7 +76,6 @@ function RegisterPageContent() {
       email: form.email,
       password: form.password,
       name: form.fullName,
-      phone: form.phone,
       role: accountType === "seller" ? "VENDOR" : "USER",
       address: form.address,
     };

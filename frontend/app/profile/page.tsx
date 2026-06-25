@@ -15,11 +15,18 @@ export default function ProfilePage() {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("details");
-  
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [issubmitting, setIsSubmitting] = useState(false);
+  const [ saving, setSaving] = useState(false);
+
+  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [sendingPhoneOtp, setSendingPhoneOtp] = useState(false);
+  const [ verifyingPhoneOtp, setVerifyingPhoneOtp] = useState(false);
+  const [pendingPhone, setPendingPhone] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -30,8 +37,6 @@ export default function ProfilePage() {
     image: "",
     isActive: true,
   });
-
-  const [saving, setSaving] = useState(false);
 
   const userId = session?.user?.id;
   const token = session?.accessToken;
@@ -78,8 +83,10 @@ export default function ProfilePage() {
             image: user.image || session?.user.image || "",
             phone: user.phone || "",
             address: user.address || "",
-            isActive: user.isActive ?? true,
           }));
+          if (user.phone && user.phoneVerifiedAt) {
+            setPhoneVerified(true);
+          }
         } catch (err) {
           console.error(err);
         }
@@ -103,7 +110,6 @@ export default function ProfilePage() {
         },
         body: JSON.stringify({
           name: formData.name,
-          phone: formData.phone,
           address: formData.address,
         }),
       });
@@ -114,7 +120,6 @@ export default function ProfilePage() {
       }
       await update({
         name: data.name,
-        phone: data.phone,
         address: data.address,
         image: data.image,
       });
@@ -124,6 +129,66 @@ export default function ProfilePage() {
       toast.error(message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  //otp request
+  const handleRequestPhoneOtp = async () => {
+    const phone = formData.phone.trim();
+    if (!/^(98|97)\d{8}$/.test(phone)) {
+      toast.error("Enter a valid Nepal number (98/97XXXXXXXX");
+      return;
+    }
+    setSendingPhoneOtp(true);
+    try {
+      const res =  await fetch("/api/user/profile/phone/request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ phone }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to send OTP");
+      setPendingPhone(phone);
+      setPhoneOtpSent(true);
+      setPhoneVerified(false);
+      toast.success(`OTP sent  to ${phone}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setSendingPhoneOtp(false);
+    }
+  };
+
+
+  //confirm otp
+  const handleConfrimPhoneOtp = async () => {
+    if (phoneOtp.length !== 6) {
+      toast.error("Enter the 6-digit OTP");
+      return;
+    }
+    setVerifyingPhoneOtp(true);
+    try {
+      const res = await fetch("/api/user/profile/phone/confirm", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ otp: phoneOtp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Invalid OTP");
+      setPhoneVerified(true);
+      setPhoneOtpSent(false);
+      setPhoneOtp("");
+      toast.success("Phone number verified and saved!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setVerifyingPhoneOtp(false);
     }
   };
 
@@ -546,10 +611,10 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="form-grid">
+                    {/* Full Name */}
                     <div className="form-group">
                       <label className="form-label">
-                        <FiUser size={14} />
-                        Full Name
+                        <FiUser size={14} /> Full Name
                       </label>
                       <div className="form-input-wrapper">
                         <FiUser className="form-input-icon" />
@@ -562,10 +627,10 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
+                    {/* Email */}
                     <div className="form-group">
                       <label className="form-label">
-                        <FiMail size={14} />
-                        Email Address
+                        <FiMail size={14} /> Email Address
                       </label>
                       <div className="form-input-wrapper">
                         <FiMail className="form-input-icon" />
@@ -579,26 +644,110 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
+                    {/* Phone with OTP */}
                     <div className="form-group">
                       <label className="form-label">
-                        <FiPhone size={14} />
-                        Contact Number
+                        <FiPhone size={14} /> Contact Number
                       </label>
-                      <div className="form-input-wrapper">
-                        <FiPhone className="form-input-icon" />
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        />
-                      </div>
+
+                      {phoneVerified ? (
+                        <>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div className="form-input-wrapper" style={{ flex: 1 }}>
+                              <FiPhone className="form-input-icon" />
+                              <input type="text" className="form-input" value={formData.phone} disabled />
+                            </div>
+                            <span style={{
+                              display: "inline-flex", alignItems: "center", gap: 5,
+                              fontSize: 12, fontWeight: 600, color: "#1a7a4a",
+                              background: "#e6f7ee", padding: "5px 12px", borderRadius: 20, whiteSpace: "nowrap",
+                            }}>
+                              Verified
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => { setPhoneVerified(false); setPhoneOtpSent(false); setPhoneOtp(""); }}
+                            style={{ background: "none", border: "none", color: PRIMARY, fontSize: 11, fontWeight: 600, cursor: "pointer", textDecoration: "underline", textAlign: "left" }}
+                          >
+                            Change number
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <div className="form-input-wrapper" style={{ flex: 1 }}>
+                              <FiPhone className="form-input-icon" />
+                              <input
+                                type="tel"
+                                className="form-input"
+                                value={formData.phone}
+                                onChange={(e) => { setFormData({ ...formData, phone: e.target.value }); setPhoneOtpSent(false); }}
+                                placeholder="98XXXXXXXX"
+                                maxLength={10}
+                                disabled={phoneOtpSent}
+                              />
+                            </div>
+                            <button
+                              onClick={handleRequestPhoneOtp}
+                              disabled={sendingPhoneOtp || phoneOtpSent}
+                              style={{
+                                whiteSpace: "nowrap", padding: "0 16px",
+                                background: PRIMARY, color: "#fff", border: "none",
+                                borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                                opacity: (sendingPhoneOtp || phoneOtpSent) ? 0.6 : 1,
+                              }}
+                            >
+                              {sendingPhoneOtp ? "Sending..." : phoneOtpSent ? "Sent" : "Send OTP"}
+                            </button>
+                          </div>
+
+                          {phoneOtpSent && (
+                            <>
+                              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                                <input
+                                  type="text"
+                                  style={{
+                                    flex: 1, padding: "11px 14px", border: "1px solid #ddd",
+                                    borderRadius: 8, fontSize: 18, letterSpacing: 8,
+                                    textAlign: "center", fontFamily: "monospace", outline: "none",
+                                  }}
+                                  placeholder="000000"
+                                  maxLength={6}
+                                  value={phoneOtp}
+                                  onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, ""))}
+                                />
+                                <button
+                                  onClick={handleConfrimPhoneOtp}
+                                  disabled={verifyingPhoneOtp}
+                                  style={{
+                                    whiteSpace: "nowrap", padding: "0 16px",
+                                    background: PRIMARY, color: "#fff", border: "none",
+                                    borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                                    opacity: verifyingPhoneOtp ? 0.6 : 1,
+                                  }}
+                                >
+                                  {verifyingPhoneOtp ? "Checking..." : "Verify"}
+                                </button>
+                              </div>
+                              <p style={{ fontSize: 11, color: "#888", marginTop: 4 }}>
+                                Code sent to {pendingPhone}.{" "}
+                                <button
+                                  onClick={() => { setPhoneOtpSent(false); setPhoneOtp(""); }}
+                                  style={{ background: "none", border: "none", color: PRIMARY, fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+                                >
+                                  Change number
+                                </button>
+                              </p>
+                            </>
+                          )}
+                        </>
+                      )}
                     </div>
 
+                    {/* Address */}
                     <div className="form-group">
                       <label className="form-label">
-                        <FiMapPin size={14} />
-                        Address
+                        <FiMapPin size={14} /> Address
                       </label>
                       <div className="form-input-wrapper">
                         <FiMapPin className="form-input-icon" />
@@ -611,7 +760,6 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   </div>
-
                   <button className="save-btn" onClick={handleSave} disabled={saving}>
                     {saving ? "Saving..." : "Save Changes"}
                   </button>
