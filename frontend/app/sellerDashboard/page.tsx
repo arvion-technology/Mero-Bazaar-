@@ -1620,7 +1620,7 @@ export default function SellerDashboard() {
             {/* Sales Chart */}
             <div className="dash-card">
               <div className="dash-chart-header">
-                <h3 classArea="dash-chart-title">Sales Overview</h3>
+                <h3 className="dash-chart-title">Sales Overview</h3>
                 <div className="dash-chart-legend">
                   <div className="dash-legend-item">
                     <span className="dash-legend-dot" style={{ background: ACCENT }} />
