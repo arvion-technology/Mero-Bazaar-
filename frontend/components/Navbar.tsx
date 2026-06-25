@@ -622,67 +622,6 @@ export default function Navbar() {
                 )}
               </button>
 
-<<<<<<< HEAD
-            <button className="hnb-bell" aria-label="Notifications">
-              <FiBell size={20} />
-            </button>
-
-
-            {status === "loading" ? null : session ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                {/*  username */}
-                <span style={{ fontSize: "13.5px", fontWeight: 500, color: "#333" }} >
-                  {session.user?.name || "User"}
-                </span>
-
-                {/* Profile Avatar and Dropdown */}
-                <div className="hnb-profile-container" ref={profileRef}>
-                  <button 
-                    className="hnb-avatar-btn" 
-                    onClick={() => setShowProfileMenu(!showProfileMenu)}
-                    aria-label="User profile menu"
-                    aria-haspopup="true"
-                    aria-expanded={showProfileMenu}
-                  >
-                    {session.user?.image ? (
-                      <img src={session.user.image} alt={session.user.name || "User"} />
-                    ) : (
-                      <span>
-                        {(session.user?.name?.[0] || "U").toUpperCase()}
-                      </span>
-                    )}
-                  </button>
-
-                  {showProfileMenu && (
-                    <div className="hnb-profile-dropdown">
-                      <div className="hnb-profile-header">
-                        <div className="hnb-profile-header-name">
-                          {session.user?.name || "User"}
-                        </div>
-                        <div className="hnb-profile-header-email">
-                          {session.user?.email || ""}
-                        </div>
-                      </div>
-                      <Link 
-                        href="/user/dashboard" 
-                        className="hnb-profile-item"
-                        onClick={() => setShowProfileMenu(false)}
-                      >
-                        <FiUser size={15} />
-                        My Account
-                      </Link>
-                      <button 
-                        onClick={() => {
-                          setShowProfileMenu(false);
-                          signOut({ callbackUrl: "/" });
-                        }}
-                        className="hnb-profile-item logout"
-                      >
-                        <FiLogOut size={15} />
-                        Logout
-                      </button>
-                    </div>
-=======
               {session && openNotif && (
                 <div className="hnb-notif-dropdown">
                   <div className="hnb-notif-header">Notifications</div>
@@ -692,7 +631,6 @@ export default function Navbar() {
                     ))
                   ) : (
                     <div className="hnb-notif-empty">You are all caught up</div>
->>>>>>> main
                   )}
                 </div>
               )}
@@ -793,16 +731,9 @@ export default function Navbar() {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 10 }}>
-<<<<<<< HEAD
-                  <Link 
-                    href="/user/dashboard" 
-                    className="hnb-mobile-link" 
-                    onClick={() => setShowMobileMenu(false)}
-=======
                   <button
                     onClick={() => { setShowMobileMenu(false); handleAccountClick(); }}
                     className="hnb-mobile-link"
->>>>>>> main
                     style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 500, color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "9px 0", textDecoration: "none", borderBottom: "1px solid #ddd" }}
                   >
                     My Account
@@ -815,7 +746,7 @@ export default function Navbar() {
                     style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 600, color: "#fff", background: PRIMARY, borderRadius: 8, padding: "9px 0", border: "none", cursor: "pointer" }}
                   >
                     Logout
-                  </button>
+                  </button> 
                 </div>
               </div>
             ) : (
