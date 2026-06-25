@@ -11,19 +11,12 @@ export default function ResetPassword() {
   const [showNewPw, setShowNewPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isValidToken, setIsValidToken] = useState<boolean | null>(null);
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
-  useEffect(() => {
-    if (!token) {
-      setIsValidToken(false);
-      return;
-    }
-    setIsValidToken(true);
-  }, [token]);
+  const isValidToken = !!token;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
