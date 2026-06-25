@@ -14,8 +14,6 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { api } from "../../lib/api";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 const PRIMARY = "#C0392B";
@@ -27,7 +25,6 @@ export default function LoginPage() {
   const [form, setForm] = useState({ emailOrPhone: "", password: "", remember: false });
   const [googleLoading, setGoogleLoading] = useState(false);
   const [facebookLoading, setFacebookLoading] = useState(false);
-  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -49,7 +46,11 @@ export default function LoginPage() {
 
     if (res?.ok) {
       toast.success("Logged in successfully!");
-      router.push("/");
+      // Hard redirect so the browser re-reads the session cookie from scratch.
+      // router.push() alone races against the cookie being set.
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 800);
     } else {
       toast.error("Invalid email or password");
     }
@@ -461,10 +462,6 @@ const handleGoogle = async () => {
               Enter your email and password to access your account.
             </p>
             <div className="login-divider-line" />
-
-
-
-
 
             <div className="login-divider">
               <div className="login-divider-line-h" />
