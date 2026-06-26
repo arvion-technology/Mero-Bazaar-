@@ -6,6 +6,7 @@ import { RolesGuard } from '../auth/roles.guard';
 import { UserService } from './user.service';
 import { OAuthSyncDto } from './dto/oauth_sync.dto';
 import { UpdatePasswordDto } from './dto/update_password.dto';
+import { Public } from '@prisma/client/runtime/library';
 
 
 @Controller('user')
@@ -36,6 +37,7 @@ export class UserController {
 
   @Post('reset-password')
   resetPassword(@Body() body: { token: string; newPassword: string }) {
+    console.log('reset-password hit, body:', body);
     return this.userService.resetPassword(body.token, body.newPassword);
   }
 

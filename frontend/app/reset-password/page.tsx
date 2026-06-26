@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FiLock, FiEye, FiEyeOff, FiAlertTriangle } from "react-icons/fi";
 import { toast } from "react-toastify";
 
-export default function ResetPassword() {
+function ResetPasswordForm() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPw, setShowNewPw] = useState(false);
@@ -36,7 +36,9 @@ export default function ResetPassword() {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/auth/reset-password", {
+      console.log('submitting with token:', token);
+      console.log('body:', { token, newPassword });
+      const res = await fetch("/api/user/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, newPassword }),
@@ -313,5 +315,14 @@ export default function ResetPassword() {
         </div>
       </div>
     </>
+  );
+}
+
+
+export default function ResetPassword() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
