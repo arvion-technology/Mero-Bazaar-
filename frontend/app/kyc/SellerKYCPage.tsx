@@ -47,6 +47,8 @@ export default function SellerKYCPage() {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [panOcrStatus, setPanOcrStatus] = useState<"idle" | "scanning" | "ok" | "warn">("idle");
+  const [faceStatus, setFaceStatus] = useState<"idle" | "scanning" | "ok" | "error">("idle");
   const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -54,7 +56,7 @@ export default function SellerKYCPage() {
 
   const handleFileChange =
     (field: "panCard" | "photo" | "selfieWithPan") =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0] || null;
       const setFile =
         field === "panCard" ? setPanCard : field === "photo" ? setPhoto : setSelfieWithPan;
@@ -68,6 +70,54 @@ export default function SellerKYCPage() {
       } else {
         setPreview(null);
       }
+      // ocr on pan card
+      if (field === "panCard" && file && file.type.startsWith("image/")) {
+        setPanOcrStatus("scanning");
+        try {
+          const { createWorker } =  await import("tesseract.js");
+          const worker = await createWorker("eng");
+          const { data: { text } } = await worker.recognize(file);
+          await worker.terminate();
+          const pan = form.panNumber.trim().toUpperCase();
+          if (pan && text.toUpperCase().includes(pan)) {
+            setPanOcrStatus("ok");
+            toast.success("PAN number verified in document");
+          } else {
+            setPanOcrStatus("warn");
+            toast.warn("PAN number not found in uploaded image");
+          }
+        } catch {
+          setPanOcrStatus("idle");
+        }
+      }
+
+    //face detection
+    if (field === "selfieWithPan" && file && file.type.startsWith("image/")) {
+      setFaceStatus("scanning");
+      try {
+        const faceapi = await import("face-api.js");
+        await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri("/models"),]);
+        const image = await createImageBitmap(file);
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(image, 0, 0);
+        const detection = await faceapi.detectSingleFace(
+          canvas as unknown as HTMLCanvasElement,
+          new faceapi.TinyFaceDetectorOptions()
+        );
+        if (detection) {
+          setFaceStatus("ok");
+          toast.success("Face detected in selfie");
+        } else {
+          setFaceStatus("error");
+          toast.error("No face detected");
+        }
+      } catch {
+        setFaceStatus("idle");
+      }
+    }  
     };
 
   // ── OTP handler
@@ -146,6 +196,13 @@ export default function SellerKYCPage() {
     if (!panCard || !photo || !selfieWithPan) {
       toast.error("Upload all 3 documents to continue");
       return;
+    }
+    if (faceStatus == "error") {
+      toast.error("Please re-upload self");
+      return;
+    }
+    if (panOcrStatus === "warn") {
+      toast.warn("PAN number mismatch");
     }
     setPhase(3);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -601,6 +658,10 @@ export default function SellerKYCPage() {
                   <div className={`upload-lbl${panCard ? " done" : ""}`}>
                     {panCard ? (panCard.name.length > 14 ? panCard.name.slice(0, 14) + "…" : panCard.name) : "PAN card"}
                   </div>
+
+                  {panOcrStatus === "scanning" && <span style={{ fontSize: 10, color: "#888" }}>Scanning...</span>}
+                  {panOcrStatus === "ok" && <span style={{ fontSize: 10, color: "#1a7a4a" }}>PAN verified</span>}
+                  {panOcrStatus === "warn" && <span style={{ fontSize: 10, color: "#f59e0b" }}>⚠ PAN mismatch</span>}
                   <label className="upload-btn" onClick={(e) => e.stopPropagation()}>
                     <FiUpload size={10} /> {panCard ? "Change" : "Upload"}
                     <input type="file" id="filePan" className="upload-input"
@@ -633,10 +694,13 @@ export default function SellerKYCPage() {
                   <div className={`upload-lbl${selfieWithPan ? " done" : ""}`}>
                     {selfieWithPan ? (selfieWithPan.name.length > 14 ? selfieWithPan.name.slice(0, 14) + "…" : selfieWithPan.name) : "Selfie with PAN"}
                   </div>
+                  {faceStatus === "scanning" && <span style={{ fontSize: 10, color: "#888" }}>Detecting face…</span>}
+                  {faceStatus === "ok" && <span style={{ fontSize: 10, color: "#1a7a4a" }}>✓ Face detected</span>}
+                  {faceStatus === "error" && <span style={{ fontSize: 10, color: "#ef4444" }}>✗ No face found</span>}
                   <label className="upload-btn" onClick={(e) => e.stopPropagation()}>
                     <FiUpload size={10} /> {selfieWithPan ? "Change" : "Upload"}
                     <input type="file" id="fileSelfie" className="upload-input"
-                      accept="image/*" onChange={handleFileChange("selfieWithPan")} />
+                      accept="image/*" capture="user" onChange={handleFileChange("selfieWithPan")} />
                   </label>
                 </div>
               </div>
