@@ -4,7 +4,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/otp/verify`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/otp/verify`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

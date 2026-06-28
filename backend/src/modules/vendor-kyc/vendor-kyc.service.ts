@@ -25,7 +25,7 @@ export class VendorKycService {
       where: { userId },
     });
  
-    if (existing && existing.status === VerificationStatus.PENDING) {
+    if (existing && existing.status === VerificationStatus.PENDING && existing.fullName !== '') {
       throw new BadRequestException('KYC already submitted and under review.');
     }
  

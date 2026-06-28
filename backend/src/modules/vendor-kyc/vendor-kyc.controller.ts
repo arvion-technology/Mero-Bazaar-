@@ -38,12 +38,12 @@ export class VendorKycController {
     return this.vendorKycService.submitKyc(req.user.id, dto, files);
   }
 
-  @Post('send-otp')
+  @Post('send')
   sendOtp(@Request() req, @Body('phone') phone: string) {
     return this.vendorKycService.sendContactOtp(req.user.id, phone);
   }
 
-  @Post('verify-otp')
+  @Post('verify')
   verifyOtp(@Request() req, @Body('otp') otp: string) {
     return this.vendorKycService.verifyContactOtp(req.user.id, otp);
   }

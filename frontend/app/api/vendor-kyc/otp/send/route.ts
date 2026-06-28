@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get("authorization");
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/vendor-kyc/otp/send`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/vendor-kyc/send`,
       {
         method: "POST",
         headers: {

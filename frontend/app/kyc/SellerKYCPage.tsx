@@ -8,6 +8,7 @@ import {
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
@@ -46,13 +47,16 @@ export default function SellerKYCPage() {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [panOcrStatus, setPanOcrStatus] = useState<"idle" | "scanning" | "ok" | "warn">("idle");
+  const [faceStatus, setFaceStatus] = useState<"idle" | "scanning" | "ok" | "error">("idle");
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleFileChange =
     (field: "panCard" | "photo" | "selfieWithPan") =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0] || null;
       const setFile =
         field === "panCard" ? setPanCard : field === "photo" ? setPhoto : setSelfieWithPan;
@@ -66,6 +70,54 @@ export default function SellerKYCPage() {
       } else {
         setPreview(null);
       }
+      // ocr on pan card
+      if (field === "panCard" && file && file.type.startsWith("image/")) {
+        setPanOcrStatus("scanning");
+        try {
+          const { createWorker } =  await import("tesseract.js");
+          const worker = await createWorker("eng");
+          const { data: { text } } = await worker.recognize(file);
+          await worker.terminate();
+          const pan = form.panNumber.trim().toUpperCase();
+          if (pan && text.toUpperCase().includes(pan)) {
+            setPanOcrStatus("ok");
+            toast.success("PAN number verified in document");
+          } else {
+            setPanOcrStatus("warn");
+            toast.warn("PAN number not found in uploaded image");
+          }
+        } catch {
+          setPanOcrStatus("idle");
+        }
+      }
+
+    //face detection
+    if (field === "selfieWithPan" && file && file.type.startsWith("image/")) {
+      setFaceStatus("scanning");
+      try {
+        const faceapi = await import("face-api.js");
+        await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri("/models"),]);
+        const image = await createImageBitmap(file);
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(image, 0, 0);
+        const detection = await faceapi.detectSingleFace(
+          canvas as unknown as HTMLCanvasElement,
+          new faceapi.TinyFaceDetectorOptions()
+        );
+        if (detection) {
+          setFaceStatus("ok");
+          toast.success("Face detected in selfie");
+        } else {
+          setFaceStatus("error");
+          toast.error("No face detected");
+        }
+      } catch {
+        setFaceStatus("idle");
+      }
+    }  
     };
 
   // ── OTP handler
@@ -83,16 +135,13 @@ export default function SellerKYCPage() {
     }
     setSendingOtp(true);
     try {
-      const res = await fetch("/api/otp/send", {
+      const res = await fetch("/api/vendor-kyc/otp/send", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}` 
         },
-        body: JSON.stringify({ 
-          phone, 
-          context: "KYC_CONTACT" 
-        }),
+        body: JSON.stringify({ phone }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to send OTP");
@@ -115,12 +164,12 @@ export default function SellerKYCPage() {
     if (otp.length !== 6) { toast.error("Enter the 6-digit OTP"); return; }
     setVerifyingOtp(true);
     try {
-      const res = await fetch("/api/otp/verify", {
+      const res = await fetch("/api/vendor-kyc/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json",
                    Authorization: `Bearer ${token}`    
                  },
-        body: JSON.stringify({ phone: form.contactNumber, otp, context: "KYC_CONTACT" }),
+        body: JSON.stringify({ otp }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Invalid OTP");
@@ -147,6 +196,13 @@ export default function SellerKYCPage() {
     if (!panCard || !photo || !selfieWithPan) {
       toast.error("Upload all 3 documents to continue");
       return;
+    }
+    if (faceStatus == "error") {
+      toast.error("Please re-upload self");
+      return;
+    }
+    if (panOcrStatus === "warn") {
+      toast.warn("PAN number mismatch");
     }
     setPhase(3);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -175,6 +231,7 @@ export default function SellerKYCPage() {
       if (!res.ok) throw new Error(data.message || "Submission failed");
       setSubmitted(true);
       toast.success("KYC submitted successfully!");
+      setTimeout(() => router.push("/seller/dashboard"), 2000);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Something went wrong!");
     } finally {
@@ -601,6 +658,10 @@ export default function SellerKYCPage() {
                   <div className={`upload-lbl${panCard ? " done" : ""}`}>
                     {panCard ? (panCard.name.length > 14 ? panCard.name.slice(0, 14) + "…" : panCard.name) : "PAN card"}
                   </div>
+
+                  {panOcrStatus === "scanning" && <span style={{ fontSize: 10, color: "#888" }}>Scanning...</span>}
+                  {panOcrStatus === "ok" && <span style={{ fontSize: 10, color: "#1a7a4a" }}>PAN verified</span>}
+                  {panOcrStatus === "warn" && <span style={{ fontSize: 10, color: "#f59e0b" }}>⚠ PAN mismatch</span>}
                   <label className="upload-btn" onClick={(e) => e.stopPropagation()}>
                     <FiUpload size={10} /> {panCard ? "Change" : "Upload"}
                     <input type="file" id="filePan" className="upload-input"
@@ -633,10 +694,13 @@ export default function SellerKYCPage() {
                   <div className={`upload-lbl${selfieWithPan ? " done" : ""}`}>
                     {selfieWithPan ? (selfieWithPan.name.length > 14 ? selfieWithPan.name.slice(0, 14) + "…" : selfieWithPan.name) : "Selfie with PAN"}
                   </div>
+                  {faceStatus === "scanning" && <span style={{ fontSize: 10, color: "#888" }}>Detecting face…</span>}
+                  {faceStatus === "ok" && <span style={{ fontSize: 10, color: "#1a7a4a" }}>✓ Face detected</span>}
+                  {faceStatus === "error" && <span style={{ fontSize: 10, color: "#ef4444" }}>✗ No face found</span>}
                   <label className="upload-btn" onClick={(e) => e.stopPropagation()}>
                     <FiUpload size={10} /> {selfieWithPan ? "Change" : "Upload"}
                     <input type="file" id="fileSelfie" className="upload-input"
-                      accept="image/*" onChange={handleFileChange("selfieWithPan")} />
+                      accept="image/*" capture="user" onChange={handleFileChange("selfieWithPan")} />
                   </label>
                 </div>
               </div>

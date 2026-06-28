@@ -63,6 +63,9 @@ prisma/migrations/dev
 # Docker
 docker-compose.override.yml
 
+#uploads
+backend/uploads
+
 # Frontend (IMPORTANT FIX)
 frontend/.next/
 frontend/node_modules/
