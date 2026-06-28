@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get("authorization");
     const formData = await req.formData();
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vendor-kyc/submit`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/vendor-kyc/submit`, {
       method: "POST",
       headers: {
         Authorization: authHeader || "",
@@ -14,8 +14,10 @@ export async function POST(req: NextRequest) {
     });
 
     const data = await res.json();
+    console.log("vendor-kyc/submit response:", res.status, data);
     return NextResponse.json(data, { status: res.status });
-  } catch {
+  } catch (err) {
+    console.error("vvendor-kyc/submit error:", err); 
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

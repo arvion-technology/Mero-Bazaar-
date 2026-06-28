@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 import {
   FiGrid,
   FiShoppingCart,
@@ -23,9 +24,16 @@ import {
   FiClock,
   FiLayers,
   FiMoreHorizontal,
-  FiArrowUpRight,
   FiCalendar,
+  FiLogOut,
+  FiUser,
+  FiChevronDown,
+  FiMenu,
+  FiX,
 } from "react-icons/fi";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 const PRIMARY = "#0f172a";
 const ACCENT = "#3b82f6";
@@ -35,8 +43,10 @@ const WARNING = "#f59e0b";
 const DANGER = "#ef4444";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
-const SIDEBAR_BG = "#0f172a";
-const SIDEBAR_HOVER = "#1e293b";
+const SITE_PRIMARY = "#C0392B";
+const SIDEBAR_BG = "#ffffff";
+const SIDEBAR_BORDER = "#e8ecf0";
+const SIDEBAR_HOVER = "#f4f6fb";
 
 const stats = [
   { icon: FiShoppingCart, label: "Total Orders", value: "320", change: "+12.5%", changeType: "up" as const, sub: "vs last month", color: ACCENT, bg: "#eff6ff" },
@@ -79,6 +89,12 @@ const chartData = [
 export default function SellerDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { data: session } = useSession();
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const [kycStatus, setkycStatus] = useState<string | null>(null);
 
   const sidebarItems = [
     { id: "dashboard", icon: FiGrid, label: "Dashboard" },
@@ -86,14 +102,54 @@ export default function SellerDashboard() {
     { id: "products", icon: FiBox, label: "Products" },
     { id: "payments", icon: FiCreditCard, label: "Payments" },
     { id: "reports", icon: FiBarChart2, label: "Reports" },
-    { id: "messages", icon: FiMessageSquare, label: "Messages", badge: "2" },
+    { id: "clients", icon: FiMessageSquare, label: "Clients", badge: "2" },
     { id: "settings", icon: FiSettings, label: "Settings" },
   ];
 
+  const userInitials = session?.user?.name
+    ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "S";
+
+  function handleNavClick(id: string) {
+    setActiveTab(id);
+    setSidebarOpen(false);
+  }
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target as Node)) {
+        setShowProfileDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [sidebarOpen]);
+
   const maxVal = Math.max(...chartData.map(d => Math.max(d.sales, d.earnings)));
+
+
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    fetch("/api/vendor-kyc/me", {
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+    })
+    .then((r) => r.json())
+    .then((d) => setkycStatus(d.status ?? null))
+    .catch(() => setkycStatus(null));
+  }, [session?.accessToken]);
 
   return (
     <>
+    <ToastContainer position="top-right" autoClose={3000} />
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -116,42 +172,56 @@ export default function SellerDashboard() {
           left: 0;
           top: 0;
           z-index: 100;
-          border-right: 1px solid rgba(255,255,255,0.06);
+          border-right: 1px solid ${SIDEBAR_BORDER};
+          box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+          transition: width 0.3s ease;
         }
 
         .dash-logo {
-          padding: 24px;
+          padding: 18px 20px;
           display: flex;
           align-items: center;
-          gap: 12px;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
+          gap: 10px;
+          border-bottom: 1px solid #f0f2f5;
+          min-height: 72px;
+          overflow: hidden;
         }
 
-        .dash-logo-icon {
-          width: 40px;
-          height: 40px;
-          background: linear-gradient(135deg, ${ACCENT}, ${ACCENT_LIGHT});
-          border-radius: 10px;
+        .dash-logo-wrap {
           display: flex;
           align-items: center;
-          justify-content: center;
-          color: #fff;
-          font-size: 20px;
-          box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+          gap: 10px;
+          text-decoration: none;
+          flex-shrink: 0;
         }
 
-        .dash-logo-text {
-          color: #fff;
-          font-size: 17px;
-          font-weight: 700;
+        .dash-logo-svg {
+          width: 36px;
+          height: 36px;
+          flex-shrink: 0;
+        }
+
+        .dash-logo-text-wrap {
+          display: flex;
+          flex-direction: column;
+          line-height: 1.1;
+          white-space: nowrap;
+          overflow: hidden;
+        }
+
+        .dash-logo-line1 {
+          font-size: 14px;
+          font-weight: 800;
+          color: ${SITE_PRIMARY};
           letter-spacing: -0.3px;
         }
 
-        .dash-logo-sub {
-          color: rgba(255,255,255,0.45);
+        .dash-logo-line2 {
           font-size: 11px;
-          font-weight: 500;
-          letter-spacing: 0.3px;
+          font-weight: 600;
+          color: #888;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
         }
 
         .dash-nav {
@@ -164,7 +234,7 @@ export default function SellerDashboard() {
           padding: 0 12px 10px;
           font-size: 10px;
           font-weight: 700;
-          color: rgba(255,255,255,0.3);
+          color: #b0b8c4;
           text-transform: uppercase;
           letter-spacing: 1.2px;
         }
@@ -174,7 +244,7 @@ export default function SellerDashboard() {
           align-items: center;
           gap: 12px;
           padding: 11px 14px;
-          color: rgba(255,255,255,0.55);
+          color: #5a6478;
           font-size: 13.5px;
           font-weight: 500;
           cursor: pointer;
@@ -184,19 +254,20 @@ export default function SellerDashboard() {
           width: 100%;
           text-align: left;
           font-family: inherit;
-          border-radius: 8px;
+          border-radius: 10px;
           margin-bottom: 2px;
           position: relative;
         }
 
         .dash-nav-item:hover {
           background: ${SIDEBAR_HOVER};
-          color: rgba(255,255,255,0.9);
+          color: #1e293b;
         }
 
         .dash-nav-item.active {
-          background: linear-gradient(90deg, rgba(59,130,246,0.15), transparent);
-          color: #fff;
+          background: #fff5f5;
+          color: ${SITE_PRIMARY};
+          font-weight: 600;
         }
 
         .dash-nav-item.active::before {
@@ -207,7 +278,7 @@ export default function SellerDashboard() {
           transform: translateY(-50%);
           width: 3px;
           height: 20px;
-          background: ${ACCENT};
+          background: ${SITE_PRIMARY};
           border-radius: 0 3px 3px 0;
         }
 
@@ -216,12 +287,7 @@ export default function SellerDashboard() {
           width: 22px;
           display: flex;
           justify-content: center;
-          opacity: 0.8;
-        }
-
-        .dash-nav-item.active .dash-nav-icon {
-          opacity: 1;
-          color: ${ACCENT_LIGHT};
+          flex-shrink: 0;
         }
 
         .dash-nav-badge {
@@ -238,20 +304,17 @@ export default function SellerDashboard() {
 
         .dash-sidebar-footer {
           padding: 16px;
-          margin: 0 12px 12px;
+          border-top: 1px solid #f0f2f5;
           display: flex;
           align-items: center;
           gap: 12px;
-          border-radius: 12px;
-          background: ${SIDEBAR_HOVER};
-          border: 1px solid rgba(255,255,255,0.05);
         }
 
         .dash-sidebar-avatar {
           width: 36px;
           height: 36px;
           border-radius: 50%;
-          background: linear-gradient(135deg, ${ACCENT}, ${ACCENT_LIGHT});
+          background: linear-gradient(135deg, ${SITE_PRIMARY}, #e74c3c);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -259,10 +322,10 @@ export default function SellerDashboard() {
           font-size: 13px;
           font-weight: 700;
           flex-shrink: 0;
+          overflow: hidden;
         }
 
         .dash-sidebar-user {
-          color: #fff;
           flex: 1;
           min-width: 0;
         }
@@ -270,14 +333,153 @@ export default function SellerDashboard() {
         .dash-sidebar-name {
           font-size: 13px;
           font-weight: 600;
+          color: #1e293b;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          max-width: 160px;
         }
 
-        .dash-sidebar-id {
+        .dash-sidebar-role {
           font-size: 11px;
-          color: rgba(255,255,255,0.45);
+          color: #94a3b8;
+          margin-top: 1px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 160px;
+        }
+
+        /* ── Profile Avatar Dropdown ── */
+        .dash-profile-wrap {
+          position: relative;
+        }
+
+        .dash-profile-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 5px 10px 5px 5px;
+          border-radius: 40px;
+          border: 1.5px solid #e2e8f0;
+          background: #fff;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-family: inherit;
+        }
+
+        .dash-profile-btn:hover {
+          border-color: #cbd5e1;
+          background: #f8fafc;
+        }
+
+        .dash-profile-btn-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, ${SITE_PRIMARY}, #e74c3c);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+          font-size: 12px;
+          font-weight: 700;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+
+        .dash-profile-btn-name {
+          font-size: 13px;
+          font-weight: 600;
+          color: #1e293b;
+          max-width: 120px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .dash-profile-chevron {
+          color: #94a3b8;
+          transition: transform 0.2s;
+          flex-shrink: 0;
+        }
+
+        .dash-profile-chevron.open {
+          transform: rotate(180deg);
+        }
+
+        .dash-profile-dropdown {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+          min-width: 200px;
+          z-index: 999;
+          overflow: hidden;
+          animation: dropdownIn 0.15s ease;
+        }
+
+        @keyframes dropdownIn {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .dash-dropdown-header {
+          padding: 14px 16px 12px;
+          border-bottom: 1px solid #f1f5f9;
+        }
+
+        .dash-dropdown-username {
+          font-size: 14px;
+          font-weight: 700;
+          color: #1e293b;
+        }
+
+        .dash-dropdown-role {
+          font-size: 12px;
+          color: #94a3b8;
+          margin-top: 2px;
+        }
+
+        .dash-dropdown-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 11px 16px;
+          font-size: 14px;
+          font-weight: 500;
+          color: #475569;
+          cursor: pointer;
+          transition: all 0.15s;
+          border: none;
+          background: none;
+          width: 100%;
+          text-align: left;
+          font-family: inherit;
+          text-decoration: none;
+        }
+
+        .dash-dropdown-item:hover {
+          background: #f8fafc;
+          color: #1e293b;
+        }
+
+        .dash-dropdown-item.logout {
+          color: #ef4444;
+        }
+
+        .dash-dropdown-item.logout:hover {
+          background: #fef2f2;
+          color: #dc2626;
+        }
+
+        .dash-dropdown-divider {
+          height: 1px;
+          background: #f1f5f9;
+          margin: 0;
         }
 
         /* ── Main Content ── */
@@ -286,6 +488,7 @@ export default function SellerDashboard() {
           margin-left: 264px;
           padding: 24px 32px 32px;
           max-width: calc(100% - 264px);
+          width: 100%;
         }
 
         /* Top Bar */
@@ -296,12 +499,23 @@ export default function SellerDashboard() {
           margin-bottom: 28px;
           padding-bottom: 20px;
           border-bottom: 1px solid #e2e8f0;
+          flex-wrap: wrap;
+          gap: 16px;
         }
 
         .dash-topbar-left {
           display: flex;
+          align-items: center;
+          gap: 12px;
+          flex: 1;
+          min-width: 0;
+        }
+
+        .dash-topbar-title-wrap {
+          display: flex;
           flex-direction: column;
           gap: 4px;
+          min-width: 0;
         }
 
         .dash-topbar-title {
@@ -321,6 +535,7 @@ export default function SellerDashboard() {
           display: flex;
           align-items: center;
           gap: 12px;
+          flex-shrink: 0;
         }
 
         .dash-search {
@@ -335,6 +550,7 @@ export default function SellerDashboard() {
           font-size: 13px;
           width: 280px;
           transition: all 0.2s;
+          flex-shrink: 0;
         }
 
         .dash-search.focused {
@@ -369,6 +585,7 @@ export default function SellerDashboard() {
           cursor: pointer;
           transition: all 0.2s;
           position: relative;
+          flex-shrink: 0;
         }
 
         .dash-icon-btn:hover {
@@ -414,6 +631,7 @@ export default function SellerDashboard() {
           transition: all 0.25s ease;
           position: relative;
           overflow: hidden;
+          width: 100%;
         }
 
         .dash-stat-card::after {
@@ -479,6 +697,7 @@ export default function SellerDashboard() {
           display: flex;
           align-items: center;
           gap: 8px;
+          flex-wrap: wrap;
         }
 
         .dash-stat-change {
@@ -522,6 +741,8 @@ export default function SellerDashboard() {
           box-shadow: 0 1px 3px rgba(0,0,0,0.04);
           border: 1px solid #f1f5f9;
           transition: box-shadow 0.25s;
+          width: 100%;
+          overflow: hidden;
         }
 
         .dash-card:hover {
@@ -533,6 +754,8 @@ export default function SellerDashboard() {
           align-items: center;
           justify-content: space-between;
           margin-bottom: 20px;
+          flex-wrap: wrap;
+          gap: 8px;
         }
 
         .dash-card-title {
@@ -551,6 +774,7 @@ export default function SellerDashboard() {
           align-items: center;
           gap: 4px;
           transition: gap 0.2s;
+          flex-shrink: 0;
         }
 
         .dash-card-link:hover {
@@ -561,12 +785,15 @@ export default function SellerDashboard() {
         /* Table */
         .dash-table-wrap {
           overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          width: 100%;
         }
 
         .dash-table {
           width: 100%;
           border-collapse: separate;
           border-spacing: 0;
+          min-width: 500px;
         }
 
         .dash-table th {
@@ -646,6 +873,8 @@ export default function SellerDashboard() {
           align-items: center;
           justify-content: space-between;
           margin-bottom: 20px;
+          flex-wrap: wrap;
+          gap: 8px;
         }
 
         .dash-chart-title {
@@ -658,6 +887,7 @@ export default function SellerDashboard() {
         .dash-chart-legend {
           display: flex;
           gap: 16px;
+          flex-wrap: wrap;
         }
 
         .dash-legend-item {
@@ -678,11 +908,13 @@ export default function SellerDashboard() {
         .dash-chart-area {
           height: 200px;
           position: relative;
+          width: 100%;
         }
 
         .dash-chart-svg {
           width: 100%;
           height: 100%;
+          display: block;
         }
 
         .dash-chart-months {
@@ -730,6 +962,7 @@ export default function SellerDashboard() {
           align-items: center;
           gap: 14px;
           text-decoration: none;
+          width: 100%;
         }
 
         .dash-quick-card:hover {
@@ -854,58 +1087,365 @@ export default function SellerDashboard() {
           font-weight: 500;
         }
 
-        /* Responsive */
+        /* ── Desktop collapsed state ── */
+        .dash-sidebar.desktop-collapsed {
+          width: 72px;
+        }
+        .dash-sidebar.desktop-collapsed .dash-logo-text-wrap,
+        .dash-sidebar.desktop-collapsed .dash-nav-item span:not(.dash-nav-icon),
+        .dash-sidebar.desktop-collapsed .dash-nav-badge,
+        .dash-sidebar.desktop-collapsed .dash-sidebar-user,
+        .dash-sidebar.desktop-collapsed .dash-nav-label {
+          display: none;
+        }
+        .dash-sidebar.desktop-collapsed .dash-logo { justify-content: center; padding: 20px 0; }
+        .dash-sidebar.desktop-collapsed .dash-logo-svg { margin: 0 auto; }
+        .dash-sidebar.desktop-collapsed .dash-nav { padding: 16px 8px; }
+        .dash-sidebar.desktop-collapsed .dash-nav-item { justify-content: center; padding: 14px; }
+        .dash-sidebar.desktop-collapsed .dash-sidebar-footer { justify-content: center; padding: 12px; }
+
+        .dash-main.desktop-collapsed {
+          margin-left: 72px;
+          max-width: calc(100% - 72px);
+        }
+
+        /* ── Backdrop (mobile/tablet overlay) ── */
+        .dash-backdrop {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(15, 23, 42, 0.45);
+          backdrop-filter: blur(2px);
+          z-index: 99;
+          animation: backdropIn 0.2s ease;
+        }
+        @keyframes backdropIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+
+        /* Mobile close button inside sidebar */
+        .dash-sidebar-close {
+          display: none;
+          position: absolute;
+          top: 18px;
+          right: 16px;
+          width: 32px;
+          height: 32px;
+          border: none;
+          background: #f1f5f9;
+          border-radius: 8px;
+          cursor: pointer;
+          align-items: center;
+          justify-content: center;
+          color: #64748b;
+          transition: all 0.2s;
+          z-index: 1;
+        }
+        .dash-sidebar-close:hover {
+          background: #e2e8f0;
+          color: #1e293b;
+        }
+
+        /* ── Hamburger button in topbar ── */
+        .dash-hamburger {
+          display: none;
+          width: 38px;
+          height: 38px;
+          border-radius: 8px;
+          border: 1.5px solid #e2e8f0;
+          background: #fff;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          color: #64748b;
+          transition: all 0.2s;
+          flex-shrink: 0;
+        }
+        .dash-hamburger:hover {
+          background: #f8fafc;
+          color: #334155;
+          border-color: #cbd5e1;
+        }
+
+        /* ── Responsive ── */
+
+        /* Large tablets — 2 col stats, 2 col quick actions */
         @media (max-width: 1200px) {
           .dash-stats { grid-template-columns: repeat(2, 1fr); }
           .dash-quick-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
-        @media (max-width: 900px) {
+        /* Tablet: overlay sidebar, full-width main */
+        @media (max-width: 1023px) {
           .dash-sidebar {
-            width: 72px;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            width: 80% !important;
+            max-width: 320px;
+            z-index: 200;
           }
-          .dash-logo-text, .dash-logo-sub, .dash-nav-item span, .dash-nav-badge, .dash-sidebar-user {
-            display: none;
+          .dash-sidebar.mobile-open {
+            transform: translateX(0);
+            box-shadow: 4px 0 32px rgba(0,0,0,0.15);
           }
-          .dash-logo { justify-content: center; padding: 20px 0; }
-          .dash-logo-icon { margin: 0 auto; }
-          .dash-nav { padding: 16px 8px; }
-          .dash-nav-item { justify-content: center; padding: 14px; }
-          .dash-nav-label { display: none; }
-          .dash-sidebar-footer { justify-content: center; padding: 12px; margin: 0 8px 8px; }
-          .dash-main { margin-left: 72px; max-width: calc(100% - 72px); padding: 20px; }
+          .dash-backdrop.active {
+            display: block;
+          }
+          .dash-sidebar.mobile-open .dash-sidebar-close {
+            display: flex;
+          }
+          .dash-hamburger {
+            display: flex;
+          }
+          .dash-main {
+            margin-left: 0 !important;
+            max-width: 100% !important;
+            padding: 20px 20px 32px;
+            width: 100%;
+          }
+          .dash-main.desktop-collapsed {
+            margin-left: 0 !important;
+            max-width: 100% !important;
+          }
           .dash-two-col { grid-template-columns: 1fr; }
+          .dash-profile-btn-name { display: none; }
+          .dash-desktop-toggle { display: none; }
+          .dash-search { width: 240px; }
         }
 
-        @media (max-width: 640px) {
-          .dash-stats { grid-template-columns: 1fr; }
-          .dash-quick-grid { grid-template-columns: 1fr; }
-          .dash-topbar { flex-direction: column; gap: 12px; align-items: flex-start; }
-          .dash-search { width: 100%; }
-          .dash-table-wrap { margin: 0 -24px; padding: 0 24px; }
+        /* Mobile: single column everything */
+        @media (max-width: 767px) {
+          .dash-main { padding: 16px; width: 100%; }
+
+          /* Header: 2 rows */
+          .dash-topbar {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+            padding-bottom: 16px;
+          }
+
+          .dash-topbar-left {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 8px;
+          }
+
+          .dash-topbar-title-wrap {
+            flex: 1;
+            min-width: 0;
+          }
+
+          .dash-topbar-title {
+            font-size: 18px;
+          }
+
+          .dash-topbar-sub {
+            font-size: 12px;
+          }
+
+          .dash-topbar-right {
+            width: 100%;
+            justify-content: flex-end;
+            gap: 8px;
+          }
+
+          /* Search: full width, second row */
+          .dash-search {
+            width: 100%;
+            order: 3;
+            flex-shrink: 1;
+          }
+
+          /* Stats: 1 column */
+          .dash-stats { 
+            grid-template-columns: 1fr; 
+            gap: 12px;
+            margin-bottom: 20px;
+          }
+
+          .dash-stat-card {
+            padding: 16px;
+            width: 100%;
+          }
+
+          .dash-stat-value {
+            font-size: 20px;
+          }
+
+          /* Two col: stack */
+          .dash-two-col { 
+            grid-template-columns: 1fr; 
+            gap: 16px;
+            margin-bottom: 20px;
+          }
+
+          /* Cards */
+          .dash-card {
+            padding: 16px;
+            width: 100%;
+          }
+
+          .dash-card-header {
+            margin-bottom: 16px;
+          }
+
+          /* Chart */
+          .dash-chart-area { 
+            height: 160px; 
+          }
+
+          /* Quick actions: 1 column */
+          .dash-quick-grid { 
+            grid-template-columns: 1fr; 
+            gap: 12px;
+          }
+
+          .dash-quick-card {
+            padding: 16px;
+          }
+
+          /* Table */
+          .dash-table-wrap { 
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -16px;
+            padding: 0 16px;
+            width: calc(100% + 32px);
+          }
+
+          .dash-table {
+            min-width: 520px;
+          }
+
+          /* Messages */
+          .dash-msg-item {
+            padding: 12px;
+          }
+
+          .dash-msg-text {
+            font-size: 12px;
+          }
+
+          .dash-msg-time {
+            font-size: 10px;
+          }
+        }
+
+        /* Small mobile */
+        @media (max-width: 480px) {
+          .dash-main { padding: 12px; }
+
+          .dash-topbar-title {
+            font-size: 16px;
+          }
+
+          .dash-stat-card {
+            padding: 14px;
+          }
+
+          .dash-stat-icon-wrap {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+          }
+
+          .dash-stat-value {
+            font-size: 18px;
+          }
+
+          .dash-card {
+            padding: 14px;
+            border-radius: 12px;
+          }
+
+          .dash-chart-area {
+            height: 140px;
+          }
+
+          .dash-quick-card {
+            padding: 14px;
+            border-radius: 12px;
+          }
+
+          .dash-quick-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 18px;
+          }
+
+          .dash-msg-avatar {
+            width: 36px;
+            height: 36px;
+            font-size: 12px;
+          }
+
+          .dash-icon-btn {
+            width: 36px;
+            height: 36px;
+          }
+
+          .dash-profile-btn-avatar {
+            width: 28px;
+            height: 28px;
+            font-size: 11px;
+          }
         }
       `}</style>
 
+      {/* ── Mobile/Tablet Backdrop ── */}
+      <div
+        className={`dash-backdrop ${sidebarOpen ? "active" : ""}`}
+        onClick={() => setSidebarOpen(false)}
+        aria-hidden="true"
+      />
+
       <div className="dash-page">
         {/* ── Sidebar ── */}
-        <aside className="dash-sidebar">
+        <aside className={`dash-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "desktop-collapsed" : ""}`}>
+          {/* Mobile close button */}
+          <button
+            type="button"
+            className="dash-sidebar-close"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close sidebar"
+          >
+            <FiX size={18} />
+          </button>
+
+          {/* Logo */}
           <div className="dash-logo">
-            {/* <div className="dash-logo-icon">
-              <FiPackage size={20} />
-            </div>
-            <div>
-              <div className="dash-logo-text">Hamro Bazar</div>
-              <div className="dash-logo-sub">Seller Portal</div>
-            </div> */}
+            <Link href="/" className="dash-logo-wrap">
+              <svg className="dash-logo-svg" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="38" height="38" rx="8" fill={SITE_PRIMARY} />
+                <path
+                  d="M10 10 C10 10, 14 8, 19 13 C24 18, 28 10, 28 10
+                     M10 28 C10 28, 14 30, 19 25 C24 20, 28 28, 28 28
+                     M10 10 Q10 19 10 28
+                     M28 10 Q28 19 28 28
+                     M14 19 C14 19 16 22 19 22 C22 22 24 19 24 19"
+                  stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"
+                />
+                <circle cx="19" cy="19" r="3" fill="#fff" opacity="0.9" />
+              </svg>
+              <div className="dash-logo-text-wrap">
+                <span className="dash-logo-line1">HamroNepal</span>
+                <span className="dash-logo-line2">Bazaar</span>
+              </div>
+            </Link>
           </div>
 
           <div className="dash-nav">
             <div className="dash-nav-label">Main Menu</div>
             {sidebarItems.map((item) => (
               <button
+                type="button"
                 key={item.id}
                 className={`dash-nav-item ${activeTab === item.id ? "active" : ""}`}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleNavClick(item.id)}
               >
                 <span className="dash-nav-icon">
                   <item.icon size={18} />
@@ -917,21 +1457,45 @@ export default function SellerDashboard() {
           </div>
 
           <div className="dash-sidebar-footer">
-            <div className="dash-sidebar-avatar">HB</div>
+            <div className="dash-sidebar-avatar">
+              {session?.user?.image
+                ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                : userInitials
+              }
+            </div>
             <div className="dash-sidebar-user">
-              <div className="dash-sidebar-name">Hamro Bazar</div>
-              <div className="dash-sidebar-id">Seller ID: FCT1234</div>
+              <div className="dash-sidebar-name">{session?.user?.name || "Seller"}</div>
+              <div className="dash-sidebar-role">{session?.user?.email || "Seller Account"}</div>
             </div>
           </div>
         </aside>
 
         {/* ── Main Content ── */}
-        <main className="dash-main">
+        <main className={`dash-main ${sidebarCollapsed ? "desktop-collapsed" : ""}`}>
           {/* Top Bar */}
           <div className="dash-topbar">
             <div className="dash-topbar-left">
-              <h1 className="dash-topbar-title">Dashboard</h1>
-              <p className="dash-topbar-sub">Welcome back! Here&apos;s what&apos;s happening with your store today.</p>
+              <button
+                type="button"
+                className="dash-hamburger"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open sidebar"
+              >
+                <FiMenu size={20} />
+              </button>
+              <button
+                type="button"
+                className="dash-icon-btn dash-desktop-toggle"
+                onClick={() => setSidebarCollapsed((prev) => !prev)}
+                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                style={{ marginRight: 8 }}
+              >
+                <FiMoreHorizontal size={18} />
+              </button>
+              <div className="dash-topbar-title-wrap">
+                <h1 className="dash-topbar-title">Dashboard</h1>
+                <p className="dash-topbar-sub">Welcome back! Here&apos;s what&apos;s happening with your store today.</p>
+              </div>
             </div>
             <div className="dash-topbar-right">
               <div className={`dash-search ${searchFocused ? "focused" : ""}`}>
@@ -943,12 +1507,67 @@ export default function SellerDashboard() {
                   onBlur={() => setSearchFocused(false)}
                 />
               </div>
-              <button className="dash-icon-btn">
+              <button type="button" className="dash-icon-btn">
                 <FiBell size={18} />
                 <span className="dash-badge">3</span>
               </button>
+
+              {/* Profile Avatar Dropdown */}
+              <div className="dash-profile-wrap" ref={profileDropdownRef}>
+                <button
+                  type="button"
+                  className="dash-profile-btn"
+                  onClick={() => setShowProfileDropdown((prev) => !prev)}
+                >
+                  <div className="dash-profile-btn-avatar">
+                    {session?.user?.image
+                      ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : userInitials
+                    }
+                  </div>
+                  <span className="dash-profile-btn-name">{session?.user?.name || "Seller"}</span>
+                  <FiChevronDown size={14} className={`dash-profile-chevron ${showProfileDropdown ? "open" : ""}`} />
+                </button>
+
+                {showProfileDropdown && (
+                  <div className="dash-profile-dropdown">
+                    <div className="dash-dropdown-header">
+                      <div className="dash-dropdown-username">{session?.user?.name || "Seller"}</div>
+                      <div className="dash-dropdown-role">Seller Account</div>
+                    </div>
+                    <Link
+                      href="/user/settings"
+                      className="dash-dropdown-item"
+                      onClick={() => setShowProfileDropdown(false)}
+                    >
+                      <FiUser size={15} />
+                      Profile & Settings
+                    </Link>
+                    <div className="dash-dropdown-divider" />
+                    <button
+                      type="button"
+                      className="dash-dropdown-item logout"
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                    >
+                      <FiLogOut size={15} />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
+
+      {/* KYC pending banner */}
+          {kycStatus === "PENDING" && (
+            <div style={{
+              background: "#FFF3CD", color: "#856404", padding: "12px 16px",
+              borderRadius: 10, marginBottom: 20, fontSize: 13, fontWeight: 500,
+              border: "1px solid #ffc107",
+            }}>
+               Your KYC is under review. You will be able to create listings once approved.
+            </div>
+          )}
 
           {/* Stats */}
           <div className="dash-stats">
@@ -1106,19 +1725,39 @@ export default function SellerDashboard() {
           <div className="dash-quick">
             <h3 className="dash-quick-title">Quick Actions</h3>
             <div className="dash-quick-grid">
-              {quickActions.map((action) => (
-                <Link key={action.label} href={action.href} className="dash-quick-card">
-                  <div className="dash-quick-icon" style={{ background: action.bg, color: action.color }}>
-                    <action.icon size={20} />
-                  </div>
+              {quickActions.map((action) => {
+                const locked = action.label === "Add Product" && kycStatus !== "VERIFIED";
+                if (locked) {
+                  return (
+                    <div key={action.label} 
+                      className="dash-quick-card" 
+                      style={{ opacity: 0.5, cursor: "not-allowed" }}
+                      onClick={() => toast.error("Your KYC is pending verification. You can add products once approved.")}
+                    >
+                    <div className="dash-quick-icon" style={{ background: action.bg, color: action.color }}>
+                      <action.icon size={20} />
+                    </div>
                   <div className="dash-quick-info">
                     <div className="dash-quick-label">{action.label}</div>
-                    <div className="dash-quick-desc">{action.desc}</div>
+                    <div className="dash-quick-desc">Pending KYc approval</div>
                   </div>
-                </Link>
-              ))}
+                </div>
+                  );
+                }
+                return (
+                  <Link key={action.label} href={action.href} className="dash-quick-card">
+                    <div className="dash-quick-icon" style={{ background: action.bg, color: action.color }}>
+                      <action.icon size={20} />
+                    </div>
+                    <div className="dash-quick-info">
+                      <div className="dash-quick-label">{action.label}</div>
+                      <div className="dash-quick-desc">{action.desc}</div>
+                    </div>
+                  </Link>
+                );
+              })}   
             </div>
-          </div>
+          </div>      
 
           {/* Recent Messages */}
           <div className="dash-card">
@@ -1150,7 +1789,7 @@ export default function SellerDashboard() {
             </div>
           </div>
         </main>
-      </div>
+       </div> 
     </>
   );
 }
