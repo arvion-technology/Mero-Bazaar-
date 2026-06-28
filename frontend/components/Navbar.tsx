@@ -58,7 +58,7 @@ export default function Navbar() {
     if (session?.user?.role === "VENDOR") {
       router.push("/kyc");
     } else {
-      router.push("/profile");
+      router.push("/user/dashboard");
     }
   };
 
