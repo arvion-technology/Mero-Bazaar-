@@ -41,10 +41,16 @@ function preprocessImageForOCR(file: File): Promise<Blob> {
   });
 }
 
+//devanagari to english
+function devanagariToEnglish(str: string): string {
+  return str.replace(/[०-९]/g, (d) => String(d.charCodeAt(0) - 0x0966));
+}
+
 //fuzzy PAN match:handles 0/O and 1/I confusions
 function fuzzyMatchPan(ocrText: string, pan: string): boolean {
   const normalize = (s: string) =>
-    s.toUpperCase().replace(/0/g, "O").replace(/1/g, "I").replace(/\s/g, "");
+    devanagariToEnglish(s)
+    .toUpperCase().replace(/0/g, "O").replace(/1/g, "I").replace(/\s/g, "");
   return normalize(ocrText).includes(normalize(pan));
 }
 
@@ -109,7 +115,9 @@ export default function SellerKYCPage() {
         try {
           const processed = await preprocessImageForOCR(file);
           const { createWorker } =  await import("tesseract.js");
-          const worker = await createWorker("eng");
+          const worker = await createWorker( "nep", 1, {
+            langPath: "/models",
+          });
           const result = await worker.recognize(processed);
           const words = (result.data as unknown as { words: { confidence: number; text: string }[] }).words ?? [];
           await worker.terminate();
