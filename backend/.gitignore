@@ -84,4 +84,4 @@ frontend/pnpm-debug.log*
 !frontend/.env.example
 
 # TypeScript build cache
-*.tsbuildinfo
+*.tsbuildinfo"uploads/" 
