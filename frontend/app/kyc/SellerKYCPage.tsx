@@ -141,7 +141,7 @@ export default function SellerKYCPage() {
         }
       }
 
-    //face detection
+    //face detection  
     if (field === "selfieWithPan" && file && file.type.startsWith("image/")) {
       setFaceStatus("scanning");
       try {
@@ -229,7 +229,7 @@ export default function SellerKYCPage() {
         headers: { "Content-Type": "application/json",
                    Authorization: `Bearer ${token}`    
                  },
-        body: JSON.stringify({ otp }),
+        body: JSON.stringify({ otp, phone: form.contactNumber }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Invalid OTP");

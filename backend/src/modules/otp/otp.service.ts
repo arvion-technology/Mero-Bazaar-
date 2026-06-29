@@ -24,7 +24,7 @@ export class PhoneOtpService {
         );
     }
     await this.prisma.phoneOtp.deleteMany({
-      where: { phone, context, verified: false },
+      where: { phone, context },
     });
     const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedOtp = await bcrypt.hash(rawOtp, 10);
