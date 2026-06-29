@@ -16,6 +16,44 @@ const PRIMARY_LIGHT = "#FAECE7";
 
 type Phase = 1 | 2 | 3;
 
+//preprocession: grayscale, contrast boost before OCR
+function preprocessImageForOCR(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const avg = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        const stretched = Math.min(255, Math.max(0, (avg - 128) * 1.4 + 128));
+        data[i] = data[i + 1] = data[i + 2] = stretched;
+      }
+      ctx.putImageData(imageData, 0, 0);
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Canvas blob failed"))), "image/png");
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+//devanagari to english
+function devanagariToEnglish(str: string): string {
+  return str.replace(/[०-९]/g, (d) => String(d.charCodeAt(0) - 0x0966));
+}
+
+//fuzzy PAN match:handles 0/O and 1/I confusions
+function fuzzyMatchPan(ocrText: string, pan: string): boolean {
+  const normalize = (s: string) =>
+    devanagariToEnglish(s)
+    .toUpperCase().replace(/0/g, "O").replace(/1/g, "I").replace(/\s/g, "");
+  return normalize(ocrText).includes(normalize(pan));
+}
+
 export default function SellerKYCPage() {
   const dateInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();
@@ -70,52 +108,74 @@ export default function SellerKYCPage() {
       } else {
         setPreview(null);
       }
+
       // ocr on pan card
       if (field === "panCard" && file && file.type.startsWith("image/")) {
         setPanOcrStatus("scanning");
         try {
+          const processed = await preprocessImageForOCR(file);
           const { createWorker } =  await import("tesseract.js");
-          const worker = await createWorker("eng");
-          const { data: { text } } = await worker.recognize(file);
+          const worker = await createWorker( "nep", 1, {
+            langPath: "/models",
+          });
+          const result = await worker.recognize(processed);
+          const words = (result.data as unknown as { words: { confidence: number; text: string }[] }).words ?? [];
           await worker.terminate();
+
+          const confidentText = words
+            .filter((w: { confidence: number; text: string }) => w.confidence > 65)
+            .map((w: { confidence: number; text: string }) => w.text)
+            .join(" ");
+            
           const pan = form.panNumber.trim().toUpperCase();
-          if (pan && text.toUpperCase().includes(pan)) {
+          if (pan && fuzzyMatchPan(confidentText, pan)) {
             setPanOcrStatus("ok");
             toast.success("PAN number verified in document");
           } else {
             setPanOcrStatus("warn");
-            toast.warn("PAN number not found in uploaded image");
+            toast.error("PAN number not found in uploaded image");
           }
         } catch {
-          setPanOcrStatus("idle");
+          setPanOcrStatus("warn");
+          toast.error("OCR failed - try again!")
         }
       }
 
-    //face detection
+    //face detection  
     if (field === "selfieWithPan" && file && file.type.startsWith("image/")) {
       setFaceStatus("scanning");
       try {
         const faceapi = await import("face-api.js");
-        await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri("/models"),]);
+        await Promise.all([
+          faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
+          faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+        ]);
         const image = await createImageBitmap(file);
         const canvas = document.createElement("canvas");
         canvas.width = image.width;
         canvas.height = image.height;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(image, 0, 0);
-        const detection = await faceapi.detectSingleFace(
-          canvas as unknown as HTMLCanvasElement,
-          new faceapi.TinyFaceDetectorOptions()
-        );
-        if (detection) {
-          setFaceStatus("ok");
-          toast.success("Face detected in selfie");
-        } else {
+        canvas.getContext("2d")!.drawImage(image, 0, 0);
+        
+        const detections = await faceapi
+          .detectAllFaces(
+            canvas as unknown as HTMLCanvasElement,
+            new faceapi.SsdMobilenetv1Options({ minConfidence: 0.7 })
+          )
+          .withFaceLandmarks();
+
+        if (detections.length === 0) {
           setFaceStatus("error");
-          toast.error("No face detected");
+          toast.error("Ensure your face is clearly visible!");
+        } else if (detections.length > 1) {
+          setFaceStatus("error");
+          toast.error("Multiple face detected");
+        } else {
+          setFaceStatus("ok");
+          toast.success("Face detected successfully!");
         }
       } catch {
         setFaceStatus("idle");
+        toast.warn("Face detection unavailable!");
       }
     }  
     };
@@ -169,7 +229,7 @@ export default function SellerKYCPage() {
         headers: { "Content-Type": "application/json",
                    Authorization: `Bearer ${token}`    
                  },
-        body: JSON.stringify({ otp }),
+        body: JSON.stringify({ otp, phone: form.contactNumber }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Invalid OTP");
@@ -197,12 +257,16 @@ export default function SellerKYCPage() {
       toast.error("Upload all 3 documents to continue");
       return;
     }
+    if (panOcrStatus === "scanning" || faceStatus === "scanning") {
+      toast.warn("Please wait a moment");
+    }
     if (faceStatus == "error") {
-      toast.error("Please re-upload self");
+      toast.error("Please re-upload selfie");
       return;
     }
     if (panOcrStatus === "warn") {
-      toast.warn("PAN number mismatch");
+      toast.error("PAN mismatch");
+      return;
     }
     setPhase(3);
     window.scrollTo({ top: 0, behavior: "smooth" });

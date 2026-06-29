@@ -44,8 +44,8 @@ export class VendorKycController {
   }
 
   @Post('verify')
-  verifyOtp(@Request() req, @Body('otp') otp: string) {
-    return this.vendorKycService.verifyContactOtp(req.user.id, otp);
+  verifyOtp(@Request() req, @Body('otp') otp: string, @Body('phone') phone: string) {
+    return this.vendorKycService.verifyContactOtp(req.user.id, otp, phone);
   }
 
   @Get('me')
