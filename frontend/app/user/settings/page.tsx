@@ -61,7 +61,7 @@ export default function UserSettings() {
   const notifDropdownRef = useRef<HTMLDivElement>(null);
 
   const token = session?.accessToken;
-  const isOAuthUser = session?.user?.provider !== "credentials";
+  const isOAuthUser = session?.user?.provider !==  undefined && session.user.provider !== "credentials";
 
   // Compute profile-completeness notifications (reused from Navbar logic)
   const notifications: string[] = session
@@ -109,7 +109,10 @@ export default function UserSettings() {
     setDeleting(true);
     setDeleteError("");
     try {
-      const res = await fetch("/api/user/delete-account", { method: "DELETE" });
+      const res = await fetch("/api/user/delete-account", { 
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
@@ -165,12 +168,60 @@ export default function UserSettings() {
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "U";
 
+  const [profileForm, setProfileForm] = useState({
+      name: session?.user?.name || "",
+      phone: session?.user?.phone || "",
+      address: session?.user?.address || "",
+    });
+    const [savingProfile, setSavingProfile] = useState(false);
+
+  const sessionSnapshot = `${session?.user?.name || ""}|${session?.user?.phone || ""}|${session?.user?.address || ""}`;
+      const [lastSessionSnapshot, setLastSessionSnapshot] = useState(sessionSnapshot);
+
+      if (!isEditing && sessionSnapshot !== lastSessionSnapshot) {
+        setLastSessionSnapshot(sessionSnapshot);
+        setProfileForm({
+          name: session?.user?.name || "",
+          phone: session?.user?.phone || "",
+          address: session?.user?.address || "",
+        });
+      }
+
   const profileFields = [
-    { icon: FiUser, label: "Full Name", value: session?.user?.name || "—", type: "text" },
-    { icon: FiPhone, label: "Phone Number", value: "+977 9834567341", type: "tel" },
-    { icon: FiMail, label: "Email Address", value: session?.user?.email || "—", type: "email" },
-    { icon: FiMapPin, label: "Address", value: "Kathmandu, Nepal", type: "text" },
+    { key: "name", icon: FiUser, label: "Full Name", value: profileForm.name, type: "text", editable: true },
+    { key: "phone", icon: FiPhone, label: "Phone Number", value: profileForm.phone, type: "tel", editable: true },
+    { key: "email", icon: FiMail, label: "Email Address", value: session?.user?.email || "—", type: "email", editable: false },
+    { key: "address", icon: FiMapPin, label: "Address", value: profileForm.address, type: "text", editable: true },
   ];
+
+  //profile save
+  async function handleProfileSave() {
+    setSavingProfile(true);
+    try {
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: profileForm.name,
+          phone: profileForm.phone,
+          address: profileForm.address,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Failed to update profile.");
+      }
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setSavingProfile(false);
+    }
+  }
 
   return (
     <>
@@ -1599,15 +1650,17 @@ export default function UserSettings() {
                 <div className="ud-profile-name">{session?.user?.name || "User"}</div>
                 <div className="ud-profile-role">Member · Kathmandu, Nepal</div>
               </div>
+              
               <div className="ud-profile-actions">
                 <button
                   type="button"
                   className={`ud-btn ${isEditing ? "ud-btn-primary" : "ud-btn-ghost"}`}
-                  onClick={() => setIsEditing(!isEditing)}
+                  onClick={() => (isEditing ? handleProfileSave() : setIsEditing(true))}
+                  disabled={savingProfile}
                 >
                   {isEditing ? (
                     <>
-                      <FiCheck size={14} /> Save Changes
+                      <FiCheck size={14} /> {savingProfile ? "Saving..." : "Save Changes"}
                     </>
                   ) : (
                     <>
@@ -1622,21 +1675,23 @@ export default function UserSettings() {
             <div className="ud-section-header">
               <h3 className="ud-section-title">Account Information</h3>
             </div>
+
             <div className="ud-form-card">
               {profileFields.map((field) => (
-                <div key={field.label} className="ud-form-row">
+                <div key={field.key} className="ud-form-row">
                   <div className="ud-form-label">
                     <field.icon size={16} />
                     {field.label}
                   </div>
-                  {isEditing ? (
+                  {isEditing && field.editable ? (
                     <input
                       type={field.type}
                       className="ud-form-input"
-                      defaultValue={field.value}
+                      value={field.value}
+                      onChange={(e) => setProfileForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
                     />
                   ) : (
-                    <div className="ud-form-value">{field.value}</div>
+                    <div className="ud-form-value">{field.value || "-"}</div>
                   )}
                 </div>
               ))}
