@@ -157,13 +157,19 @@ model DoctorProfile {
 }
 
 model Session {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String @id @default(cuid())
+  userId           String
+  user             User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   refreshTokenHash String
   expiresAt        DateTime
   createdAt        DateTime @default(now())
+
+  userAgent        String?
+  ipAddress        String?
+  deviceLabel      String?
+  lastActiveAt     DateTime @default(now())
+  revokedAt        DateTime?
 
   @@index([userId])
   @@index([expiresAt])

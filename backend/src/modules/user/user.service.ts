@@ -58,11 +58,24 @@ export class UserService {
           },
           select: { id: true, email: true, role: true, phone: true, address: true, image: true, name: true },
         });
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const opaqueSecret = crypto.randomBytes(32).toString('hex');
+  const refreshTokenHash = await bcrypt.hash(opaqueSecret, 10);
+
+  const session = await this.prisma.session.create({
+    data: {
+      userId: user.id,
+      refreshTokenHash,
+      expiresAt,
+      deviceLabel: 'OAuth login',
+    },
+  });
 
     const accessToken = this.jwtService.sign({
       sub: user.id,
       email: user.email,
       role: user.role,
+      sid: session.id,
     });
 
     return { id: user.id, role: user.role, phone: user.phone, address: user.address, image: user.image, name: user.name, accessToken };

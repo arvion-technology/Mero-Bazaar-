@@ -46,6 +46,20 @@ export default function UserSettings() {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [notifSeen, setNotifSeen] = useState(false);
 
+  //active session state
+  const [showSessionsModal, setShowSessionsModal] = useState(false);
+  const [sessions, setSessions] = useState<
+    {
+      id: string;
+      deviceLabel: string | null;
+      ipAddress: string | null;
+      lastActiveAt: string;
+      isCurrent: boolean;
+    }[]
+  >([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+
   // Change Password state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -61,7 +75,7 @@ export default function UserSettings() {
   const notifDropdownRef = useRef<HTMLDivElement>(null);
 
   const token = session?.accessToken;
-  const isOAuthUser = session?.user?.provider !== "credentials";
+  const isOAuthUser = session?.user?.provider !==  undefined && session.user.provider !== "credentials";
 
   // Compute profile-completeness notifications (reused from Navbar logic)
   const notifications: string[] = session
@@ -109,7 +123,10 @@ export default function UserSettings() {
     setDeleting(true);
     setDeleteError("");
     try {
-      const res = await fetch("/api/user/delete-account", { method: "DELETE" });
+      const res = await fetch("/api/user/delete-account", { 
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
@@ -165,12 +182,94 @@ export default function UserSettings() {
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "U";
 
+  const [profileForm, setProfileForm] = useState({
+      name: session?.user?.name || "",
+      phone: session?.user?.phone || "",
+      address: session?.user?.address || "",
+    });
+    const [savingProfile, setSavingProfile] = useState(false);
+
+  const sessionSnapshot = `${session?.user?.name || ""}|${session?.user?.phone || ""}|${session?.user?.address || ""}`;
+      const [lastSessionSnapshot, setLastSessionSnapshot] = useState(sessionSnapshot);
+
+      if (!isEditing && sessionSnapshot !== lastSessionSnapshot) {
+        setLastSessionSnapshot(sessionSnapshot);
+        setProfileForm({
+          name: session?.user?.name || "",
+          phone: session?.user?.phone || "",
+          address: session?.user?.address || "",
+        });
+      }
+
   const profileFields = [
-    { icon: FiUser, label: "Full Name", value: session?.user?.name || "—", type: "text" },
-    { icon: FiPhone, label: "Phone Number", value: "+977 9834567341", type: "tel" },
-    { icon: FiMail, label: "Email Address", value: session?.user?.email || "—", type: "email" },
-    { icon: FiMapPin, label: "Address", value: "Kathmandu, Nepal", type: "text" },
+    { key: "name", icon: FiUser, label: "Full Name", value: profileForm.name, type: "text", editable: true },
+    { key: "phone", icon: FiPhone, label: "Phone Number", value: profileForm.phone, type: "tel", editable: true },
+    { key: "email", icon: FiMail, label: "Email Address", value: session?.user?.email || "—", type: "email", editable: false },
+    { key: "address", icon: FiMapPin, label: "Address", value: profileForm.address, type: "text", editable: true },
   ];
+
+  //profile save
+  async function handleProfileSave() {
+    setSavingProfile(true);
+    try {
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: profileForm.name,
+          phone: profileForm.phone,
+          address: profileForm.address,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Failed to update profile.");
+      }
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
+//revoke function for active session
+  async function loadSessions() {
+    setLoadingSessions(true);
+    try {
+      const res = await fetch("/api/sessions/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to load sessions.");
+      const data = await res.json();
+      setSessions(data);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setLoadingSessions(false);
+    }
+  }
+
+  async function handleRevokeSession(id: string) {
+    setRevokingId(id);
+    try {
+      const res = await fetch(`/api/sessions/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to revoke session.");
+      setSessions((prev) => prev.filter((s) => s.id !== id));
+      toast.success("Session revoked.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setRevokingId(null);
+    }
+  }
 
   return (
     <>
@@ -1599,15 +1698,17 @@ export default function UserSettings() {
                 <div className="ud-profile-name">{session?.user?.name || "User"}</div>
                 <div className="ud-profile-role">Member · Kathmandu, Nepal</div>
               </div>
+              
               <div className="ud-profile-actions">
                 <button
                   type="button"
                   className={`ud-btn ${isEditing ? "ud-btn-primary" : "ud-btn-ghost"}`}
-                  onClick={() => setIsEditing(!isEditing)}
+                  onClick={() => (isEditing ? handleProfileSave() : setIsEditing(true))}
+                  disabled={savingProfile}
                 >
                   {isEditing ? (
                     <>
-                      <FiCheck size={14} /> Save Changes
+                      <FiCheck size={14} /> {savingProfile ? "Saving..." : "Save Changes"}
                     </>
                   ) : (
                     <>
@@ -1622,21 +1723,23 @@ export default function UserSettings() {
             <div className="ud-section-header">
               <h3 className="ud-section-title">Account Information</h3>
             </div>
+
             <div className="ud-form-card">
               {profileFields.map((field) => (
-                <div key={field.label} className="ud-form-row">
+                <div key={field.key} className="ud-form-row">
                   <div className="ud-form-label">
                     <field.icon size={16} />
                     {field.label}
                   </div>
-                  {isEditing ? (
+                  {isEditing && field.editable ? (
                     <input
                       type={field.type}
                       className="ud-form-input"
-                      defaultValue={field.value}
+                      value={field.value}
+                      onChange={(e) => setProfileForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
                     />
                   ) : (
-                    <div className="ud-form-value">{field.value}</div>
+                    <div className="ud-form-value">{field.value || "-"}</div>
                   )}
                 </div>
               ))}
@@ -1654,12 +1757,19 @@ export default function UserSettings() {
                 </div>
                 <button type="button" className="ud-btn ud-btn-ghost">Enable</button>
               </div>
+
               <div className="ud-security-row">
                 <div className="ud-security-info">
                   <h4>Active Sessions</h4>
                   <p>Manage devices where you&apos;re currently logged in</p>
                 </div>
-                <button type="button" className="ud-btn ud-btn-ghost">Manage</button>
+                <button
+                  type="button"
+                  className="ud-btn ud-btn-ghost"
+                  onClick={() => { setShowSessionsModal(true); loadSessions(); }}
+                >
+                  Manage
+                </button>
               </div>
               <div className="ud-security-row">
                 <div className="ud-security-info">
@@ -1775,54 +1885,124 @@ export default function UserSettings() {
         </div>
       </div>
 
-      {/* ── Delete Account Confirmation Modal ── */}
-      {showDeleteModal && (
-        <div className="ud-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
-          <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="ud-modal-icon">
-              <FiAlertTriangle size={26} />
-            </div>
-            <div className="ud-modal-title">Delete Your Account?</div>
-            <div className="ud-modal-body">
-              This action is <strong>permanent and irreversible</strong>. All your orders,
-              wishlist, and personal data will be permanently deleted.
-            </div>
-            {deleteError && (
-              <div className="ud-modal-error">{deleteError}</div>
-            )}
-            <div className="ud-modal-actions">
-              <button
-                type="button"
-                className="ud-modal-cancel"
-                onClick={() => { setShowDeleteModal(false); setDeleteError(""); }}
-                disabled={deleting}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="ud-modal-delete"
-                onClick={handleDeleteAccount}
-                disabled={deleting}
-              >
-                {deleting ? (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                    </svg>
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <FiTrash2 size={15} />
-                    Yes, Delete Account
-                  </>
-                )}
-              </button>
-            </div>
+    {/* ── Delete Account Confirmation Modal ── */}
+    {showDeleteModal && (
+      <div className="ud-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
+        <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="ud-modal-icon">
+            <FiAlertTriangle size={26} />
+          </div>
+          <div className="ud-modal-title">Delete Your Account?</div>
+          <div className="ud-modal-body">
+            This action is <strong>permanent and irreversible</strong>. All your orders,
+            wishlist, and personal data will be permanently deleted.
+          </div>
+          {deleteError && (
+            <div className="ud-modal-error">{deleteError}</div>
+          )}
+          <div className="ud-modal-actions">
+            <button
+              type="button"
+              className="ud-modal-cancel"
+              onClick={() => { setShowDeleteModal(false); setDeleteError(""); }}
+              disabled={deleting}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="ud-modal-delete"
+              onClick={handleDeleteAccount}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                  </svg>
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <FiTrash2 size={15} />
+                  Yes, Delete Account
+                </>
+              )}
+            </button>
           </div>
         </div>
-      )}
-    </>
-  );
+      </div>
+    )}
+
+    {/* ── Active Sessions Modal ── */}
+    {showSessionsModal && (
+      <div className="ud-modal-overlay" onClick={() => setShowSessionsModal(false)}>
+        <div className="ud-modal" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
+          <div className="ud-modal-title" style={{ marginBottom: 16 }}>Active Sessions</div>
+
+          {loadingSessions ? (
+            <div style={{ textAlign: "center", padding: "20px 0", color: "#94a3b8", fontSize: 13 }}>
+              Loading...
+            </div>
+          ) : sessions.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "20px 0", color: "#94a3b8", fontSize: 13 }}>
+              No active sessions found.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+              {sessions.map((s) => (
+                <div
+                  key={s.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "12px 14px",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 10,
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", display: "flex", alignItems: "center", gap: 6 }}>
+                      {s.deviceLabel || "Unknown device"}
+                      {s.isCurrent && (
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "#16a34a", background: "#f0fdf4", padding: "2px 6px", borderRadius: 6 }}>
+                          This device
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
+                      {s.ipAddress || "Unknown IP"} · Last active {new Date(s.lastActiveAt).toLocaleString()}
+                    </div>
+                  </div>
+                  {!s.isCurrent && (
+                    <button
+                      type="button"
+                      className="ud-btn ud-btn-ghost"
+                      style={{ flexShrink: 0, color: "#ef4444" }}
+                      onClick={() => handleRevokeSession(s.id)}
+                      disabled={revokingId === s.id}
+                    >
+                      {revokingId === s.id ? "Revoking..." : "Revoke"}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button
+            type="button"
+            className="ud-modal-cancel"
+            style={{ width: "100%" }}
+            onClick={() => setShowSessionsModal(false)}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    )}
+  </>
+);
 }

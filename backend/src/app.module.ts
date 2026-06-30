@@ -21,6 +21,7 @@ import { UserModule } from './modules/user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { PhoneOtpModule } from './modules/otp/otp.module';
 import { VendorKycModule } from './modules/vendor-kyc/vendor-kyc.module';
+import { SessionsModule } from './modules/session/session.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { VendorKycModule } from './modules/vendor-kyc/vendor-kyc.module';
     UserModule,
     PhoneOtpModule,
     VendorKycModule,
+    SessionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
