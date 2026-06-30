@@ -1288,18 +1288,7 @@ export default function UserWishlist() {
             </button>
           </div>
 
-          <div className="ud-sidebar-footer">
-            <div className="ud-sidebar-avatar">
-              {session?.user?.image
-                ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
-                : userInitials
-              }
-            </div>
-            <div className="ud-sidebar-user">
-              <div className="ud-sidebar-name">{session?.user?.name || "User"}</div>
-              <div className="ud-sidebar-role">{session?.user?.email || "Member"}</div>
-            </div>
-          </div>
+
         </aside>
 
         {/* ── Main Area ── */}

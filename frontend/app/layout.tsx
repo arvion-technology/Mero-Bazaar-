@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import ConditionalNavbar from "@/components/ConditionalNavbar";
 import AuthProvider from "../components/AuthProviders";
 
 const inter = Inter({
@@ -23,10 +23,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ne" className={inter.variable} >
+    <html lang="ne" className={inter.variable}>
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         <AuthProvider>
-          <Navbar />
+          <ConditionalNavbar />
           {children}
         </AuthProvider>
       </body>
