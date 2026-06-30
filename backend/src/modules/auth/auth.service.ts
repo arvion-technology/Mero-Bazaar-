@@ -5,6 +5,15 @@ import * as bcrypt from 'bcrypt';
 import { UserRole } from '@prisma/client';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { randomBytes } from 'crypto';
+import type { Request } from 'express';
+
+function parseUserAgent(ua?: string): string {
+  if (!ua) return 'Unknown device';
+  const browser = /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+  const os = /Windows/.test(ua) ? 'Windows' : /Mac OS/.test(ua) ? 'macOS' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /Linux/.test(ua) ? 'Linux' : 'Unknown OS';
+  return `${browser} on ${os}`;
+}
 
 @Injectable()
 export class AuthService {
@@ -13,7 +22,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, req: Request) {
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -47,10 +56,10 @@ export class AuthService {
       },
     });
 
-    return this.signToken(user.id, user.email, user.role ?? UserRole.USER);
+    return this.signToken(user.id, user.email, user.role ?? UserRole.USER,req);
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, req: Request) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -62,23 +71,48 @@ export class AuthService {
         "This account uses Google/Facebook login. Please continue with OAuth."
       );
     }
-    const valid = await bcrypt.compare(dto.password, user.password);    if (!valid) throw new UnauthorizedException('Invalid credentials!');
+    const valid = await bcrypt.compare(dto.password, user.password);
+    if (!valid) throw new UnauthorizedException('Invalid credentials!');
 
-    return this.signToken(user.id, user.email, user.role ?? UserRole.USER);
-  }
-
-  async logout(userId: string) {
     await this.prisma.user.update({
-      where: { id: userId },
+      where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
+    return this.signToken(user.id, user.email, user.role ?? UserRole.USER, req);
+  }
+
+  async logout(userId: string, sessionId?: string) {
+    if (sessionId) {
+      await this.prisma.session.updateMany({
+        where: { id: sessionId, userId },
+        data: { revokedAt: new Date() },
+      });
+    }
     return { message: 'Logged out successfully!' };
   }
 
-  private signToken(userId: string, email: string, role: UserRole) {
+  private async signToken(userId: string, email: string, role: UserRole, req: Request) {
+    console.log('>>> signToken called for userId:', userId);
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const opaqueSecret = randomBytes(32).toString('hex');
+    const refreshTokenHash = await bcrypt.hash(opaqueSecret, 10);
+
+    const session = await this.prisma.session.create({
+      data: {
+        userId,
+        refreshTokenHash,
+        expiresAt,
+        userAgent: req.headers['user-agent'],
+        ipAddress: req.ip,
+        deviceLabel: parseUserAgent(req.headers['user-agent']),
+      },
+    });
+
+    console.log('>>> session created with id:', session.id);
+
     return {
-      access_token: this.jwtService.sign({ sub: userId, email, role }),
+      access_token: this.jwtService.sign({ sub: userId, email, role, sid: session.id }),
       user: { id: userId, email, role },
     };
   }
-}
+} 
