@@ -54,7 +54,7 @@ export default function UserSettings() {
       deviceLabel: string | null;
       ipAddress: string | null;
       lastActiveAt: string;
-      isCurrent: boolean;a
+      isCurrent: boolean;
     }[]
   >([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
