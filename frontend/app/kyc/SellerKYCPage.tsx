@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   FiUser, FiCalendar, FiUpload, FiCreditCard, FiCamera,
   FiCheckCircle, FiShield, FiLock, FiArrowRight, FiArrowLeft
@@ -60,6 +60,67 @@ export default function SellerKYCPage() {
 
   const [phase, setPhase] = useState<Phase>(1);
   const [submitted, setSubmitted] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(true);
+  const [existingStatus, setExistingStatus] = useState<"VERIFIED" | "PENDING" | "REJECTED" | null>(null);
+  const router = useRouter();
+
+
+  useEffect(() => {
+    const checkExisting = async () => {
+      const token = session?.accessToken;
+      if (!token) {
+        setCheckingStatus(false);
+        return;
+      }
+      try {
+        const res = await fetch("/api/vendor-kyc/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.status === 404) {
+          setCheckingStatus(false);
+          return;
+        }
+
+        if (res.ok) {
+          const kyc = await res.json();
+
+          if (!kyc.fullName) {
+            setCheckingStatus(false);
+            return;
+          }
+
+          if (kyc.status === "VERIFIED" || kyc.status === "PENDING") {
+            router.replace("/seller/dashboard");
+            return;
+          }
+
+          if (kyc.status === "REJECTED") {
+            setExistingStatus("REJECTED");
+            setForm({
+              fullName: kyc.fullName ?? "",
+              dateOfBirth: kyc.dateOfBirth ? kyc.dateOfBirth.slice(0, 10) : "",
+              panNumber: kyc.panNumber ?? "",
+              contactNumber: kyc.contactNumber ?? "",
+              address: kyc.address ?? "",
+              bankName: kyc.bankName ?? "",
+              account: kyc.account ?? "",
+              accountHolderName: kyc.accountHolderName ?? "",
+            });
+            if (kyc.phoneVerified) setPhoneVerified(true);
+            setCheckingStatus(false);
+            return;
+          }
+        }
+
+        setCheckingStatus(false);
+      } catch {
+        setCheckingStatus(false);
+      }
+    };
+
+    checkExisting();
+  }, [session, router]);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -87,7 +148,6 @@ export default function SellerKYCPage() {
   const [submitting, setSubmitting] = useState(false);
   const [panOcrStatus, setPanOcrStatus] = useState<"idle" | "scanning" | "ok" | "warn">("idle");
   const [faceStatus, setFaceStatus] = useState<"idle" | "scanning" | "ok" | "error">("idle");
-  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -312,6 +372,18 @@ export default function SellerKYCPage() {
     if (phase === n) return "active";
     return "idle";
   };
+
+    if (checkingStatus) {
+    return (
+      <div className="kyc-page">
+        <div className="kyc-wrap">
+          <div className="kyc-card" style={{ textAlign: "center", padding: 60 }}>
+            <div className="spinner" style={{ margin: "0 auto", borderTopColor: PRIMARY, borderColor: "#eee" }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -597,6 +669,15 @@ export default function SellerKYCPage() {
               )}
             </div>
           </div>
+          
+          {existingStatus === "REJECTED" && (
+          <div className="kyc-card" style={{ background: "#FEF2F2", border: "1px solid #FCA5A5" }}>
+            <strong style={{ color: "#B91C1C" }}>Your previous submission was rejected.</strong>
+            <p style={{ fontSize: 13, color: "#7F1D1D", marginTop: 4 }}>
+              Please review and correct the details below, then resubmit.
+            </p>
+          </div>
+        )}
 
           {/* ── Phase content ── */}
           {submitted ? (
