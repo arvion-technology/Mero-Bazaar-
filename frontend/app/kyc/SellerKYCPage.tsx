@@ -64,6 +64,17 @@ export default function SellerKYCPage() {
   const [existingStatus, setExistingStatus] = useState<"VERIFIED" | "PENDING" | "REJECTED" | null>(null);
   const router = useRouter();
 
+  const [form, setForm] = useState({
+    fullName: "",
+    dateOfBirth: "",
+    panNumber: "",
+    contactNumber: "",
+    address: "",
+    bankName: "",
+    account: "",
+    accountHolderName: "",
+  });
+  const [phoneVerified, setPhoneVerified] = useState(false);
 
   useEffect(() => {
     const checkExisting = async () => {
@@ -122,27 +133,18 @@ export default function SellerKYCPage() {
     checkExisting();
   }, [session, router]);
 
-  const [form, setForm] = useState({
-    fullName: "",
-    dateOfBirth: "",
-    panNumber: "",
-    contactNumber: "",
-    address: "",
-    bankName: "",
-    account: "",
-    accountHolderName: "",
-  });
-
   const [panCard, setPanCard] = useState<File | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [selfieWithPan, setSelfieWithPan] = useState<File | null>(null);
   const [panCardPreview, setPanCardPreview] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
-  const [phoneVerified, setPhoneVerified] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -151,6 +153,44 @@ export default function SellerKYCPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
+
+  // ── shared face detection logic (used by both file upload and camera capture)
+  const runFaceDetection = async (file: File) => {
+    setFaceStatus("scanning");
+    try {
+      const faceapi = await import("face-api.js");
+      await Promise.all([
+        faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
+        faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+      ]);
+      const image = await createImageBitmap(file);
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      canvas.getContext("2d")!.drawImage(image, 0, 0);
+
+      const detections = await faceapi
+        .detectAllFaces(
+          canvas as unknown as HTMLCanvasElement,
+          new faceapi.SsdMobilenetv1Options({ minConfidence: 0.7 })
+        )
+        .withFaceLandmarks();
+
+      if (detections.length === 0) {
+        setFaceStatus("error");
+        toast.error("Ensure your face is clearly visible!");
+      } else if (detections.length > 1) {
+        setFaceStatus("error");
+        toast.error("Multiple face detected");
+      } else {
+        setFaceStatus("ok");
+        toast.success("Face detected successfully!");
+      }
+    } catch {
+      setFaceStatus("idle");
+      toast.warn("Face detection unavailable!");
+    }
+  };
 
   const handleFileChange =
     (field: "panCard" | "photo" | "selfieWithPan") =>
@@ -174,8 +214,8 @@ export default function SellerKYCPage() {
         setPanOcrStatus("scanning");
         try {
           const processed = await preprocessImageForOCR(file);
-          const { createWorker } =  await import("tesseract.js");
-          const worker = await createWorker( "nep", 1, {
+          const { createWorker } = await import("tesseract.js");
+          const worker = await createWorker("nep", 1, {
             langPath: "/models",
           });
           const result = await worker.recognize(processed);
@@ -186,7 +226,7 @@ export default function SellerKYCPage() {
             .filter((w: { confidence: number; text: string }) => w.confidence > 65)
             .map((w: { confidence: number; text: string }) => w.text)
             .join(" ");
-            
+
           const pan = form.panNumber.trim().toUpperCase();
           if (pan && fuzzyMatchPan(confidentText, pan)) {
             setPanOcrStatus("ok");
@@ -197,48 +237,61 @@ export default function SellerKYCPage() {
           }
         } catch {
           setPanOcrStatus("warn");
-          toast.error("OCR failed - try again!")
+          toast.error("OCR failed - try again!");
         }
       }
 
-    //face detection  
-    if (field === "selfieWithPan" && file && file.type.startsWith("image/")) {
-      setFaceStatus("scanning");
-      try {
-        const faceapi = await import("face-api.js");
-        await Promise.all([
-          faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
-          faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
-        ]);
-        const image = await createImageBitmap(file);
-        const canvas = document.createElement("canvas");
-        canvas.width = image.width;
-        canvas.height = image.height;
-        canvas.getContext("2d")!.drawImage(image, 0, 0);
-        
-        const detections = await faceapi
-          .detectAllFaces(
-            canvas as unknown as HTMLCanvasElement,
-            new faceapi.SsdMobilenetv1Options({ minConfidence: 0.7 })
-          )
-          .withFaceLandmarks();
-
-        if (detections.length === 0) {
-          setFaceStatus("error");
-          toast.error("Ensure your face is clearly visible!");
-        } else if (detections.length > 1) {
-          setFaceStatus("error");
-          toast.error("Multiple face detected");
-        } else {
-          setFaceStatus("ok");
-          toast.success("Face detected successfully!");
-        }
-      } catch {
-        setFaceStatus("idle");
-        toast.warn("Face detection unavailable!");
+      // face detection
+      if (field === "selfieWithPan" && file && file.type.startsWith("image/")) {
+        await runFaceDetection(file);
       }
-    }  
     };
+
+  // ── Desktop/webcam camera capture
+  const openCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+      });
+      streamRef.current = stream;
+      setShowCamera(true);
+      setTimeout(() => {
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      }, 0);
+    } catch {
+      toast.error("Could not access camera");
+    }
+  };
+
+  const closeCamera = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setShowCamera(false);
+  };
+
+  const captureSelfie = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d")!.drawImage(video, 0, 0);
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const file = new File([blob], "selfie.png", { type: "image/png" });
+      setSelfieWithPan(file);
+      setSelfiePreview(canvas.toDataURL("image/png"));
+      closeCamera();
+      await runFaceDetection(file);
+    }, "image/png");
+  };
+
+  // stop camera if the component unmounts mid-capture
+  useEffect(() => {
+    return () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
 
   // ── OTP handler
   const sendOtp = async () => {
@@ -257,9 +310,9 @@ export default function SellerKYCPage() {
     try {
       const res = await fetch("/api/vendor-kyc/otp/send", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ phone }),
       });
@@ -287,7 +340,7 @@ export default function SellerKYCPage() {
       const res = await fetch("/api/vendor-kyc/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json",
-                   Authorization: `Bearer ${token}`    
+                   Authorization: `Bearer ${token}`
                  },
         body: JSON.stringify({ otp, phone: form.contactNumber }),
       });
@@ -373,7 +426,7 @@ export default function SellerKYCPage() {
     return "idle";
   };
 
-    if (checkingStatus) {
+  if (checkingStatus) {
     return (
       <div className="kyc-page">
         <div className="kyc-wrap">
@@ -669,15 +722,15 @@ export default function SellerKYCPage() {
               )}
             </div>
           </div>
-          
+
           {existingStatus === "REJECTED" && (
-          <div className="kyc-card" style={{ background: "#FEF2F2", border: "1px solid #FCA5A5" }}>
-            <strong style={{ color: "#B91C1C" }}>Your previous submission was rejected.</strong>
-            <p style={{ fontSize: 13, color: "#7F1D1D", marginTop: 4 }}>
-              Please review and correct the details below, then resubmit.
-            </p>
-          </div>
-        )}
+            <div className="kyc-card" style={{ background: "#FEF2F2", border: "1px solid #FCA5A5" }}>
+              <strong style={{ color: "#B91C1C" }}>Your previous submission was rejected.</strong>
+              <p style={{ fontSize: 13, color: "#7F1D1D", marginTop: 4 }}>
+                Please review and correct the details below, then resubmit.
+              </p>
+            </div>
+          )}
 
           {/* ── Phase content ── */}
           {submitted ? (
@@ -831,9 +884,12 @@ export default function SellerKYCPage() {
                 </div>
 
                 {/* Selfie with PAN */}
-                <div className={`upload-box${selfieWithPan ? " done" : ""}`}
-                  onClick={() => document.getElementById("fileSelfie")?.click()}>
-                  <div className="upload-icon">
+                <div className={`upload-box${selfieWithPan ? " done" : ""}`}>
+                  <div
+                    className="upload-icon"
+                    onClick={() => document.getElementById("fileSelfie")?.click()}
+                    style={{ cursor: "pointer" }}
+                  >
                     {selfiePreview ? <img src={selfiePreview} alt="Selfie" /> : <FiCamera />}
                   </div>
                   <div className={`upload-lbl${selfieWithPan ? " done" : ""}`}>
@@ -842,13 +898,38 @@ export default function SellerKYCPage() {
                   {faceStatus === "scanning" && <span style={{ fontSize: 10, color: "#888" }}>Detecting face…</span>}
                   {faceStatus === "ok" && <span style={{ fontSize: 10, color: "#1a7a4a" }}>✓ Face detected</span>}
                   {faceStatus === "error" && <span style={{ fontSize: 10, color: "#ef4444" }}>✗ No face found</span>}
-                  <label className="upload-btn" onClick={(e) => e.stopPropagation()}>
-                    <FiUpload size={10} /> {selfieWithPan ? "Change" : "Upload"}
-                    <input type="file" id="fileSelfie" className="upload-input"
-                      accept="image/*" capture="user" onChange={handleFileChange("selfieWithPan")} />
-                  </label>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button type="button" className="upload-btn" onClick={openCamera}>
+                      <FiCamera size={10} /> Camera
+                    </button>
+                    <label className="upload-btn" onClick={(e) => e.stopPropagation()}>
+                      <FiUpload size={10} /> {selfieWithPan ? "Change" : "File"}
+                      <input type="file" id="fileSelfie" className="upload-input"
+                        accept="image/*" onChange={handleFileChange("selfieWithPan")} />
+                    </label>
+                  </div>
                 </div>
               </div>
+
+              {showCamera && (
+                <div style={{
+                  position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
+                  display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+                }}>
+                  <div style={{ background: "#fff", borderRadius: 12, padding: 16, maxWidth: 420, width: "90%" }}>
+                    <video ref={videoRef} autoPlay playsInline muted
+                      style={{ width: "100%", borderRadius: 8, transform: "scaleX(-1)" }} />
+                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                      <button type="button" className="btn-next" style={{ flex: 1, justifyContent: "center" }} onClick={captureSelfie}>
+                        Capture
+                      </button>
+                      <button type="button" className="btn-back" style={{ flex: 1, justifyContent: "center" }} onClick={closeCamera}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="upload-info">
                 All 3 documents are required. Images must be clear, well-lit, and unobstructed.
