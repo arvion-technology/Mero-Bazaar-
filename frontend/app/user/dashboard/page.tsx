@@ -24,6 +24,7 @@ import {
   FiChevronDown,
   FiMenu,
   FiX,
+  FiAlertCircle,
 } from "react-icons/fi";
 
 const stats = [
@@ -56,9 +57,21 @@ export default function UserDashboard() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const [notifSeen, setNotifSeen] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const notifDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Compute profile-completeness notifications (reused from Navbar logic)
+  const notifications: string[] = session
+    ? ([
+        !session.user?.phone && "Add your phone number",
+        !session.user?.address && "Add your address",
+      ].filter(Boolean) as string[])
+    : [];
+  const notificationCount = notifications.length;
 
   const sidebarItems = [
     { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/user/dashboard" },
@@ -69,11 +82,14 @@ export default function UserDashboard() {
     { id: "settings", icon: FiSettings, label: "Settings", href: "/user/settings" },
   ];
 
-  // Close profile dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target as Node)) {
         setShowProfileDropdown(false);
+      }
+      if (notifDropdownRef.current && !notifDropdownRef.current.contains(e.target as Node)) {
+        setShowNotifDropdown(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -1325,18 +1341,7 @@ export default function UserDashboard() {
             </button>
           </div>
 
-          <div className="ud-sidebar-footer">
-            <div className="ud-sidebar-avatar">
-              {session?.user?.image
-                ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
-                : userInitials
-              }
-            </div>
-            <div className="ud-sidebar-user">
-              <div className="ud-sidebar-name">{session?.user?.name || "User"}</div>
-              <div className="ud-sidebar-role">{session?.user?.email || "Member"}</div>
-            </div>
-          </div>
+          {/* Sidebar footer intentionally left empty */}
         </aside>
 
         {/* ── Main Area ── */}
@@ -1365,11 +1370,70 @@ export default function UserDashboard() {
               <h1 className="ud-breadcrumb">Dashboard</h1>
             </div>
             <div className="ud-topbar-right">
-              {/* Notifications */}
-              <Link href="/user/notifications" className="ud-icon-btn" title="Notifications">
-                <FiBell size={18} />
-                <span className="ud-badge">3</span>
-              </Link>
+              {/* Notifications Bell */}
+              <div style={{ position: "relative" }} ref={notifDropdownRef}>
+                <button
+                  type="button"
+                  className="ud-icon-btn"
+                  title="Notifications"
+                  onClick={() => {
+                    setShowNotifDropdown((v) => !v);
+                    setNotifSeen(true);
+                  }}
+                >
+                  <FiBell size={18} />
+                  {notificationCount > 0 && !notifSeen && (
+                    <span className="ud-badge">{notificationCount}</span>
+                  )}
+                </button>
+
+                {showNotifDropdown && (
+                  <div style={{
+                    position: "absolute",
+                    top: "calc(100% + 10px)",
+                    right: 0,
+                    background: "#fff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+                    minWidth: "280px",
+                    zIndex: 999,
+                    overflow: "hidden",
+                    animation: "dropdownIn 0.15s ease",
+                  }}>
+                    <div style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9", fontWeight: 700, fontSize: "13px", color: "#1e293b" }}>
+                      Notifications
+                    </div>
+                    {notifications.length > 0 ? (
+                      notifications.map((msg, i) => (
+                        <Link
+                          key={i}
+                          href="/user/settings"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                            padding: "12px 16px",
+                            fontSize: "13px",
+                            color: "#475569",
+                            borderBottom: i < notifications.length - 1 ? "1px solid #f8fafc" : "none",
+                            textDecoration: "none",
+                            transition: "background 0.15s",
+                          }}
+                          onClick={() => setShowNotifDropdown(false)}
+                        >
+                          <FiAlertCircle size={15} color="#f59e0b" style={{ flexShrink: 0 }} />
+                          {msg}
+                        </Link>
+                      ))
+                    ) : (
+                      <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>
+                        You&apos;re all caught up ✓
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Profile Avatar Dropdown */}
               <div className="ud-profile-wrap" ref={profileDropdownRef}>
@@ -1384,7 +1448,6 @@ export default function UserDashboard() {
                       : userInitials
                     }
                   </div>
-                  <span className="ud-profile-btn-name">{session?.user?.name || "User"}</span>
                   <FiChevronDown size={14} className={`ud-profile-chevron ${showProfileDropdown ? "open" : ""}`} />
                 </button>
 
