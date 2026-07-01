@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -7,6 +7,8 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { randomBytes } from 'crypto';
 import type { Request } from 'express';
+import { PhoneOtpService } from '../otp/otp.service';
+import { OtpContext } from '@prisma/client';
 
 function parseUserAgent(ua?: string): string {
   if (!ua) return 'Unknown device';
@@ -20,6 +22,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private phoneOtpService: PhoneOtpService,
   ) {}
 
   async register(dto: RegisterDto, req: Request) {
@@ -74,10 +77,43 @@ export class AuthService {
     const valid = await bcrypt.compare(dto.password, user.password);
     if (!valid) throw new UnauthorizedException('Invalid credentials!');
 
+    // NEW: 2FA gate
+    if (user.twoFactorEnabled) {
+      if (!user.phone) {
+        throw new ForbiddenException('Two-factor is enabled but no verified phone is on file.');
+      }
+      await this.phoneOtpService.sendOtp(user.phone, OtpContext.LOGIN);
+      const tempToken = this.jwtService.sign(
+        { sub: user.id, purpose: 'login_2fa' },
+        { expiresIn: '5m' },
+      );
+      return { requiresTwoFactor: true, tempToken };
+    }
+
     await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
+    return this.signToken(user.id, user.email, user.role ?? UserRole.USER, req);
+  }
+
+    async verifyLoginOtp(tempToken: string, otp: string, req: Request) {
+    let payload: { sub: string; purpose: string };
+    try {
+      payload = this.jwtService.verify(tempToken);
+    } catch {
+      throw new UnauthorizedException('Login session expired. Please log in again.');
+    }
+    if (payload.purpose !== 'login_2fa') {
+      throw new UnauthorizedException('Invalid token.');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+    if (!user?.phone) throw new UnauthorizedException('User not found');
+
+    await this.phoneOtpService.verifyOtp(user.phone, otp, OtpContext.LOGIN);
+
+    await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     return this.signToken(user.id, user.email, user.role ?? UserRole.USER, req);
   }
 

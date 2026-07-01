@@ -225,4 +225,31 @@ export class UserService {
 
     return { message: 'Phone number verified and saved.' };
   }
+
+  async requestEnableTwoFactor(userId: string) {
+  const user = await this.prisma.user.findUnique({
+    where: { id: userId },
+    select: { phone: true, phoneVerifiedAt: true, twoFactorEnabled: true },
+  });
+  if (!user) throw new NotFoundException('User not found');
+  if (user.twoFactorEnabled) throw new BadRequestException('Two-factor is already enabled.');
+  if (!user.phone || !user.phoneVerifiedAt) {
+    throw new BadRequestException('Verify a phone number before enabling two-factor authentication.');
+  }
+  await this.phoneOtpService.sendOtp(user.phone, OtpContext.TWO_FA_SETUP);
+  return { message: `OTP sent to ${user.phone}` };
+}
+
+async confirmEnableTwoFactor(userId: string, otp: string) {
+  const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { phone: true } });
+  if (!user?.phone) throw new BadRequestException('No phone on file.');
+  await this.phoneOtpService.verifyOtp(user.phone, otp, OtpContext.TWO_FA_SETUP);
+  await this.prisma.user.update({ where: { id: userId }, data: { twoFactorEnabled: true } });
+  return { message: 'Two-factor authentication enabled.' };
+}
+
+async disableTwoFactor(userId: string) {
+  await this.prisma.user.update({ where: { id: userId }, data: { twoFactorEnabled: false } });
+  return { message: 'Two-factor authentication disabled.' };
+}
 }

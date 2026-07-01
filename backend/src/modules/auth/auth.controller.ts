@@ -4,6 +4,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt_auth.guards';
 import type { Request } from 'express';
+import { VerifyLoginOtpDto } from './dto/verify_login_otp.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -17,6 +18,11 @@ export class AuthController {
   @Post('login')
   login(@Body() dto: LoginDto, @Req() req: Request) {
     return this.authService.login(dto, req);
+  }
+
+  @Post('2fa/verify')
+  verifyTwoFactor(@Body() dto: VerifyLoginOtpDto, @Req() req: Request) {
+    return this.authService.verifyLoginOtp(dto.tempToken, dto.otp, req);
   }
 
   @UseGuards(JwtAuthGuard)
