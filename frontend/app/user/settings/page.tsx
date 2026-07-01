@@ -29,6 +29,7 @@ import {
   FiMenu,
   FiX,
   FiAlertCircle,
+  FiShield,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 
@@ -69,10 +70,20 @@ export default function UserSettings() {
   const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [isSubmittingPw, setIsSubmittingPw] = useState(false);
 
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
   const router = useRouter();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const notifDropdownRef = useRef<HTMLDivElement>(null);
+
+  // 2FA state
+const [twoFactorEnabled, setTwoFactorEnabled] = useState(session?.user?.twoFactorEnabled ?? false);
+const [show2FAModal, setShow2FAModal] = useState(false);
+const [tfaOtp, setTfaOtp] = useState("");
+const [tfaRequesting, setTfaRequesting] = useState(false);
+const [tfaConfirming, setTfaConfirming] = useState(false);
+const [tfaError, setTfaError] = useState("");
+const [showDisable2FAModal, setShowDisable2FAModal] = useState(false);
+const [tfaDisabling, setTfaDisabling] = useState(false);
 
   const token = session?.accessToken;
   const isOAuthUser = session?.user?.provider !==  undefined && session.user.provider !== "credentials";
@@ -189,7 +200,7 @@ export default function UserSettings() {
     });
     const [savingProfile, setSavingProfile] = useState(false);
 
-  const sessionSnapshot = `${session?.user?.name || ""}|${session?.user?.phone || ""}|${session?.user?.address || ""}`;
+  const sessionSnapshot = `${session?.user?.name || ""}|${session?.user?.phone || ""}|${session?.user?.address || ""}|${session?.user?.twoFactorEnabled ?? ""}`;
       const [lastSessionSnapshot, setLastSessionSnapshot] = useState(sessionSnapshot);
 
       if (!isEditing && sessionSnapshot !== lastSessionSnapshot) {
@@ -199,6 +210,7 @@ export default function UserSettings() {
           phone: session?.user?.phone || "",
           address: session?.user?.address || "",
         });
+        setTwoFactorEnabled(session?.user?.twoFactorEnabled ?? false);
       }
 
   const profileFields = [
@@ -270,6 +282,83 @@ export default function UserSettings() {
       setRevokingId(null);
     }
   }
+
+  // request an OTP to enable 2FA
+async function handleRequestEnable2FA() {
+  setTfaRequesting(true);
+  setTfaError("");
+  try {
+    const res = await fetch("/api/user/2fa/enable", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.message || "Failed to start 2FA setup.");
+    }
+    setTfaOtp("");
+    setShow2FAModal(true);
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "Something went wrong!");
+  } finally {
+    setTfaRequesting(false);
+  }
+}
+
+// confirm the OTP to actually turn 2FA on
+async function handleConfirmEnable2FA() {
+  if (!tfaOtp || tfaOtp.length < 6) {
+    setTfaError("Enter the 6-digit code we sent you.");
+    return;
+  }
+  setTfaConfirming(true);
+  setTfaError("");
+  try {
+    const res = await fetch("/api/user/2fa/confirm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ otp: tfaOtp }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.message || "Invalid or expired code.");
+    }
+    setTwoFactorEnabled(true);
+    setShow2FAModal(false);
+    toast.success("Two-factor authentication enabled.");
+    await updateSession({ user: { ...session?.user, twoFactorEnabled: true } });
+  } catch (err) {
+    setTfaError(err instanceof Error ? err.message : "Something went wrong!");
+  } finally {
+    setTfaConfirming(false);
+  }
+}
+
+// Disable — single call, no OTP needed since the user is already authenticated
+async function handleDisable2FA() {
+  setTfaDisabling(true);
+  try {
+    const res = await fetch("/api/user/2fa/disable", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.message || "Failed to disable 2FA.");
+    }
+    setTwoFactorEnabled(false);
+    setShowDisable2FAModal(false);
+    toast.success("Two-factor authentication disabled.");
+    await updateSession({ user: { ...session?.user, twoFactorEnabled: false } });
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "Something went wrong!");
+  } finally {
+    setTfaDisabling(false);
+  }
+}
 
   return (
     <>
@@ -1753,9 +1842,21 @@ export default function UserSettings() {
               <div className="ud-security-row">
                 <div className="ud-security-info">
                   <h4>Two-Factor Authentication</h4>
-                  <p>Add an extra layer of security to your account</p>
+                  <p>
+                    {twoFactorEnabled
+                      ? "Your account is protected with an extra verification step."
+                      : "Add an extra layer of security to your account"}
+                  </p>
                 </div>
-                <button type="button" className="ud-btn ud-btn-ghost">Enable</button>
+                {twoFactorEnabled ? (
+                  <button type="button" className="ud-btn ud-btn-ghost" style={{ color: "#ef4444" }} onClick={() => setShowDisable2FAModal(true)}>
+                    Disable
+                  </button>
+                ) : (
+                  <button type="button" className="ud-btn ud-btn-ghost" onClick={handleRequestEnable2FA} disabled={tfaRequesting}>
+                    {tfaRequesting ? "Sending code..." : "Enable"}
+                  </button>
+                )}
               </div>
 
               <div className="ud-security-row">
@@ -1763,14 +1864,11 @@ export default function UserSettings() {
                   <h4>Active Sessions</h4>
                   <p>Manage devices where you&apos;re currently logged in</p>
                 </div>
-                <button
-                  type="button"
-                  className="ud-btn ud-btn-ghost"
-                  onClick={() => { setShowSessionsModal(true); loadSessions(); }}
-                >
+                <button type="button" className="ud-btn ud-btn-ghost" onClick={() => { setShowSessionsModal(true); loadSessions(); }}>
                   Manage
                 </button>
               </div>
+
               <div className="ud-security-row">
                 <div className="ud-security-info">
                   <h4>Login History</h4>
@@ -2003,6 +2101,90 @@ export default function UserSettings() {
         </div>
       </div>
     )}
+
+    
+        {/* ── Enable 2FA — Verify OTP Modal ── */}
+        {show2FAModal && (
+          <div className="ud-modal-overlay" onClick={() => !tfaConfirming && setShow2FAModal(false)}>
+            <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="ud-modal-icon" style={{ background: "#eef2ff", color: "#4f46e5" }}>
+                <FiShield size={26} />
+              </div>
+              <div className="ud-modal-title">Verify Your Identity</div>
+              <div className="ud-modal-body">
+                Enter the 6-digit code we sent you to finish enabling two-factor authentication.
+              </div>
+
+              {tfaError && <div className="ud-modal-error">{tfaError}</div>}
+
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                className="ud-form-input"
+                placeholder="000000"
+                value={tfaOtp}
+                onChange={(e) => setTfaOtp(e.target.value.replace(/\D/g, ""))}
+                style={{ textAlign: "center", fontSize: 20, letterSpacing: 6, marginBottom: 20 }}
+                autoFocus
+              />
+
+              <div className="ud-modal-actions">
+                <button
+                  type="button"
+                  className="ud-modal-cancel"
+                  onClick={() => { setShow2FAModal(false); setTfaError(""); }}
+                  disabled={tfaConfirming}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="ud-pw-submit-btn"
+                  style={{ flex: 1, justifyContent: "center" }}
+                  onClick={handleConfirmEnable2FA}
+                  disabled={tfaConfirming}
+                >
+                  {tfaConfirming ? "Verifying..." : "Verify & Enable"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Disable 2FA Confirmation Modal ── */}
+        {showDisable2FAModal && (
+          <div className="ud-modal-overlay" onClick={() => !tfaDisabling && setShowDisable2FAModal(false)}>
+            <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="ud-modal-icon">
+                <FiAlertTriangle size={26} />
+              </div>
+              <div className="ud-modal-title">Disable Two-Factor Authentication?</div>
+              <div className="ud-modal-body">
+                This will <strong>remove the extra verification step</strong> when you log in.
+                Your account will rely on your password alone.
+              </div>
+              <div className="ud-modal-actions">
+                <button
+                  type="button"
+                  className="ud-modal-cancel"
+                  onClick={() => setShowDisable2FAModal(false)}
+                  disabled={tfaDisabling}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="ud-modal-delete"
+                  onClick={handleDisable2FA}
+                  disabled={tfaDisabling}
+                >
+                  {tfaDisabling ? "Disabling..." : "Yes, Disable"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
   </>
 );
 }

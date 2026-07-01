@@ -32,6 +32,7 @@ model User {
   doctorProfile DoctorProfile?
 
   vendorKyc     vendorKyc?
+  twoFactorEnabled  Boolean @default(false)
 
   leads    Lead[]
   orders   Order[]
@@ -136,6 +137,7 @@ enum OtpContext {
   KYC_CONTACT
   PASSWORD_RESET
   LOGIN
+  TWO_FA_SETUP
 }
 
 model DoctorProfile {

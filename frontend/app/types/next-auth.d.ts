@@ -8,6 +8,7 @@ declare module "next-auth" {
     accessToken?: string;
     phone?: string | null;
     address?: string | null;
+    twoFactorEnabled?: boolean;
   }
 
   interface Session {
@@ -21,6 +22,7 @@ declare module "next-auth" {
       address?: string | null;
       role?: string;
       provider?: string;
+      twoFactorEnabled?: boolean;
     };
   }
 }
@@ -34,8 +36,9 @@ declare module "next-auth/jwt" {
     name?: string;
     picture?: string;
     phone?: string | null;
-    address?: string | null;
+    address?: string | null;a
     provider?: string;
+    twoFactorEnabled?: boolean;
   }
 
   type OAuthProfile = {

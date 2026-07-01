@@ -47,6 +47,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: data.user.name ?? data.user.email.split("@")[0],
           email: data.user.email,
           role: data.user.role,
+          twoFactorEnabled: data.user.twoFactorEnabled ?? false,
           accessToken: data.accessToken ?? data.access_token,
         };
       },
@@ -73,6 +74,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.phone = user.phone ?? null;
         token.address = user.address ?? null;
         token.provider = "credentials";
+        token.twoFactorEnabled = user.twoFactorEnabled ?? false;
       }
       if (account && account.provider !== "credentials") {
         const p = profile as OAuthProfile;
@@ -109,6 +111,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.picture = dbUser.image ?? image;
           token.provider = account.provider;
           token.accessToken = dbUser.accessToken ?? dbUser.access_token ?? token.accessToken;
+          token.twoFactorEnabled = dbUser.twoFactorEnabled ?? false;
         }
       } else {
         console.error(`No email from ${account.provider} profile`, p);
@@ -127,6 +130,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.phone = (token.phone as string) ?? null;
         session.user.address = (token.address as string) ?? null;
         session.user.provider = token.provider as string;
+        session.user.twoFactorEnabled =token.twoFactorEnabled as boolean;
       }
       if (typeof token.accessToken === "string") {
         session.accessToken = token.accessToken;
