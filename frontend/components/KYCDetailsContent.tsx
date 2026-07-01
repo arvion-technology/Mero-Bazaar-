@@ -27,9 +27,10 @@ interface KYCRecord {
 
 interface KYCDetailsContentProps {
   kyc: KYCRecord | undefined;
+  pageType: "verified" | "pending" | "rejected";
 }
 
-export default function KYCDetailsContent({ kyc }: KYCDetailsContentProps) {
+export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentProps) {
   if (!kyc) {
     return (
       <div style={{ padding: "32px" }}>
