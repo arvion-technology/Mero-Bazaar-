@@ -41,8 +41,8 @@ const recentKYCs = [
 
 const sidebarItems = [
   { id: "dashboard", icon: FiGrid, label: "Dashboard", active: true },
-  { id: "verified", icon: FiCheckCircle, label: "Verified KYC", active: false },
-  { id: "unverified", icon: FiUser, label: "Unverified List", active: false },
+  { id: "verified", icon: FiCheckCircle, label: "Verified KYC", active: false, href: "/admin/verified" },
+  { id: "unverified", icon: FiUser, label: "Unverified List", active: false, href: "/admin/unverified" },
 ];
 
 function StatIcon({ type, color }: { type: string; color: string }) {
@@ -722,17 +722,31 @@ export default function AdminDashboard() {
           <div className="admin-nav">
             <div className="admin-nav-label">Menu</div>
             {sidebarItems.map((item) => (
-              <button
-                type="button"
-                key={item.id}
-                className={`admin-nav-item ${activeTab === item.id ? "active" : ""}`}
-                onClick={() => handleNavClick(item.id)}
-              >
-                <span className="admin-nav-icon">
-                  <item.icon size={18} />
-                </span>
-                <span>{item.label}</span>
-              </button>
+              item.href ? (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className={`admin-nav-item ${activeTab === item.id ? "active" : ""}`}
+                  onClick={() => handleNavClick(item.id)}
+                >
+                  <span className="admin-nav-icon">
+                    <item.icon size={18} />
+                  </span>
+                  <span>{item.label}</span>
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  key={item.id}
+                  className={`admin-nav-item ${activeTab === item.id ? "active" : ""}`}
+                  onClick={() => handleNavClick(item.id)}
+                >
+                  <span className="admin-nav-icon">
+                    <item.icon size={18} />
+                  </span>
+                  <span>{item.label}</span>
+                </button>
+              )
             ))}
           </div>
 
@@ -797,7 +811,7 @@ export default function AdminDashboard() {
           <div className="admin-section">
             <div className="admin-section-header">
               <h2 className="admin-section-title">Recently Applied KYCs</h2>
-              <Link href="/admin/kycs" className="admin-see-more">
+              <Link href="/admin/unverified" className="admin-see-more">
                 See More <FiChevronRight size={14} />
               </Link>
             </div>
