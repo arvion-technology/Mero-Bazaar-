@@ -8,6 +8,7 @@ import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
 import { PhoneOtpService } from '../otp/otp.service';
 import { OtpContext } from '@prisma/client';
+import { parseUserAgent } from '../auth/auth.service';
 
 @Injectable()
 export class UserService {
@@ -38,6 +39,8 @@ export class UserService {
     name: string;
     image?: string;
     role?: string;
+    userAgent?: string;
+    ipAddress?: string;
   }) {
     const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
 
@@ -67,7 +70,9 @@ export class UserService {
       userId: user.id,
       refreshTokenHash,
       expiresAt,
-      deviceLabel: 'OAuth login',
+      deviceLabel: parseUserAgent(data.userAgent),
+      userAgent: data.userAgent,
+      ipAddress: data.ipAddress,
     },
   });
 
@@ -93,6 +98,7 @@ export class UserService {
         role: true,
         image: true,
         isActive: true,
+        twoFactorEnabled: true,
         vendorProfile: true,
         doctorProfile: true,
       },
@@ -104,9 +110,10 @@ export class UserService {
 
   async update(id: string, data: UpdateUserDto) {
     await this.findOne(id);
+    const { name, address, image } = data;
     return this.prisma.user.update({
       where: { id },
-      data,
+      data: {name, address, image },
       select: {
         id: true,
         name: true,
@@ -115,6 +122,16 @@ export class UserService {
         address: true,
         image: true,
       },
+    });
+  }
+
+  async updateProfileImage(userId: string, file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    const imagePath = `/uploads/profile/${file.filename}`;
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { image: imagePath },
+      select: { id: true, image: true },
     });
   }
 

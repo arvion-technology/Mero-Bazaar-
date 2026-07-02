@@ -10,7 +10,7 @@ import type { Request } from 'express';
 import { PhoneOtpService } from '../otp/otp.service';
 import { OtpContext } from '@prisma/client';
 
-function parseUserAgent(ua?: string): string {
+export function parseUserAgent(ua?: string): string {
   if (!ua) return 'Unknown device';
   const browser = /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
   const os = /Windows/.test(ua) ? 'Windows' : /Mac OS/.test(ua) ? 'macOS' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /Linux/.test(ua) ? 'Linux' : 'Unknown OS';

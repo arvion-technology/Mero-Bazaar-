@@ -3,7 +3,7 @@ import Google from "next-auth/providers/google";
 import Facebook from "next-auth/providers/facebook";
 import Credentials from "next-auth/providers/credentials";
 import type { OAuthProfile } from "next-auth/jwt";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -65,6 +65,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.picture = session.image ?? token.picture;
         token.phone = session.phone ?? token.phone;
         token.address = session.address ?? token.address;
+        token.twoFactorEnabled = session.user?.twoFactorEnabled ?? session.twoFactorEnabled ?? token.twoFactorEnabled;
         return token;
       }
       if (user) {
@@ -88,14 +89,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (email) {
           const cookieStore = await cookies();
+          const headerList = await headers();
           const pendingRole = cookieStore.get("pending_role")?.value;
           const role = pendingRole === "VENDOR" ? "VENDOR" : "USER";
+          const userAgent = headerList.get("user-agent") ?? undefined;
+          const ipAddress = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? undefined;
           const res = await fetch(
             "http://localhost:3001/api/user/oauth-sync",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email, name, image, role }),
+              body: JSON.stringify({ email, name, image, role, userAgent, ipAddress }),
             }
           );
 
