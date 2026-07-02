@@ -8,6 +8,7 @@ import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
 import { PhoneOtpService } from '../otp/otp.service';
 import { OtpContext } from '@prisma/client';
+import { parseUserAgent } from '../auth/auth.service';
 
 @Injectable()
 export class UserService {
@@ -38,6 +39,8 @@ export class UserService {
     name: string;
     image?: string;
     role?: string;
+    userAgent?: string;
+    ipAddress?: string;
   }) {
     const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
 
@@ -67,7 +70,9 @@ export class UserService {
       userId: user.id,
       refreshTokenHash,
       expiresAt,
-      deviceLabel: 'OAuth login',
+      deviceLabel: parseUserAgent(data.userAgent),
+      userAgent: data.userAgent,
+      ipAddress: data.ipAddress,
     },
   });
 

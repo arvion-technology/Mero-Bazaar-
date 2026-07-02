@@ -2074,7 +2074,7 @@ async function handleDisable2FA() {
               No active sessions found.
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20, maxHeight: "50vh", overflowY: "auto", paddingRight: 4 }}>
               {sessions.map((s) => (
                 <div
                   key={s.id}
