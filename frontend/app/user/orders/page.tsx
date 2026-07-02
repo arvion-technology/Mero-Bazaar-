@@ -29,21 +29,21 @@ const PRIMARY = "#C0392B";
 
 // ── Mock order data ──
 const ALL_ORDERS = [
-  { id: "#1024", item: "Laptop Stand", date: "Jun 22, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 850" },
-  { id: "#1023", item: "Wireless Keyboard", date: "Jun 19, 2025", status: "Shipped", statusColor: "#6366f1", amount: "NPR 1,200" },
-  { id: "#1022", item: "USB Hub 7-Port", date: "Jun 15, 2025", status: "Processing", statusColor: "#f59e0b", amount: "NPR 650" },
-  { id: "#1021", item: "Monitor Light Bar", date: "Jun 10, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 1,450" },
-  { id: "#1020", item: "Mechanical Keyboard", date: "Jun 5, 2025", status: "Cancelled", statusColor: "#ef4444", amount: "NPR 2,800" },
-  { id: "#1019", item: "Webcam HD 1080p", date: "May 30, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 3,200" },
-  { id: "#1018", item: "Desk Mat XL", date: "May 24, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 550" },
-  { id: "#1017", item: "GPU RTX 3060", date: "May 18, 2025", status: "Shipped", statusColor: "#6366f1", amount: "NPR 45,000" },
-  { id: "#1016", item: "LED Desk Lamp", date: "May 12, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 720" },
-  { id: "#1015", item: "Headset Wireless", date: "May 5, 2025", status: "Processing", statusColor: "#f59e0b", amount: "NPR 4,500" },
-  { id: "#1014", item: "Mouse Pad Gaming", date: "Apr 28, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 380" },
-  { id: "#1013", item: "External SSD 1TB", date: "Apr 20, 2025", status: "Cancelled", statusColor: "#ef4444", amount: "NPR 6,800" },
-  { id: "#1012", item: "Router Dual Band", date: "Apr 14, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 3,200" },
-  { id: "#1011", item: "Power Bank 20000mAh", date: "Apr 7, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 1,800" },
-  { id: "#1010", item: "Microphone Studio", date: "Mar 31, 2025", status: "Shipped", statusColor: "#6366f1", amount: "NPR 5,500" },
+  { id: "#1024", item: "Laptop Stand", date: "Jun 22, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 850", image: "https://plus.unsplash.com/premium_photo-1683326528070-4ebec9188ae1?w=600&auto=format&fit=crop&q=60", category: "Electronics > Accessories", description: "Adjustable aluminum laptop stand with ergonomic design. Compatible with all laptops 10\"–17\".", deliveryOn: "May 28, 2024 02:30 PM", deliveryPartner: "Pathao", trackingId: "PA12341234NP", vendor: { name: "Tech World Nepal", rating: 4.5, reviewCount: 128, phone: "9845678943", email: "techworldnepal@gmail.com", logo: "https://ui-avatars.com/api/?name=Tech+World+Nepal&background=C0392B&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Tech World Nepal", address: "New Baneshwor, Kathmandu", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Maitidevi-32, Kathmandu", address: "Maitidevi-32, Kathmandu", province: "Bagmati Province, Nepal" } }, paymentMethod: "eSewa", paymentStatus: "Paid", paymentStatusColor: "#22c55e", shippingFee: "NPR 0", discount: "NPR 0" },
+  { id: "#1023", item: "Wireless Keyboard", date: "Jun 19, 2025", status: "Shipped", statusColor: "#6366f1", amount: "NPR 1,200", image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600&auto=format&fit=crop&q=60", category: "Electronics > Accessories", description: "Slim wireless keyboard with silent keys and long battery life. Bluetooth 5.0 connectivity.", deliveryOn: "Jun 25, 2025 11:00 AM", deliveryPartner: "Pathao", trackingId: "PA56785678NP", vendor: { name: "Gadget Hub Nepal", rating: 4.2, reviewCount: 89, phone: "9812345678", email: "gadgethub@gmail.com", logo: "https://ui-avatars.com/api/?name=Gadget+Hub+Nepal&background=6366f1&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Gadget Hub Nepal", address: "Thamel, Kathmandu", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Lazimpat, Kathmandu", address: "Lazimpat, Kathmandu", province: "Bagmati Province, Nepal" } }, paymentMethod: "Khalti", paymentStatus: "Paid", paymentStatusColor: "#22c55e", shippingFee: "NPR 50", discount: "NPR 0" },
+  { id: "#1022", item: "USB Hub 7-Port", date: "Jun 15, 2025", status: "Processing", statusColor: "#f59e0b", amount: "NPR 650", image: "https://images.unsplash.com/photo-1625766763788-95dcce9bf5ac?w=600&auto=format&fit=crop&q=60", category: "Electronics > Accessories", description: "7-port USB 3.0 hub with individual power switches and LED indicators.", deliveryOn: "Jun 22, 2025 03:00 PM", deliveryPartner: "Pathao", trackingId: "PA90129012NP", vendor: { name: "Digital Store Nepal", rating: 4.0, reviewCount: 56, phone: "9854321098", email: "digitalstore@gmail.com", logo: "https://ui-avatars.com/api/?name=Digital+Store+Nepal&background=f59e0b&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Digital Store Nepal", address: "Koteshwor, Kathmandu", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Boudha, Kathmandu", address: "Boudha, Kathmandu", province: "Bagmati Province, Nepal" } }, paymentMethod: "eSewa", paymentStatus: "Pending", paymentStatusColor: "#f59e0b", shippingFee: "NPR 0", discount: "NPR 0" },
+  { id: "#1021", item: "Monitor Light Bar", date: "Jun 10, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 1,450", image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=600&auto=format&fit=crop&q=60", category: "Electronics > Accessories", description: "LED monitor light bar with adjustable brightness and color temperature.", deliveryOn: "Jun 17, 2025 10:00 AM", deliveryPartner: "Pathao", trackingId: "PA34563456NP", vendor: { name: "Tech World Nepal", rating: 4.5, reviewCount: 128, phone: "9845678943", email: "techworldnepal@gmail.com", logo: "https://ui-avatars.com/api/?name=Tech+World+Nepal&background=C0392B&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Tech World Nepal", address: "New Baneshwor, Kathmandu", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Patan, Lalitpur", address: "Patan, Lalitpur", province: "Bagmati Province, Nepal" } }, paymentMethod: "Khalti", paymentStatus: "Paid", paymentStatusColor: "#22c55e", shippingFee: "NPR 0", discount: "NPR 50" },
+  { id: "#1020", item: "Mechanical Keyboard", date: "Jun 5, 2025", status: "Cancelled", statusColor: "#ef4444", amount: "NPR 2,800", image: "https://images.unsplash.com/photo-1595225476474-87563907a212?w=600&auto=format&fit=crop&q=60", category: "Electronics > Accessories", description: "RGB mechanical keyboard with hot-swappable switches and customizable lighting.", deliveryOn: "—", deliveryPartner: "—", trackingId: "—", vendor: { name: "Gaming Gear Nepal", rating: 3.8, reviewCount: 34, phone: "9867890123", email: "gaminggear@gmail.com", logo: "https://ui-avatars.com/api/?name=Gaming+Gear+Nepal&background=ef4444&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Gaming Gear Nepal", address: "Kalanki, Kathmandu", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Kalimati, Kathmandu", address: "Kalimati, Kathmandu", province: "Bagmati Province, Nepal" } }, paymentMethod: "eSewa", paymentStatus: "Refunded", paymentStatusColor: "#ef4444", shippingFee: "NPR 0", discount: "NPR 0" },
+  { id: "#1019", item: "Webcam HD 1080p", date: "May 30, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 3,200", image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600&auto=format&fit=crop&q=60", category: "Electronics > Accessories", description: "Full HD 1080p webcam with built-in microphone and auto-focus.", deliveryOn: "Jun 5, 2025 09:30 AM", deliveryPartner: "Pathao", trackingId: "PA78907890NP", vendor: { name: "Camera World Nepal", rating: 4.7, reviewCount: 210, phone: "9801234567", email: "cameraworld@gmail.com", logo: "https://ui-avatars.com/api/?name=Camera+World+Nepal&background=22c55e&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Camera World Nepal", address: "Durbarmarg, Kathmandu", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Maharajgunj, Kathmandu", address: "Maharajgunj, Kathmandu", province: "Bagmati Province, Nepal" } }, paymentMethod: "Khalti", paymentStatus: "Paid", paymentStatusColor: "#22c55e", shippingFee: "NPR 0", discount: "NPR 100" },
+  { id: "#1018", item: "Desk Mat XL", date: "May 24, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 550", image: "https://images.unsplash.com/photo-1616627547584-bf28cee262db?w=600&auto=format&fit=crop&q=60", category: "Electronics > Accessories", description: "Extra large desk mat with stitched edges and non-slip rubber base.", deliveryOn: "May 30, 2025 02:00 PM", deliveryPartner: "Pathao", trackingId: "PA12351235NP", vendor: { name: "Office Supplies Nepal", rating: 4.3, reviewCount: 76, phone: "9810987654", email: "officesupplies@gmail.com", logo: "https://ui-avatars.com/api/?name=Office+Supplies+Nepal&background=22c55e&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Office Supplies Nepal", address: "Putalisadak, Kathmandu", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Naxal, Kathmandu", address: "Naxal, Kathmandu", province: "Bagmati Province, Nepal" } }, paymentMethod: "eSewa", paymentStatus: "Paid", paymentStatusColor: "#22c55e", shippingFee: "NPR 0", discount: "NPR 0" },
+  { id: "#1017", item: "GPU RTX 3060", date: "May 18, 2025", status: "Shipped", statusColor: "#6366f1", amount: "NPR 45,000", image: "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=600&auto=format&fit=crop&q=60", category: "Electronics > Components", description: "NVIDIA GeForce RTX 3060 12GB GDDR6 graphics card with ray tracing support.", deliveryOn: "May 25, 2025 11:00 AM", deliveryPartner: "Pathao", trackingId: "PA56795679NP", vendor: { name: "PC Build Nepal", rating: 4.6, reviewCount: 156, phone: "9845123456", email: "pcbuild@gmail.com", logo: "https://ui-avatars.com/api/?name=PC+Build+Nepal&background=6366f1&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "PC Build Nepal", address: "New Road, Kathmandu", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Bhaktapur, Nepal", address: "Bhaktapur, Nepal", province: "Bagmati Province, Nepal" } }, paymentMethod: "Khalti", paymentStatus: "Paid", paymentStatusColor: "#22c55e", shippingFee: "NPR 200", discount: "NPR 500" },
+  { id: "#1016", item: "LED Desk Lamp", date: "May 12, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 720", image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600&auto=format&fit=crop&q=60", category: "Electronics > Accessories", description: "Smart LED desk lamp with touch controls and wireless charging base.", deliveryOn: "May 18, 2025 04:00 PM", deliveryPartner: "Pathao", trackingId: "PA90139013NP", vendor: { name: "Smart Home Nepal", rating: 4.1, reviewCount: 45, phone: "9865432109", email: "smarthome@gmail.com", logo: "https://ui-avatars.com/api/?name=Smart+Home+Nepal&background=22c55e&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Smart Home Nepal", address: "Chabahil, Kathmandu", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Gongabu, Kathmandu", address: "Gongabu, Kathmandu", province: "Bagmati Province, Nepal" } }, paymentMethod: "eSewa", paymentStatus: "Paid", paymentStatusColor: "#22c55e", shippingFee: "NPR 0", discount: "NPR 0" },
+  { id: "#1015", item: "Headset Wireless", date: "May 5, 2025", status: "Processing", statusColor: "#f59e0b", amount: "NPR 4,500", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=60", category: "Electronics > Audio", description: "Over-ear wireless headset with active noise cancellation and 30-hour battery.", deliveryOn: "May 15, 2025 01:00 PM", deliveryPartner: "Pathao", trackingId: "PA34573457NP", vendor: { name: "Audio Zone Nepal", rating: 4.4, reviewCount: 98, phone: "9809876543", email: "audiozone@gmail.com", logo: "https://ui-avatars.com/api/?name=Audio+Zone+Nepal&background=f59e0b&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Audio Zone Nepal", address: "Jawalakhel, Lalitpur", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Kumaripati, Lalitpur", address: "Kumaripati, Lalitpur", province: "Bagmati Province, Nepal" } }, paymentMethod: "Khalti", paymentStatus: "Pending", paymentStatusColor: "#f59e0b", shippingFee: "NPR 0", discount: "NPR 0" },
+  { id: "#1014", item: "Mouse Pad Gaming", date: "Apr 28, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 380", image: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=600&auto=format&fit=crop&q=60", category: "Electronics > Accessories", description: "Extended gaming mouse pad with anti-fray stitched edges and water-resistant surface.", deliveryOn: "May 3, 2025 10:30 AM", deliveryPartner: "Pathao", trackingId: "PA78917891NP", vendor: { name: "Gaming Gear Nepal", rating: 3.8, reviewCount: 34, phone: "9867890123", email: "gaminggear@gmail.com", logo: "https://ui-avatars.com/api/?name=Gaming+Gear+Nepal&background=22c55e&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Gaming Gear Nepal", address: "Kalanki, Kathmandu", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Teku, Kathmandu", address: "Teku, Kathmandu", province: "Bagmati Province, Nepal" } }, paymentMethod: "eSewa", paymentStatus: "Paid", paymentStatusColor: "#22c55e", shippingFee: "NPR 0", discount: "NPR 0" },
+  { id: "#1013", item: "External SSD 1TB", date: "Apr 20, 2025", status: "Cancelled", statusColor: "#ef4444", amount: "NPR 6,800", image: "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=600&auto=format&fit=crop&q=60", category: "Electronics > Storage", description: "Portable 1TB external SSD with USB-C 3.2 Gen 2 and read speeds up to 1050MB/s.", deliveryOn: "—", deliveryPartner: "—", trackingId: "—", vendor: { name: "Storage Solutions Nepal", rating: 4.0, reviewCount: 67, phone: "9856789012", email: "storagesolutions@gmail.com", logo: "https://ui-avatars.com/api/?name=Storage+Solutions+Nepal&background=ef4444&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Storage Solutions Nepal", address: "Balaju, Kathmandu", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Samakhusi, Kathmandu", address: "Samakhusi, Kathmandu", province: "Bagmati Province, Nepal" } }, paymentMethod: "Khalti", paymentStatus: "Refunded", paymentStatusColor: "#ef4444", shippingFee: "NPR 0", discount: "NPR 0" },
+  { id: "#1012", item: "Router Dual Band", date: "Apr 14, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 3,200", image: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&auto=format&fit=crop&q=60", category: "Electronics > Networking", description: "Dual-band Wi-Fi 6 router with 4 antennas and parental controls.", deliveryOn: "Apr 20, 2025 03:00 PM", deliveryPartner: "Pathao", trackingId: "PA12361236NP", vendor: { name: "Network Pro Nepal", rating: 4.2, reviewCount: 82, phone: "9843210987", email: "networkpro@gmail.com", logo: "https://ui-avatars.com/api/?name=Network+Pro+Nepal&background=22c55e&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Network Pro Nepal", address: "Baneshwor, Kathmandu", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Tinkune, Kathmandu", address: "Tinkune, Kathmandu", province: "Bagmati Province, Nepal" } }, paymentMethod: "eSewa", paymentStatus: "Paid", paymentStatusColor: "#22c55e", shippingFee: "NPR 0", discount: "NPR 0" },
+  { id: "#1011", item: "Power Bank 20000mAh", date: "Apr 7, 2025", status: "Delivered", statusColor: "#22c55e", amount: "NPR 1,800", image: "https://images.unsplash.com/photo-1609592424308-646c9a5e2d7c?w=600&auto=format&fit=crop&q=60", category: "Electronics > Accessories", description: "20000mAh power bank with 22.5W fast charging and dual USB-C ports.", deliveryOn: "Apr 12, 2025 11:30 AM", deliveryPartner: "Pathao", trackingId: "PA567A567ANP", vendor: { name: "Mobile Accessories Nepal", rating: 4.3, reviewCount: 112, phone: "9812345670", email: "mobileacc@gmail.com", logo: "https://ui-avatars.com/api/?name=Mobile+Accessories+Nepal&background=22c55e&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Mobile Accessories Nepal", address: "Mahaboudha, Kathmandu", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Chhetrapati, Kathmandu", address: "Chhetrapati, Kathmandu", province: "Bagmati Province, Nepal" } }, paymentMethod: "Khalti", paymentStatus: "Paid", paymentStatusColor: "#22c55e", shippingFee: "NPR 0", discount: "NPR 0" },
+  { id: "#1010", item: "Microphone Studio", date: "Mar 31, 2025", status: "Shipped", statusColor: "#6366f1", amount: "NPR 5,500", image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=600&auto=format&fit=crop&q=60", category: "Electronics > Audio", description: "Professional USB condenser microphone with shock mount and pop filter.", deliveryOn: "Apr 8, 2025 09:00 AM", deliveryPartner: "Pathao", trackingId: "PA90149014NP", vendor: { name: "Audio Zone Nepal", rating: 4.4, reviewCount: 98, phone: "9809876543", email: "audiozone@gmail.com", logo: "https://ui-avatars.com/api/?name=Audio+Zone+Nepal&background=6366f1&color=fff&size=64" }, deliveryRoute: { pickup: { label: "Pickup Location (Vendor)", name: "Audio Zone Nepal", address: "Jawalakhel, Lalitpur", province: "Bagmati Province, Nepal" }, dropoff: { label: "Delivery Location (Customer)", name: "Pulchowk, Lalitpur", address: "Pulchowk, Lalitpur", province: "Bagmati Province, Nepal" } }, paymentMethod: "eSewa", paymentStatus: "Paid", paymentStatusColor: "#22c55e", shippingFee: "NPR 100", discount: "NPR 0" },
 ];
 
 const FILTERS = ["All", "Delivered", "Shipped", "Processing", "Cancelled"];
@@ -321,11 +321,19 @@ export default function UserOrders() {
           border-bottom: 1px solid #f1f5f9; background: #fafbfc; white-space: nowrap;
         }
         .orders-table td {
-          padding: 14px 20px; font-size: 14px; color: #334155;
+          padding: 0; font-size: 14px; color: #334155;
           border-bottom: 1px solid #f8fafc; white-space: nowrap;
         }
         .orders-table tr:last-child td { border-bottom: none; }
-        .orders-table tr:hover td { background: #fafbfc; }
+        .order-row-link {
+          display: table-row;
+          text-decoration: none;
+          color: inherit;
+          transition: background 0.15s;
+          cursor: pointer;
+        }
+        .order-row-link:hover td { background: #fafbfc; }
+        .order-row-link td { padding: 14px 20px; }
         .order-id { font-weight: 600; color: #1e293b; font-family: "SF Mono", "Fira Code", monospace; font-size: 13px; }
         .order-item { color: #475569; font-size: 13px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
         .ud-status {
@@ -364,8 +372,11 @@ export default function UserOrders() {
         .orders-mobile { display: none; flex-direction: column; gap: 12px; padding: 16px; }
         .orders-mobile-card {
           background: #f8fafc; border-radius: 10px; padding: 14px;
-          border: 1px solid #f1f5f9;
+          border: 1px solid #f1f5f9; cursor: pointer;
+          transition: background 0.15s, border-color 0.15s;
+          text-decoration: none; color: inherit; display: block;
         }
+        .orders-mobile-card:hover { background: #f1f5f9; border-color: #e2e8f0; }
         .orders-mobile-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .orders-mobile-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
         .orders-mobile-item { font-size: 13px; color: #475569; margin-bottom: 6px; }
@@ -606,7 +617,11 @@ export default function UserOrders() {
                   </thead>
                   <tbody>
                     {paginated.length > 0 ? paginated.map((order, idx) => (
-                      <tr key={idx}>
+                      <Link
+                        key={idx}
+                        href={`/user/orders/${order.id.replace("#", "")}`}
+                        className="order-row-link"
+                      >
                         <td><span className="order-id">{order.id}</span></td>
                         <td><span className="order-item">{order.item}</span></td>
                         <td>{order.date}</td>
@@ -617,7 +632,7 @@ export default function UserOrders() {
                           </span>
                         </td>
                         <td className="order-amount">{order.amount}</td>
-                      </tr>
+                      </Link>
                     )) : (
                       <tr>
                         <td colSpan={5}>
@@ -636,7 +651,11 @@ export default function UserOrders() {
               {/* Mobile Cards */}
               <div className="orders-mobile">
                 {paginated.length > 0 ? paginated.map((order, idx) => (
-                  <div key={idx} className="orders-mobile-card">
+                  <Link
+                    key={idx}
+                    href={`/user/orders/${order.id.replace("#", "")}`}
+                    className="orders-mobile-card"
+                  >
                     <div className="orders-mobile-row">
                       <span className="order-id">{order.id}</span>
                       <span className="ud-status" style={{ background: order.statusColor + "12", color: order.statusColor }}>
@@ -649,7 +668,7 @@ export default function UserOrders() {
                       <span className="orders-mobile-date">{order.date}</span>
                       <span className="order-amount">{order.amount}</span>
                     </div>
-                  </div>
+                  </Link>
                 )) : (
                   <div className="orders-empty">
                     <FiShoppingBag size={40} />
