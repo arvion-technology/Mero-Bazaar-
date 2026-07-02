@@ -75,16 +75,27 @@ export default function UserSettings() {
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const notifDropdownRef = useRef<HTMLDivElement>(null);
 
-  // 2FA state
-const [twoFactorEnabled, setTwoFactorEnabled] = useState(session?.user?.twoFactorEnabled ?? false);
-const [show2FAModal, setShow2FAModal] = useState(false);
-const [tfaOtp, setTfaOtp] = useState("");
-const [tfaRequesting, setTfaRequesting] = useState(false);
-const [tfaConfirming, setTfaConfirming] = useState(false);
-const [tfaError, setTfaError] = useState("");
-const [showDisable2FAModal, setShowDisable2FAModal] = useState(false);
-const [tfaDisabling, setTfaDisabling] = useState(false);
+    // 2FA state
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(session?.user?.twoFactorEnabled ?? false);
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [tfaOtp, setTfaOtp] = useState("");
+  const [tfaRequesting, setTfaRequesting] = useState(false);
+  const [tfaConfirming, setTfaConfirming] = useState(false);
+  const [tfaError, setTfaError] = useState("");
+  const [showDisable2FAModal, setShowDisable2FAModal] = useState(false);
+  const [tfaDisabling, setTfaDisabling] = useState(false);
 
+  //phone otp state for save changes
+  const [showPhoneOtpModal, setShowPhoneOtpModal] = useState(false);
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [phoneOtpError, setPhoneOtpError] = useState("");
+  const [pendingPhone, setPendingPhone] = useState("");
+  const [confirmingPhone, setConfirmingPhone] = useState(false);
+
+ //avatar change
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+ 
   const token = session?.accessToken;
   const isOAuthUser = session?.user?.provider !==  undefined && session.user.provider !== "credentials";
 
@@ -164,6 +175,7 @@ const [tfaDisabling, setTfaDisabling] = useState(false);
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
       }
+      toast.success("Account deleted successfully.");
       await signOut({ redirect: false });
       router.push("/");
     } catch (err: unknown) {
@@ -242,8 +254,54 @@ const [tfaDisabling, setTfaDisabling] = useState(false);
     { key: "address", icon: FiMapPin, label: "Address", value: profileForm.address, type: "text", editable: true },
   ];
 
-  //profile save
+
+  //avatar change
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB.");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch("/api/user/profile/avatar", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Failed to upload photo.");
+      }
+      const data = await res.json();
+      const fullImageUrl = data.image?.startsWith("http")
+        ? data.image
+        : `${process.env.NEXT_PUBLIC_API_URL}${data.image}`;
+
+      await updateSession({ user: { ...session?.user, image: fullImageUrl } });
+      toast.success("Profile photo updated.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
+//profile save
   async function handleProfileSave() {
+    const phoneChanged = profileForm.phone !== (session?.user?.phone || "");
+
     setSavingProfile(true);
     try {
       const res = await fetch("/api/user/profile", {
@@ -254,7 +312,6 @@ const [tfaDisabling, setTfaDisabling] = useState(false);
         },
         body: JSON.stringify({
           name: profileForm.name,
-          phone: profileForm.phone,
           address: profileForm.address,
         }),
       });
@@ -262,12 +319,66 @@ const [tfaDisabling, setTfaDisabling] = useState(false);
         const data = await res.json().catch(() => null);
         throw new Error(data?.message || "Failed to update profile.");
       }
+
+      if (phoneChanged && profileForm.phone) {
+        const phoneRes = await fetch("/api/user/profile/phone/request", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ phone: profileForm.phone }),
+        });
+        if (!phoneRes.ok) {
+          const data = await phoneRes.json().catch(() => null);
+          setProfileForm((prev) => ({ ...prev, phone: session?.user?.phone || "" }));
+          throw new Error(data?.message || "Failed to update phone number.");
+        }
+        setPendingPhone(profileForm.phone);
+        setPhoneOtp("");
+        setPhoneOtpError("");
+        setShowPhoneOtpModal(true);
+        toast.success("Profile updated. Enter the code sent to your new number to confirm it.");
+        setIsEditing(false);
+        return;
+      }
+
       toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong!");
     } finally {
       setSavingProfile(false);
+    }
+  }
+
+  async function handleConfirmPhoneOtp() {
+    if (!phoneOtp || phoneOtp.length < 6) {
+      setPhoneOtpError("Enter the 6-digit code we sent you.");
+      return;
+    }
+    setConfirmingPhone(true);
+    setPhoneOtpError("");
+    try {
+      const res = await fetch("/api/user/profile/phone/confirm", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ otp: phoneOtp }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Invalid or expired code.");
+      }
+      toast.success("Phone number verified.");
+      setShowPhoneOtpModal(false);
+      await updateSession({ user: { ...session?.user, phone: pendingPhone } });
+    } catch (err) {
+      setPhoneOtpError(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setConfirmingPhone(false);
     }
   }
 
@@ -1803,13 +1914,27 @@ async function handleDisable2FA() {
                 <div className="ud-profile-avatar">
                   {session?.user?.image
                     ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
-                    : userInitials
-                  }
+                    : userInitials}
                 </div>
-                <div className="ud-avatar-edit" title="Change photo">
+                <button
+                  type="button"
+                  className="ud-avatar-edit"
+                  title="Change photo"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  style={{ cursor: uploadingAvatar ? "wait" : "pointer" }}
+                >
                   <FiCamera size={12} />
-                </div>
+                </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleAvatarChange}
+                  style={{ display: "none" }}
+                />
               </div>
+
               <div className="ud-profile-info">
                 <div className="ud-profile-name">{session?.user?.name || "User"}</div>
                 <div className="ud-profile-role">Member · Kathmandu, Nepal</div>
@@ -2207,6 +2332,59 @@ async function handleDisable2FA() {
                   disabled={tfaDisabling}
                 >
                   {tfaDisabling ? "Disabling..." : "Yes, Disable"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+ 
+ {/* ── Phone OTP Verification Modal ── */}
+        {showPhoneOtpModal && (
+          <div className="ud-modal-overlay" onClick={() => !confirmingPhone && setShowPhoneOtpModal(false)}>
+            <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="ud-modal-icon" style={{ background: "#eef2ff", color: "#4f46e5" }}>
+                <FiPhone size={26} />
+              </div>
+              <div className="ud-modal-title">Verify New Phone Number</div>
+              <div className="ud-modal-body">
+                Enter the 6-digit code sent to {pendingPhone} to confirm this number.
+              </div>
+
+              {phoneOtpError && <div className="ud-modal-error">{phoneOtpError}</div>}
+
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                className="ud-form-input"
+                placeholder="000000"
+                value={phoneOtp}
+                onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, ""))}
+                style={{ textAlign: "center", fontSize: 20, letterSpacing: 6, marginBottom: 20 }}
+                autoFocus
+              />
+
+              <div className="ud-modal-actions">
+              <button
+                  type="button"
+                  className="ud-modal-cancel"
+                  onClick={() => {
+                    setShowPhoneOtpModal(false);
+                    setPhoneOtpError("");
+                    setProfileForm((prev) => ({ ...prev, phone: session?.user?.phone || "" }));
+                  }}
+                  disabled={confirmingPhone}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="ud-pw-submit-btn"
+                  style={{ flex: 1, justifyContent: "center" }}
+                  onClick={handleConfirmPhoneOtp}
+                  disabled={confirmingPhone}
+                >
+                  {confirmingPhone ? "Verifying..." : "Verify"}
                 </button>
               </div>
             </div>

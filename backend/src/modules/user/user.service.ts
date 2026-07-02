@@ -110,9 +110,10 @@ export class UserService {
 
   async update(id: string, data: UpdateUserDto) {
     await this.findOne(id);
+    const { name, address, image } = data;
     return this.prisma.user.update({
       where: { id },
-      data,
+      data: {name, address, image },
       select: {
         id: true,
         name: true,
@@ -121,6 +122,16 @@ export class UserService {
         address: true,
         image: true,
       },
+    });
+  }
+
+  async updateProfileImage(userId: string, file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    const imagePath = `/uploads/profile/${file.filename}`;
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { image: imagePath },
+      select: { id: true, image: true },
     });
   }
 
