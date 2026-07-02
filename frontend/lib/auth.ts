@@ -65,6 +65,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.picture = session.image ?? token.picture;
         token.phone = session.phone ?? token.phone;
         token.address = session.address ?? token.address;
+        token.twoFactorEnabled = session.user?.twoFactorEnabled ?? session.twoFactorEnabled ?? token.twoFactorEnabled;
         return token;
       }
       if (user) {

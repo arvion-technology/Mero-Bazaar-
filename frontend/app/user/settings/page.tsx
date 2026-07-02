@@ -120,7 +120,7 @@ const [tfaDisabling, setTfaDisabling] = useState(false);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Prevent body scroll when mobile sidebar is open
+ // Prevent body scroll when mobile sidebar is open
   useEffect(() => {
     if (sidebarOpen) {
       document.body.style.overflow = "hidden";
@@ -129,6 +129,28 @@ const [tfaDisabling, setTfaDisabling] = useState(false);
     }
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
+
+  // Reconcile 2FA state with DB truth on mount (session JWT can go stale)
+  useEffect(() => {
+    if (!token) return;
+    (async () => {
+      try {
+        const res = await fetch("/api/user/profile/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (typeof data.twoFactorEnabled === "boolean" && data.twoFactorEnabled !== session?.user?.twoFactorEnabled) {
+          setTwoFactorEnabled(data.twoFactorEnabled);
+          await updateSession({ user: { ...session?.user, twoFactorEnabled: data.twoFactorEnabled } });
+        }
+      } catch {
+        // silent — non-critical background sync
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
 
   async function handleDeleteAccount() {
     setDeleting(true);
@@ -294,6 +316,11 @@ async function handleRequestEnable2FA() {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => null);
+      if (data?.message === "Two-factor is already enabled.") {
+        setTwoFactorEnabled(true);
+        await updateSession({ user: { ...session?.user, twoFactorEnabled: true } });
+        return;
+      }
       throw new Error(data?.message || "Failed to start 2FA setup.");
     }
     setTfaOtp("");

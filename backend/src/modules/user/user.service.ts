@@ -93,6 +93,7 @@ export class UserService {
         role: true,
         image: true,
         isActive: true,
+        twoFactorEnabled: true,
         vendorProfile: true,
         doctorProfile: true,
       },
