@@ -3,7 +3,7 @@ import Google from "next-auth/providers/google";
 import Facebook from "next-auth/providers/facebook";
 import Credentials from "next-auth/providers/credentials";
 import type { OAuthProfile } from "next-auth/jwt";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -47,6 +47,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: data.user.name ?? data.user.email.split("@")[0],
           email: data.user.email,
           role: data.user.role,
+          twoFactorEnabled: data.user.twoFactorEnabled ?? false,
           accessToken: data.accessToken ?? data.access_token,
         };
       },
@@ -64,6 +65,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.picture = session.image ?? token.picture;
         token.phone = session.phone ?? token.phone;
         token.address = session.address ?? token.address;
+        token.twoFactorEnabled = session.user?.twoFactorEnabled ?? session.twoFactorEnabled ?? token.twoFactorEnabled;
         return token;
       }
       if (user) {
@@ -73,6 +75,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.phone = user.phone ?? null;
         token.address = user.address ?? null;
         token.provider = "credentials";
+        token.twoFactorEnabled = user.twoFactorEnabled ?? false;
       }
       if (account && account.provider !== "credentials") {
         const p = profile as OAuthProfile;
@@ -86,14 +89,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (email) {
           const cookieStore = await cookies();
+          const headerList = await headers();
           const pendingRole = cookieStore.get("pending_role")?.value;
           const role = pendingRole === "VENDOR" ? "VENDOR" : "USER";
+          const userAgent = headerList.get("user-agent") ?? undefined;
+          const ipAddress = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? undefined;
           const res = await fetch(
             "http://localhost:3001/api/user/oauth-sync",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email, name, image, role }),
+              body: JSON.stringify({ email, name, image, role, userAgent, ipAddress }),
             }
           );
 
@@ -109,6 +115,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.picture = dbUser.image ?? image;
           token.provider = account.provider;
           token.accessToken = dbUser.accessToken ?? dbUser.access_token ?? token.accessToken;
+          token.twoFactorEnabled = dbUser.twoFactorEnabled ?? false;
         }
       } else {
         console.error(`No email from ${account.provider} profile`, p);
@@ -127,6 +134,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.phone = (token.phone as string) ?? null;
         session.user.address = (token.address as string) ?? null;
         session.user.provider = token.provider as string;
+        session.user.twoFactorEnabled =token.twoFactorEnabled as boolean;
       }
       if (typeof token.accessToken === "string") {
         session.accessToken = token.accessToken;

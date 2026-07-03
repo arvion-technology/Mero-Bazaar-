@@ -29,6 +29,7 @@ import {
   FiMenu,
   FiX,
   FiAlertCircle,
+  FiShield,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 
@@ -46,6 +47,20 @@ export default function UserSettings() {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [notifSeen, setNotifSeen] = useState(false);
 
+  //active session state
+  const [showSessionsModal, setShowSessionsModal] = useState(false);
+  const [sessions, setSessions] = useState<
+    {
+      id: string;
+      deviceLabel: string | null;
+      ipAddress: string | null;
+      lastActiveAt: string;
+      isCurrent: boolean;
+    }[]
+  >([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+
   // Change Password state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -55,13 +70,34 @@ export default function UserSettings() {
   const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [isSubmittingPw, setIsSubmittingPw] = useState(false);
 
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
   const router = useRouter();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const notifDropdownRef = useRef<HTMLDivElement>(null);
 
+    // 2FA state
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(session?.user?.twoFactorEnabled ?? false);
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [tfaOtp, setTfaOtp] = useState("");
+  const [tfaRequesting, setTfaRequesting] = useState(false);
+  const [tfaConfirming, setTfaConfirming] = useState(false);
+  const [tfaError, setTfaError] = useState("");
+  const [showDisable2FAModal, setShowDisable2FAModal] = useState(false);
+  const [tfaDisabling, setTfaDisabling] = useState(false);
+
+  //phone otp state for save changes
+  const [showPhoneOtpModal, setShowPhoneOtpModal] = useState(false);
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [phoneOtpError, setPhoneOtpError] = useState("");
+  const [pendingPhone, setPendingPhone] = useState("");
+  const [confirmingPhone, setConfirmingPhone] = useState(false);
+
+ //avatar change
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+ 
   const token = session?.accessToken;
-  const isOAuthUser = session?.user?.provider !== "credentials";
+  const isOAuthUser = session?.user?.provider !==  undefined && session.user.provider !== "credentials";
 
   // Compute profile-completeness notifications (reused from Navbar logic)
   const notifications: string[] = session
@@ -95,7 +131,7 @@ export default function UserSettings() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Prevent body scroll when mobile sidebar is open
+ // Prevent body scroll when mobile sidebar is open
   useEffect(() => {
     if (sidebarOpen) {
       document.body.style.overflow = "hidden";
@@ -105,15 +141,41 @@ export default function UserSettings() {
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
 
+  // Reconcile 2FA state with DB truth on mount (session JWT can go stale)
+  useEffect(() => {
+    if (!token) return;
+    (async () => {
+      try {
+        const res = await fetch("/api/user/profile/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (typeof data.twoFactorEnabled === "boolean" && data.twoFactorEnabled !== session?.user?.twoFactorEnabled) {
+          setTwoFactorEnabled(data.twoFactorEnabled);
+          await updateSession({ user: { ...session?.user, twoFactorEnabled: data.twoFactorEnabled } });
+        }
+      } catch {
+        // silent — non-critical background sync
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+
   async function handleDeleteAccount() {
     setDeleting(true);
     setDeleteError("");
     try {
-      const res = await fetch("/api/user/delete-account", { method: "DELETE" });
+      const res = await fetch("/api/user/delete-account", { 
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
       }
+      toast.success("Account deleted successfully.");
       await signOut({ redirect: false });
       router.push("/");
     } catch (err: unknown) {
@@ -165,12 +227,276 @@ export default function UserSettings() {
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "U";
 
+  const [profileForm, setProfileForm] = useState({
+      name: session?.user?.name || "",
+      phone: session?.user?.phone || "",
+      address: session?.user?.address || "",
+    });
+    const [savingProfile, setSavingProfile] = useState(false);
+
+  const sessionSnapshot = `${session?.user?.name || ""}|${session?.user?.phone || ""}|${session?.user?.address || ""}|${session?.user?.twoFactorEnabled ?? ""}`;
+      const [lastSessionSnapshot, setLastSessionSnapshot] = useState(sessionSnapshot);
+
+      if (!isEditing && sessionSnapshot !== lastSessionSnapshot) {
+        setLastSessionSnapshot(sessionSnapshot);
+        setProfileForm({
+          name: session?.user?.name || "",
+          phone: session?.user?.phone || "",
+          address: session?.user?.address || "",
+        });
+        setTwoFactorEnabled(session?.user?.twoFactorEnabled ?? false);
+      }
+
   const profileFields = [
-    { icon: FiUser, label: "Full Name", value: session?.user?.name || "—", type: "text" },
-    { icon: FiPhone, label: "Phone Number", value: "+977 9834567341", type: "tel" },
-    { icon: FiMail, label: "Email Address", value: session?.user?.email || "—", type: "email" },
-    { icon: FiMapPin, label: "Address", value: "Kathmandu, Nepal", type: "text" },
+    { key: "name", icon: FiUser, label: "Full Name", value: profileForm.name, type: "text", editable: true },
+    { key: "phone", icon: FiPhone, label: "Phone Number", value: profileForm.phone, type: "tel", editable: true },
+    { key: "email", icon: FiMail, label: "Email Address", value: session?.user?.email || "—", type: "email", editable: false },
+    { key: "address", icon: FiMapPin, label: "Address", value: profileForm.address, type: "text", editable: true },
   ];
+
+
+  //avatar change
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB.");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch("/api/user/profile/avatar", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Failed to upload photo.");
+      }
+      const data = await res.json();
+      const fullImageUrl = data.image?.startsWith("http")
+        ? data.image
+        : `${process.env.NEXT_PUBLIC_API_URL}${data.image}`;
+
+      await updateSession({ user: { ...session?.user, image: fullImageUrl } });
+      toast.success("Profile photo updated.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
+//profile save
+  async function handleProfileSave() {
+    const phoneChanged = profileForm.phone !== (session?.user?.phone || "");
+
+    setSavingProfile(true);
+    try {
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: profileForm.name,
+          address: profileForm.address,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Failed to update profile.");
+      }
+
+      if (phoneChanged && profileForm.phone) {
+        const phoneRes = await fetch("/api/user/profile/phone/request", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ phone: profileForm.phone }),
+        });
+        if (!phoneRes.ok) {
+          const data = await phoneRes.json().catch(() => null);
+          setProfileForm((prev) => ({ ...prev, phone: session?.user?.phone || "" }));
+          throw new Error(data?.message || "Failed to update phone number.");
+        }
+        setPendingPhone(profileForm.phone);
+        setPhoneOtp("");
+        setPhoneOtpError("");
+        setShowPhoneOtpModal(true);
+        toast.success("Profile updated. Enter the code sent to your new number to confirm it.");
+        setIsEditing(false);
+        return;
+      }
+
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
+  async function handleConfirmPhoneOtp() {
+    if (!phoneOtp || phoneOtp.length < 6) {
+      setPhoneOtpError("Enter the 6-digit code we sent you.");
+      return;
+    }
+    setConfirmingPhone(true);
+    setPhoneOtpError("");
+    try {
+      const res = await fetch("/api/user/profile/phone/confirm", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ otp: phoneOtp }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Invalid or expired code.");
+      }
+      toast.success("Phone number verified.");
+      setShowPhoneOtpModal(false);
+      await updateSession({ user: { ...session?.user, phone: pendingPhone } });
+    } catch (err) {
+      setPhoneOtpError(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setConfirmingPhone(false);
+    }
+  }
+
+//revoke function for active session
+  async function loadSessions() {
+    setLoadingSessions(true);
+    try {
+      const res = await fetch("/api/sessions/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to load sessions.");
+      const data = await res.json();
+      setSessions(data);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setLoadingSessions(false);
+    }
+  }
+
+  async function handleRevokeSession(id: string) {
+    setRevokingId(id);
+    try {
+      const res = await fetch(`/api/sessions/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to revoke session.");
+      setSessions((prev) => prev.filter((s) => s.id !== id));
+      toast.success("Session revoked.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setRevokingId(null);
+    }
+  }
+
+  // request an OTP to enable 2FA
+async function handleRequestEnable2FA() {
+  setTfaRequesting(true);
+  setTfaError("");
+  try {
+    const res = await fetch("/api/user/2fa/enable", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      if (data?.message === "Two-factor is already enabled.") {
+        setTwoFactorEnabled(true);
+        await updateSession({ user: { ...session?.user, twoFactorEnabled: true } });
+        return;
+      }
+      throw new Error(data?.message || "Failed to start 2FA setup.");
+    }
+    setTfaOtp("");
+    setShow2FAModal(true);
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "Something went wrong!");
+  } finally {
+    setTfaRequesting(false);
+  }
+}
+
+// confirm the OTP to actually turn 2FA on
+async function handleConfirmEnable2FA() {
+  if (!tfaOtp || tfaOtp.length < 6) {
+    setTfaError("Enter the 6-digit code we sent you.");
+    return;
+  }
+  setTfaConfirming(true);
+  setTfaError("");
+  try {
+    const res = await fetch("/api/user/2fa/confirm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ otp: tfaOtp }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.message || "Invalid or expired code.");
+    }
+    setTwoFactorEnabled(true);
+    setShow2FAModal(false);
+    toast.success("Two-factor authentication enabled.");
+    await updateSession({ user: { ...session?.user, twoFactorEnabled: true } });
+  } catch (err) {
+    setTfaError(err instanceof Error ? err.message : "Something went wrong!");
+  } finally {
+    setTfaConfirming(false);
+  }
+}
+
+// Disable — single call, no OTP needed since the user is already authenticated
+async function handleDisable2FA() {
+  setTfaDisabling(true);
+  try {
+    const res = await fetch("/api/user/2fa/disable", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.message || "Failed to disable 2FA.");
+    }
+    setTwoFactorEnabled(false);
+    setShowDisable2FAModal(false);
+    toast.success("Two-factor authentication disabled.");
+    await updateSession({ user: { ...session?.user, twoFactorEnabled: false } });
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "Something went wrong!");
+  } finally {
+    setTfaDisabling(false);
+  }
+}
 
   return (
     <>
@@ -1588,26 +1914,42 @@ export default function UserSettings() {
                 <div className="ud-profile-avatar">
                   {session?.user?.image
                     ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
-                    : userInitials
-                  }
+                    : userInitials}
                 </div>
-                <div className="ud-avatar-edit" title="Change photo">
+                <button
+                  type="button"
+                  className="ud-avatar-edit"
+                  title="Change photo"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  style={{ cursor: uploadingAvatar ? "wait" : "pointer" }}
+                >
                   <FiCamera size={12} />
-                </div>
+                </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleAvatarChange}
+                  style={{ display: "none" }}
+                />
               </div>
+
               <div className="ud-profile-info">
                 <div className="ud-profile-name">{session?.user?.name || "User"}</div>
                 <div className="ud-profile-role">Member · Kathmandu, Nepal</div>
               </div>
+              
               <div className="ud-profile-actions">
                 <button
                   type="button"
                   className={`ud-btn ${isEditing ? "ud-btn-primary" : "ud-btn-ghost"}`}
-                  onClick={() => setIsEditing(!isEditing)}
+                  onClick={() => (isEditing ? handleProfileSave() : setIsEditing(true))}
+                  disabled={savingProfile}
                 >
                   {isEditing ? (
                     <>
-                      <FiCheck size={14} /> Save Changes
+                      <FiCheck size={14} /> {savingProfile ? "Saving..." : "Save Changes"}
                     </>
                   ) : (
                     <>
@@ -1622,21 +1964,23 @@ export default function UserSettings() {
             <div className="ud-section-header">
               <h3 className="ud-section-title">Account Information</h3>
             </div>
+
             <div className="ud-form-card">
               {profileFields.map((field) => (
-                <div key={field.label} className="ud-form-row">
+                <div key={field.key} className="ud-form-row">
                   <div className="ud-form-label">
                     <field.icon size={16} />
                     {field.label}
                   </div>
-                  {isEditing ? (
+                  {isEditing && field.editable ? (
                     <input
                       type={field.type}
                       className="ud-form-input"
-                      defaultValue={field.value}
+                      value={field.value}
+                      onChange={(e) => setProfileForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
                     />
                   ) : (
-                    <div className="ud-form-value">{field.value}</div>
+                    <div className="ud-form-value">{field.value || "-"}</div>
                   )}
                 </div>
               ))}
@@ -1650,17 +1994,33 @@ export default function UserSettings() {
               <div className="ud-security-row">
                 <div className="ud-security-info">
                   <h4>Two-Factor Authentication</h4>
-                  <p>Add an extra layer of security to your account</p>
+                  <p>
+                    {twoFactorEnabled
+                      ? "Your account is protected with an extra verification step."
+                      : "Add an extra layer of security to your account"}
+                  </p>
                 </div>
-                <button type="button" className="ud-btn ud-btn-ghost">Enable</button>
+                {twoFactorEnabled ? (
+                  <button type="button" className="ud-btn ud-btn-ghost" style={{ color: "#ef4444" }} onClick={() => setShowDisable2FAModal(true)}>
+                    Disable
+                  </button>
+                ) : (
+                  <button type="button" className="ud-btn ud-btn-ghost" onClick={handleRequestEnable2FA} disabled={tfaRequesting}>
+                    {tfaRequesting ? "Sending code..." : "Enable"}
+                  </button>
+                )}
               </div>
+
               <div className="ud-security-row">
                 <div className="ud-security-info">
                   <h4>Active Sessions</h4>
                   <p>Manage devices where you&apos;re currently logged in</p>
                 </div>
-                <button type="button" className="ud-btn ud-btn-ghost">Manage</button>
+                <button type="button" className="ud-btn ud-btn-ghost" onClick={() => { setShowSessionsModal(true); loadSessions(); }}>
+                  Manage
+                </button>
               </div>
+
               <div className="ud-security-row">
                 <div className="ud-security-info">
                   <h4>Login History</h4>
@@ -1775,54 +2135,261 @@ export default function UserSettings() {
         </div>
       </div>
 
-      {/* ── Delete Account Confirmation Modal ── */}
-      {showDeleteModal && (
-        <div className="ud-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
-          <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="ud-modal-icon">
-              <FiAlertTriangle size={26} />
-            </div>
-            <div className="ud-modal-title">Delete Your Account?</div>
-            <div className="ud-modal-body">
-              This action is <strong>permanent and irreversible</strong>. All your orders,
-              wishlist, and personal data will be permanently deleted.
-            </div>
-            {deleteError && (
-              <div className="ud-modal-error">{deleteError}</div>
-            )}
-            <div className="ud-modal-actions">
-              <button
-                type="button"
-                className="ud-modal-cancel"
-                onClick={() => { setShowDeleteModal(false); setDeleteError(""); }}
-                disabled={deleting}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="ud-modal-delete"
-                onClick={handleDeleteAccount}
-                disabled={deleting}
-              >
-                {deleting ? (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                    </svg>
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <FiTrash2 size={15} />
-                    Yes, Delete Account
-                  </>
-                )}
-              </button>
-            </div>
+    {/* ── Delete Account Confirmation Modal ── */}
+    {showDeleteModal && (
+      <div className="ud-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
+        <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="ud-modal-icon">
+            <FiAlertTriangle size={26} />
+          </div>
+          <div className="ud-modal-title">Delete Your Account?</div>
+          <div className="ud-modal-body">
+            This action is <strong>permanent and irreversible</strong>. All your orders,
+            wishlist, and personal data will be permanently deleted.
+          </div>
+          {deleteError && (
+            <div className="ud-modal-error">{deleteError}</div>
+          )}
+          <div className="ud-modal-actions">
+            <button
+              type="button"
+              className="ud-modal-cancel"
+              onClick={() => { setShowDeleteModal(false); setDeleteError(""); }}
+              disabled={deleting}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="ud-modal-delete"
+              onClick={handleDeleteAccount}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                  </svg>
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <FiTrash2 size={15} />
+                  Yes, Delete Account
+                </>
+              )}
+            </button>
           </div>
         </div>
-      )}
-    </>
-  );
+      </div>
+    )}
+
+    {/* ── Active Sessions Modal ── */}
+    {showSessionsModal && (
+      <div className="ud-modal-overlay" onClick={() => setShowSessionsModal(false)}>
+        <div className="ud-modal" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
+          <div className="ud-modal-title" style={{ marginBottom: 16 }}>Active Sessions</div>
+
+          {loadingSessions ? (
+            <div style={{ textAlign: "center", padding: "20px 0", color: "#94a3b8", fontSize: 13 }}>
+              Loading...
+            </div>
+          ) : sessions.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "20px 0", color: "#94a3b8", fontSize: 13 }}>
+              No active sessions found.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20, maxHeight: "50vh", overflowY: "auto", paddingRight: 4 }}>
+              {sessions.map((s) => (
+                <div
+                  key={s.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "12px 14px",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 10,
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", display: "flex", alignItems: "center", gap: 6 }}>
+                      {s.deviceLabel || "Unknown device"}
+                      {s.isCurrent && (
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "#16a34a", background: "#f0fdf4", padding: "2px 6px", borderRadius: 6 }}>
+                          This device
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
+                      {s.ipAddress || "Unknown IP"} · Last active {new Date(s.lastActiveAt).toLocaleString()}
+                    </div>
+                  </div>
+                  {!s.isCurrent && (
+                    <button
+                      type="button"
+                      className="ud-btn ud-btn-ghost"
+                      style={{ flexShrink: 0, color: "#ef4444" }}
+                      onClick={() => handleRevokeSession(s.id)}
+                      disabled={revokingId === s.id}
+                    >
+                      {revokingId === s.id ? "Revoking..." : "Revoke"}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button
+            type="button"
+            className="ud-modal-cancel"
+            style={{ width: "100%" }}
+            onClick={() => setShowSessionsModal(false)}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    )}
+
+    
+        {/* ── Enable 2FA — Verify OTP Modal ── */}
+        {show2FAModal && (
+          <div className="ud-modal-overlay" onClick={() => !tfaConfirming && setShow2FAModal(false)}>
+            <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="ud-modal-icon" style={{ background: "#eef2ff", color: "#4f46e5" }}>
+                <FiShield size={26} />
+              </div>
+              <div className="ud-modal-title">Verify Your Identity</div>
+              <div className="ud-modal-body">
+                Enter the 6-digit code we sent you to finish enabling two-factor authentication.
+              </div>
+
+              {tfaError && <div className="ud-modal-error">{tfaError}</div>}
+
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                className="ud-form-input"
+                placeholder="000000"
+                value={tfaOtp}
+                onChange={(e) => setTfaOtp(e.target.value.replace(/\D/g, ""))}
+                style={{ textAlign: "center", fontSize: 20, letterSpacing: 6, marginBottom: 20 }}
+                autoFocus
+              />
+
+              <div className="ud-modal-actions">
+                <button
+                  type="button"
+                  className="ud-modal-cancel"
+                  onClick={() => { setShow2FAModal(false); setTfaError(""); }}
+                  disabled={tfaConfirming}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="ud-pw-submit-btn"
+                  style={{ flex: 1, justifyContent: "center" }}
+                  onClick={handleConfirmEnable2FA}
+                  disabled={tfaConfirming}
+                >
+                  {tfaConfirming ? "Verifying..." : "Verify & Enable"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Disable 2FA Confirmation Modal ── */}
+        {showDisable2FAModal && (
+          <div className="ud-modal-overlay" onClick={() => !tfaDisabling && setShowDisable2FAModal(false)}>
+            <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="ud-modal-icon">
+                <FiAlertTriangle size={26} />
+              </div>
+              <div className="ud-modal-title">Disable Two-Factor Authentication?</div>
+              <div className="ud-modal-body">
+                This will <strong>remove the extra verification step</strong> when you log in.
+                Your account will rely on your password alone.
+              </div>
+              <div className="ud-modal-actions">
+                <button
+                  type="button"
+                  className="ud-modal-cancel"
+                  onClick={() => setShowDisable2FAModal(false)}
+                  disabled={tfaDisabling}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="ud-modal-delete"
+                  onClick={handleDisable2FA}
+                  disabled={tfaDisabling}
+                >
+                  {tfaDisabling ? "Disabling..." : "Yes, Disable"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+ 
+ {/* ── Phone OTP Verification Modal ── */}
+        {showPhoneOtpModal && (
+          <div className="ud-modal-overlay" onClick={() => !confirmingPhone && setShowPhoneOtpModal(false)}>
+            <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="ud-modal-icon" style={{ background: "#eef2ff", color: "#4f46e5" }}>
+                <FiPhone size={26} />
+              </div>
+              <div className="ud-modal-title">Verify New Phone Number</div>
+              <div className="ud-modal-body">
+                Enter the 6-digit code sent to {pendingPhone} to confirm this number.
+              </div>
+
+              {phoneOtpError && <div className="ud-modal-error">{phoneOtpError}</div>}
+
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                className="ud-form-input"
+                placeholder="000000"
+                value={phoneOtp}
+                onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, ""))}
+                style={{ textAlign: "center", fontSize: 20, letterSpacing: 6, marginBottom: 20 }}
+                autoFocus
+              />
+
+              <div className="ud-modal-actions">
+              <button
+                  type="button"
+                  className="ud-modal-cancel"
+                  onClick={() => {
+                    setShowPhoneOtpModal(false);
+                    setPhoneOtpError("");
+                    setProfileForm((prev) => ({ ...prev, phone: session?.user?.phone || "" }));
+                  }}
+                  disabled={confirmingPhone}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="ud-pw-submit-btn"
+                  style={{ flex: 1, justifyContent: "center" }}
+                  onClick={handleConfirmPhoneOtp}
+                  disabled={confirmingPhone}
+                >
+                  {confirmingPhone ? "Verifying..." : "Verify"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+  </>
+);
 }

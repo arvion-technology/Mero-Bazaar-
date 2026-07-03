@@ -13,7 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: string; email: string }) {
+  async validate(payload: { sub: string; email: string; sid?: string }) {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
     });
@@ -21,7 +21,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!user || !user.isActive) {
       throw new UnauthorizedException();
     }
-
-    return { id: user.id, email: user.email, role: user.role };
+    if (payload.sid) {
+      const session = await this.prisma.session.findUnique({ where: { id: payload.sid } });
+      if (!session || session.revokedAt || session.expiresAt < new Date()) {
+        throw new UnauthorizedException('Session has been revoked');
+      }
+      this.prisma.session
+      .update({ where: { id: payload.sid }, data: { lastActiveAt: new Date() } })
+      .catch(() => {});
+    }
+    return { id: user.id, email: user.email, role: user.role, sessionId: payload.sid };
   }
 }

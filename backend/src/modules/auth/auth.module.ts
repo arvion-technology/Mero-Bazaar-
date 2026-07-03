@@ -7,10 +7,12 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt_auth.guards';
 import { PrismaService } from 'src/database/prisma.service';
+import { PhoneOtpModule } from '../otp/otp.module';
 
 @Module({
   imports: [
     PassportModule,
+    PhoneOtpModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({

@@ -13,8 +13,8 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/:path((?!auth(?:/|$)).*)",
-        destination: `${API_URL}/api/:path`,
+        source: "/api/:path((?!auth(?:/|$)|otp(?:/|$)|vendor-kyc(?:/|$)|user(?:/|$)).*)",
+        destination: `${API_URL}/:path`,
       },
     ];
   },

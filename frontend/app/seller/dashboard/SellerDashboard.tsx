@@ -31,6 +31,9 @@ import {
   FiMenu,
   FiX,
 } from "react-icons/fi";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 const PRIMARY = "#0f172a";
 const ACCENT = "#3b82f6";
@@ -91,6 +94,7 @@ export default function SellerDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: session } = useSession();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const [kycStatus, setkycStatus] = useState<string | null>(null);
 
   const sidebarItems = [
     { id: "dashboard", icon: FiGrid, label: "Dashboard" },
@@ -132,8 +136,20 @@ export default function SellerDashboard() {
 
   const maxVal = Math.max(...chartData.map(d => Math.max(d.sales, d.earnings)));
 
+
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    fetch("/api/vendor-kyc/me", {
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+    })
+    .then((r) => r.json())
+    .then((d) => setkycStatus(d.status ?? null))
+    .catch(() => setkycStatus(null));
+  }, [session?.accessToken]);
+
   return (
     <>
+    <ToastContainer position="top-right" autoClose={3000} />
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1542,6 +1558,17 @@ export default function SellerDashboard() {
             </div>
           </div>
 
+      {/* KYC pending banner */}
+          {kycStatus === "PENDING" && (
+            <div style={{
+              background: "#FFF3CD", color: "#856404", padding: "12px 16px",
+              borderRadius: 10, marginBottom: 20, fontSize: 13, fontWeight: 500,
+              border: "1px solid #ffc107",
+            }}>
+               Your KYC is under review. You will be able to create listings once approved.
+            </div>
+          )}
+
           {/* Stats */}
           <div className="dash-stats">
             {stats.map((stat) => (
@@ -1620,7 +1647,7 @@ export default function SellerDashboard() {
             {/* Sales Chart */}
             <div className="dash-card">
               <div className="dash-chart-header">
-                <h3 classArea="dash-chart-title">Sales Overview</h3>
+                <h3 className="dash-chart-title">Sales Overview</h3>
                 <div className="dash-chart-legend">
                   <div className="dash-legend-item">
                     <span className="dash-legend-dot" style={{ background: ACCENT }} />
@@ -1698,19 +1725,39 @@ export default function SellerDashboard() {
           <div className="dash-quick">
             <h3 className="dash-quick-title">Quick Actions</h3>
             <div className="dash-quick-grid">
-              {quickActions.map((action) => (
-                <Link key={action.label} href={action.href} className="dash-quick-card">
-                  <div className="dash-quick-icon" style={{ background: action.bg, color: action.color }}>
-                    <action.icon size={20} />
-                  </div>
+              {quickActions.map((action) => {
+                const locked = action.label === "Add Product" && kycStatus !== "VERIFIED";
+                if (locked) {
+                  return (
+                    <div key={action.label} 
+                      className="dash-quick-card" 
+                      style={{ opacity: 0.5, cursor: "not-allowed" }}
+                      onClick={() => toast.error("Your KYC is pending verification. You can add products once approved.")}
+                    >
+                    <div className="dash-quick-icon" style={{ background: action.bg, color: action.color }}>
+                      <action.icon size={20} />
+                    </div>
                   <div className="dash-quick-info">
                     <div className="dash-quick-label">{action.label}</div>
-                    <div className="dash-quick-desc">{action.desc}</div>
+                    <div className="dash-quick-desc">Pending KYc approval</div>
                   </div>
-                </Link>
-              ))}
+                </div>
+                  );
+                }
+                return (
+                  <Link key={action.label} href={action.href} className="dash-quick-card">
+                    <div className="dash-quick-icon" style={{ background: action.bg, color: action.color }}>
+                      <action.icon size={20} />
+                    </div>
+                    <div className="dash-quick-info">
+                      <div className="dash-quick-label">{action.label}</div>
+                      <div className="dash-quick-desc">{action.desc}</div>
+                    </div>
+                  </Link>
+                );
+              })}   
             </div>
-          </div>
+          </div>      
 
           {/* Recent Messages */}
           <div className="dash-card">
@@ -1742,7 +1789,7 @@ export default function SellerDashboard() {
             </div>
           </div>
         </main>
-      </div>
+       </div> 
     </>
   );
 }

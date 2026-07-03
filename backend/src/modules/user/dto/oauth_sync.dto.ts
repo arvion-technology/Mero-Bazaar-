@@ -14,4 +14,12 @@ export class OAuthSyncDto {
   @IsOptional()
   @IsIn(['USER', 'VENDOR'])
   role?: string;
+
+  @IsOptional()
+  @IsString()
+  userAgent?: string;
+
+  @IsOptional()
+  @IsString()
+  ipAddress?: string;
 }

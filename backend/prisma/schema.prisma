@@ -32,6 +32,7 @@ model User {
   doctorProfile DoctorProfile?
 
   vendorKyc     vendorKyc?
+  twoFactorEnabled  Boolean @default(false)
 
   leads    Lead[]
   orders   Order[]
@@ -87,8 +88,8 @@ model vendorKyc {
 
   fullName          String
   dateOfBirth       DateTime
-  contactNumber      String  @unique
-  address           String
+  contactNumber     String  @unique
+  address           String  
   panNumber         String @unique
 
   panCardUrl        String?
@@ -136,6 +137,7 @@ enum OtpContext {
   KYC_CONTACT
   PASSWORD_RESET
   LOGIN
+  TWO_FA_SETUP
 }
 
 model DoctorProfile {
@@ -157,13 +159,19 @@ model DoctorProfile {
 }
 
 model Session {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String @id @default(cuid())
+  userId           String
+  user             User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   refreshTokenHash String
   expiresAt        DateTime
   createdAt        DateTime @default(now())
+
+  userAgent        String?
+  ipAddress        String?
+  deviceLabel      String?
+  lastActiveAt     DateTime @default(now())
+  revokedAt        DateTime?
 
   @@index([userId])
   @@index([expiresAt])
