@@ -66,6 +66,14 @@ export default function UserOrders() {
   const router = useRouter();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const notifDropdownRef = useRef<HTMLDivElement>(null);
+  const [securityNotifs, setSecurityNotifs] = useState<{ id: string; type: string; createdAt: string }[]>([]);
+
+  function getImageUrl(image?: string | null) {
+  if (!image) return "";
+  return image.startsWith("http")
+    ? image
+    : `${process.env.NEXT_PUBLIC_API_URL}${image}`;
+  }
 
   // Notification logic (same as Navbar)
   const notifications: string[] = session
@@ -542,7 +550,7 @@ export default function UserOrders() {
               <div className="ud-profile-wrap" ref={profileDropdownRef}>
                 <button type="button" className="ud-profile-btn" onClick={() => setShowProfileDropdown((p) => !p)}>
                   <div className="ud-profile-btn-avatar">
-                    {session?.user?.image ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : userInitials}
+                    {session?.user?.image ? <img src={getImageUrl(session.user.image)} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : userInitials}
                   </div>
                   <FiChevronDown size={14} className={`ud-profile-chevron ${showProfileDropdown ? "open" : ""}`} />
                 </button>

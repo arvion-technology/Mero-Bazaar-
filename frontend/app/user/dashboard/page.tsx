@@ -60,15 +60,18 @@ export default function UserDashboard() {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [notifSeen, setNotifSeen] = useState(false);
   const { data: session } = useSession();
+  const token =  session?.accessToken;
   const router = useRouter();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const notifDropdownRef = useRef<HTMLDivElement>(null);
+  const [securityNotifs, setSecurityNotifs] = useState<{ id: string; type: string; createdAt: string }[]>([]);
 
   // Compute profile-completeness notifications (reused from Navbar logic)
   const notifications: string[] = session
     ? ([
         !session.user?.phone && "Add your phone number",
         !session.user?.address && "Add your address",
+        ...securityNotifs.map((n) => activityLabel(n.type)),
       ].filter(Boolean) as string[])
     : [];
   const notificationCount = notifications.length;
@@ -105,6 +108,33 @@ export default function UserDashboard() {
     }
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
+
+  function activityLabel(type: string) {
+  switch (type) {
+    case "PASSWORD_CHANGED": return "Password changed";
+    case "TWO_FA_ENABLED": return "Two-factor authentication enabled";
+    case "TWO_FA_DISABLED": return "Two-factor authentication disabled";
+    case "PHONE_CHANGED": return "Phone number changed";
+    default: return type;
+  }
+}
+
+  useEffect(() => {
+    if (!token) return;
+    fetch("/api/user/profile/notifications/security", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then(setSecurityNotifs)
+      .catch(() => {});
+  }, [token]); 
+  
+  function getImageUrl(image?: string | null) {
+  if (!image) return "";
+  return image.startsWith("http")
+    ? image
+    : `${process.env.NEXT_PUBLIC_API_URL}${image}`;
+}
 
   async function handleDeleteAccount() {
     setDeleting(true);
@@ -1379,6 +1409,12 @@ export default function UserDashboard() {
                   onClick={() => {
                     setShowNotifDropdown((v) => !v);
                     setNotifSeen(true);
+                    if (securityNotifs.length > 0) {
+                      fetch("/api/user/profile/notifications/security/mark-read", {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}` },
+                      }).then(() => setSecurityNotifs([]));
+                    }
                   }}
                 >
                   <FiBell size={18} />
@@ -1444,7 +1480,7 @@ export default function UserDashboard() {
                 >
                   <div className="ud-profile-btn-avatar">
                     {session?.user?.image
-                      ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ? <img src={getImageUrl(session.user.image)} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       : userInitials
                     }
                   </div>

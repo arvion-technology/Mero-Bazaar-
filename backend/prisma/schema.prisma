@@ -34,11 +34,12 @@ model User {
   vendorKyc     vendorKyc?
   twoFactorEnabled  Boolean @default(false)
 
-  leads    Lead[]
-  orders   Order[]
-  reviews  Review[]
-  listings Listing[]
-  sessions Session[]
+  leads         Lead[]
+  orders        Order[]
+  reviews       Review[]
+  listings      Listing[]
+  sessions      Session[]
+  ActivityLogs  ActivityLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -175,6 +176,30 @@ model Session {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+enum ActivityType {
+  LOGIN 
+  PASSWORD_CHANGED
+  TWO_FA_ENABLED
+  TWO_FA_DISABLED
+  PHONE_CHANGED
+  PROFILE_UPDATED
+  PROFILE_PHOTO_CHANGED
+}
+
+model ActivityLog {
+  id           String @id @default(cuid())
+  userId       String
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         ActivityType 
+  description  String?
+  ipAddress    String?
+  deviceLabel  String?
+  read         Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model Listing {

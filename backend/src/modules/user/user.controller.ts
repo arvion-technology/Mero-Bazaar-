@@ -9,10 +9,14 @@ import { UpdatePasswordDto } from './dto/update_password.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadedFile } from '@nestjs/common';
 import { profileUploadConfig } from './upload/profile_upload.config';
+import { ActivityLogService } from './activity_log.service';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly activityLogService: ActivityLogService,
+  ) {}
 
   @Get()
   findAll() {
@@ -40,6 +44,24 @@ export class UserController {
   resetPassword(@Body() body: { token: string; newPassword: string }) {
     console.log('reset-password hit, body:', body);
     return this.userService.resetPassword(body.token, body.newPassword);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile/activity')
+  getActivityLog(@Request() req) {
+    return  this.activityLogService.list(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile/notifications/security')
+  getSecurityNotifications(@Request() req) {
+    return this.activityLogService.getUnreadSecurityNotifications(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('profile/notifications/security/mark-read')
+  markSecurityNotificationsRead(@Request() req) {
+    return this.activityLogService.markAllRead(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)

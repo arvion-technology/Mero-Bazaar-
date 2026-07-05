@@ -21,6 +21,7 @@ import {
   FiChevronDown,
   FiMenu,
   FiX,
+  FiAlertCircle,
 } from "react-icons/fi";
 
 const PRIMARY = "#C0392B";
@@ -82,6 +83,31 @@ export default function UserWishlist() {
   const { data: session } = useSession();
   const router = useRouter();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const [securityNotifs, setSecurityNotifs] = useState<{ id: string; type: string; createdAt: string }[]>([]);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const [notifSeen, setNotifSeen] = useState(false);
+  const notifDropdownRef = useRef<HTMLDivElement>(null);
+  const token = session?.accessToken;
+
+  function activityLabel(type: string) {
+  switch (type) {
+    case "PASSWORD_CHANGED": return "Password changed";
+    case "TWO_FA_ENABLED": return "Two-factor authentication enabled";
+    case "TWO_FA_DISABLED": return "Two-factor authentication disabled";
+    case "PHONE_CHANGED": return "Phone number changed";
+    default: return type;
+  }
+}
+
+  const notifications: string[] = session
+    ? ([
+        !session.user?.phone && "Add your phone number",
+        !session.user?.address && "Add your address",
+        ...securityNotifs.map((n) => activityLabel(n.type)),
+      ].filter(Boolean) as string[])
+    : [];
+  const notificationCount = notifications.length;
+
 
   const sidebarItems = [
     { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/user/dashboard" },
@@ -91,6 +117,14 @@ export default function UserWishlist() {
     { id: "help", icon: FiHelpCircle, label: "Help & Support", href: "/user/help" },
     { id: "settings", icon: FiSettings, label: "Settings", href: "/user/settings" },
   ];
+
+
+  function getImageUrl(image?: string | null) {
+  if (!image) return "";
+  return image.startsWith("http")
+    ? image
+    : `${process.env.NEXT_PUBLIC_API_URL}${image}`;
+ }
 
   // Close profile dropdown on outside click
   useEffect(() => {
@@ -112,6 +146,16 @@ export default function UserWishlist() {
     }
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
+
+  useEffect(() => {
+  if (!token) return;
+  fetch("/api/user/profile/notifications/security", {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+    .then((res) => (res.ok ? res.json() : []))
+    .then(setSecurityNotifs)
+    .catch(() => {});
+}, [token]);
 
   async function handleDeleteAccount() {
     setDeleting(true);
@@ -1317,12 +1361,47 @@ export default function UserWishlist() {
               <h1 className="ud-breadcrumb">Wishlist</h1>
             </div>
             <div className="ud-topbar-right">
-              {/* Notifications */}
-              <Link href="/user/notifications" className="ud-icon-btn" title="Notifications">
-                <FiBell size={18} />
-                <span className="ud-badge">3</span>
-              </Link>
+              <div style={{ position: "relative" }} ref={notifDropdownRef}>
+                <button
+                  type="button"
+                  className="ud-icon-btn"
+                  title="Notifications"
+                  onClick={() => {
+                    setShowNotifDropdown((v) => !v);
+                    setNotifSeen(true);
+                    if (securityNotifs.length > 0) {
+                      fetch("/api/user/profile/notifications/security/mark-read", {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}` },
+                      }).then(() => setSecurityNotifs([]));
+                    }
+                  }}
+                >
+                  <FiBell size={18} />
+                  {notificationCount > 0 && !notifSeen && <span className="ud-badge">{notificationCount}</span>}
+                </button>
 
+                {showNotifDropdown && (
+                  <div style={{ position: "absolute", top: "calc(100% + 10px)", right: 0, background: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.1)", minWidth: "280px", zIndex: 999, overflow: "hidden", animation: "dropdownIn 0.15s ease" }}>
+                    <div style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9", fontWeight: 700, fontSize: "13px", color: "#1e293b" }}>
+                      Notifications
+                    </div>
+                    {notifications.length > 0 ? (
+                      notifications.map((msg, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", fontSize: "13px", color: "#475569", borderBottom: i < notifications.length - 1 ? "1px solid #f8fafc" : "none" }}>
+                          <FiAlertCircle size={15} color="#f59e0b" style={{ flexShrink: 0 }} />
+                          {msg}
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>
+                        You&apos;re all caught up ✓
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div> 
+            
               {/* Profile Avatar Dropdown */}
               <div className="ud-profile-wrap" ref={profileDropdownRef}>
                 <button
@@ -1332,11 +1411,10 @@ export default function UserWishlist() {
                 >
                   <div className="ud-profile-btn-avatar">
                     {session?.user?.image
-                      ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ? <img src={getImageUrl(session.user.image)} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       : userInitials
                     }
                   </div>
-                  <span className="ud-profile-btn-name">{session?.user?.name || "User"}</span>
                   <FiChevronDown size={14} className={`ud-profile-chevron ${showProfileDropdown ? "open" : ""}`} />
                 </button>
 
