@@ -2024,15 +2024,7 @@ async function handleDisable2FA() {
                   Manage
                 </button>
               </div>
-
-              <div className="ud-security-row">
-                <div className="ud-security-info">
-                  <h4>Login History</h4>
-                  <p>View your recent login activity</p>
-                </div>
-                <button type="button" className="ud-btn ud-btn-ghost">View</button>
               </div>
-            </div>
 
             {/* Change Password Section */}
             <div className="ud-section-header">
