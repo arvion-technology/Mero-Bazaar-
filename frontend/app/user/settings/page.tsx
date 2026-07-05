@@ -223,6 +223,14 @@ export default function UserSettings() {
     }
   }
 
+  //image in avatar helper
+  function getImageUrl(image?: string | null) {
+  if (!image) return "";
+  return image.startsWith("http")
+    ? image
+    : `${process.env.NEXT_PUBLIC_API_URL}${image}`;
+  }
+
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "U";
@@ -285,11 +293,7 @@ export default function UserSettings() {
         throw new Error(data?.message || "Failed to upload photo.");
       }
       const data = await res.json();
-      const fullImageUrl = data.image?.startsWith("http")
-        ? data.image
-        : `${process.env.NEXT_PUBLIC_API_URL}${data.image}`;
-
-      await updateSession({ user: { ...session?.user, image: fullImageUrl } });
+      await updateSession({ user: { ...session?.user, image: data.image } });
       toast.success("Profile photo updated.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong!");
@@ -1870,7 +1874,7 @@ async function handleDisable2FA() {
                 >
                   <div className="ud-profile-btn-avatar">
                     {session?.user?.image
-                      ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ? <img src={getImageUrl(session.user.image)} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       : userInitials
                     }
                   </div>
@@ -1913,7 +1917,7 @@ async function handleDisable2FA() {
               <div className="ud-profile-avatar-wrap">
                 <div className="ud-profile-avatar">
                   {session?.user?.image
-                    ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                    ? <img src={getImageUrl(session.user.image)} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
                     : userInitials}
                 </div>
                 <button
