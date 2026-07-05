@@ -65,7 +65,7 @@ interface DeliveryMapProps {
 
 export default function DeliveryMap({ pickup, dropoff, pickupLabel, dropoffLabel }: DeliveryMapProps) {
   const positions = useMemo(() => [pickup, dropoff], [pickup, dropoff]);
-  const center = useMemo(() => [(pickup[0] + dropoff[0]) / 2, (pickup[1] + dropoff[1]) / 2], [pickup, dropoff]);
+  const center = useMemo<[number, number]>(() => [(pickup[0] + dropoff[0]) / 2, (pickup[1] + dropoff[1]) / 2], [pickup, dropoff]);
 
   return (
     <MapContainer
