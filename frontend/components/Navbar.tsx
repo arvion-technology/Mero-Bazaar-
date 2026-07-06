@@ -45,8 +45,10 @@ export default function Navbar() {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const [openNotif, setOpenNotif] = useState(false);
   const { data: session, status } = useSession();
+  const token = session?.accessToken;
   const router = useRouter();
   const [notifSeen, setNotifSeen] = useState(false);
+  const [securityNotifs, setSecurityNotifs] = useState<{ id: string; type: string; createdAt: string }[]>([]);
 
   const catRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
@@ -78,6 +80,7 @@ export default function Navbar() {
     ? ([
         !session.user?.phone && "Add your phone number",
         !session.user?.address && "Add your address",
+        ...securityNotifs.map((n) => activityLabel(n.type)),
       ].filter(Boolean) as string[])
     : [];
 
@@ -89,6 +92,33 @@ export default function Navbar() {
     setPrevNotificationCount(notificationCount);
     setNotifSeen(false);
   }
+
+  function activityLabel(type: string) {
+    switch (type) {
+      case "PASSWORD_CHANGED": return "Password chnaged";
+      case "TWO_FA_ENABLED": return "Two-factor authentication enabled";
+      case "TWO_FA_DISABLED": return "Two-factor authentication disabled";
+      case "PHONE_CHANGED": return "Phone number changed";
+      default: return type;
+    }
+  }
+
+  function getImageUrl(image?: string | null) {
+    if (!image) return "";
+    return image.startsWith("http")
+      ? image
+      : `${process.env.NEXT_PUBLIC_API_URL}${image}`;
+  }
+
+  useEffect(() => {
+    if (!token) return;
+    fetch("/api/user/profile/notifications/security", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then(setSecurityNotifs)
+      .catch(() => {});
+  }, [token]);
 
   return (
     <>
@@ -614,7 +644,14 @@ export default function Navbar() {
                   }
                   setOpenNotif((v) => !v);
                   setNotifSeen(true);
+                  if (securityNotifs.length > 0) {
+                    fetch("/api/user/profile/notifications/security/mark-read", {
+                      method: "POST",
+                      headers: { Authorization: `Bearer ${token}` },
+                    }).then(() => setSecurityNotifs([]));
+                  }
                 }}
+
               >
                 <FiBell size={20} />
                 {session && showNotificationBadge && !notifSeen && (
@@ -646,7 +683,7 @@ export default function Navbar() {
                   aria-expanded={showProfileMenu}
                 >
                   {session.user?.image ? (
-                    <img src={session.user.image} alt={session.user.name || "User"} />
+                    <img src={getImageUrl(session.user.image)} alt={session.user.name || "User"} />
                   ) : (
                     <span>{(session.user?.name?.[0] || "U").toUpperCase()}</span>
                   )}
@@ -718,8 +755,7 @@ export default function Navbar() {
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, paddingLeft: 4 }}>
                   <div className="hnb-avatar-btn" style={{ cursor: "default", transform: "none", boxShadow: "none" }}>
                     {session.user?.image ? (
-                      <img src={session.user.image} alt={session.user.name || "User"} />
-                    ) : (
+                      <img src={getImageUrl(session.user.image)} alt={session.user.name || "User"} />                    ) : (
                       <span>
                         {(session.user?.name?.[0] || "U").toUpperCase()}
                       </span>
