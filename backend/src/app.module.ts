@@ -23,6 +23,7 @@ import { PhoneOtpModule } from './modules/otp/otp.module';
 import { VendorKycModule } from './modules/vendor-kyc/vendor-kyc.module';
 import { SessionsModule } from './modules/session/session.module';
 import { VendorModule } from './modules/vendor/vendor.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -46,7 +47,8 @@ import { VendorModule } from './modules/vendor/vendor.module';
     PhoneOtpModule,
     VendorKycModule,
     SessionsModule,
-    VendorModule
+    VendorModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

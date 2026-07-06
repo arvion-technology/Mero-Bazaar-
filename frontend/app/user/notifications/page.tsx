@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect,useMemo } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -114,14 +114,6 @@ const notificationsData: NotificationItem[] = [
   },
 ];
 
-const categoryCounts = {
-  all: notificationsData.length,
-  orders: notificationsData.filter((n) => n.category === "orders").length,
-  account: notificationsData.filter((n) => n.category === "account").length,
-  promotions: notificationsData.filter((n) => n.category === "promotions").length,
-  system: notificationsData.filter((n) => n.category === "system").length,
-};
-
 const categoryTabs: { key: NotificationCategory; label: string }[] = [
   { key: "all", label: "All" },
   { key: "orders", label: "Orders" },
@@ -143,9 +135,44 @@ export default function NotificationsPage() {
   const [selectedCategory, setSelectedCategory] = useState<NotificationCategory>("all");
   const [notifications, setNotifications] = useState<NotificationItem[]>(notificationsData);
   const { data: session } = useSession();
+  const token = session?.accessToken;
   const router = useRouter();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const notifDropdownRef = useRef<HTMLDivElement>(null);
+  const [securityNotifs, setSecurityNotifs] = useState<{ id: string; type: string; createdAt: string; read: boolean }[]>([]);
+
+  function activityLabel(type: string) {
+    switch (type) {
+      case "PASSWORD_CHANGED": return "Password changed";
+      case "TWO_FA_ENABLED": return "Two-factor authentication enabled";
+      case "TWO_FA_DISABLED": return "Two-factor authentication disabled";
+      case "PHONE_CHANGED": return "Phone number changed";
+      default: return type;
+    }
+  }
+
+  const mergedNotifications = useMemo(() => {
+  const mapped: NotificationItem[] = securityNotifs.map((n) => ({
+    id: `activity-${n.id}`,
+    icon: FiShield,
+    iconBg: "#f3e8ff",
+    iconColor: "#a855f7",
+    title: activityLabel(n.type),
+    description: "Security activity on your account",
+    time: new Date(n.createdAt).toLocaleString(),
+    category: "account" as NotificationCategory,
+    read: n.read,
+  }));
+  return [...mapped, ...notifications];
+}, [securityNotifs, notifications]);
+
+const categoryCounts = {
+  all: mergedNotifications.length,
+  orders: mergedNotifications.filter((n) => n.category === "orders").length,
+  account: mergedNotifications.filter((n) => n.category === "account").length,
+  promotions: mergedNotifications.filter((n) => n.category === "promotions").length,
+  system: mergedNotifications.filter((n) => n.category === "system").length,
+};
 
   const profileNotifications: string[] = session
     ? ([
@@ -153,7 +180,29 @@ export default function NotificationsPage() {
         !session.user?.address && "Add your address",
       ].filter(Boolean) as string[])
     : [];
-  const notificationCount = profileNotifications.length;
+  const notificationCount = profileNotifications.length + mergedNotifications.filter((n) => !n.read).length;
+
+  const filteredNotifications =
+  selectedCategory === "all"
+    ? mergedNotifications
+    : mergedNotifications.filter((n) => n.category === selectedCategory);
+
+  function getImageUrl(image?: string | null) {
+    if (!image) return "";
+    return image.startsWith("http")
+      ? image
+      : `${process.env.NEXT_PUBLIC_API_URL}${image}`;
+  }
+
+  useEffect(() => {
+    if (!token) return;
+    fetch("/api/user/profile/notifications/security", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then((res) => (res.ok ? res.json() : []))
+    .then(setSecurityNotifs)
+    .catch(() => {});
+  }, [token]);
 
   const sidebarItems = [
     { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/user/dashboard" },
@@ -164,20 +213,22 @@ export default function NotificationsPage() {
     { id: "settings", icon: FiSettings, label: "Settings", href: "/user/settings" },
   ];
 
-  const filteredNotifications =
-    selectedCategory === "all"
-      ? notifications
-      : notifications.filter((n) => n.category === selectedCategory);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = mergedNotifications.filter((n) => !n.read).length;
 
   const handleMarkAllRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setSecurityNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
   const handleMarkRead = (id: string) => {
+    if (id.startsWith("activity-")) {
+      const readId = id.replace("activity-", "");
+        setSecurityNotifs((prev) => prev.map((n) => (n.id === readId ? { ...n, read: true } : n)));
+  } else {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  };
+  } 
+};
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -1208,10 +1259,10 @@ export default function NotificationsPage() {
                 key={item.id}
                 href={item.href}
                 className={`ud-nav-item ${activeTab === item.id ? "active" : ""}`}
-                onClick={() => {
-                  setActiveTab(item.id);
-                  setSidebarOpen(false);
-                }}
+              onClick={() => {
+                setActiveTab(item.id);
+                setSidebarOpen(false);
+              }}
               >
                 <span className="ud-nav-icon">
                   <item.icon size={18} />
@@ -1286,15 +1337,23 @@ export default function NotificationsPage() {
             <div className="ud-topbar-right">
               {/* Notifications Bell */}
               <div style={{ position: "relative" }} ref={notifDropdownRef}>
-                <button
-                  type="button"
-                  className="ud-icon-btn"
-                  title="Notifications"
-                  onClick={() => {
-                    setShowNotifDropdown((v) => !v);
-                    setNotifSeen(true);
-                  }}
-                >
+              <button
+                type="button"
+                className="ud-icon-btn"
+                title="Notifications"
+                onClick={() => {
+                  setShowNotifDropdown((v) => !v);
+                  setNotifSeen(true);
+                  if (securityNotifs.some((n) => !n.read)) {
+                    fetch("/api/user/profile/notifications/security/mark-read", {
+                      method: "POST",
+                      headers: { Authorization: `Bearer ${token}` },
+                    }).then(() => {
+                      setSecurityNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+                    });
+                  }
+                }}
+              >
                   <FiBell size={18} />
                   {notificationCount > 0 && !notifSeen && (
                     <span className="ud-badge">{notificationCount}</span>
@@ -1383,7 +1442,7 @@ export default function NotificationsPage() {
                   <div className="ud-profile-btn-avatar">
                     {session?.user?.image ? (
                       <img
-                        src={session.user.image}
+                        src={getImageUrl(session.user.image)}
                         alt="avatar"
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       />
