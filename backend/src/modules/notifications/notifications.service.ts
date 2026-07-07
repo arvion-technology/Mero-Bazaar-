@@ -13,6 +13,20 @@ export class NotificationsService {
     });
   }
 
+  async findSecurityForUser(userId: string) {
+    return this.prisma.activityLog.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async markAllSecurityRead(userId: string) {
+    return this.prisma.activityLog.updateMany({
+      where: { userId, read: false },
+      data: { read: true },
+    })
+  }
+
   async markRead(userId: string, id: string) {
     return this.prisma.notification.updateMany({
       where: { id, userId },
