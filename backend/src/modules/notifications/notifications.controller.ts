@@ -12,9 +12,19 @@ export class NotificationsController {
     return this.service.findAllForUser(req.user.id);
   }
 
+  @Get('security')
+  findSecurity(@Request() req) {
+    return this.service.findSecurityForUser(req.user.id);
+  }
+
   @Post('mark-all-read')
   markAllRead(@Request() req) {
     return this.service.markAllRead(req.user.id);
+  }
+
+  @Post('security/mark-read')
+  markAllSecurityRead(@Request() req) {
+    return this.service.markAllSecurityRead(req.user.id);
   }
 
   @Post(':id/mark-read')

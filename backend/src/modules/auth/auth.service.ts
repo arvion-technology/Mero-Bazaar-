@@ -9,6 +9,7 @@ import { randomBytes } from 'crypto';
 import type { Request } from 'express';
 import { PhoneOtpService } from '../otp/otp.service';
 import { OtpContext } from '@prisma/client';
+import { ActivityLogService } from '../user/activity_log.service';
 
 export function parseUserAgent(ua?: string): string {
   if (!ua) return 'Unknown device';
@@ -23,6 +24,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private phoneOtpService: PhoneOtpService,
+    private activityLogService: ActivityLogService,
   ) {}
 
   async register(dto: RegisterDto, req: Request) {
@@ -94,6 +96,10 @@ export class AuthService {
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
+    await this.activityLogService.log(user.id, 'LOGIN', {
+      ipAddress: req.ip,
+      deviceLabel: parseUserAgent(req.headers['user-agent']),
+    });
     return this.signToken(user.id, user.email, user.role ?? UserRole.USER, req);
   }
 
@@ -114,6 +120,10 @@ export class AuthService {
     await this.phoneOtpService.verifyOtp(user.phone, otp, OtpContext.LOGIN);
 
     await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+    await this.activityLogService.log(user.id, 'LOGIN', {
+      ipAddress: req.ip,
+      deviceLabel: parseUserAgent(req.headers['user-agent']),
+    });
     return this.signToken(user.id, user.email, user.role ?? UserRole.USER, req);
   }
 

@@ -12,7 +12,6 @@ import {
   FiHelpCircle,
   FiSettings,
   FiTrash2,
-  FiChevronRight,
   FiMoreHorizontal,
   FiAlertTriangle,
   FiLogOut,
@@ -22,9 +21,7 @@ import {
   FiX,
   FiAlertCircle,
   FiShield,
-  FiCheckCircle,
   FiTruck,
-  FiCreditCard,
   FiTag,
   FiUserCheck,
 } from "react-icons/fi";
@@ -45,75 +42,6 @@ interface NotificationItem {
   read: boolean;
 }
 
-const notificationsData: NotificationItem[] = [
-  {
-    id: "1",
-    icon: FiShield,
-    iconBg: "#f3e8ff",
-    iconColor: "#a855f7",
-    title: "Enable 2FA Verification",
-    description: "Secure your account by enabling two-factor authentication",
-    time: "Just now",
-    category: "system",
-    read: false,
-  },
-  {
-    id: "2",
-    icon: FiCheckCircle,
-    iconBg: "#dcfce7",
-    iconColor: "#22c55e",
-    title: "Your order has been placed",
-    description: "Order #1024 has been placed successfully.",
-    time: "2 mins ago",
-    category: "orders",
-    read: false,
-  },
-  {
-    id: "3",
-    icon: FiTruck,
-    iconBg: "#fce7f3",
-    iconColor: "#ec4899",
-    title: "Your order is shipped",
-    description: "Order #1024 has been shipped and is on the way",
-    time: "1 hour ago",
-    category: "orders",
-    read: false,
-  },
-  {
-    id: "4",
-    icon: FiCreditCard,
-    iconBg: "#dbeafe",
-    iconColor: "#3b82f6",
-    title: "Payment successful",
-    description: "Payment of NPR 850 for order #1024 was successful",
-    time: "2 hours ago",
-    category: "orders",
-    read: false,
-  },
-  {
-    id: "5",
-    icon: FiTag,
-    iconBg: "#fee2e2",
-    iconColor: "#ef4444",
-    title: "Special offer for you!",
-    description: "Get 20% off on all products. Limited time offer",
-    time: "Yesterday",
-    category: "promotions",
-    read: false,
-  },
-  {
-    id: "6",
-    icon: FiUserCheck,
-    iconBg: "#fef9c3",
-    iconColor: "#eab308",
-    title: "Profile updated",
-    description: "Your profile information has been update successfully.",
-    time: "2 days ago",
-    category: "account",
-    read: false,
-  },
-];
-
 const categoryTabs: { key: NotificationCategory; label: string }[] = [
   { key: "all", label: "All" },
   { key: "orders", label: "Orders" },
@@ -133,7 +61,7 @@ export default function NotificationsPage() {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [notifSeen, setNotifSeen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<NotificationCategory>("all");
-  const [notifications, setNotifications] = useState<NotificationItem[]>(notificationsData);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const { data: session } = useSession();
   const token = session?.accessToken;
   const router = useRouter();
@@ -151,6 +79,19 @@ export default function NotificationsPage() {
     }
   }
 
+  function getCategoryIcon(category: string) {
+  switch (category) {
+    case "ORDERS":
+      return { icon: FiTruck, iconBg: "#dbeafe", iconColor: "#3b82f6" };
+    case "PROMOTIONS":
+      return { icon: FiTag, iconBg: "#fee2e2", iconColor: "#ef4444" };
+    case "SYSTEM":
+      return { icon: FiShield, iconBg: "#f3e8ff", iconColor: "#a855f7" };
+    case "ACCOUNT":
+    default:
+      return { icon: FiUserCheck, iconBg: "#fef9c3", iconColor: "#eab308" };
+  }
+}
   const mergedNotifications = useMemo(() => {
   const mapped: NotificationItem[] = securityNotifs.map((n) => ({
     id: `activity-${n.id}`,
@@ -196,12 +137,51 @@ const categoryCounts = {
 
   useEffect(() => {
     if (!token) return;
-    fetch("/api/user/profile/notifications/security", {
+    fetch("/api/user/notifications/security", {
       headers: { Authorization: `Bearer ${token}` },
     })
     .then((res) => (res.ok ? res.json() : []))
     .then(setSecurityNotifs)
     .catch(() => {});
+  }, [token]);
+
+
+useEffect(() => {
+    if (!token) return;
+    fetch("/api/user/notifications", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then(
+        (
+          data: {
+            id: string;
+            category: string;
+            type: string;
+            title: string;
+            description: string;
+            read: boolean;
+            createdAt: string;
+          }[]
+        ) => {
+          const mapped: NotificationItem[] = data.map((n) => {
+            const { icon, iconBg, iconColor } = getCategoryIcon(n.category);
+            return {
+              id: n.id,
+              icon,
+              iconBg,
+              iconColor,
+              title: n.title,
+              description: n.description,
+              time: new Date(n.createdAt).toLocaleString(),
+              category: n.category.toLowerCase() as NotificationCategory,
+              read: n.read,
+            };
+          });
+          setNotifications(mapped);
+        }
+      )
+      .catch(() => {});
   }, [token]);
 
   const sidebarItems = [
@@ -219,6 +199,15 @@ const categoryCounts = {
   const handleMarkAllRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     setSecurityNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+    if (!token) return;
+    fetch("/api/user/notifications/mark-all-read", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(() => {});
+    fetch("/api/user/notifications/security/mark-read", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(() => {});
   };
 
   const handleMarkRead = (id: string) => {
@@ -227,6 +216,12 @@ const categoryCounts = {
         setSecurityNotifs((prev) => prev.map((n) => (n.id === readId ? { ...n, read: true } : n)));
   } else {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    if (token) {
+      fetch(`/api/user/notifications/${id}/mark-read`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    }
   } 
 };
 
@@ -1345,7 +1340,7 @@ const categoryCounts = {
                   setShowNotifDropdown((v) => !v);
                   setNotifSeen(true);
                   if (securityNotifs.some((n) => !n.read)) {
-                    fetch("/api/user/profile/notifications/security/mark-read", {
+                    fetch("/api/user/notifications/security/mark-read", {
                       method: "POST",
                       headers: { Authorization: `Bearer ${token}` },
                     }).then(() => {

@@ -53,18 +53,6 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('profile/notifications/security')
-  getSecurityNotifications(@Request() req) {
-    return this.activityLogService.getUnreadSecurityNotifications(req.user.id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('profile/notifications/security/mark-read')
-  markSecurityNotificationsRead(@Request() req) {
-    return this.activityLogService.markAllRead(req.user.id);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('profile/me')
   getMyProfile(@Request() req) {
     return this.userService.findOne(req.user.id);

@@ -48,7 +48,7 @@ export default function Navbar() {
   const token = session?.accessToken;
   const router = useRouter();
   const [notifSeen, setNotifSeen] = useState(false);
-  const [securityNotifs, setSecurityNotifs] = useState<{ id: string; type: string; createdAt: string }[]>([]);
+  const [securityNotifs, setSecurityNotifs] = useState<{ id: string; type: string; createdAt: string; read: boolean }[]>([]);
 
   const catRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
@@ -80,7 +80,7 @@ export default function Navbar() {
     ? ([
         !session.user?.phone && "Add your phone number",
         !session.user?.address && "Add your address",
-        ...securityNotifs.map((n) => activityLabel(n.type)),
+        ...securityNotifs.filter((n) => !n.read).map((n) => activityLabel(n.type)),
       ].filter(Boolean) as string[])
     : [];
 
@@ -112,7 +112,7 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!token) return;
-    fetch("/api/user/profile/notifications/security", {
+    fetch("/api/user/notifications/security", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => (res.ok ? res.json() : []))
@@ -644,14 +644,15 @@ export default function Navbar() {
                   }
                   setOpenNotif((v) => !v);
                   setNotifSeen(true);
-                  if (securityNotifs.length > 0) {
-                    fetch("/api/user/profile/notifications/security/mark-read", {
+                  if (securityNotifs.some((n) => !n.read)) {
+                    fetch("/api/user/notifications/security/mark-read", {
                       method: "POST",
                       headers: { Authorization: `Bearer ${token}` },
-                    }).then(() => setSecurityNotifs([]));
-                  }
-                }}
-
+                    }).then(() => {
++                     setSecurityNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+                  });
+                }
+              }}
               >
                 <FiBell size={20} />
                 {session && showNotificationBadge && !notifSeen && (
