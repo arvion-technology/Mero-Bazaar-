@@ -24,6 +24,9 @@ import { VendorKycModule } from './modules/vendor-kyc/vendor-kyc.module';
 import { SessionsModule } from './modules/session/session.module';
 import { VendorModule } from './modules/vendor/vendor.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { AdminUserService } from './modules/admin-user/admin-user.service';
+import { AdminUserController } from './modules/admin-user/admin-user.controller';
+import { AdminUserModule } from './modules/admin-user/admin-user.module';
 
 @Module({
   imports: [
@@ -49,8 +52,9 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     SessionsModule,
     VendorModule,
     NotificationsModule,
+    AdminUserModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, AdminUserController],
+  providers: [AppService, AdminUserService],
 })
 export class AppModule {}
