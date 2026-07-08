@@ -10,11 +10,12 @@ import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { Roles } from '../auth/roles.decorator';
 
 @Controller('vendor-kyc')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class VendorKycController {
   constructor(private vendorKycService: VendorKycService) {}
 
   @Post('submit')
+  @Roles(UserRole.VENDOR)
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -39,29 +40,30 @@ export class VendorKycController {
   }
 
   @Post('send')
+  @Roles(UserRole.VENDOR)
   sendOtp(@Request() req, @Body('phone') phone: string) {
     return this.vendorKycService.sendContactOtp(req.user.id, phone);
   }
 
   @Post('verify')
+  @Roles(UserRole.VENDOR)
   verifyOtp(@Request() req, @Body('otp') otp: string, @Body('phone') phone: string) {
     return this.vendorKycService.verifyContactOtp(req.user.id, otp, phone);
   }
 
   @Get('me')
+  @Roles(UserRole.VENDOR)
   getMyKyc(@Request() req) {
     return this.vendorKycService.getMyKyc(req.user.id);
   }
 
   @Get('admin/all')
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   getAllKyc(@Query('status') status?: VerificationStatus) {
     return this.vendorKycService.getAllKyc(status);
   }
 
   @Patch('admin/review/:id')
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   reviewKyc(
     @Param('id') id: string,

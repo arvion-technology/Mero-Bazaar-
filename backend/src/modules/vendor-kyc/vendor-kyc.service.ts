@@ -2,15 +2,38 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { PrismaService } from 'src/database/prisma.service';
 import { PhoneOtpService } from '../otp/otp.service';
 import { SubmitKycDto } from './dto/submit-kyc.dto';
-import { VerificationStatus, OtpContext } from '@prisma/client';
+import { VerificationStatus, OtpContext, Prisma } from '@prisma/client';
 import { ReviewKycDto } from './dto/review-kyc.dto';
+import { FileValidationService } from './upload/file_validation.service';
+import { FileSanitizeService } from './upload/file_sanitize.service';
+import * as path from 'path';
+import * as crypto from 'crypto';
+import * as fs from 'fs/promises';
 
 @Injectable()
 export class VendorKycService {
   constructor(
     private prisma: PrismaService,
     private phoneOtpService: PhoneOtpService,
+    private fileValidationService: FileValidationService,
+    private fileSanitizeService: FileSanitizeService,
   ) {}
+
+  private async processUpload(
+    file: Express.Multer.File | undefined,
+    existingFilename: string | null | undefined,
+  ): Promise<string | null> {
+    if (!file) return existingFilename ?? null;
+
+    await this.fileValidationService.assertRealType(file.path);
+
+    const finalName = `${crypto.randomBytes(16).toString('hex')}.jpg`;
+    const finalPath = path.join('/uploads/kyc-verified', finalName);
+
+    await fs.mkdir('./uploads/kyc-verified', { recursive: true });
+    await this.fileSanitizeService.sanitizeImage(file.path, finalPath);
+    return finalName;
+  }
 
   async submitKyc(
     userId: string,
@@ -47,10 +70,9 @@ export class VendorKycService {
       );
     }
 
-    const panCardUrl = files.panCardUrl?.[0]?.path ?? existing?.panCardUrl;
-    const photoUrl = files.photoUrl?.[0]?.path ?? existing?.photoUrl;
-    const selfieWithPanUrl =
-      files.selfieWithPanUrl?.[0]?.path ?? existing?.selfieWithPanUrl;
+    const panCardUrl = await this.processUpload(files.panCardUrl?.[0], existing?.panCardUrl);
+    const photoUrl = await this.processUpload(files.photoUrl?.[0], existing?.photoUrl);
+    const selfieWithPanUrl = await this.processUpload(files.selfieWithPanUrl?.[0], existing?.selfieWithPanUrl);
 
     const data = {
       userId,
@@ -69,18 +91,31 @@ export class VendorKycService {
       phoneVerified: true,
     };
 
-    const kyc = await this.prisma.vendorKyc.upsert({
-      where: { userId },
-      create: data,
-      update: {
-        ...data,
-        rejectionReason: null,
-        reviewedAt: null,
-        reviewedBy: null,
-      },
-    });
+    try {
+      const kyc = await this.prisma.vendorKyc.upsert({
+        where: { userId },
+        create: data,
+        update: {
+          ...data,
+          rejectionReason: null,
+          reviewedAt: null,
+          reviewedBy: null,
+        },
+      });
 
-    return { message: 'KYC submitted successfully.', kyc };
+      return { message: 'KYC submitted successfully.', kyc };
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        const target = (e.meta?.target as string[]) ?? [];
+        if (target.includes('panNumber')) {
+          throw new ConflictException('This PAN number is already registered.');
+        }
+        if (target.includes('contactNumber')) {
+          throw new ConflictException('This contact number is already registered.');
+        }
+      }
+      throw e;
+    }
   }
 
   async sendContactOtp(
@@ -114,7 +149,7 @@ export class VendorKycService {
         where: { userId },
         data: {
           contactNumber: phone,
-          phoneVerified: false,      
+          phoneVerified: false,
           phoneVerifiedAt: null,
         },
       });
@@ -127,7 +162,7 @@ export class VendorKycService {
   async verifyContactOtp(
     userId: string,
     otp: string,
-    phone: string,           
+    phone: string,
   ): Promise<{ message: string }> {
     if (!phone) {
       throw new BadRequestException('Phone number is required.');
@@ -149,7 +184,7 @@ export class VendorKycService {
         fullName: '',
         dateOfBirth: new Date(0),
         address: '',
-        panNumber: '',
+        panNumber: null,
         bankName: '',
         account: '',
         accountHolderName: '',
@@ -177,28 +212,36 @@ export class VendorKycService {
     const kyc = await this.prisma.vendorKyc.findUnique({ where: { id: kycId } });
     if (!kyc) throw new NotFoundException('KYC not found.');
 
+    if (kyc.status !== VerificationStatus.PENDING) {
+      throw new BadRequestException('Only pending KYC records can be reviewed.');
+    }
+
     if (dto.status === VerificationStatus.REJECTED && !dto.rejectionReason) {
       throw new BadRequestException(
         'Rejection reason is required when rejecting KYC.',
       );
     }
 
-    const updated = await this.prisma.vendorKyc.update({
-      where: { id: kycId },
-      data: {
-        status: dto.status,
-        rejectionReason: dto.rejectionReason ?? null,
-        reviewedAt: new Date(),
-        reviewedBy: adminId,
-      },
-    });
-
-    if (dto.status === VerificationStatus.VERIFIED) {
-      await this.prisma.vendorProfile.update({
-        where: { userId: kyc.userId },
-        data: { isVerified: true },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const record = await tx.vendorKyc.update({
+        where: { id: kycId },
+        data: {
+          status: dto.status,
+          rejectionReason: dto.status === VerificationStatus.REJECTED ? dto.rejectionReason : null,
+          reviewedAt: new Date(),
+          reviewedBy: adminId,
+        },
       });
-    }
+
+      if (dto.status === VerificationStatus.VERIFIED) {
+        await tx.vendorProfile.update({
+          where: { userId: kyc.userId },
+          data: { isVerified: true, isOnProbation: false },
+        });
+      }
+
+      return record;
+    });
 
     return {
       message: `KYC ${dto.status.toLowerCase()} successfully.`,
