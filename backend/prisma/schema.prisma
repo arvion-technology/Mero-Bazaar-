@@ -31,7 +31,7 @@ model User {
   vendorProfile VendorProfile?
   doctorProfile DoctorProfile?
 
-  vendorKyc     vendorKyc?
+  vendorKyc     VendorKyc?
   twoFactorEnabled  Boolean @default(false)
 
   leads         Lead[]
@@ -83,7 +83,7 @@ enum VendorType {
   AGENCY
 }
 
-model vendorKyc {
+model VendorKyc {
   id                String @id @default(cuid())
   userId            String @unique
   user              User   @relation(fields:[userId], references: [id], onDelete: Cascade)
@@ -92,7 +92,7 @@ model vendorKyc {
   dateOfBirth       DateTime
   contactNumber     String  @unique
   address           String  
-  panNumber         String @unique
+  panNumber         String? @unique
 
   panCardUrl        String?
   photoUrl          String?

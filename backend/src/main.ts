@@ -34,5 +34,6 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3001;
   await app.listen(port);
   console.log(`NestJS running on http://localhost:${port}`);
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads' });
 }
 bootstrap();
