@@ -9,6 +9,7 @@ import * as nodemailer from 'nodemailer';
 import { PhoneOtpService } from '../otp/otp.service';
 import { OtpContext } from '@prisma/client';
 import { parseUserAgent } from '../auth/auth.service';
+import { ActivityLogService } from './activity_log.service';
 
 @Injectable()
 export class UserService {
@@ -16,6 +17,8 @@ export class UserService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private phoneOtpService: PhoneOtpService,
+    private activityLogService: ActivityLogService,
+    
   ) {}
 
   async findAll() {
@@ -111,7 +114,7 @@ export class UserService {
   async update(id: string, data: UpdateUserDto) {
     await this.findOne(id);
     const { name, address, image } = data;
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id },
       data: {name, address, image },
       select: {
@@ -123,16 +126,20 @@ export class UserService {
         image: true,
       },
     });
+    await this.activityLogService.log(id, 'PROFILE_UPDATED');
+    return updated;
   }
 
   async updateProfileImage(userId: string, file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file uploaded');
     const imagePath = `/uploads/profile/${file.filename}`;
-    return this.prisma.user.update({
+    const updated = await  this.prisma.user.update({
       where: { id: userId },
       data: { image: imagePath },
       select: { id: true, image: true },
     });
+    await this.activityLogService.log(userId, 'PROFILE_PHOTO_CHANGED');
+    return updated;
   }
 
   async remove(id: string) {
@@ -154,6 +161,7 @@ export class UserService {
 
     const newHash = await bcrypt.hash(dto.newPassword, 12);
     await this.prisma.user.update({ where: { id }, data: { password: newHash } });
+    await this.activityLogService.log(id, 'PASSWORD_CHANGED');
     return { message: 'Password updated successfully' };
   }
 
@@ -239,7 +247,7 @@ export class UserService {
       where: { id: userId },
       data: { phoneVerifiedAt: new Date() },
     });
-
+    await this.activityLogService.log(userId, 'PHONE_CHANGED');
     return { message: 'Phone number verified and saved.' };
   }
 
@@ -262,11 +270,13 @@ async confirmEnableTwoFactor(userId: string, otp: string) {
   if (!user?.phone) throw new BadRequestException('No phone on file.');
   await this.phoneOtpService.verifyOtp(user.phone, otp, OtpContext.TWO_FA_SETUP);
   await this.prisma.user.update({ where: { id: userId }, data: { twoFactorEnabled: true } });
+  await this.activityLogService.log(userId, 'TWO_FA_ENABLED');
   return { message: 'Two-factor authentication enabled.' };
 }
 
 async disableTwoFactor(userId: string) {
   await this.prisma.user.update({ where: { id: userId }, data: { twoFactorEnabled: false } });
+  await this.activityLogService.log(userId, 'TWO_FA_DISABLED');
   return { message: 'Two-factor authentication disabled.' };
 }
 }

@@ -45,6 +45,7 @@ export default function UserSettings() {
   const [deleteError, setDeleteError] = useState("");
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const [securityNotifs, setSecurityNotifs] = useState<{ id: string; type: string; createdAt: string; read: boolean }[]>([]);
   const [notifSeen, setNotifSeen] = useState(false);
 
   //active session state
@@ -99,11 +100,22 @@ export default function UserSettings() {
   const token = session?.accessToken;
   const isOAuthUser = session?.user?.provider !==  undefined && session.user.provider !== "credentials";
 
+  function activityLabel(type: string) {
+    switch (type) {
+      case "PASSWORD_CHANGED": return "Password changed";
+      case "TWO_FA_ENABLED": return "Two-factor authentication enabled";
+      case "TWO_FA_DISABLED": return "Two-factor authentication disabled";
+      case "PHONE_CHANGED": return "Phone number changed";
+      default: return type;
+    }
+  }
+
   // Compute profile-completeness notifications (reused from Navbar logic)
   const notifications: string[] = session
     ? ([
         !session.user?.phone && "Add your phone number",
         !session.user?.address && "Add your address",
+        ...securityNotifs.filter((n) => !n.read).map((n) => activityLabel(n.type)),
       ].filter(Boolean) as string[])
     : [];
   const notificationCount = notifications.length;
@@ -162,6 +174,16 @@ export default function UserSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+
+  useEffect(() => {
+    if (!token) return;
+    fetch("/api/user/notifications/security", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then(setSecurityNotifs)
+      .catch(() => {});
+  }, [token]);
 
   async function handleDeleteAccount() {
     setDeleting(true);
@@ -1813,6 +1835,15 @@ async function handleDisable2FA() {
                   onClick={() => {
                     setShowNotifDropdown((v) => !v);
                     setNotifSeen(true);
+                    if (securityNotifs.some((n) => !n.read)) {
+                      fetch("/api/user/notifications/security/mark-read", {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}` },
+                      }).then(() => {
+                       setSecurityNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+                      });
+                    }
+
                   }}
                 >
                   <FiBell size={18} />
