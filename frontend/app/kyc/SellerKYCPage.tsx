@@ -215,7 +215,7 @@ export default function SellerKYCPage() {
         try {
           const processed = await preprocessImageForOCR(file);
           const { createWorker } = await import("tesseract.js");
-          const worker = await createWorker("nep", 1, {
+          const worker = await createWorker("eng+nep", 1, {
             langPath: "/models",
           });
           const result = await worker.recognize(processed);
@@ -255,13 +255,20 @@ export default function SellerKYCPage() {
       });
       streamRef.current = stream;
       setShowCamera(true);
-      setTimeout(() => {
-        if (videoRef.current) videoRef.current.srcObject = stream;
-      }, 0);
+      // setTimeout(() => {
+      //   if (videoRef.current) videoRef.current.srcObject = stream;
+      // }, 0);
     } catch {
       toast.error("Could not access camera");
     }
   };
+
+  // attach stream to video element once it's actually mounted
+  useEffect(() => {
+    if (showCamera && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [showCamera]);
 
   const closeCamera = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -272,6 +279,10 @@ export default function SellerKYCPage() {
   const captureSelfie = () => {
     const video = videoRef.current;
     if (!video) return;
+    if (!video.videoWidth || !video.videoHeight) {
+      toast.error("Camera still loading, try again in a moment");
+      return;
+    }
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -887,7 +898,7 @@ export default function SellerKYCPage() {
                 <div className={`upload-box${selfieWithPan ? " done" : ""}`}>
                   <div
                     className="upload-icon"
-                    onClick={() => document.getElementById("fileSelfie")?.click()}
+                    onClick={openCamera}
                     style={{ cursor: "pointer" }}
                   >
                     {selfiePreview ? <img src={selfiePreview} alt="Selfie" /> : <FiCamera />}
@@ -902,11 +913,6 @@ export default function SellerKYCPage() {
                     <button type="button" className="upload-btn" onClick={openCamera}>
                       <FiCamera size={10} /> Camera
                     </button>
-                    <label className="upload-btn" onClick={(e) => e.stopPropagation()}>
-                      <FiUpload size={10} /> {selfieWithPan ? "Change" : "File"}
-                      <input type="file" id="fileSelfie" className="upload-input"
-                        accept="image/*" onChange={handleFileChange("selfieWithPan")} />
-                    </label>
                   </div>
                 </div>
               </div>
