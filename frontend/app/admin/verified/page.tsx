@@ -8,13 +8,13 @@ import {
   FiCheckCircle,
   FiUser,
   FiBell,
-  FiChevronRight,
   FiMenu,
   FiX,
   FiEye,
 } from "react-icons/fi";
-import { verifiedKYCs } from "@/lib/data";
 import StatusBadge from "@/components/StatusBadge";
+import type { VendorKycRecord, KYCRow } from "@/app/types/kyc";
+import { mapKycRow } from "@/app/types/kyc_mappers";
 
 const PRIMARY = "#0f172a";
 const SITE_PRIMARY = "#C0392B";
@@ -50,10 +50,25 @@ export default function VerifiedKYCPage() {
   const [activeTab, setActiveTab] = useState("verified");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: session } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [kycRows, setKycRows] = useState<KYCRow[]>([]);
 
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "A";
+
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    fetch("/api/vendor-kyc/admin/all?status=VERIFIED", {
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+    })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows: VendorKycRecord[]) => {
+        setKycRows(rows.map(mapKycRow));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [session?.accessToken]);
 
   function handleNavClick(id: string) {
     setActiveTab(id);
@@ -65,6 +80,14 @@ export default function VerifiedKYCPage() {
     else document.body.style.overflow = "";
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
+
+  if (loading) {
+    return (
+      <div style={{ padding: 40, textAlign: "center", color: "#888" }}>
+        Loading Verified KYCs...
+      </div>
+    );
+  }
 
   return (
     <>
@@ -198,7 +221,7 @@ export default function VerifiedKYCPage() {
                   <tr><th>Name</th><th>Date</th><th>Status</th><th>Action</th></tr>
                 </thead>
                 <tbody>
-                  {verifiedKYCs.map((kyc) => (
+                  {kycRows.map((kyc) => (
                     <tr key={kyc.id}>
                       <td>
                         <div className="admin-name-cell">

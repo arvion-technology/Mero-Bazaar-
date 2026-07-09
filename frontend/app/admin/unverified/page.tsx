@@ -8,13 +8,13 @@ import {
   FiCheckCircle,
   FiUser,
   FiBell,
-  FiChevronRight,
   FiMenu,
   FiX,
   FiEye,
 } from "react-icons/fi";
-import { recentKYCs } from "@/lib/data";
 import StatusBadge from "@/components/StatusBadge";
+import type { VendorKycRecord, KYCRow } from "@/app/types/kyc";
+import { mapKycRow } from "@/app/types/kyc_mappers";
 
 const PRIMARY = "#0f172a";
 const SITE_PRIMARY = "#C0392B";
@@ -50,10 +50,26 @@ export default function UnverifiedKYCPage() {
   const [activeTab, setActiveTab] = useState("unverified");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: session } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [kycRows, setKycRows] = useState<KYCRow[]>([]);
+
 
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "A";
+  
+    useEffect(() => {
+      if (!session?.accessToken) return;
+      fetch("/api/vendor-kyc/admin/all?status=PENDING", {
+        headers: { Authorization: `Bearer ${session.accessToken}` },
+      })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows: VendorKycRecord[]) => {
+       setKycRows(rows.map(mapKycRow)); 
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+    }, [session?.accessToken]);
 
   function handleNavClick(id: string) {
     setActiveTab(id);
@@ -66,6 +82,13 @@ export default function UnverifiedKYCPage() {
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
 
+  if (loading) {
+    return (
+      <div style={{ padding: 40, textAlign: "center", color: "#888" }}>
+        Loading Dashboard...
+      </div>
+   );
+}
   return (
     <>
       <style>{`
@@ -198,7 +221,7 @@ export default function UnverifiedKYCPage() {
                   <tr><th>Name</th><th>Date</th><th>Status</th><th>Action</th></tr>
                 </thead>
                 <tbody>
-                  {recentKYCs.map((kyc) => (
+                  {kycRows.map((kyc) => (
                     <tr key={kyc.id}>
                       <td>
                         <div className="admin-name-cell">

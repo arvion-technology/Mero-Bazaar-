@@ -57,7 +57,9 @@ export default function Navbar() {
 
   const handleAccountClick = () => {
     setShowProfileMenu(false);
-    if (session?.user?.role === "VENDOR") {
+    if (session?.user?.role === "ADMIN") {
+      router.push("/admin");
+    } else if (session?.user?.role === "VENDOR") {
       router.push("/kyc");
     } else {
       router.push("/user/dashboard");
