@@ -91,18 +91,19 @@ export default function AddPhotosPage() {
     setImages((prev) => prev.filter((_, i) => i !== idx));
   };
 
+
   const handleContinue = () => {
-    if (images.length === 0) {
-      toast.error("Please upload at least one photo");
-      return;
-    }
-    setIsUploading(true);
-    setTimeout(() => {
-      setIsUploading(false);
-      toast.success("Photos saved!");
-      router.push("/seller/products");
-    }, 1200);
-  };
+  if (images.length === 0) {
+    toast.error("Please upload at least one photo");
+    return;
+  }
+  setIsUploading(true);
+  setTimeout(() => {
+    setIsUploading(false);
+    toast.success("Photos saved!");
+    router.push("/seller/listing/vehicle/preview");  
+  }, 1200);
+};
 
   return (
     <>
