@@ -13,7 +13,7 @@ export const kycUploadconfig = {
     }),
     limits: { 
       fileSize: 5 * 1024 *1024,
-      files: 1,
+      files: 3,
      },
     fileFilter: (req, file, cb) => {
         const allowed = ['.jpg', '.jpeg', '.png'];

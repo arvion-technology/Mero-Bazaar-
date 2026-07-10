@@ -60,7 +60,7 @@ export default function Navbar() {
     if (session?.user?.role === "ADMIN") {
       router.push("/admin");
     } else if (session?.user?.role === "VENDOR") {
-      router.push("/kyc");
+      router.push("/seller/dashboard");
     } else {
       router.push("/user/dashboard");
     }
@@ -651,7 +651,7 @@ export default function Navbar() {
                       method: "POST",
                       headers: { Authorization: `Bearer ${token}` },
                     }).then(() => {
-+                     setSecurityNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+                     setSecurityNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
                   });
                 }
               }}

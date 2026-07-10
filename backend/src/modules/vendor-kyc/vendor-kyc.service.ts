@@ -9,6 +9,7 @@ import { FileSanitizeService } from './upload/file_sanitize.service';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
+import { Response } from 'express';
 
 @Injectable()
 export class VendorKycService {
@@ -28,7 +29,7 @@ export class VendorKycService {
     await this.fileValidationService.assertRealType(file.path);
 
     const finalName = `${crypto.randomBytes(16).toString('hex')}.jpg`;
-    const finalPath = path.join('/uploads/kyc-verified', finalName);
+    const finalPath = path.join('./uploads/kyc-verified', finalName);
 
     await fs.mkdir('./uploads/kyc-verified', { recursive: true });
     await this.fileSanitizeService.sanitizeImage(file.path, finalPath);
@@ -248,4 +249,52 @@ export class VendorKycService {
       kyc: updated,
     };
   }
+
+  async getStats() {
+  const [total, verified, pending, rejected] = await Promise.all([
+    this.prisma.vendorKyc.count(),
+    this.prisma.vendorKyc.count({ where: { status: VerificationStatus.VERIFIED } }),
+    this.prisma.vendorKyc.count({ where: { status: VerificationStatus.PENDING } }),
+    this.prisma.vendorKyc.count({ where: { status: VerificationStatus.REJECTED } }),
+  ]);
+  return { total, verified, pending, rejected };
+}
+
+  async getKycById(kycId: string) {
+    const kyc = await this.prisma.vendorKyc.findUnique({
+      where: { id: kycId },
+      include: { user: { select: { email: true, name: true } } },
+    });
+    if (!kyc) throw new NotFoundException('KYC not found.');
+    return kyc;
+  }
+
+  async streamDocument(filename: string, res: Response) {
+    const safeName = path.basename(filename); 
+    const filePath = path.join(process.cwd(), 'uploads', 'kyc-verified', safeName);
+
+    console.log("filename:", filename);
+    console.log("filePath:", filePath);
+
+    try {
+      await fs.access(filePath);
+      console.log("File exists");
+    } catch (e) {
+      console.log("File NOT found");
+      throw new NotFoundException('Document not found.');
+    }
+
+    return res.sendFile(filePath);
+  }
+
+  //patching rejected documents
+  async streamOwnDocument(userId: string, filename: string, res: Response) {
+  const kyc = await this.prisma.vendorKyc.findUnique({ where: { userId } });
+  if (!kyc) throw new NotFoundException('KYC not found.');
+
+  const owned = [kyc.panCardUrl, kyc.photoUrl, kyc.selfieWithPanUrl].includes(filename);
+  if (!owned) throw new NotFoundException('Document not found.');
+
+  return this.streamDocument(filename, res);
+}
 }

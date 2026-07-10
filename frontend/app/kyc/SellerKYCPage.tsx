@@ -63,6 +63,8 @@ export default function SellerKYCPage() {
   const [checkingStatus, setCheckingStatus] = useState(true);
   const [existingStatus, setExistingStatus] = useState<"VERIFIED" | "PENDING" | "REJECTED" | null>(null);
   const router = useRouter();
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
+  const [existingDocs, setExistingDocs] = useState<{ panCardUrl?: string | null; photoUrl?: string | null; selfieWithPanUrl?: string | null }>({});
 
   const [form, setForm] = useState({
     fullName: "",
@@ -108,6 +110,7 @@ export default function SellerKYCPage() {
 
           if (kyc.status === "REJECTED") {
             setExistingStatus("REJECTED");
+            setRejectionReason(kyc.rejectionReason ?? null);
             setForm({
               fullName: kyc.fullName ?? "",
               dateOfBirth: kyc.dateOfBirth ? kyc.dateOfBirth.slice(0, 10) : "",
@@ -118,6 +121,30 @@ export default function SellerKYCPage() {
               account: kyc.account ?? "",
               accountHolderName: kyc.accountHolderName ?? "",
             });
+
+            setExistingDocs({
+              panCardUrl: kyc.panCardUrl ?? null,
+              photoUrl: kyc.photoUrl ?? null,
+              selfieWithPanUrl: kyc.selfieWithPanUrl ?? null,
+            });
+
+            const loadPreview = async (filename: string | null, setPreview: (url: string) => void) => {
+              if (!filename) return;
+              try {
+                const res = await fetch(`/api/vendor-kyc/document/${filename}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!res.ok) return;
+                const blob = await res.blob();
+                setPreview(URL.createObjectURL(blob));
+              } catch {}
+            };
+            await Promise.all([
+              loadPreview(kyc.panCardUrl, setPanCardPreview),
+              loadPreview(kyc.photoUrl, setPhotoPreview),
+              loadPreview(kyc.selfieWithPanUrl, setSelfiePreview),
+            ]);
+
             if (kyc.phoneVerified) setPhoneVerified(true);
             setCheckingStatus(false);
             return;
@@ -132,6 +159,7 @@ export default function SellerKYCPage() {
 
     checkExisting();
   }, [session, router]);
+  
 
   const [panCard, setPanCard] = useState<File | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -219,6 +247,7 @@ export default function SellerKYCPage() {
             langPath: "/models",
           });
           const result = await worker.recognize(processed);
+          console.log("RAW TEXT:", result.data.text);
           const words = (result.data as unknown as { words: { confidence: number; text: string }[] }).words ?? [];
           await worker.terminate();
 
@@ -377,7 +406,10 @@ export default function SellerKYCPage() {
   };
 
   const goToPhase3 = () => {
-    if (!panCard || !photo || !selfieWithPan) {
+    const hasPan = panCard || existingDocs.panCardUrl;
+    const hasPhoto = photo || existingDocs.photoUrl;
+    const hasSelfie = selfieWithPan || existingDocs.selfieWithPanUrl;
+    if (!hasPan || !hasPhoto || !hasSelfie) {
       toast.error("Upload all 3 documents to continue");
       return;
     }
@@ -389,8 +421,7 @@ export default function SellerKYCPage() {
       return;
     }
     if (panOcrStatus === "warn") {
-      toast.error("PAN mismatch");
-      return;
+      toast.warn("Could not auto-verify PAN number — admin will verify manually");
     }
     setPhase(3);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -737,9 +768,14 @@ export default function SellerKYCPage() {
           {existingStatus === "REJECTED" && (
             <div className="kyc-card" style={{ background: "#FEF2F2", border: "1px solid #FCA5A5" }}>
               <strong style={{ color: "#B91C1C" }}>Your previous submission was rejected.</strong>
-              <p style={{ fontSize: 13, color: "#7F1D1D", marginTop: 4 }}>
+              <p style={{ fontSize: 13, color: "#7F1D1D", marginTop: 8 }}>
                 Please review and correct the details below, then resubmit.
               </p>
+              {rejectionReason && (
+                <p style={{ fontSize: 13, color: "#7F1D1D", marginTop: 8, background: "#FEE2E2", padding: "8px 10px", borderRadius: 6 }}>
+                  <strong>Reason:</strong> {rejectionReason}
+                </p>
+              )}
             </div>
           )}
 
@@ -859,7 +895,7 @@ export default function SellerKYCPage() {
 
               <div className="upload-grid">
                 {/* PAN card */}
-                <div className={`upload-box${panCard ? " done" : ""}`}
+                <div className={`upload-box${(panCard || existingDocs.panCardUrl) ? " done" : ""}`}
                   onClick={() => document.getElementById("filePan")?.click()}>
                   <div className="upload-icon">
                     {panCardPreview ? <img src={panCardPreview} alt="PAN" /> : <FiCreditCard />}
@@ -879,7 +915,7 @@ export default function SellerKYCPage() {
                 </div>
 
                 {/* Passport photo */}
-                <div className={`upload-box${photo ? " done" : ""}`}
+                <div className={`upload-box${(photo || existingDocs.photoUrl) ? " done" : ""}`}
                   onClick={() => document.getElementById("filePhoto")?.click()}>
                   <div className="upload-icon">
                     {photoPreview ? <img src={photoPreview} alt="Photo" /> : <FiUser />}
@@ -895,7 +931,7 @@ export default function SellerKYCPage() {
                 </div>
 
                 {/* Selfie with PAN */}
-                <div className={`upload-box${selfieWithPan ? " done" : ""}`}>
+                <div className={`upload-box${(selfieWithPan || existingDocs.selfieWithPanUrl) ? " done" : ""}`}>
                   <div
                     className="upload-icon"
                     onClick={openCamera}

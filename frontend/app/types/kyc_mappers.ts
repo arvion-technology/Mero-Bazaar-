@@ -1,9 +1,5 @@
 import type { VendorKycDetail, VendorKycRecord, KYCRow, MappedKycDetail, KYCStatus } from "./kyc";
 
-function getImageUrl(path?: string | null): string | undefined {
-    if (!path) return undefined;
-    return path.startsWith("http") ? path : `${process.env.NEXT_PUBLIC_API_URL}${path}`;
-}
 export const AVATAR_COLORS = ["#818cf8", "#34d399", "#fbbf24", "#f472b6", "#60a5fa"];
 
 export function toTitleStatus(s: VendorKycRecord["status"]): KYCStatus {
@@ -20,7 +16,6 @@ export function mapKycRow(k: VendorKycRecord, index: number): KYCRow {
     status: toTitleStatus(k.status),
   };
 }
-
 export function mapKycDetail(k: VendorKycDetail): MappedKycDetail {
   return {
     id: k.id,
@@ -38,8 +33,8 @@ export function mapKycDetail(k: VendorKycDetail): MappedKycDetail {
     bankAccount: k.account,
     accountHolder: k.accountHolderName,
     rejectionReason: k.rejectionReason ?? undefined,
-    panCardUrl: getImageUrl(k.panCardUrl ?? undefined),
-    photoUrl: getImageUrl(k.photoUrl ?? undefined),
-    selfieWithPanUrl: getImageUrl(k.selfieWithPanUrl ?? undefined),
+    panCardUrl: k.panCardUrl ?? undefined,
+    photoUrl: k.photoUrl ?? undefined,
+    selfieWithPanUrl: k.selfieWithPanUrl ?? undefined,
   };
 }
