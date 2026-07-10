@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FiChevronRight, FiEdit3 } from "react-icons/fi";
+import KycDocumentImage from "./KycDocumentImage";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 
 const SITE_PRIMARY = "#C0392B";
 const PRIMARY = "#0f172a";
@@ -24,6 +27,9 @@ interface KYCRecord {
   accountHolder: string;
   avatar?: string;
   rejectionReason?: string;
+  panCardUrl?: string | null;
+  photoUrl?: string | null;
+  selfieWithPanUrl?: string | null;
 }
 
 interface KYCDetailsContentPendingProps {
@@ -33,6 +39,10 @@ interface KYCDetailsContentPendingProps {
 export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendingProps) {
   const [selectedStatus, setSelectedStatus] = useState<string>(kyc?.status || "Pending");
   const [rejectionReason, setRejectionReason] = useState<string>("");
+  const { data: session } = useSession();
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   if (!kyc) {
     return (
@@ -42,37 +52,68 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
     );
   }
 
-  const DocumentPlaceholder = ({ label }: { label: string }) => (
-    <div style={{ textAlign: "center" as const }}>
-      <div
-        style={{
-          width: "100%",
-          height: "120px",
-          background: "#c4b5b5",
-          borderRadius: "8px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: "8px",
-        }}
-      >
-        <span style={{ color: "#fff", fontSize: "12px", opacity: 0.7 }}>No Image</span>
+  const DocumentPlaceholder = ({ label, filename }: { label: string; filename?: string | null }) => {
+    if (!filename) {
+      return (
+        <div style={{ textAlign: "center" as const }}>
+          <div
+            style={{
+              width: "100%",
+              height: "120px",
+              background: "#c4b5b5",
+              borderRadius: "8px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "8px",
+            }}
+          >
+            <span style={{ color: "#fff", fontSize: "12px", opacity: 0.7 }}>No Image</span>
+          </div>
+        </div>
+      );
+    }
+
+  const handleViewFullSize = async () => {
+    if (!session?.accessToken) return;
+    const newTab = window.open("", "_blank"); // open synchronously, before await
+    try {
+      const res = await fetch(`/api/vendor-kyc/admin/document/${filename}`, {
+        headers: { Authorization: `Bearer ${session.accessToken}` },
+      });
+      if (!res.ok || !newTab) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      newTab.location.href = url;
+    } catch (err) {
+      newTab?.close();
+      console.error("Failed to open document:", err);
+    }
+  };
+
+    return (
+      <div style={{ textAlign: "center" as const }}>
+        <KycDocumentImage filename={filename} alt={label} />
+        <button
+          type="button"
+          onClick={handleViewFullSize}
+          style={{
+            background: "none",
+            border: "none",
+            color: "#6366f1",
+            fontSize: "13px",
+            cursor: "pointer",
+            fontWeight: 500,
+            textDecoration: "none",
+            display: "inline-block",
+            marginTop: "4px",
+          }}
+        >
+          View Full Size
+        </button>
       </div>
-      <button
-        type="button"
-        style={{
-          background: "none",
-          border: "none",
-          color: "#6366f1",
-          fontSize: "13px",
-          cursor: "pointer",
-          fontWeight: 500,
-        }}
-      >
-        View Full Size
-      </button>
-    </div>
-  );
+    );
+  };
 
   const InfoRow = ({ label, value }: { label: string; value: string }) => (
     <div style={{ display: "contents" }}>
@@ -109,7 +150,6 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
 
   const showRejectionField = selectedStatus === "Rejected";
 
-  // Status badge colors based on actual status
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
       case "Verified":
@@ -123,6 +163,37 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
   };
 
   const currentStatusStyle = getStatusBadgeStyle(kyc.status);
+
+
+  const handleSubmitStatus = async () => {
+    if (selectedStatus === "Rejected" && !rejectionReason.trim()) {
+      toast.error("Rejection reason is required.");
+      return;
+    }
+    if (!session?.accessToken) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/vendor-kyc/admin/review/${kyc.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        body: JSON.stringify({
+          status: selectedStatus.toUpperCase(),
+          rejectionReason: selectedStatus === "Rejected" ? rejectionReason : null,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      toast.success("Status updated successfully");
+    } catch (err) {
+      toast.error("Something went wrong. Try again.");
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <>
@@ -228,20 +299,22 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
           </div>
           <div className="kyc-current-status">
             <div className="kyc-current-status-label">Current Status</div>
-            <span 
-              className="kyc-status-badge" 
-              style={{ 
-                background: currentStatusStyle.background, 
-                color: currentStatusStyle.color 
+            <span
+              className="kyc-status-badge"
+              style={{
+                background: currentStatusStyle.background,
+                color: currentStatusStyle.color,
               }}
             >
-              <span style={{ 
-                width: "6px", 
-                height: "6px", 
-                borderRadius: "50%", 
-                background: currentStatusStyle.dot,
-                display: "inline-block"
-              }} />
+              <span
+                style={{
+                  width: "6px",
+                  height: "6px",
+                  borderRadius: "50%",
+                  background: currentStatusStyle.dot,
+                  display: "inline-block",
+                }}
+              />
               {kyc.status}
             </span>
           </div>
@@ -265,15 +338,15 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
               <div className="kyc-documents-grid">
                 <div>
                   <div className="kyc-doc-label">PAN Card Image</div>
-                  <DocumentPlaceholder label="PAN Card" />
+                  <DocumentPlaceholder label="PAN Card" filename={kyc.panCardUrl} />
                 </div>
                 <div>
                   <div className="kyc-doc-label">Passport Size Photo</div>
-                  <DocumentPlaceholder label="Passport" />
+                  <DocumentPlaceholder label="Passport" filename={kyc.photoUrl} />
                 </div>
                 <div>
                   <div className="kyc-doc-label">Selfie With Pan Card</div>
-                  <DocumentPlaceholder label="Selfie" />
+                  <DocumentPlaceholder label="Selfie" filename={kyc.selfieWithPanUrl} />
                 </div>
               </div>
             </div>
@@ -286,13 +359,6 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
                 <InfoRow label="Bank Account Number" value={kyc.bankAccount} />
                 <InfoRow label="Account Holder Name" value={kyc.accountHolder} />
               </div>
-              
-              <div className="kyc-edit-wrap">
-                <button type="button" className="kyc-edit-btn">
-                  <FiEdit3 size={16} />
-                  Edit KYC
-                </button>
-              </div>
             </div>
           </div>
 
@@ -300,7 +366,7 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
           <div className="kyc-right-col">
             <div className="kyc-status-panel">
               <h2 className="kyc-status-panel-title">Application Status</h2>
-              
+
               <select
                 className="kyc-status-select"
                 value={selectedStatus}
@@ -326,9 +392,12 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
                 </>
               )}
 
-              <button type="button" className="kyc-submit-btn">
-                Submit Status
+              <button type="button" className="kyc-submit-btn" onClick={handleSubmitStatus} disabled={submitting}>
+                {submitting ? "Submitting..." : "Submit Status"}
               </button>
+              {submitError && (
+                <div style={{ color: "#dc2626", fontSize: "12px", marginTop: "8px" }}>{submitError}</div>
+              )}
             </div>
           </div>
         </div>

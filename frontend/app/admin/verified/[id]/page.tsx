@@ -13,8 +13,9 @@ import {
   FiMenu,
   FiX,
 } from "react-icons/fi";
-import { getKYCById } from "@/lib/data";
 import KYCDetailsContent from "@/components/KYCDetailsContent";
+import type { VendorKycDetail, MappedKycDetail } from "@/app/types/kyc";
+import { mapKycDetail } from "@/app/types/kyc_mappers";
 
 const SITE_PRIMARY = "#C0392B";
 const BG = "#f8f5f5";
@@ -49,8 +50,8 @@ const sidebarItems = [
 export default function VerifiedKYCDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const kyc = getKYCById(id);
-
+  const [kyc, setKyc] = useState<MappedKycDetail | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("verified");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: session } = useSession();
@@ -58,6 +59,18 @@ export default function VerifiedKYCDetailPage() {
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "A";
+
+  useEffect(() => {
+    if (!session?.accessToken || !id) return;
+    fetch(`/api/vendor-kyc/admin/${id}`, {
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: VendorKycDetail | null) => setKyc(data ? mapKycDetail(data) : null))
+      .catch(() => setKyc(null))
+      .finally(() => setLoading(false));
+  }, [session?.accessToken, id]);
+
 
   function handleNavClick(id: string) {
     setActiveTab(id);
@@ -69,6 +82,15 @@ export default function VerifiedKYCDetailPage() {
     else document.body.style.overflow = "";
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
+
+
+  if (loading) {
+    return (
+      <div style={{ padding: 40, textAlign: "center", color: "#888" }}>
+        Loading KYC Details...
+      </div>
+    );
+  }
 
   if (!kyc) {
     return (

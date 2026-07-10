@@ -3,8 +3,7 @@ import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { AdminUserService } from './admin-user.service';
-import { UserRole } from '@prisma/client';
-
+import { UserRole, VerificationStatus } from '@prisma/client';
 
 @Controller('admin/users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -13,8 +12,11 @@ export class AdminUserController {
   constructor(private adminUserService: AdminUserService) {}
 
   @Get()
-  listUsers(@Query('role') role?: UserRole) {
-    return this.adminUserService.listUsers(role);
+  listUsers(
+    @Query('role') role?: UserRole,
+    @Query('kycStatus') kycStatus?: VerificationStatus | 'NOT_SUBMITTED',
+  ) {
+    return this.adminUserService.listUsers(role, kycStatus);
   }
 
   @Get(':id')

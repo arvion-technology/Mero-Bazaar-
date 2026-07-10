@@ -20,11 +20,9 @@ import {
   FiEye,
   FiDollarSign,
   FiPieChart,
-  FiPackage,
   FiClock,
   FiLayers,
   FiMoreHorizontal,
-  FiCalendar,
   FiLogOut,
   FiUser,
   FiChevronDown,
@@ -95,6 +93,7 @@ export default function SellerDashboard() {
   const { data: session } = useSession();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const [kycStatus, setkycStatus] = useState<string | null>(null);
+  const [kycRejectionReason, setKycRejectionReason] = useState<string | null>(null);
 
   const sidebarItems = [
     { id: "dashboard", icon: FiGrid, label: "Dashboard" },
@@ -142,8 +141,15 @@ export default function SellerDashboard() {
     fetch("/api/vendor-kyc/me", {
       headers: { Authorization: `Bearer ${session.accessToken}` },
     })
-    .then((r) => r.json())
-    .then((d) => setkycStatus(d.status ?? null))
+    .then(async (r) => {
+      if (r.status === 404) {
+        setkycStatus("NOT_STARTED");
+        return;
+      }
+      const d = await r.json();
+      setkycStatus(d.status ?? null);
+      setKycRejectionReason(d.rejectionReason ?? null);
+    })
     .catch(() => setkycStatus(null));
   }, [session?.accessToken]);
 
@@ -1558,7 +1564,30 @@ export default function SellerDashboard() {
             </div>
           </div>
 
-      {/* KYC pending banner */}
+        {/* KYC status banners */}
+          {kycStatus === "NOT_STARTED" && (
+            <div style={{
+              background: "#EFF6FF", color: "#1E40AF", padding: "14px 16px",
+              borderRadius: 10, marginBottom: 20, fontSize: 13, fontWeight: 500,
+              border: "1px solid #BFDBFE", display: "flex", alignItems: "center",
+              justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+            }}>
+              <div style={{ fontWeight: 700 }}>
+                Complete your seller verification to start listing products.
+              </div>
+              <Link
+                href="/kyc"
+                style={{
+                  background: "#1D4ED8", color: "#fff", padding: "8px 14px",
+                  borderRadius: 8, fontSize: 12.5, fontWeight: 600, textDecoration: "none",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Get Started
+              </Link>
+            </div>
+          )}
+          
           {kycStatus === "PENDING" && (
             <div style={{
               background: "#FFF3CD", color: "#856404", padding: "12px 16px",
@@ -1568,6 +1597,37 @@ export default function SellerDashboard() {
                Your KYC is under review. You will be able to create listings once approved.
             </div>
           )}
+
+          {kycStatus === "REJECTED" && (
+            <div style={{
+              background: "#FEF2F2", color: "#991B1B", padding: "14px 16px",
+              borderRadius: 10, marginBottom: 20, fontSize: 13, fontWeight: 500,
+              border: "1px solid #FCA5A5", display: "flex", alignItems: "center",
+              justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+            }}>
+              <div>
+                <div style={{ fontWeight: 700, marginBottom: kycRejectionReason ? 4 : 0 }}>
+                  Your KYC was rejected. You can't list products until this is resolved.
+                </div>
+                {kycRejectionReason && (
+                  <div style={{ fontSize: 12.5 }}>
+                    <strong>Reason:</strong> {kycRejectionReason}
+                  </div>
+                )}
+              </div>
+              <Link
+                href="/kyc"
+                style={{
+                  background: "#B91C1C", color: "#fff", padding: "8px 14px",
+                  borderRadius: 8, fontSize: 12.5, fontWeight: 600, textDecoration: "none",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Update KYC Info
+              </Link>
+            </div>
+          )}
+
 
           {/* Stats */}
           <div className="dash-stats">

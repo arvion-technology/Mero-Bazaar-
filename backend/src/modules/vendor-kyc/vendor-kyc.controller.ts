@@ -8,6 +8,8 @@ import { UserRole, VerificationStatus } from '@prisma/client';
 import { ReviewKycDto } from './dto/review-kyc.dto';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { Roles } from '../auth/roles.decorator';
+import { Res } from '@nestjs/common';
+import { Response } from 'express';
 
 @Controller('vendor-kyc')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -71,5 +73,30 @@ export class VendorKycController {
     @Body() dto: ReviewKycDto,
   ) {
     return this.vendorKycService.reviewKyc(id, req.user.id, dto);
+  }
+
+  @Get('admin/stats')
+  @Roles(UserRole.ADMIN)
+  getStats() {
+    return this.vendorKycService.getStats();
+  }
+
+  @Get('admin/:id')
+  @Roles(UserRole.ADMIN)
+  getKycById(@Param('id') id: string) {
+    return this.vendorKycService.getKycById(id);
+  }
+  
+  @Get('admin/document/:filename')
+  @Roles(UserRole.ADMIN)
+  getDocument(@Param('filename') filename: string, @Res() res: Response) {
+    return this.vendorKycService.streamDocument(filename, res);
+  }
+
+  //patching rejected documents
+  @Get('document/:filename')
+  @Roles(UserRole.VENDOR)
+  getOwnDocument(@Request() req, @Param('filename') filename: string, @Res() res: Response) {
+    return this.vendorKycService.streamOwnDocument(req.user.id, filename, res);
   }
 }

@@ -12,6 +12,7 @@ import {
   FiMenu,
   FiX,
 } from "react-icons/fi";
+import type { VendorKycRecord } from "../types/kyc";
 
 const PRIMARY = "#0f172a";
 const SITE_PRIMARY = "#C0392B";
@@ -21,23 +22,6 @@ const SIDEBAR_BG = "#ffffff";
 const SIDEBAR_BORDER = "#e8e4e4";
 const SIDEBAR_HOVER = "#f4f4f4";
 const PENDING_COLOR = "#f59e0b";
-
-const kycStats = [
-  { label: "Total KYC", value: "1,248", icon: "user", color: "#818cf8", bg: "#eef2ff" },
-  { label: "Verified KYC", value: "845", icon: "check", color: "#34d399", bg: "#ecfdf5" },
-  { label: "Unverified KYC", value: "236", icon: "user", color: "#fbbf24", bg: "#fffbeb" },
-  { label: "Rejected KYC", value: "158", icon: "x", color: "#f87171", bg: "#fef2f2" },
-];
-
-const recentKYCs = [
-  { name: "Ramesh Adhikari", initial: "R", color: "#818cf8", date: "May 23, 2024 10:00 AM", status: "Pending" },
-  { name: "Sita Shretha", initial: "S", color: "#34d399", date: "May 23, 2024 12:30 PM", status: "Pending" },
-  { name: "Pinki Shah", initial: "P", color: "#fbbf24", date: "May 22, 2024 01:45 PM", status: "Pending" },
-  { name: "Laxmi Rai", initial: "L", color: "#f472b6", date: "May 23, 2024 02:10 PM", status: "Pending" },
-  { name: "Sunil Kumar", initial: "S", color: "#818cf8", date: "May 24, 2024 10:30 AM", status: "Pending" },
-  { name: "Sita Patel", initial: "S", color: "#818cf8", date: "May 26, 2024 11:30 AM", status: "Pending" },
-  { name: "Binod Rai", initial: "B", color: "#818cf8", date: "May 23, 2024 04:50 PM", status: "Pending" },
-];
 
 const sidebarItems = [
   { id: "dashboard", icon: FiGrid, label: "Dashboard", active: true },
@@ -96,6 +80,40 @@ export default function AdminDashboard() {
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "A";
 
+  const [stats, setStats] = useState({ total: 0, verified: 0, pending: 0, rejected: 0 });
+  const [recentKYCs, setRecentKYCs] = useState
+    <{ id: string; name: string; initial: string; date: string; status: string; color: string }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    const headers = { Authorization: `Bearer ${session.accessToken}` };
+
+    Promise.all([
+      fetch("/api/vendor-kyc/admin/stats", { headers }).then((r) => (r.ok ? r.json() : null)) as Promise<typeof stats | null>,
+      fetch("/api/vendor-kyc/admin/all?status=PENDING", { headers }).then((r) => (r.ok ? r.json() : [])) as Promise<VendorKycRecord[]>,
+    ])
+      .then(([statsData, kycRows]) => {
+        if (statsData) setStats(statsData);
+        setRecentKYCs(
+          (kycRows ?? []).slice(0, 7).map((k: VendorKycRecord) => ({
+            id: k.id,
+            name: k.fullName || "Unknown",
+            initial: (k.fullName?.[0] ?? "?").toUpperCase(),
+            date: new Date(k.submittedAt).toLocaleString("en-US", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            }),
+            status: k.status,
+            color: "#818cf8",
+          }))
+        );
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [session?.accessToken]);
+
   function handleNavClick(id: string) {
     setActiveTab(id);
     setSidebarOpen(false);
@@ -110,6 +128,14 @@ export default function AdminDashboard() {
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
 
+  if (loading) {
+    return (
+      <div style={{ padding: 40, textAlign: "center", color: "#888" }}>
+        Loading Dashboard...
+      </div>
+    );
+  }
+
   return (
     <>
       <style>{`
@@ -122,7 +148,6 @@ export default function AdminDashboard() {
           font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
-        /* ── Sidebar ── */
         .admin-sidebar {
           width: 240px;
           background: ${SIDEBAR_BG};
@@ -270,7 +295,6 @@ export default function AdminDashboard() {
           margin-top: 2px;
         }
 
-        /* ── Main Content ── */
         .admin-main {
           flex: 1;
           margin-left: 240px;
@@ -279,7 +303,6 @@ export default function AdminDashboard() {
           max-width: calc(100% - 240px);
         }
 
-        /* Top Bar */
         .admin-topbar {
           display: flex;
           align-items: center;
@@ -346,7 +369,6 @@ export default function AdminDashboard() {
           border: 2px solid ${BG};
         }
 
-        /* ── Stats Grid ── */
         .admin-stats {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
@@ -396,7 +418,6 @@ export default function AdminDashboard() {
           font-weight: 500;
         }
 
-        /* ── KYC Table ── */
         .admin-section {
           padding: 0 32px 32px;
         }
@@ -520,7 +541,6 @@ export default function AdminDashboard() {
           background: ${PENDING_COLOR};
         }
 
-        /* ── Backdrop ── */
         .admin-backdrop {
           display: none;
           position: fixed;
@@ -566,7 +586,6 @@ export default function AdminDashboard() {
           flex-shrink: 0;
         }
 
-        /* ── Responsive ── */
         @media (max-width: 1200px) {
           .admin-stats { grid-template-columns: repeat(2, 1fr); }
         }
@@ -689,7 +708,6 @@ export default function AdminDashboard() {
         }
       `}</style>
 
-      {/* Backdrop */}
       <div
         className={`admin-backdrop ${sidebarOpen ? "active" : ""}`}
         onClick={() => setSidebarOpen(false)}
@@ -697,7 +715,6 @@ export default function AdminDashboard() {
       />
 
       <div className="admin-page">
-        {/* ── Sidebar ── */}
         <aside className={`admin-sidebar ${sidebarOpen ? "mobile-open" : ""}`}>
           <button
             type="button"
@@ -708,7 +725,6 @@ export default function AdminDashboard() {
             <FiX size={18} />
           </button>
 
-          {/* Logo with HamroNepal Bazaar SVG */}
           <div className="admin-logo">
             <Link href="/" className="admin-logo-wrap">
               <HamroBazarLogo size={36} />
@@ -769,9 +785,7 @@ export default function AdminDashboard() {
           </div>
         </aside>
 
-        {/* ── Main Content ── */}
         <main className="admin-main">
-          {/* Top Bar */}
           <div className="admin-topbar">
             <div className="admin-topbar-left">
               <button
@@ -792,9 +806,13 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Stats */}
           <div className="admin-stats">
-            {kycStats.map((stat) => (
+            {[
+              { label: "Total KYC", value: stats.total, icon: "user", color: "#818cf8", bg: "#eef2ff" },
+              { label: "Verified KYC", value: stats.verified, icon: "check", color: "#34d399", bg: "#ecfdf5" },
+              { label: "Unverified KYC", value: stats.pending, icon: "user", color: "#fbbf24", bg: "#fffbeb" },
+              { label: "Rejected KYC", value: stats.rejected, icon: "x", color: "#f87171", bg: "#fef2f2" },
+            ].map((stat) => (
               <div key={stat.label} className="admin-stat-card">
                 <div className="admin-stat-icon-wrap" style={{ background: stat.bg }}>
                   <StatIcon type={stat.icon} color={stat.color} />
@@ -807,7 +825,6 @@ export default function AdminDashboard() {
             ))}
           </div>
 
-          {/* Recently Applied KYCs */}
           <div className="admin-section">
             <div className="admin-section-header">
               <h2 className="admin-section-title">Recently Applied KYCs</h2>
@@ -826,7 +843,7 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {recentKYCs.map((kyc) => (
-                    <tr key={kyc.name}>
+                    <tr key={kyc.id}>
                       <td>
                         <div className="admin-name-cell">
                           <div className="admin-avatar" style={{ background: kyc.color }}>
