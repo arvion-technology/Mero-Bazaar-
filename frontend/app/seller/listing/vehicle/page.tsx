@@ -62,9 +62,9 @@ export default function NewListingPage() {
     }
     setIsSubmitting(true);
     await new Promise((r) => setTimeout(r, 1500));
-    toast.success("Listing created successfully!");
+    toast.success("Details saved! Now add photos.");
     setIsSubmitting(false);
-    router.push("/seller/products");
+    router.push("/seller/listing/vehicle/photos");
   };
 
   return (
