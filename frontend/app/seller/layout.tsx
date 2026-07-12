@@ -2,38 +2,18 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import {
-  FiGrid,
-  FiShoppingCart,
-  FiBox,
-  FiCreditCard,
-  FiBarChart2,
-  FiMessageSquare,
-  FiSettings,
-  FiSearch,
-  FiBell,
-  FiChevronRight,
-  FiChevronDown,
-  FiMenu,
-  FiX,
-  FiLogOut,
-  FiUser,
-  FiMoreHorizontal,
-  FiTrendingUp,
-  FiTrendingDown,
-  FiPlus,
-  FiEye,
-  FiDollarSign,
-  FiPieChart,
-  FiLayers,
-  FiClock,
+  FiGrid, FiShoppingCart, FiBox, FiCreditCard, FiBarChart2,
+  FiMessageSquare, FiSettings, FiSearch, FiBell, FiChevronDown,
+  FiMenu, FiX, FiLogOut, FiUser, FiMoreHorizontal,
 } from "react-icons/fi";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { KycStatusProvider } from "../../components/kycstatusContext";
 
+const SITE_PRIMARY = "#C0392B";
 const PRIMARY = "#0f172a";
 const ACCENT = "#3b82f6";
 const SUCCESS = "#10b981";
@@ -41,99 +21,32 @@ const WARNING = "#f59e0b";
 const DANGER = "#ef4444";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
-const SITE_PRIMARY = "#C0392B";
 const SIDEBAR_BG = "#ffffff";
 const SIDEBAR_BORDER = "#e8ecf0";
 const SIDEBAR_HOVER = "#f4f6fb";
 
-const categories = [
-  { name: "Vehicles", slug: "vehicle" },
-  { name: "Medical & Dental", slug: "medical-dental" },
-  { name: "Rent & Real Estate", slug: "rent-real-estate" },
-  { name: "Secondhand Goods", slug: "secondhand-goods" },
-  { name: "Hair, Beauty & Wellness", slug: "hair-beauty-wellness" },
-  { name: "Jobs & Labour Hire", slug: "jobs-labour-hire" },
-  { name: "Trades & Home Repair", slug: "trades-home-repair" },
-  { name: "Agriculture & Livestock", slug: "agriculture-livestock" },
-  { name: "Food & Home Delivery", slug: "food-home-delivery" },
+const sidebarItems = [
+  { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/seller/dashboard" },
+  { id: "orders", icon: FiShoppingCart, label: "Orders", href: "/seller/orders", badge: "15" },
+  { id: "products", icon: FiBox, label: "Products", href: "/seller/products" },
+  { id: "payments", icon: FiCreditCard, label: "Payments", href: "/seller/payments" },
+  { id: "reports", icon: FiBarChart2, label: "Reports", href: "/seller/reports" },
+  { id: "clients", icon: FiMessageSquare, label: "Clients", href: "/seller/clients", badge: "2" },
+  { id: "settings", icon: FiSettings, label: "Settings", href: "/seller/settings" },
 ];
 
-const stats = [
-  { icon: FiShoppingCart, label: "Total Orders", value: "320", change: "+12.5%", changeType: "up" as const, sub: "This Month: 45", color: ACCENT, bg: "#eff6ff" },
-  { icon: FiClock, label: "Pending", value: "15", change: "-3.2%", changeType: "down" as const, sub: "This Month: 45", color: WARNING, bg: "#fffbeb" },
-  { icon: FiDollarSign, label: "Total Earnings", value: "NPR1,25,000", change: "+8.4%", changeType: "up" as const, sub: "This Month: NPR. 001", color: SUCCESS, bg: "#ecfdf5" },
-  { icon: FiLayers, label: "Product Listed", value: "58", change: "+5", changeType: "up" as const, sub: "This Month: 45", color: "#8b5cf6", bg: "#f5f3ff" },
-];
-
-const recentOrders = [
-  { id: "#1024", customer: "Sita Sharma", email: "sita@email.com", amount: "NPR 500", status: "Completed", statusColor: SUCCESS },
-  { id: "#1023", customer: "Hari Bahadur", email: "hari@email.com", amount: "NPR 500", status: "Processing", statusColor: WARNING },
-  { id: "#1022", customer: "Anis Kumar", email: "anis@email.com", amount: "NPR 2,100", status: "Completed", statusColor: SUCCESS },
-];
-
-const quickActions = [
-  { icon: FiPlus, label: "Add Product", desc: "Create new listing", color: ACCENT, bg: "#eff6ff", href: "/seller/products/add" },
-  { icon: FiEye, label: "View Orders", desc: "Manage all orders", color: SUCCESS, bg: "#ecfdf5", href: "/seller/orders" },
-  { icon: FiCreditCard, label: "Payments", desc: "View transactions", color: WARNING, bg: "#fffbeb", href: "/seller/payments" },
-  { icon: FiPieChart, label: "Analytics", desc: "Detailed reports", color: "#8b5cf6", bg: "#f5f3ff", href: "/seller/reports" },
-];
-
-const messages = [
-  { initials: "RS", name: "Ramesh Store", msg: "Hello, is the product still available?", time: "10:30 AM", color: ACCENT, unread: true },
-  { initials: "PS", name: "Prakash Suppliers", msg: "When will my order be shipped?", time: "09:15 AM", color: DANGER, unread: true },
-  { initials: "SK", name: "Sneha Kadka", msg: "Thank you for the fast delivery!", time: "Yesterday", color: SUCCESS, unread: false },
-  { initials: "AK", name: "Amit Khadka", msg: "Can you provide a discount?", time: "Yesterday", color: WARNING, unread: false },
-];
-
-const chartData = [
-  { month: "Jan", sales: 28, earnings: 22 },
-  { month: "Feb", sales: 42, earnings: 35 },
-  { month: "Mar", sales: 38, earnings: 40 },
-  { month: "Apr", sales: 52, earnings: 45 },
-  { month: "May", sales: 68, earnings: 58 },
-  { month: "Jun", sales: 82, earnings: 75 },
-];
-
-export default function SelectCategoryPage() {
-  const router = useRouter();
+function SellerShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const { data: session } = useSession();
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard");
   const [searchFocused, setSearchFocused] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
-  const [kycStatus, setkycStatus] = useState<string | null>(null);
-
-  const sidebarItems = [
-    { id: "dashboard", icon: FiGrid, label: "Dashboard" },
-    { id: "orders", icon: FiShoppingCart, label: "Orders", badge: "15" },
-    { id: "products", icon: FiBox, label: "Products" },
-    { id: "payments", icon: FiCreditCard, label: "Payments" },
-    { id: "reports", icon: FiBarChart2, label: "Reports" },
-    { id: "clients", icon: FiMessageSquare, label: "Clients", badge: "2" },
-    { id: "settings", icon: FiSettings, label: "Settings" },
-  ];
 
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "S";
-
-  function handleCategorySelect(categoryName: string) {
-    const category = categories.find((c) => c.name === categoryName);
-    if (category) {
-      setSelectedCategory(categoryName);
-      setDropdownOpen(false);
-      router.push(`/seller/listing/${category.slug}`);
-    }
-  }
-
-  function handleNavClick(id: string) {
-    setActiveTab(id);
-    setSidebarOpen(false);
-  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -146,29 +59,13 @@ export default function SelectCategoryPage() {
   }, []);
 
   useEffect(() => {
-    if (sidebarOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = sidebarOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
 
-  const maxVal = Math.max(...chartData.map(d => Math.max(d.sales, d.earnings)));
-
-  useEffect(() => {
-    if (!session?.accessToken) return;
-    fetch("/api/vendor-kyc/me", {
-      headers: { Authorization: `Bearer ${session.accessToken}` },
-    })
-    .then((r) => r.json())
-    .then((d) => setkycStatus(d.status ?? null))
-    .catch(() => setkycStatus(null));
-  }, [session?.accessToken]);
-
   return (
     <>
-    <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer position="top-right" autoClose={3000} />
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -179,6 +76,7 @@ export default function SelectCategoryPage() {
           font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
+        /* ── Sidebar ── */
         .dash-sidebar {
           width: 264px;
           background: ${SIDEBAR_BG};
@@ -368,6 +266,7 @@ export default function SelectCategoryPage() {
           max-width: 160px;
         }
 
+        /* ── Profile Avatar Dropdown ── */
         .dash-profile-wrap {
           position: relative;
         }
@@ -499,6 +398,7 @@ export default function SelectCategoryPage() {
           margin: 0;
         }
 
+        /* ── Main Content ── */
         .dash-main {
           flex: 1;
           margin-left: 264px;
@@ -507,6 +407,7 @@ export default function SelectCategoryPage() {
           width: 100%;
         }
 
+        /* Top Bar */
         .dash-topbar {
           display: flex;
           align-items: center;
@@ -626,6 +527,7 @@ export default function SelectCategoryPage() {
           border: 2px solid #fff;
         }
 
+        /* Stats Grid */
         .dash-stats {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
@@ -740,6 +642,7 @@ export default function SelectCategoryPage() {
           font-weight: 400;
         }
 
+        /* Two Column Layout */
         .dash-two-col {
           display: grid;
           grid-template-columns: 1.3fr 1fr;
@@ -795,6 +698,7 @@ export default function SelectCategoryPage() {
           text-decoration: underline;
         }
 
+        /* Table */
         .dash-table-wrap {
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
@@ -879,6 +783,7 @@ export default function SelectCategoryPage() {
           border-radius: 50%;
         }
 
+        /* Chart */
         .dash-chart-header {
           display: flex;
           align-items: center;
@@ -943,6 +848,7 @@ export default function SelectCategoryPage() {
           font-weight: 500;
         }
 
+        /* Quick Actions */
         .dash-quick {
           margin-bottom: 28px;
         }
@@ -1015,6 +921,7 @@ export default function SelectCategoryPage() {
           font-weight: 400;
         }
 
+        /* Messages */
         .dash-msg-list {
           display: flex;
           flex-direction: column;
@@ -1096,125 +1003,7 @@ export default function SelectCategoryPage() {
           font-weight: 500;
         }
 
-        .cat-label {
-          font-size: 14px;
-          color: ${ACCENT};
-          font-weight: 500;
-          margin-bottom: 10px;
-        }
-
-        .cat-dropdown-wrap {
-          position: relative;
-          margin-bottom: 16px;
-        }
-
-        .cat-dropdown-btn {
-          width: 100%;
-          padding: 12px 14px;
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
-          background: #fff;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          cursor: pointer;
-          font-size: 14px;
-          color: #9ca3af;
-          font-family: inherit;
-        }
-
-        .cat-dropdown-btn.has-value {
-          color: #1e293b;
-          font-weight: 500;
-        }
-
-        .cat-dropdown-btn:hover {
-          border-color: ${ACCENT};
-        }
-
-        .cat-dropdown-menu {
-          position: absolute;
-          top: calc(100% + 4px);
-          left: 0;
-          right: 0;
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-          z-index: 50;
-          padding: 8px 0;
-          max-height: 360px;
-          overflow-y: auto;
-        }
-
-        .cat-dropdown-item {
-          padding: 10px 16px;
-          font-size: 14px;
-          color: #374151;
-          cursor: pointer;
-          transition: background 0.15s;
-        }
-
-        .cat-dropdown-item:hover {
-          background: #f3f4f6;
-        }
-
-        .cat-dropdown-item:first-child {
-          color: #C0392B;
-          font-weight: 600;
-        }
-
-        .cat-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8px;
-          margin-top: 4px;
-        }
-
-        .cat-grid-item {
-          padding: 10px 12px;
-          font-size: 13px;
-          color: #374151;
-          cursor: pointer;
-          border-radius: 6px;
-          transition: all 0.15s;
-        }
-
-        .cat-grid-item:hover {
-          background: #f3f4f6;
-        }
-
-        .cat-grid-item:first-child,
-        .cat-grid-item:nth-child(2) {
-          color: #C0392B;
-          font-weight: 500;
-        }
-
-        .continue-btn {
-          display: block;
-          width: 100%;
-          max-width: 300px;
-          margin: 32px auto 0;
-          padding: 12px 24px;
-          background: ${ACCENT};
-          color: #fff;
-          border: none;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
-
-        .continue-btn:hover {
-          background: #1d4ed8;
-        }
-
-        .continue-btn:disabled {
-          background: #9ca3af;
-          cursor: not-allowed;
-        }
-
+        /* ── Desktop collapsed state ── */
         .dash-sidebar.desktop-collapsed {
           width: 72px;
         }
@@ -1236,6 +1025,7 @@ export default function SelectCategoryPage() {
           max-width: calc(100% - 72px);
         }
 
+        /* ── Backdrop (mobile/tablet overlay) ── */
         .dash-backdrop {
           display: none;
           position: fixed;
@@ -1250,6 +1040,7 @@ export default function SelectCategoryPage() {
           to   { opacity: 1; }
         }
 
+        /* Mobile close button inside sidebar */
         .dash-sidebar-close {
           display: none;
           position: absolute;
@@ -1272,6 +1063,7 @@ export default function SelectCategoryPage() {
           color: #1e293b;
         }
 
+        /* ── Hamburger button in topbar ── */
         .dash-hamburger {
           display: none;
           width: 38px;
@@ -1292,11 +1084,15 @@ export default function SelectCategoryPage() {
           border-color: #cbd5e1;
         }
 
+        /* ── Responsive ── */
+
+        /* Large tablets — 2 col stats, 2 col quick actions */
         @media (max-width: 1200px) {
           .dash-stats { grid-template-columns: repeat(2, 1fr); }
           .dash-quick-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
+        /* Tablet: overlay sidebar, full-width main */
         @media (max-width: 1023px) {
           .dash-sidebar {
             transform: translateX(-100%);
@@ -1334,14 +1130,18 @@ export default function SelectCategoryPage() {
           .dash-search { width: 240px; }
         }
 
+        /* Mobile: single column everything */
         @media (max-width: 767px) {
           .dash-main { padding: 16px; width: 100%; }
+
+          /* Header: 2 rows */
           .dash-topbar {
             flex-direction: column;
             align-items: stretch;
             gap: 12px;
             padding-bottom: 16px;
           }
+
           .dash-topbar-left {
             display: flex;
             align-items: center;
@@ -1349,56 +1149,82 @@ export default function SelectCategoryPage() {
             width: 100%;
             gap: 8px;
           }
+
+          .dash-topbar-title-wrap {
+            flex: 1;
+            min-width: 0;
+          }
+
           .dash-topbar-title {
             font-size: 18px;
           }
+
           .dash-topbar-sub {
             font-size: 12px;
           }
+
           .dash-topbar-right {
             width: 100%;
             justify-content: flex-end;
             gap: 8px;
           }
+
+          /* Search: full width, second row */
           .dash-search {
             width: 100%;
             order: 3;
             flex-shrink: 1;
           }
+
+          /* Stats: 1 column */
           .dash-stats { 
             grid-template-columns: 1fr; 
             gap: 12px;
             margin-bottom: 20px;
           }
+
           .dash-stat-card {
             padding: 16px;
             width: 100%;
           }
+
           .dash-stat-value {
             font-size: 20px;
           }
+
+          /* Two col: stack */
           .dash-two-col { 
             grid-template-columns: 1fr; 
             gap: 16px;
             margin-bottom: 20px;
           }
+
+          /* Cards */
           .dash-card {
             padding: 16px;
             width: 100%;
           }
+
           .dash-card-header {
             margin-bottom: 16px;
           }
+
+          /* Chart */
           .dash-chart-area { 
             height: 160px; 
           }
+
+          /* Quick actions: 1 column */
           .dash-quick-grid { 
             grid-template-columns: 1fr; 
             gap: 12px;
           }
+
           .dash-quick-card {
             padding: 16px;
           }
+
+          /* Table */
           .dash-table-wrap { 
             overflow-x: auto; 
             -webkit-overflow-scrolling: touch;
@@ -1406,51 +1232,83 @@ export default function SelectCategoryPage() {
             padding: 0 16px;
             width: calc(100% + 32px);
           }
+
           .dash-table {
             min-width: 520px;
           }
+
+          /* Messages */
           .dash-msg-item {
             padding: 12px;
           }
+
           .dash-msg-text {
             font-size: 12px;
           }
+
           .dash-msg-time {
             font-size: 10px;
           }
         }
 
+        /* Small mobile */
         @media (max-width: 480px) {
           .dash-main { padding: 12px; }
-          .dash-topbar-title { font-size: 16px; }
-          .dash-stat-card { padding: 14px; }
+
+          .dash-topbar-title {
+            font-size: 16px;
+          }
+
+          .dash-stat-card {
+            padding: 14px;
+          }
+
           .dash-stat-icon-wrap {
             width: 40px;
             height: 40px;
             font-size: 18px;
           }
-          .dash-stat-value { font-size: 18px; }
+
+          .dash-stat-value {
+            font-size: 18px;
+          }
+
           .dash-card {
             padding: 14px;
             border-radius: 12px;
           }
-          .dash-chart-area { height: 140px; }
+
+          .dash-chart-area {
+            height: 140px;
+          }
+
           .dash-quick-card {
             padding: 14px;
             border-radius: 12px;
           }
+
           .dash-quick-icon {
             width: 38px;
             height: 38px;
             font-size: 18px;
           }
+
           .dash-msg-avatar {
             width: 36px;
             height: 36px;
             font-size: 12px;
           }
-          .dash-icon-btn { width: 36px; height: 36px; }
-          .dash-profile-btn-avatar { width: 28px; height: 28px; font-size: 11px; }
+
+          .dash-icon-btn {
+            width: 36px;
+            height: 36px;
+          }
+
+          .dash-profile-btn-avatar {
+            width: 28px;
+            height: 28px;
+            font-size: 11px;
+          }
         }
       `}</style>
 
@@ -1478,23 +1336,21 @@ export default function SelectCategoryPage() {
 
           <div className="dash-nav">
             <div className="dash-nav-label">Main Menu</div>
-            {sidebarItems.map((item) => (
-              <button type="button" key={item.id} className={`dash-nav-item ${activeTab === item.id ? "active" : ""}`} onClick={() => handleNavClick(item.id)}>
-                <span className="dash-nav-icon"><item.icon size={18} /></span>
-                <span>{item.label}</span>
-                {item.badge && <span className="dash-nav-badge">{item.badge}</span>}
-              </button>
-            ))}
-          </div>
-
-          <div className="dash-sidebar-footer">
-            <div className="dash-sidebar-avatar">
-              {session?.user?.image ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} /> : userInitials}
-            </div>
-            <div className="dash-sidebar-user">
-              <div className="dash-sidebar-name">{session?.user?.name || "Seller"}</div>
-              <div className="dash-sidebar-role">{session?.user?.email || "Seller Account"}</div>
-            </div>
+            {sidebarItems.map((item) => {
+              const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className={`dash-nav-item ${isActive ? "active" : ""}`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <span className="dash-nav-icon"><item.icon size={18} /></span>
+                  <span>{item.label}</span>
+                  {item.badge && <span className="dash-nav-badge">{item.badge}</span>}
+                </Link>
+              );
+            })}
           </div>
         </aside>
 
@@ -1504,12 +1360,12 @@ export default function SelectCategoryPage() {
               <button type="button" className="dash-hamburger" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar">
                 <FiMenu size={20} />
               </button>
-              <button type="button" className="dash-icon-btn dash-desktop-toggle" onClick={() => setSidebarCollapsed((prev) => !prev)} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} style={{ marginRight: 8 }}>
+              <button type="button" className="dash-icon-btn dash-desktop-toggle" onClick={() => setSidebarCollapsed((p) => !p)} style={{ marginRight: 8 }}>
                 <FiMoreHorizontal size={18} />
               </button>
               <div className="dash-topbar-title-wrap">
-                <h1 className="dash-topbar-title">Seller Dashboard</h1>
-                <p className="dash-topbar-sub">Welcome, Hamro Bazar!</p>
+                <h1 className="dash-topbar-title">Dashboard</h1>
+                <p className="dash-topbar-sub">Welcome back! Here&apos;s what&apos;s happening with your store today.</p>
               </div>
             </div>
             <div className="dash-topbar-right">
@@ -1521,16 +1377,15 @@ export default function SelectCategoryPage() {
                 <FiBell size={18} />
                 <span className="dash-badge">3</span>
               </button>
-
               <div className="dash-profile-wrap" ref={profileDropdownRef}>
-                <button type="button" className="dash-profile-btn" onClick={() => setShowProfileDropdown((prev) => !prev)}>
+                <button type="button" className="dash-profile-btn" onClick={() => setShowProfileDropdown((p) => !p)}>
                   <div className="dash-profile-btn-avatar">
-                    {session?.user?.image ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : userInitials}
+                    {session?.user?.image
+                      ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : userInitials}
                   </div>
-                  <span className="dash-profile-btn-name">{session?.user?.name || "Seller"}</span>
                   <FiChevronDown size={14} className={`dash-profile-chevron ${showProfileDropdown ? "open" : ""}`} />
                 </button>
-
                 {showProfileDropdown && (
                   <div className="dash-profile-dropdown">
                     <div className="dash-dropdown-header">
@@ -1550,163 +1405,17 @@ export default function SelectCategoryPage() {
             </div>
           </div>
 
-          {kycStatus === "PENDING" && (
-            <div style={{ background: "#FFF3CD", color: "#856404", padding: "12px 16px", borderRadius: 10, marginBottom: 20, fontSize: 13, fontWeight: 500, border: "1px solid #ffc107" }}>
-              Your KYC is under review. You will be able to create listings once approved.
-            </div>
-          )}
-
-          <div className="dash-stats">
-            {stats.map((stat) => (
-              <div key={stat.label} className="dash-stat-card" style={{ "--stat-color": stat.color } as React.CSSProperties}>
-                <div className="dash-stat-icon-wrap" style={{ background: stat.bg, color: stat.color }}>
-                  <stat.icon size={22} />
-                </div>
-                <div className="dash-stat-info">
-                  <div className="dash-stat-label">{stat.label}</div>
-                  <div className="dash-stat-value">{stat.value}</div>
-                  <div className="dash-stat-footer">
-                    <span className={`dash-stat-change ${stat.changeType}`}>
-                      {stat.changeType === "up" ? <FiTrendingUp size={10} /> : <FiTrendingDown size={10} />}
-                      {stat.change}
-                    </span>
-                    <span className="dash-stat-sub">{stat.sub}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="dash-two-col">
-            <div className="dash-card">
-              <div className="dash-card-header">
-                <h3 className="dash-card-title">Select Category</h3>
-              </div>
-              <div className="cat-label">Select category for Listing</div>
-              <div className="cat-dropdown-wrap">
-                <button className={`cat-dropdown-btn ${selectedCategory ? "has-value" : ""}`} onClick={() => setDropdownOpen(!dropdownOpen)}>
-                  <span>{selectedCategory || "Choose category"}</span>
-                  {dropdownOpen ? <FiChevronDown size={16} style={{ transform: "rotate(180deg)" }} /> : <FiChevronDown size={16} />}
-                </button>
-                {dropdownOpen && (
-                  <div className="cat-dropdown-menu">
-                    {categories.map((cat, idx) => (
-                      <div key={cat.name} className="cat-dropdown-item" style={idx === 0 ? { color: "#C0392B", fontWeight: 600 } : {}} onClick={() => handleCategorySelect(cat.name)}>
-                        {cat.name}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="cat-grid">
-                {categories.map((cat, idx) => (
-                  <div key={cat.name} className="cat-grid-item" style={idx === 0 ? { color: "#C0392B", fontWeight: 500 } : {}} onClick={() => handleCategorySelect(cat.name)}>
-                    {cat.name}
-                  </div>
-                ))}
-              </div>
-
-              <button className="continue-btn" disabled={!selectedCategory} onClick={() => { const cat = categories.find((c) => c.name === selectedCategory); if (cat) router.push(`/seller/listing/${cat.slug}`); }}>
-                Continue
-              </button>
-            </div>
-
-            <div className="dash-card">
-              <div className="dash-chart-header">
-                <h3 className="dash-chart-title">Seller Overview</h3>
-                <div className="dash-chart-legend">
-                  <div className="dash-legend-item"><span className="dash-legend-dot" style={{ background: ACCENT }} /> Sales </div>
-                  <div className="dash-legend-item"><span className="dash-legend-dot" style={{ background: DANGER }} /> Earnings </div>
-                </div>
-              </div>
-              <div className="dash-chart-area">
-                <svg className="dash-chart-svg" viewBox="0 0 400 200" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={ACCENT} stopOpacity="0.2" /><stop offset="100%" stopColor={ACCENT} stopOpacity="0" /></linearGradient>
-                    <linearGradient id="earnGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={DANGER} stopOpacity="0.15" /><stop offset="100%" stopColor={DANGER} stopOpacity="0" /></linearGradient>
-                  </defs>
-                  {[0, 1, 2, 3, 4].map((i) => <line key={i} x1="0" y1={i * 50} x2="400" y2={i * 50} stroke="#f1f5f9" strokeWidth="1" />)}
-                  <polygon fill="url(#salesGrad)" points={`0,200 ${chartData.map((d, i) => `${i * 80},${200 - (d.sales / maxVal) * 180}`).join(" ")} 400,200`} />
-                  <polygon fill="url(#earnGrad)" points={`0,200 ${chartData.map((d, i) => `${i * 80},${200 - (d.earnings / maxVal) * 180}`).join(" ")} 400,200`} />
-                  <polyline fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" points={chartData.map((d, i) => `${i * 80},${200 - (d.sales / maxVal) * 180}`).join(" ")} />
-                  <polyline fill="none" stroke={DANGER} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="6,4" points={chartData.map((d, i) => `${i * 80},${200 - (d.earnings / maxVal) * 180}`).join(" ")} />
-                  {chartData.map((d, i) => <circle key={`s-${i}`} cx={i * 80} cy={200 - (d.sales / maxVal) * 180} r="4" fill={ACCENT} stroke="#fff" strokeWidth="2.5" />)}
-                  {chartData.map((d, i) => <circle key={`e-${i}`} cx={i * 80} cy={200 - (d.earnings / maxVal) * 180} r="4" fill={DANGER} stroke="#fff" strokeWidth="2.5" />)}
-                </svg>
-              </div>
-              <div className="dash-chart-months">
-                {chartData.map((d) => <div key={d.month} className="dash-chart-month">{d.month}</div>)}
-              </div>
-            </div>
-          </div>
-
-          <div className="dash-quick">
-            <h3 className="dash-quick-title">Quick Actions</h3>
-            <div className="dash-quick-grid">
-              {quickActions.map((action) => {
-                const locked = action.label === "Add Product" && kycStatus !== "VERIFIED";
-                if (locked) {
-                  return (
-                    <div key={action.label} className="dash-quick-card" style={{ opacity: 0.5, cursor: "not-allowed" }} onClick={() => toast.error("Your KYC is pending verification. You can add products once approved.")}>
-                      <div className="dash-quick-icon" style={{ background: action.bg, color: action.color }}><action.icon size={20} /></div>
-                      <div className="dash-quick-info"><div className="dash-quick-label">{action.label}</div><div className="dash-quick-desc">Pending KYC approval</div></div>
-                    </div>
-                  );
-                }
-                return (
-                  <Link key={action.label} href={action.href} className="dash-quick-card">
-                    <div className="dash-quick-icon" style={{ background: action.bg, color: action.color }}><action.icon size={20} /></div>
-                    <div className="dash-quick-info"><div className="dash-quick-label">{action.label}</div><div className="dash-quick-desc">{action.desc}</div></div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="dash-two-col">
-            <div className="dash-card">
-              <div className="dash-card-header">
-                <h3 className="dash-card-title">Recent Orders</h3>
-                <Link href="/seller/orders" className="dash-card-link">View All <FiChevronRight size={14} /></Link>
-              </div>
-              <div className="dash-table-wrap">
-                <table className="dash-table">
-                  <thead><tr><th>Order Id</th><th>Customer</th><th>Status</th></tr></thead>
-                  <tbody>
-                    {recentOrders.map((order) => (
-                      <tr key={order.id}>
-                        <td><span className="dash-order-id">{order.id}</span></td>
-                        <td><div className="dash-customer-name">{order.customer}</div><div className="dash-customer-email">{order.email}</div></td>
-                        <td><span className="dash-status" style={{ background: order.statusColor + "12", color: order.statusColor }}><span className="dash-status-dot" style={{ background: order.statusColor }} />{order.status}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="dash-card">
-              <div className="dash-card-header">
-                <h3 className="dash-card-title">Recent Messages</h3>
-                <Link href="/seller/messages" className="dash-card-link">View All <FiChevronRight size={14} /></Link>
-              </div>
-              <div className="dash-msg-list">
-                {messages.map((msg) => (
-                  <div key={msg.name} className="dash-msg-item">
-                    <div className="dash-msg-avatar" style={{ background: msg.color }}>{msg.initials}{msg.unread && <span className="dash-msg-unread" />}</div>
-                    <div className="dash-msg-content">
-                      <div className="dash-msg-name">{msg.name}{msg.unread && <span style={{ width: 8, height: 8, borderRadius: "50%", background: DANGER, display: "inline-block", flexShrink: 0 }} />}</div>
-                      <div className="dash-msg-text">{msg.msg}</div>
-                    </div>
-                    <div className="dash-msg-time">{msg.time}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          {children}
         </main>
       </div>
     </>
+  );
+}
+
+export default function SellerLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <KycStatusProvider>
+      <SellerShell>{children}</SellerShell>
+    </KycStatusProvider>
   );
 }

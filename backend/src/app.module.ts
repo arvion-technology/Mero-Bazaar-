@@ -27,6 +27,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { AdminUserService } from './modules/admin-user/admin-user.service';
 import { AdminUserController } from './modules/admin-user/admin-user.controller';
 import { AdminUserModule } from './modules/admin-user/admin-user.module';
+import { VendorSalesOverviewModule } from './modules/vendor-sales-overview/vendor-sales-overview.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { AdminUserModule } from './modules/admin-user/admin-user.module';
     VendorModule,
     NotificationsModule,
     AdminUserModule,
+    VendorSalesOverviewModule,
   ],
   controllers: [AppController, AdminUserController],
   providers: [AppService, AdminUserService],

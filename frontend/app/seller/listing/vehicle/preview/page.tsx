@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiArrowLeft, FiCheck, FiSend } from "react-icons/fi";
 import { toast } from "react-toastify";
@@ -16,42 +16,87 @@ const TEXT_SECONDARY = "#64748b";
 const BG           = "#f8fafc";
 const CARD_BG      = "#ffffff";
 
+interface ListingDetail {
+  label: string;
+  value: string | number | undefined;
+}
+
+interface ListingData {
+  category: string;
+  title: string;
+  price: string;
+  images: string[];
+  details: ListingDetail[];
+  description: string;
+}
+
+
 export default function PreviewListingPage() {
   const router = useRouter();
   const [isPublishing, setIsPublishing] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
-
-  const listing = {
-    category: "Vehicle",
-    title: "Toyota Fortuner 2021",
-    price: "NPR 38,50,000",
-    images: [
-      "https://images.unsplash.com/photo-1617788138017-80ad40651399?w=600&h=450&fit=crop",
-      "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&h=450&fit=crop",
-      "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=600&h=450&fit=crop",
-      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&h=450&fit=crop",
-    ],
-    details: [
-      { label: "Vehicle Type", value: "Car" },
-      { label: "Condition", value: "Like New" },
-      { label: "Brand", value: "Toyota" },
-      { label: "Model", value: "Fortuner" },
-      { label: "Model Year", value: "2021" },
-      { label: "KM Driven", value: "45,000 km" },
-      { label: "Location", value: "Lalitpur, Nepal" },
-    ],
-    description:
-      "Toyota Fortuner 2021 model in excellent condition. Well maintained, all documents are valid.",
-  };
+  const [ listing, setListing] = useState<ListingData | null>(null);
 
   const handlePublish = () => {
     setIsPublishing(true);
     setTimeout(() => {
+      sessionStorage.removeItem("draft-vehicle-listing");
       setIsPublishing(false);
       toast.success("Listing published successfully!");
-      router.push("/seller/dashboard/products");
-    }, 1500);
+      router.push("/seller/products");
+    }, 800);
   };
+
+  useEffect(() => {
+    const id = sessionStorage.getItem("draft-listing-id");
+
+    if (!id) {
+      const timer = setTimeout(() => {
+        toast.error("No listing found. Start a new listing!");
+        router.push("/seller/listing/vehicle");
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+
+    fetch(`/api/vehicles/${id}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Failed to load listing");
+        return res.json();
+      })
+      .then((data) => {
+        const v = data.vehicle ?? {};
+        const details = v.details ?? {};
+        setListing({
+          category: "Vehicle",
+          title: details.customTitle || data.title,
+          price: `NPR ${data.price?.toLocaleString("en-IN") ?? "—"}`,
+          images: data.images?.length ? data.images : ["/placeholder.png"],
+          details: [
+            { label: "Vehicle Type", value: v.type },
+            { label: "Condition", value: v.condition },
+            { label: "Brand", value: v.brand },
+            { label: "Model Year", value: v.year },
+            { label: "KM Driven", value: `${v.km_driven ?? "—"} km` },
+            { label: "Fuel Type", value: v.fuel_type },
+            { label: "Bluebook Status", value: v.bluebook_status },
+            { label: "Location", value: details.address },
+          ],
+          description: details.description || data.description,
+        });
+      })
+      .catch(() => {
+        toast.error("Could not load listing");
+        router.push("/seller/listing/vehicle");
+      });
+  }, []);
+
+  if (!listing) {
+    return (
+      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SECONDARY }}>
+        Loading preview...
+      </div>
+    );
+  }
 
   return (
     <>
@@ -71,7 +116,7 @@ export default function PreviewListingPage() {
 
         .preview-container {
           flex: 1;
-          max-width: 1100px;
+          max-width: 1300px;
           width: 100%;
           margin: 0 auto;
           padding: 24px 32px;
@@ -154,13 +199,13 @@ export default function PreviewListingPage() {
 
         .card-layout {
           display: flex;
-          gap: 28px;
+          gap: 24px;
           flex: 1;
           min-height: 0;
         }
 
         .card-images {
-          flex: 0 0 360px;
+          flex: 0 0 480px;
           display: flex;
           flex-direction: column;
           gap: 10px;
@@ -186,13 +231,13 @@ export default function PreviewListingPage() {
         .gallery {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 8px;
+          gap: 10px;
           flex-shrink: 0;
         }
 
         .gallery-thumb {
           aspect-ratio: 4/3;
-          border-radius: 8px;
+          border-radius: 10px;
           overflow: hidden;
           border: 2px solid transparent;
           cursor: pointer;
@@ -384,7 +429,7 @@ export default function PreviewListingPage() {
           .preview-container { padding: 20px 20px 40px; }
           .card-layout { flex-direction: column; }
           .card-images { flex: 0 0 auto; width: 100%; }
-          .main-image { aspect-ratio: 4/3; flex: none; min-height: 200px; }
+          .main-image { aspect-ratio: 4/3; flex: none; min-height: 320px; }
           .actions { flex-direction: column; }
           .btn { width: 100%; justify-content: center; }
           .draft-saved { display: none; }
