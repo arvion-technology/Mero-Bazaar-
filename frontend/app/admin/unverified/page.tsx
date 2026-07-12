@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";  // ← add signOut
 import {
   FiGrid,
   FiCheckCircle,
@@ -11,6 +11,8 @@ import {
   FiMenu,
   FiX,
   FiEye,
+  FiXCircle,
+  FiLogOut,  // ← add this
 } from "react-icons/fi";
 import StatusBadge from "@/components/StatusBadge";
 import type { VendorKycRecord, KYCRow } from "@/app/types/kyc";
@@ -44,32 +46,33 @@ const sidebarItems = [
   { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/admin" },
   { id: "verified", icon: FiCheckCircle, label: "Verified KYC", href: "/admin/verified" },
   { id: "unverified", icon: FiUser, label: "Unverified List", active: true },
+  { id: "rejected", icon: FiXCircle, label: "Rejected List", active: false, href: "/admin/rejected" },
 ];
 
 export default function UnverifiedKYCPage() {
   const [activeTab, setActiveTab] = useState("unverified");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showAvatarDropdown, setShowAvatarDropdown] = useState(false);  // ← add this state
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   const [kycRows, setKycRows] = useState<KYCRow[]>([]);
 
-
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "A";
-  
-    useEffect(() => {
-      if (!session?.accessToken) return;
-      fetch("/api/vendor-kyc/admin/all?status=PENDING", {
-        headers: { Authorization: `Bearer ${session.accessToken}` },
-      })
+
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    fetch("/api/vendor-kyc/admin/all?status=PENDING", {
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+    })
       .then((r) => (r.ok ? r.json() : []))
       .then((rows: VendorKycRecord[]) => {
-       setKycRows(rows.map(mapKycRow)); 
+        setKycRows(rows.map(mapKycRow));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-    }, [session?.accessToken]);
+  }, [session?.accessToken]);
 
   function handleNavClick(id: string) {
     setActiveTab(id);
@@ -87,8 +90,9 @@ export default function UnverifiedKYCPage() {
       <div style={{ padding: 40, textAlign: "center", color: "#888" }}>
         Loading Dashboard...
       </div>
-   );
-}
+    );
+  }
+
   return (
     <>
       <style>{`
@@ -106,11 +110,6 @@ export default function UnverifiedKYCPage() {
         .admin-nav-item:hover { background: ${SIDEBAR_HOVER}; color: #1e293b; }
         .admin-nav-item.active { background: #fee2e2; color: ${SITE_PRIMARY}; font-weight: 600; }
         .admin-nav-icon { font-size: 18px; width: 22px; display: flex; justify-content: center; flex-shrink: 0; }
-        .admin-sidebar-footer { padding: 16px; border-top: 1px solid ${SIDEBAR_BORDER}; display: flex; align-items: center; gap: 12px; }
-        .admin-sidebar-avatar { width: 40px; height: 40px; border-radius: 50%; background: ${SITE_PRIMARY}; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; flex-shrink: 0; }
-        .admin-sidebar-user { flex: 1; min-width: 0; }
-        .admin-sidebar-name { font-size: 14px; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .admin-sidebar-role { font-size: 11px; color: #888; margin-top: 2px; }
         .admin-main { flex: 1; margin-left: 240px; padding: 0; width: 100%; max-width: calc(100% - 240px); }
         .admin-topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 32px; background: ${BG}; border-bottom: 1px solid #e8e4e4; flex-wrap: wrap; gap: 12px; }
         .admin-topbar-left { display: flex; align-items: center; gap: 12px; }
@@ -132,6 +131,19 @@ export default function UnverifiedKYCPage() {
         .admin-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 700; flex-shrink: 0; }
         .admin-view-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; background: #eef2ff; color: #818cf8; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
         .admin-view-btn:hover { background: #818cf8; color: #fff; }
+        .admin-avatar-wrap { position: relative; }  /* ← add these avatar dropdown styles */
+        .admin-avatar-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: none; cursor: pointer; padding: 0; transition: all 0.2s; }
+        .admin-avatar-btn:hover { transform: scale(1.05); }
+        .admin-avatar-circle { width: 40px; height: 40px; border-radius: 50%; background: ${SITE_PRIMARY}; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; overflow: hidden; }
+        .admin-avatar-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); min-width: 200px; z-index: 999; overflow: hidden; animation: dropdownIn 0.15s ease; }
+        @keyframes dropdownIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        .admin-avatar-dropdown-header { padding: 14px 16px 12px; border-bottom: 1px solid #f1f5f9; }
+        .admin-avatar-dropdown-name { font-size: 14px; font-weight: 700; color: #1e293b; }
+        .admin-avatar-dropdown-email { font-size: 12px; color: #94a3b8; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .admin-avatar-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 14px; font-weight: 500; color: #475569; cursor: pointer; transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; font-family: inherit; }
+        .admin-avatar-dropdown-item:hover { background: #f8fafc; color: #1e293b; }
+        .admin-avatar-dropdown-item.logout { color: #ef4444; }
+        .admin-avatar-dropdown-item.logout:hover { background: #fef2f2; color: #dc2626; }
         .admin-backdrop { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(2px); z-index: 99; animation: backdropIn 0.2s ease; }
         @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
         .admin-sidebar-close { display: none; position: absolute; top: 18px; right: 16px; width: 32px; height: 32px; border: none; background: #f1f5f9; border-radius: 8px; cursor: pointer; align-items: center; justify-content: center; color: #64748b; z-index: 1; }
@@ -193,13 +205,7 @@ export default function UnverifiedKYCPage() {
               )
             ))}
           </div>
-          <div className="admin-sidebar-footer">
-            <div className="admin-sidebar-avatar">{session?.user?.image ? <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} /> : userInitials}</div>
-            <div className="admin-sidebar-user">
-              <div className="admin-sidebar-name">{session?.user?.name || "Admin"}</div>
-              <div className="admin-sidebar-role">{session?.user?.email || "admin@hamronepal.com"}</div>
-            </div>
-          </div>
+          {/* ← REMOVED sidebar footer - avatar moved to topbar */}
         </aside>
 
         <main className="admin-main">
@@ -210,6 +216,29 @@ export default function UnverifiedKYCPage() {
             </div>
             <div className="admin-topbar-right">
               <button type="button" className="admin-icon-btn"><FiBell size={20} /><span className="admin-badge">1</span></button>
+              {/* ← ADDED avatar dropdown */}
+              <div className="admin-avatar-wrap">
+                <button type="button" className="admin-avatar-btn" onClick={() => setShowAvatarDropdown((v) => !v)}>
+                  <div className="admin-avatar-circle">
+                    {session?.user?.image ? (
+                      <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                    ) : (
+                      userInitials
+                    )}
+                  </div>
+                </button>
+                {showAvatarDropdown && (
+                  <div className="admin-avatar-dropdown">
+                    <div className="admin-avatar-dropdown-header">
+                      <div className="admin-avatar-dropdown-name">{session?.user?.name || "Admin"}</div>
+                      <div className="admin-avatar-dropdown-email">{session?.user?.email || "admin@hamronepal.com"}</div>
+                    </div>
+                    <button type="button" className="admin-avatar-dropdown-item logout" onClick={() => signOut({ callbackUrl: "/" })}>
+                      <FiLogOut size={15} /> Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
