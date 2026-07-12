@@ -29,38 +29,50 @@ export default function PreviewListingPage() {
       setIsPublishing(false);
       toast.success("Listing published successfully!");
       router.push("/seller/products");
-    }, 1500);
+    }, 800);
   };
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("draft-vehicle-listing");
+    const id = sessionStorage.getItem("draft-listing-id");
 
-    if (!raw) {
+    if (!id) {
       const timer = setTimeout(() => {
-        toast.error("No draft found. Start a new listing!");
+        toast.error("No listing found. Start a new listing!");
         router.push("/seller/listing/vehicle");
       }, 0);
       return () => clearTimeout(timer);
     }
 
-    const draft = JSON.parse(raw);
-    setListing({
-      category: "Vehicle",
-      title: draft.title,
-      price: `NPR ${draft.price}`,
-      images: draft.images?.length ? draft.images : ["/placeholder.png"],
-      details: [
-        { label: "Vehicle Type", value: draft.vehicleType },
-        { label: "Condition", value: draft.condition },
-        { label: "Brand", value: draft.brand },
-        { label: "Model Year", value: draft.modelYear },
-        { label: "KM Driven", value: `${draft.kmDriven} km` },
-        { label: "Fuel Type", value: draft.fuelType },
-        { label: "Bluebook Status", value: draft.bluebookStatus },
-        { label: "Location", value: draft.address },
-      ],
-      description: draft.description,
-    });
+    fetch(`/api/vehicles/${id}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Failed to load listing");
+        return res.json();
+      })
+      .then((data) => {
+        const v = data.vehicle ?? {};
+        const details = v.details ?? {};
+        setListing({
+          category: "Vehicle",
+          title: details.customTitle || data.title,
+          price: `NPR ${data.price?.toLocaleString("en-IN") ?? "—"}`,
+          images: data.images?.length ? data.images : ["/placeholder.png"],
+          details: [
+            { label: "Vehicle Type", value: v.type },
+            { label: "Condition", value: v.condition },
+            { label: "Brand", value: v.brand },
+            { label: "Model Year", value: v.year },
+            { label: "KM Driven", value: `${v.km_driven ?? "—"} km` },
+            { label: "Fuel Type", value: v.fuel_type },
+            { label: "Bluebook Status", value: v.bluebook_status },
+            { label: "Location", value: details.address },
+          ],
+          description: details.description || data.description,
+        });
+      })
+      .catch(() => {
+        toast.error("Could not load listing");
+        router.push("/seller/listing/vehicle");
+      });
   }, []);
 
   if (!listing) {

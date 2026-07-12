@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateVehicleDto } from './dto/create_vehicle.dto';
 import { UpdateVehicleDto } from './dto/update_vehicle.dto';
@@ -123,22 +123,25 @@ async findAll(query: QueryVehicleDto) {
   async update(id: string, dto: UpdateVehicleDto, userId: string) {    
     const existing = await this.findOne(id);
 
-    const vehicleType = dto.type ?? existing.vehicle?.type;
+    if (existing.userId !== userId) {                  
+      throw new ForbiddenException('You do not own this listing');
+    }
 
+    const vehicleType = dto.type ?? existing.vehicle?.type;
     const cleanDetails =
       dto.details && vehicleType
         ? sanitizeVehicleDetails(vehicleType, dto.details)
         : undefined;
 
     return this.prisma.listing.update({
-      where: { id, userId },
+      where: { id },             
       data: {
         title: dto.brand && dto.model && dto.year
           ? `${dto.brand} ${dto.model} ${dto.year}`
           : undefined,
-          
         latitude: dto.latitude,
         longitude: dto.longitude,
+        images: dto.images,                                
 
         vehicle: {
           update: {
@@ -155,17 +158,15 @@ async findAll(query: QueryVehicleDto) {
           },
         },
       },
-      include: {
-        vehicle: true,
-      },
+      include: { vehicle: true },
     });
   }
 
-  async remove(id: string,userId: string) {
-    await this.findOne(id);
-
-    return this.prisma.listing.delete({
-      where: { id,userId },
-    });
+  async remove(id: string, userId: string) {
+    const existing = await this.findOne(id);
+    if (existing.userId !== userId) {
+      throw new ForbiddenException('You do not own this listing');
+    }
+    return this.prisma.listing.delete({ where: { id } });
   }
 }

@@ -15,6 +15,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useSession } from "next-auth/react";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -51,7 +52,7 @@ const steps = [
 
 export default function NewListingPage() {
   const router = useRouter();
-
+  const { data: session } = useSession();
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
@@ -92,15 +93,48 @@ export default function NewListingPage() {
       return;
     }
     setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1500));
 
-    sessionStorage.setItem(
-      "draft-vehicle-listing",
-      JSON.stringify({ title, price: formattedPrice, description, ... vehicleData })
-    );
-    toast.success("Details saved! Now add photos.");
-    setIsSubmitting(false);
-    router.push("/seller/listing/vehicle/photos");
+    try {
+      const res = await fetch("/api/vehicles", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.accessToken}`,
+         },
+        body: JSON.stringify({
+          type: vehicleData.vehicleType,
+          brand: vehicleData.brand,
+          model: vehicleData.brand, // TODO: add a real `model` field to VehicleData; brand is being reused as a placeholder
+          year: Number(vehicleData.modelYear),
+          km_driven: Number(vehicleData.kmDriven),
+          condition: vehicleData.condition,
+          bluebook_status: vehicleData.bluebookStatus,
+          fuel_type: vehicleData.fuelType,
+          ownership_transfer_ready: vehicleData.ownershipTransfer,
+          price: Number(price),
+          details: {
+            customTitle: title,
+            description,
+            address: vehicleData.address,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.message || "Failed to save listing");
+      }
+
+      const created = await res.json(); // { id, title, vehicle: {...}, ... }
+      sessionStorage.setItem("draft-listing-id", created.id);
+
+      toast.success("Details saved! Now add photos.");
+      router.push("/seller/listing/vehicle/photos");
+    } catch (err: any) {
+      toast.error(err.message || "Something went wrong");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const descLength = description.length;

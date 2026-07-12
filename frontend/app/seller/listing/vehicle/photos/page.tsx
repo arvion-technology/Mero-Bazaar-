@@ -92,24 +92,35 @@ export default function AddPhotosPage() {
   };
 
 
-  const handleContinue = () => {
-  if (images.length === 0) {
-    toast.error("Please upload at least one photo");
-    return;
-  }
-  setIsUploading(true);
-  setTimeout(() => {
-    const raw = sessionStorage.getItem("draft-vehicle-listing");
-    const draft = raw ? JSON.parse(raw) : {};
-    sessionStorage.setItem(
-      "draft-vehicle-listing",
-      JSON.stringify({ ...draft, images })
-    );
-    setIsUploading(false);
-    toast.success("Photos saved!");
-    router.push("/seller/listing/vehicle/preview");  
-  }, 1200);
-};
+  const handleContinue = async () => {
+    if (images.length === 0) {
+      toast.error("Please upload at least one photo");
+      return;
+    }
+    setIsUploading(true);
+    try {
+      const listingId = sessionStorage.getItem("draft-listing-id");
+      if (!listingId) {
+        toast.error("No listing found. Please fill in details first.");
+        router.push("/seller/listing/vehicle");
+        return;
+      }
+      const res = await fetch(`/api/vehicles/${listingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ images }),
+      });
+
+      if (!res.ok) throw new Error("Failed to save photos");
+
+      toast.success("Photos saved!");
+      router.push("/seller/listing/vehicle/preview");
+    } catch (err) {
+      toast.error("Something went wrong saving photos");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <>
