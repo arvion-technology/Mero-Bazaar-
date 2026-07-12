@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import {
   FiGrid,
   FiCheckCircle,
@@ -11,6 +11,8 @@ import {
   FiChevronRight,
   FiMenu,
   FiX,
+  FiXCircle,
+  FiLogOut,
 } from "react-icons/fi";
 import type { VendorKycRecord } from "../types/kyc";
 
@@ -27,6 +29,7 @@ const sidebarItems = [
   { id: "dashboard", icon: FiGrid, label: "Dashboard", active: true },
   { id: "verified", icon: FiCheckCircle, label: "Verified KYC", active: false, href: "/admin/verified" },
   { id: "unverified", icon: FiUser, label: "Unverified List", active: false, href: "/admin/unverified" },
+  { id: "rejected", icon: FiXCircle, label: "Rejected List", active: false, href: "/admin/rejected" },
 ];
 
 function StatIcon({ type, color }: { type: string; color: string }) {
@@ -74,6 +77,7 @@ function HamroBazarLogo({ size = 36 }: { size?: number }) {
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showAvatarDropdown, setShowAvatarDropdown] = useState(false);
   const { data: session } = useSession();
 
   const userInitials = session?.user?.name
@@ -586,6 +590,104 @@ export default function AdminDashboard() {
           flex-shrink: 0;
         }
 
+        .admin-avatar-wrap {
+          position: relative;
+        }
+
+        .admin-avatar-btn {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          border: none;
+          background: none;
+          cursor: pointer;
+          padding: 0;
+          transition: all 0.2s;
+        }
+
+        .admin-avatar-btn:hover {
+          transform: scale(1.05);
+        }
+
+        .admin-avatar-circle {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: ${SITE_PRIMARY};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+          font-size: 14px;
+          font-weight: 700;
+          overflow: hidden;
+        }
+
+        .admin-avatar-dropdown {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+          min-width: 200px;
+          z-index: 999;
+          overflow: hidden;
+          animation: dropdownIn 0.15s ease;
+        }
+
+        .admin-avatar-dropdown-header {
+          padding: 14px 16px 12px;
+          border-bottom: 1px solid #f1f5f9;
+        }
+
+        .admin-avatar-dropdown-name {
+          font-size: 14px;
+          font-weight: 700;
+          color: #1e293b;
+        }
+
+        .admin-avatar-dropdown-email {
+          font-size: 12px;
+          color: #94a3b8;
+          margin-top: 2px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .admin-avatar-dropdown-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 11px 16px;
+          font-size: 14px;
+          font-weight: 500;
+          color: #475569;
+          cursor: pointer;
+          transition: all 0.15s;
+          border: none;
+          background: none;
+          width: 100%;
+          text-align: left;
+          font-family: inherit;
+        }
+
+        .admin-avatar-dropdown-item:hover {
+          background: #f8fafc;
+          color: #1e293b;
+        }
+
+        .admin-avatar-dropdown-item.logout {
+          color: #ef4444;
+        }
+
+        .admin-avatar-dropdown-item.logout:hover {
+          background: #fef2f2;
+          color: #dc2626;
+        }
+
         @media (max-width: 1200px) {
           .admin-stats { grid-template-columns: repeat(2, 1fr); }
         }
@@ -766,23 +868,7 @@ export default function AdminDashboard() {
             ))}
           </div>
 
-          <div className="admin-sidebar-footer">
-            <div className="admin-sidebar-avatar">
-              {session?.user?.image ? (
-                <img
-                  src={session.user.image}
-                  alt="avatar"
-                  style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
-                />
-              ) : (
-                userInitials
-              )}
-            </div>
-            <div className="admin-sidebar-user">
-              <div className="admin-sidebar-name">{session?.user?.name || "Admin"}</div>
-              <div className="admin-sidebar-role">{session?.user?.email || "admin@hamronepal.com"}</div>
-            </div>
-          </div>
+
         </aside>
 
         <main className="admin-main">
@@ -803,6 +889,41 @@ export default function AdminDashboard() {
                 <FiBell size={20} />
                 <span className="admin-badge">1</span>
               </button>
+              <div className="admin-avatar-wrap">
+                <button
+                  type="button"
+                  className="admin-avatar-btn"
+                  onClick={() => setShowAvatarDropdown((v) => !v)}
+                >
+                  <div className="admin-avatar-circle">
+                    {session?.user?.image ? (
+                      <img
+                        src={session.user.image}
+                        alt="avatar"
+                        style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      userInitials
+                    )}
+                  </div>
+                </button>
+                {showAvatarDropdown && (
+                  <div className="admin-avatar-dropdown">
+                    <div className="admin-avatar-dropdown-header">
+                      <div className="admin-avatar-dropdown-name">{session?.user?.name || "Admin"}</div>
+                      <div className="admin-avatar-dropdown-email">{session?.user?.email || "admin@hamronepal.com"}</div>
+                    </div>
+                    <button
+                      type="button"
+                      className="admin-avatar-dropdown-item logout"
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                    >
+                      <FiLogOut size={15} />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
