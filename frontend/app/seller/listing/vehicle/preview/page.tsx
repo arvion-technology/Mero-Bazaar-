@@ -16,11 +16,26 @@ const TEXT_SECONDARY = "#64748b";
 const BG           = "#f8fafc";
 const CARD_BG      = "#ffffff";
 
+interface ListingDetail {
+  label: string;
+  value: string | number | undefined;
+}
+
+interface ListingData {
+  category: string;
+  title: string;
+  price: string;
+  images: string[];
+  details: ListingDetail[];
+  description: string;
+}
+
+
 export default function PreviewListingPage() {
   const router = useRouter();
   const [isPublishing, setIsPublishing] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [ listing, setListing] = useState<any>(null);
+  const [ listing, setListing] = useState<ListingData | null>(null);
 
   const handlePublish = () => {
     setIsPublishing(true);
