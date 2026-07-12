@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { FiChevronRight, FiEdit3 } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 const SITE_PRIMARY = "#C0392B";
 const PRIMARY = "#0f172a";
@@ -23,6 +25,9 @@ interface KYCRecord {
   accountHolder: string;
   avatar?: string;
   rejectionReason?: string;
+  panCardUrl?: string | null;
+  photoUrl?: string | null;
+  selfieWithPanUrl?: string | null;
 }
 
 interface KYCDetailsContentProps {
@@ -31,6 +36,43 @@ interface KYCDetailsContentProps {
 }
 
 export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentProps) {
+  const { data: session } = useSession();
+  const [docPreviews, setDocPreviews] = useState<{panCardUrl?: string; photoUrl?: string; selfieWithPanUrl?: string;}>({});
+
+  useEffect(() => {
+    const token = session?.accessToken;
+    if (!token || !kyc) return;
+
+    let revoke: string[] = [];
+
+    const loadDoc = async (filename: string | undefined, key: "panCardUrl" | "photoUrl" | " selfieWithPanUrl") => {
+      if (!filename) return;
+      try {
+        const res = await fetch(`/api/vendor-kyc/admin/document/${filename}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          console.error("Admin doc fetch failed", filename, res.status);
+          return;
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        revoke.push(url);
+        setDocPreviews((prev) => ({ ...prev, [key]: url }));
+      } catch (e) {
+        console.error("Admin doct fetch threw", filename, e);
+      }
+    };
+    loadDoc(kyc.panCardUrl, "panCardUrl");
+    loadDoc(kyc.photoUrl, "photoUrl");
+    loadDoc(kyc.selfieWithPanUrl, "selfieWithPanUrl");
+
+    return () => {
+      revoke.forEach((u) => URL.revokeObjectURL(u));
+    };
+  }, [session?.accessToken, kyc]);
+  
+
   if (!kyc) {
     return (
       <div style={{ padding: "32px" }}>
@@ -39,31 +81,37 @@ export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentPr
     );
   }
 
-  const DocumentPlaceholder = ({ label }: { label: string }) => (
+  const DocumentPlaceholder = ({ label, src }: { label: string; src?: string }) => (
     <div style={{ textAlign: "center" as const }}>
       <div
         style={{
           width: "100%",
-          height: "120px",
+          height: "200px",
           background: "#c4b5b5",
           borderRadius: "8px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           marginBottom: "8px",
+          overflow: "hidden",
         }}
       >
-        <span style={{ color: "#fff", fontSize: "12px", opacity: 0.7 }}>No Image</span>
+        {src ? ( <img src={src} alt={label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <span style={{ color: "#fff", fontSize: "12px", opacity: 0.7 }}>No Image</span>
+        )}
+
       </div>
       <button
-        type="button"
+        type="button" disabled={!src} onClick={() => src && window.open(src, "_blank")}
         style={{
           background: "none",
           border: "none",
           color: "#6366f1",
           fontSize: "13px",
-          cursor: "pointer",
+          cursor: src ? "pointer" : "default",
           fontWeight: 500,
+          opacity: src ? 1 : 0.5,
         }}
       >
         View Full Size
@@ -188,8 +236,8 @@ export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentPr
         {/* Profile Header */}
         <div className="kyc-profile-header">
           <div className="kyc-avatar-wrap">
-            {kyc.avatar ? (
-              <img src={kyc.avatar} alt={kyc.name} className="kyc-profile-avatar" />
+            {docPreviews.photoUrl ? (
+              <img src={docPreviews.photoUrl} alt={kyc.name} className="kyc-profile-avatar" />
             ) : (
               <div className="kyc-profile-avatar-placeholder" style={{ background: kyc.color }}>
                 {kyc.initial}
@@ -213,15 +261,15 @@ export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentPr
           <div className="kyc-documents-grid">
             <div>
               <div className="kyc-doc-label">PAN Card Image</div>
-              <DocumentPlaceholder label="PAN Card" />
+              <DocumentPlaceholder label="PAN Card" src={docPreviews.panCardUrl} />
             </div>
             <div>
               <div className="kyc-doc-label">Passport Size Photo</div>
-              <DocumentPlaceholder label="Passport" />
+              <DocumentPlaceholder label="Passport" src={docPreviews.photoUrl} />
             </div>
             <div>
               <div className="kyc-doc-label">Selfie With Pan Card</div>
-              <DocumentPlaceholder label="Selfie" />
+              <DocumentPlaceholder label="Selfie"  src={docPreviews.selfieWithPanUrl} />
             </div>
           </div>
         </div>
@@ -233,13 +281,6 @@ export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentPr
             <InfoRow label="Bank Name" value={kyc.bankName} />
             <InfoRow label="Bank Account Number" value={kyc.bankAccount} />
             <InfoRow label="Account Holder Name" value={kyc.accountHolder} />
-          </div>
-          
-          <div className="kyc-edit-wrap">
-            <button type="button" className="kyc-edit-btn">
-              <FiEdit3 size={16} />
-              Edit KYC
-            </button>
           </div>
         </div>
       </div>

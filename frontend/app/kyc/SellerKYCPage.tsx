@@ -134,10 +134,16 @@ export default function SellerKYCPage() {
                 const res = await fetch(`/api/vendor-kyc/document/${filename}`, {
                   headers: { Authorization: `Bearer ${token}` },
                 });
-                if (!res.ok) return;
+                if (!res.ok) {
+                  console.error("doc fetch failed", filename, res.status, await res.text());
+                  return;
+                }
                 const blob = await res.blob();
+                console.log("doc blob", filename, blob.type, blob.size);
                 setPreview(URL.createObjectURL(blob));
-              } catch {}
+              } catch (e){
+                console.error("doc fetch threw", filename, e);
+              }
             };
             await Promise.all([
               loadPreview(kyc.panCardUrl, setPanCardPreview),
