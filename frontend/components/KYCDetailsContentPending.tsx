@@ -284,8 +284,8 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
         <div className="kyc-profile-header">
           <div className="kyc-profile-left">
             <div className="kyc-avatar-wrap">
-              {kyc.avatar ? (
-                <img src={kyc.avatar} alt={kyc.name} className="kyc-profile-avatar" />
+              {kyc.photoUrl ? (
+                <img src={kyc.photoUrl} alt={kyc.name} className="kyc-profile-avatar" />
               ) : (
                 <div className="kyc-profile-avatar-placeholder" style={{ background: kyc.color }}>
                   {kyc.initial}

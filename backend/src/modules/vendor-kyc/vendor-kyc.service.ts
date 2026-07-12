@@ -293,8 +293,10 @@ export class VendorKycService {
   if (!kyc) throw new NotFoundException('KYC not found.');
 
   const owned = [kyc.panCardUrl, kyc.photoUrl, kyc.selfieWithPanUrl].includes(filename);
-  if (!owned) throw new NotFoundException('Document not found.');
-
+  if (!owned) {
+    console.log('Doc not found', { filename, panCardUrl: kyc.panCardUrl, photoUrl: kyc.photoUrl, selfiewithPanUrl: kyc.selfieWithPanUrl });
+    throw new NotFoundException('Document not found.');
+  }
   return this.streamDocument(filename, res);
 }
 }

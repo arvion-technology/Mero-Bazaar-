@@ -5,7 +5,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ file
   const authHeader = req.headers.get("authorization");
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/vendor-kyc/admin/document/${filename}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/vendor-kyc/document/${filename}`,
     { headers: { Authorization: authHeader || "" } }
   );
 
