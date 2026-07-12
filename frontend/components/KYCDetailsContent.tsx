@@ -45,7 +45,7 @@ export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentPr
 
     let revoke: string[] = [];
 
-    const loadDoc = async (filename: string | undefined, key: "panCardUrl" | "photoUrl" | " selfieWithPanUrl") => {
+    const loadDoc = async (filename: string | null | undefined, key: "panCardUrl" | "photoUrl" | " selfieWithPanUrl") => {
       if (!filename) return;
       try {
         const res = await fetch(`/api/vendor-kyc/admin/document/${filename}`, {
