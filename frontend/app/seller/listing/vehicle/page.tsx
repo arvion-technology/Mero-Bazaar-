@@ -1,8 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { FiArrowLeft, FiChevronRight, FiChevronDown, FiMapPin, FiFileText, FiTruck } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiChevronRight,
+  FiChevronDown,
+  FiMapPin,
+  FiFileText,
+  FiTruck,
+  FiCheck,
+  FiImage,
+  FiEye,
+} from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 
@@ -10,6 +20,7 @@ const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
 const ACCENT_LIGHT = "#eff6ff";
 const DANGER = "#dc2626";
+const SUCCESS = "#10b981";
 const BORDER = "#e2e8f0";
 const BORDER_FOCUS = "#bfdbfe";
 const TEXT_PRIMARY = "#0f172a";
@@ -17,6 +28,7 @@ const TEXT_SECONDARY = "#64748b";
 const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
+const SITE_PRIMARY = "#C0392B";
 
 interface VehicleData {
   vehicleType: string;
@@ -29,6 +41,13 @@ interface VehicleData {
   ownershipTransfer: boolean;
   address: string;
 }
+
+const steps = [
+  { label: "Category", icon: FiFileText, status: "done" as const },
+  { label: "Details", icon: FiTruck, status: "active" as const },
+  { label: "Photos", icon: FiImage, status: "upcoming" as const },
+  { label: "Preview", icon: FiEye, status: "upcoming" as const },
+];
 
 export default function NewListingPage() {
   const router = useRouter();
@@ -50,6 +69,18 @@ export default function NewListingPage() {
     address: "",
   });
 
+  const formattedPrice = useMemo(() => {
+    if (!price) return "";
+    const num = Number(price.replace(/,/g, ""));
+    if (isNaN(num)) return price;
+    return num.toLocaleString("en-IN");
+  }, [price]);
+
+  const handlePriceChange = (val: string) => {
+    const cleaned = val.replace(/[^0-9]/g, "");
+    setPrice(cleaned);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !price || !description) {
@@ -62,10 +93,18 @@ export default function NewListingPage() {
     }
     setIsSubmitting(true);
     await new Promise((r) => setTimeout(r, 1500));
+
+    sessionStorage.setItem(
+      "draft-vehicle-listing",
+      JSON.stringify({ title, price: formattedPrice, description, ... vehicleData })
+    );
     toast.success("Details saved! Now add photos.");
     setIsSubmitting(false);
     router.push("/seller/listing/vehicle/photos");
   };
+
+  const descLength = description.length;
+  const descMax = 500;
 
   return (
     <>
@@ -84,7 +123,7 @@ export default function NewListingPage() {
         .listing-container {
           max-width: 900px;
           margin: 0 auto;
-          padding: 40px 24px 64px;
+          padding: 32px 24px 64px;
         }
 
         /* ── Header ── */
@@ -92,7 +131,7 @@ export default function NewListingPage() {
           display: flex;
           align-items: center;
           gap: 16px;
-          margin-bottom: 6px;
+          margin-bottom: 24px;
         }
 
         .back-btn {
@@ -108,6 +147,7 @@ export default function NewListingPage() {
           color: ${TEXT_PRIMARY};
           transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
           box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+          flex-shrink: 0;
         }
 
         .back-btn:hover {
@@ -117,42 +157,143 @@ export default function NewListingPage() {
           box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
-        .back-btn:active {
-          transform: translateX(0) scale(0.96);
-        }
+        .back-btn:active { transform: translateX(0) scale(0.96); }
+
+        .listing-header-text { flex: 1; min-width: 0; }
 
         .listing-title {
-          font-size: 28px;
+          font-size: 26px;
           font-weight: 800;
           color: ${TEXT_PRIMARY};
           letter-spacing: -0.5px;
           line-height: 1.2;
         }
 
-        /* ── Breadcrumb ── */
-        .breadcrumb {
+        .listing-subtitle {
+          font-size: 13.5px;
+          color: ${TEXT_SECONDARY};
+          margin-top: 3px;
+        }
+
+        /* ── Stepper ── */
+        .stepper {
           display: flex;
           align-items: center;
-          gap: 8px;
-          margin-bottom: 32px;
-          margin-left: 56px;
+          background: ${CARD_BG};
+          border: 1px solid ${BORDER};
+          border-radius: 16px;
+          padding: 18px 22px;
+          margin-bottom: 24px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+          overflow-x: auto;
+        }
+
+        .step {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-shrink: 0;
+        }
+
+        .step-icon-wrap {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           font-size: 13px;
-          color: ${TEXT_MUTED};
-          font-weight: 500;
+          font-weight: 700;
+          flex-shrink: 0;
+          transition: all 0.25s ease;
         }
 
-        .breadcrumb span {
-          color: ${TEXT_MUTED};
-          transition: color 0.2s;
+        .step.done .step-icon-wrap {
+          background: ${SUCCESS};
+          color: #fff;
         }
 
-        .breadcrumb .active {
-          color: ${TEXT_PRIMARY};
+        .step.active .step-icon-wrap {
+          background: linear-gradient(135deg, ${SITE_PRIMARY}, #e0574a);
+          color: #fff;
+          box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.15);
+        }
+
+        .step.upcoming .step-icon-wrap {
+          background: #f1f5f9;
+          color: ${TEXT_MUTED};
+        }
+
+        .step-label {
+          font-size: 13.5px;
           font-weight: 600;
+          white-space: nowrap;
         }
 
-        .breadcrumb svg {
-          color: #cbd5e1;
+        .step.done .step-label { color: ${SUCCESS}; }
+        .step.active .step-label { color: ${SITE_PRIMARY}; }
+        .step.upcoming .step-label { color: ${TEXT_MUTED}; }
+
+        .step-connector {
+          flex: 1;
+          height: 2px;
+          background: #e2e8f0;
+          margin: 0 14px;
+          min-width: 24px;
+          position: relative;
+        }
+
+        .step-connector.filled {
+          background: ${SUCCESS};
+        }
+
+        /* ── Live preview strip ── */
+        .preview-strip {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          background: linear-gradient(135deg, #fff5f5, #fff);
+          border: 1.5px solid #fde2df;
+          border-radius: 16px;
+          padding: 16px 20px;
+          margin-bottom: 24px;
+          transition: all 0.3s ease;
+        }
+
+        .preview-strip-icon {
+          width: 46px;
+          height: 46px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, ${SITE_PRIMARY}, #e0574a);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+          flex-shrink: 0;
+        }
+
+        .preview-strip-text { flex: 1; min-width: 0; }
+
+        .preview-strip-title {
+          font-size: 14.5px;
+          font-weight: 700;
+          color: ${TEXT_PRIMARY};
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .preview-strip-sub {
+          font-size: 12.5px;
+          color: ${TEXT_SECONDARY};
+          margin-top: 2px;
+        }
+
+        .preview-strip-price {
+          font-size: 17px;
+          font-weight: 800;
+          color: ${SITE_PRIMARY};
+          white-space: nowrap;
           flex-shrink: 0;
         }
 
@@ -194,13 +335,8 @@ export default function NewListingPage() {
           flex-shrink: 0;
         }
 
-        .section-icon.blue {
-          background: linear-gradient(135deg, #3b82f6, #2563eb);
-        }
-
-        .section-icon.green {
-          background: linear-gradient(135deg, #10b981, #059669);
-        }
+        .section-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .section-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
 
         .section-title-wrap h2 {
           font-size: 18px;
@@ -238,12 +374,8 @@ export default function NewListingPage() {
           gap: 3px;
         }
 
-        .form-label .required {
-          color: ${DANGER};
-          font-weight: 700;
-        }
+        .form-label .required { color: ${DANGER}; font-weight: 700; }
 
-        /* ── Inputs ── */
         .form-input,
         .form-select,
         .form-textarea {
@@ -259,32 +391,51 @@ export default function NewListingPage() {
           outline: none;
         }
 
-        .form-input:hover,
-        .form-select:hover,
-        .form-textarea:hover {
+        .form-input:hover, .form-select:hover, .form-textarea:hover {
           border-color: #cbd5e1;
           background: #fafafa;
         }
 
-        .form-input:focus,
-        .form-select:focus,
-        .form-textarea:focus {
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
           border-color: ${ACCENT};
           background: ${CARD_BG};
           box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
         }
 
-        .form-input::placeholder,
-        .form-textarea::placeholder {
+        .form-input::placeholder, .form-textarea::placeholder {
           color: #a1a8b5;
           font-weight: 400;
         }
 
+        .price-input-wrap { position: relative; }
+
+        .price-prefix {
+          position: absolute;
+          left: 16px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 14px;
+          font-weight: 700;
+          color: ${SITE_PRIMARY};
+          pointer-events: none;
+        }
+
+        .price-input-wrap .form-input { padding-left: 46px; }
+
         .form-textarea {
-          min-height: 42px;
+          min-height: 90px;
           resize: vertical;
           line-height: 1.5;
         }
+
+        .char-counter {
+          font-size: 11.5px;
+          color: ${TEXT_MUTED};
+          text-align: right;
+          margin-top: -2px;
+        }
+
+        .char-counter.near-limit { color: ${DANGER}; font-weight: 600; }
 
         .form-select {
           cursor: pointer;
@@ -296,9 +447,7 @@ export default function NewListingPage() {
         }
 
         /* ── Category ── */
-        .category-wrap {
-          margin-bottom: 32px;
-        }
+        .category-wrap { margin-bottom: 32px; }
 
         .category-label {
           font-size: 13px;
@@ -313,12 +462,12 @@ export default function NewListingPage() {
           align-items: center;
           gap: 10px;
           padding: 10px 18px;
-          background: linear-gradient(135deg, ${ACCENT_LIGHT}, #dbeafe);
-          border: 1.5px solid ${BORDER_FOCUS};
+          background: linear-gradient(135deg, #fff5f5, #fde2df);
+          border: 1.5px solid #f5c6c1;
           border-radius: 12px;
           font-size: 14px;
           font-weight: 600;
-          color: #1d4ed8;
+          color: ${SITE_PRIMARY};
           font-family: inherit;
           cursor: pointer;
           transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -326,22 +475,14 @@ export default function NewListingPage() {
         }
 
         .category-pill:hover {
-          border-color: #93c5fd;
-          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+          border-color: #eb9c94;
+          box-shadow: 0 2px 8px rgba(192, 57, 43, 0.12);
           transform: translateY(-1px);
         }
 
-        .category-pill:active {
-          transform: translateY(0);
-        }
-
-        .category-pill svg {
-          transition: transform 0.2s;
-        }
-
-        .category-pill:hover svg {
-          transform: rotate(180deg);
-        }
+        .category-pill:active { transform: translateY(0); }
+        .category-pill svg { transition: transform 0.2s; }
+        .category-pill:hover svg { transform: rotate(180deg); }
 
         /* ── Divider ── */
         .divider {
@@ -351,12 +492,7 @@ export default function NewListingPage() {
         }
 
         /* ── Radio Group ── */
-        .radio-group {
-          display: flex;
-          gap: 24px;
-          align-items: center;
-          padding-top: 6px;
-        }
+        .radio-group { display: flex; gap: 24px; align-items: center; padding-top: 6px; }
 
         .radio-label {
           display: flex;
@@ -370,9 +506,7 @@ export default function NewListingPage() {
           transition: color 0.2s;
         }
 
-        .radio-label:hover {
-          color: ${ACCENT};
-        }
+        .radio-label:hover { color: ${ACCENT}; }
 
         .radio-input {
           width: 18px;
@@ -383,13 +517,8 @@ export default function NewListingPage() {
         }
 
         /* ── Address Input ── */
-        .address-wrap {
-          position: relative;
-        }
-
-        .address-wrap .form-input {
-          padding-right: 42px;
-        }
+        .address-wrap { position: relative; }
+        .address-wrap .form-input { padding-right: 42px; }
 
         .address-icon {
           position: absolute;
@@ -401,9 +530,7 @@ export default function NewListingPage() {
           transition: color 0.2s;
         }
 
-        .address-wrap:focus-within .address-icon {
-          color: ${ACCENT};
-        }
+        .address-wrap:focus-within .address-icon { color: ${ACCENT}; }
 
         /* ── Submit Button ── */
         .submit-wrap {
@@ -415,7 +542,7 @@ export default function NewListingPage() {
 
         .submit-btn {
           padding: 14px 56px;
-          background: linear-gradient(135deg, #3b82f6, ${ACCENT});
+          background: linear-gradient(135deg, ${SITE_PRIMARY}, #e0574a);
           color: #fff;
           font-size: 15px;
           font-weight: 600;
@@ -424,42 +551,47 @@ export default function NewListingPage() {
           cursor: pointer;
           transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
           font-family: inherit;
-          box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+          box-shadow: 0 4px 20px rgba(192, 57, 43, 0.3);
           letter-spacing: 0.2px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
 
         .submit-btn:hover {
-          background: linear-gradient(135deg, #2563eb, ${ACCENT_HOVER});
-          box-shadow: 0 6px 28px rgba(37, 99, 235, 0.4);
+          box-shadow: 0 6px 28px rgba(192, 57, 43, 0.4);
           transform: translateY(-2px);
         }
 
         .submit-btn:active {
           transform: translateY(0);
-          box-shadow: 0 2px 10px rgba(37, 99, 235, 0.2);
+          box-shadow: 0 2px 10px rgba(192, 57, 43, 0.2);
         }
 
         .submit-btn:disabled {
           opacity: 0.6;
           cursor: not-allowed;
           transform: none;
-          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+          box-shadow: 0 2px 8px rgba(192, 57, 43, 0.15);
         }
 
         /* ── Responsive ── */
         @media (max-width: 768px) {
-          .listing-container { padding: 24px 20px 48px; }
+          .listing-container { padding: 20px 20px 48px; }
           .form-card { padding: 28px; border-radius: 16px; }
           .form-row { grid-template-columns: 1fr; gap: 18px; }
-          .listing-title { font-size: 24px; }
-          .breadcrumb { margin-left: 0; margin-top: 8px; }
-          .listing-header { flex-wrap: wrap; }
+          .listing-title { font-size: 22px; }
+          .stepper { padding: 14px 16px; }
+          .step-label { display: none; }
+          .step-connector { margin: 0 6px; min-width: 16px; }
+          .preview-strip { flex-wrap: wrap; }
         }
 
         @media (max-width: 480px) {
-          .listing-container { padding: 20px 16px 40px; }
-          .form-card { padding: 24px; border-radius: 14px; }
+          .listing-container { padding: 16px 16px 40px; }
+          .form-card { padding: 20px; border-radius: 14px; }
           .submit-btn { width: 100%; justify-content: center; }
+          .preview-strip-price { font-size: 15px; }
         }
       `}</style>
 
@@ -469,13 +601,44 @@ export default function NewListingPage() {
             <button type="button" className="back-btn" onClick={() => router.back()}>
               <FiArrowLeft size={18} />
             </button>
-            <h1 className="listing-title">New Listing</h1>
+            <div className="listing-header-text">
+              <h1 className="listing-title">New Vehicle Listing</h1>
+              <p className="listing-subtitle">Fill in the details below — buyers see this first.</p>
+            </div>
           </div>
-          <div className="breadcrumb">
-            <span>Select Category</span>
-            <FiChevronRight size={14} />
-            <span className="active">Create Listing</span>
+
+          {/* Stepper */}
+          <div className="stepper">
+            {steps.map((step, idx) => (
+              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+                <div className={`step ${step.status}`}>
+                  <div className="step-icon-wrap">
+                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                  </div>
+                  <span className="step-label">{step.label}</span>
+                </div>
+                {idx < steps.length - 1 && (
+                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                )}
+              </div>
+            ))}
           </div>
+
+          {/* Live preview strip — updates as you type */}
+          {(title || price) && (
+            <div className="preview-strip">
+              <div className="preview-strip-icon">
+                <FiTruck size={20} />
+              </div>
+              <div className="preview-strip-text">
+                <div className="preview-strip-title">{title || "Untitled listing"}</div>
+                <div className="preview-strip-sub">
+                  {vehicleData.brand} · {vehicleData.vehicleType} · {vehicleData.modelYear}
+                </div>
+              </div>
+              {price && <div className="preview-strip-price">NPR {formattedPrice}</div>}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="form-card">
             {/* Section: Basic Information */}
@@ -496,21 +659,42 @@ export default function NewListingPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Price (NPR)<span className="required">*</span></label>
-                <input type="number" className="form-input" placeholder="2,500,000" value={price} onChange={(e) => setPrice(e.target.value)} required />
+                <div className="price-input-wrap">
+                  <span className="price-prefix">Rs.</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className="form-input"
+                    placeholder="2,500,000"
+                    value={formattedPrice}
+                    onChange={(e) => handlePriceChange(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ gridColumn: "1 / -1" }}>
                 <label className="form-label">Description<span className="required">*</span></label>
-                <textarea className="form-textarea" placeholder="Describe your vehicle..." value={description} onChange={(e) => setDescription(e.target.value)} required />
+                <textarea
+                  className="form-textarea"
+                  placeholder="Describe your vehicle — condition, features, why it's a great buy..."
+                  value={description}
+                  maxLength={descMax}
+                  onChange={(e) => setDescription(e.target.value)}
+                  required
+                />
+                <div className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}>
+                  {descLength}/{descMax}
+                </div>
               </div>
             </div>
 
             <div className="category-wrap">
               <label className="category-label">Category</label>
-              <div className="category-pill">
-                <FiFileText size={16} />
+              <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
+                <FiTruck size={16} />
                 Vehicle
                 <FiChevronDown size={14} />
-              </div>
+              </button>
             </div>
 
             <div className="divider" />
@@ -615,7 +799,12 @@ export default function NewListingPage() {
 
             <div className="submit-wrap">
               <button type="submit" className="submit-btn" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save & Continue"}
+                {isSubmitting ? "Saving..." : (
+                  <>
+                    Save & Continue to Photos
+                    <FiChevronRight size={16} />
+                  </>
+                )}
               </button>
             </div>
           </form>

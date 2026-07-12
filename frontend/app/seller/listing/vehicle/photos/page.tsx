@@ -99,6 +99,12 @@ export default function AddPhotosPage() {
   }
   setIsUploading(true);
   setTimeout(() => {
+    const raw = sessionStorage.getItem("draft-vehicle-listing");
+    const draft = raw ? JSON.parse(raw) : {};
+    sessionStorage.setItem(
+      "draft-vehicle-listing",
+      JSON.stringify({ ...draft, images })
+    );
     setIsUploading(false);
     toast.success("Photos saved!");
     router.push("/seller/listing/vehicle/preview");  
