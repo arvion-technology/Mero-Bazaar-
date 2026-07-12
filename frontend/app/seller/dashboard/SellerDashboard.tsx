@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { useKycStatus } from "../../../components/kycstatusContext";
+import { useEffect, useState } from "react";
 
 const ACCENT = "#3b82f6";
 const SUCCESS = "#10b981";
@@ -26,6 +27,13 @@ const chartData = [
   { month: "Jun", sales: 82, earnings: 75, expenses: 30 },
 ];
 
+interface MonthlySalesData {
+  month: string;
+  sales: number;
+  loss: number;
+  revenue: number;
+}
+
 export default function SellerDashboard() {
   const { kycStatus, kycRejectionReason } = useKycStatus();
   const maxVal = Math.max(...chartData.map(d => Math.max(d.sales, d.earnings)));
@@ -36,6 +44,9 @@ export default function SellerDashboard() {
   const isProfit = netProfit >= 0;
 
   const isKycLocked = kycStatus !== "VERIFIED";
+  const [chartData, setChartData] = useState<MonthlySalesData[]>([]);
+  const [chartLoading, setChartLoading] = useState(true);
+
 
   const stats = [
     {
@@ -52,6 +63,17 @@ export default function SellerDashboard() {
     { icon: FiClock, label: "Pending", value: "15", change: "-3.2%", changeType: "down" as const, sub: "needs attention", color: WARNING, bg: "#fffbeb" },
     { icon: FiLayers, label: "Products", value: "58", change: "+5", changeType: "up" as const, sub: "active listings", color: "#8b5cf6", bg: "#f5f3ff" },
   ];
+
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    fetch("/api/vendor-sales-overview?months=6", {
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+    })
+      .then((r) => r.json())
+      .then((d) => setChartData(d))
+      .catch(() => setChartData([]))
+      .finally(() => setChartLoading(false));
+  }, [session?.accessToken]);
 
   return (
     <>
