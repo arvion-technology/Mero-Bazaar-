@@ -5,6 +5,9 @@ import { UpdateVehicleDto } from './dto/update_vehicle.dto';
 import { ListingCategory } from '@prisma/client';
 import { QueryVehicleDto } from './dto/query_vehicle.dto';
 import { sanitizeVehicleDetails } from 'src/common/utils/vehicle_details.util';
+import sharp from 'sharp';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 @Injectable()
 export class VehiclesService {
@@ -168,5 +171,48 @@ async findAll(query: QueryVehicleDto) {
       throw new ForbiddenException('You do not own this listing');
     }
     return this.prisma.listing.delete({ where: { id } });
+  }
+
+  async savePhotos(id: string, files: Express.Multer.File[], userId: string) {
+    const existing = await this.findOne(id);
+    if (existing.userId !== userId) {
+      throw new ForbiddenException('You do not own this listing');
+    }
+
+    const savedPaths: string[] = [];
+
+    for (const file of files) {
+      const processedFilename = `processed-${file.filename}`;
+      const processedPath = path.join('./uploads/vehicles', processedFilename);
+
+      await sharp(file.path)
+        .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 80 })
+        .toFile(processedPath);
+
+      await this.safeUnlink(file.path);
+      savedPaths.push(`/uploads/vehicles/${processedFilename}`);
+    }
+
+    return this.prisma.listing.update({
+      where: { id },
+      data: { images: savedPaths },
+      include: { vehicle: true },
+    });
+  }
+
+  private async safeUnlink(filePath: string, retries = 3, delayMs = 150) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        await fs.unlink(filePath);
+        return;
+      } catch (err) {
+        if (i === retries - 1) {
+          console.error(`Failed to unlink ${filePath}:`, err);
+          return;
+        }
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
+    }
   }
 }

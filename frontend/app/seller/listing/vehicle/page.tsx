@@ -16,6 +16,7 @@ import {
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useSession } from "next-auth/react";
+import { useDraft } from "./layout";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -31,18 +32,6 @@ const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 const SITE_PRIMARY = "#C0392B";
 
-interface VehicleData {
-  vehicleType: string;
-  brand: string;
-  modelYear: string;
-  kmDriven: string;
-  condition: string;
-  bluebookStatus: string;
-  fuelType: string;
-  ownershipTransfer: boolean;
-  address: string;
-}
-
 const steps = [
   { label: "Category", icon: FiFileText, status: "done" as const },
   { label: "Details", icon: FiTruck, status: "active" as const },
@@ -52,23 +41,10 @@ const steps = [
 
 export default function NewListingPage() {
   const router = useRouter();
-  const { data: session } = useSession();
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [vehicleData, setVehicleData] = useState<VehicleData>({
-    vehicleType: "car",
-    brand: "Toyota",
-    modelYear: "2021",
-    kmDriven: "",
-    condition: "used",
-    bluebookStatus: "verified",
-    fuelType: "petrol",
-    ownershipTransfer: true,
-    address: "",
-  });
+  const { vehicleData, setVehicleData } = useDraft();
 
   const formattedPrice = useMemo(() => {
     if (!price) return "";
@@ -82,7 +58,7 @@ export default function NewListingPage() {
     setPrice(cleaned);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !price || !description) {
       toast.error("Please fill all required fields");
@@ -92,49 +68,10 @@ export default function NewListingPage() {
       toast.error("Please fill all vehicle details");
       return;
     }
-    setIsSubmitting(true);
 
-    try {
-      const res = await fetch("/api/vehicles", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.accessToken}`,
-         },
-        body: JSON.stringify({
-          type: vehicleData.vehicleType,
-          brand: vehicleData.brand,
-          model: vehicleData.brand, // TODO: add a real `model` field to VehicleData; brand is being reused as a placeholder
-          year: Number(vehicleData.modelYear),
-          km_driven: Number(vehicleData.kmDriven),
-          condition: vehicleData.condition,
-          bluebook_status: vehicleData.bluebookStatus,
-          fuel_type: vehicleData.fuelType,
-          ownership_transfer_ready: vehicleData.ownershipTransfer,
-          price: Number(price),
-          details: {
-            customTitle: title,
-            description,
-            address: vehicleData.address,
-          },
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        throw new Error(err?.message || "Failed to save listing");
-      }
-
-      const created = await res.json(); // { id, title, vehicle: {...}, ... }
-      sessionStorage.setItem("draft-listing-id", created.id);
-
-      toast.success("Details saved! Now add photos.");
-      router.push("/seller/listing/vehicle/photos");
-    } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
-    } finally {
-      setIsSubmitting(false);
-    }
+    setVehicleData({ ...vehicleData, title, price, description });
+    toast.success("Details saved! Now add photos.");
+    router.push("/seller/listing/vehicle/photos");
   };
 
   const descLength = description.length;
@@ -749,10 +686,11 @@ export default function NewListingPage() {
                 <label className="form-label">Vehicle Type<span className="required">*</span></label>
                 <select className="form-select" value={vehicleData.vehicleType} onChange={(e) => setVehicleData({ ...vehicleData, vehicleType: e.target.value })}>
                   <option value="car">Car</option>
-                  <option value="motorcycle">Motorcycle</option>
-                  <option value="bicycle">Bicycle</option>
+                  <option value="bike">Bike</option>
                   <option value="scooter">Scooter</option>
+                  <option value="ev">EV</option>
                   <option value="truck">Truck</option>
+                  <option value="spare_parts">Spare Parts</option>
                 </select>
               </div>
               <div className="form-group">
@@ -832,13 +770,9 @@ export default function NewListingPage() {
             </div>
 
             <div className="submit-wrap">
-              <button type="submit" className="submit-btn" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : (
-                  <>
-                    Save & Continue to Photos
-                    <FiChevronRight size={16} />
-                  </>
-                )}
+              <button type="submit" className="submit-btn">
+                Save & Continue to Photos
+                <FiChevronRight size={16} />
               </button>
             </div>
           </form>

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { FiArrowLeft, FiUploadCloud, FiX, FiImage, FiCheck } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useDraft } from "../layout";
 
 const ACCENT       = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -21,14 +22,17 @@ const TEXT_MUTED   = "#94a3b8";
 const BG           = "#f8fafc";
 const CARD_BG      = "#ffffff";
 
+interface ImageItem {
+  file: File;
+  preview: string;
+}
+
 export default function AddPhotosPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
-
-  const [images, setImages] = useState<string[]>([]);
+  const { images, setImages } = useDraft();
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
   const maxPhotos = 10;
 
@@ -40,17 +44,15 @@ export default function AddPhotosPage() {
       return;
     }
     const toProcess = Array.from(files).slice(0, remaining);
+    const valid: ImageItem[] = [];
     toProcess.forEach((file) => {
       if (!file.type.startsWith("image/")) {
         toast.error(`${file.name} is not an image`);
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImages((prev) => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
+      valid.push({ file, preview: URL.createObjectURL(file) });
     });
+    setImages([...images, ...valid]);
   };
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -76,50 +78,31 @@ export default function AddPhotosPage() {
     e.stopPropagation();
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    dragCounter.current = 0;
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFiles(e.dataTransfer.files);
-      e.dataTransfer.clearData();
-    }
-  }, [images.length]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      dragCounter.current = 0;
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFiles(e.dataTransfer.files);
+        e.dataTransfer.clearData();
+      }
+    },
+    [images.length]
+  );
 
   const removeImage = (idx: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== idx));
+    URL.revokeObjectURL(images[idx].preview);
+    setImages(images.filter((_, i) => i !== idx));
   };
 
-
-  const handleContinue = async () => {
+  const handleContinue = () => {
     if (images.length === 0) {
       toast.error("Please upload at least one photo");
       return;
     }
-    setIsUploading(true);
-    try {
-      const listingId = sessionStorage.getItem("draft-listing-id");
-      if (!listingId) {
-        toast.error("No listing found. Please fill in details first.");
-        router.push("/seller/listing/vehicle");
-        return;
-      }
-      const res = await fetch(`/api/vehicles/${listingId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ images }),
-      });
-
-      if (!res.ok) throw new Error("Failed to save photos");
-
-      toast.success("Photos saved!");
-      router.push("/seller/listing/vehicle/preview");
-    } catch (err) {
-      toast.error("Something went wrong saving photos");
-    } finally {
-      setIsUploading(false);
-    }
+    router.push("/seller/listing/vehicle/preview");
   };
 
   return (
@@ -605,7 +588,7 @@ export default function AddPhotosPage() {
               <div className="photo-grid">
                 {images.map((img, idx) => (
                   <div key={idx} className="photo-item">
-                    <img src={img} alt={`Photo ${idx + 1}`} />
+                    <img src={img.preview} alt={`Photo ${idx + 1}`} />
                     {idx === 0 && <span className="main-badge">Main</span>}
                     <button type="button" className="photo-remove" onClick={() => removeImage(idx)}>
                       <FiX size={14} />
@@ -647,12 +630,9 @@ export default function AddPhotosPage() {
 
           {/* Continue */}
           <div className="continue-wrap">
-            <button type="button" className="continue-btn" onClick={handleContinue} disabled={isUploading}>
-              {isUploading ? (
-                <><span className="spinner" />Uploading...</>
-              ) : (
-                <><FiCheck size={18} />Save & Continue</>
-              )}
+            <button type="button" className="continue-btn" onClick={handleContinue}>
+              <FiCheck size={18} />
+              Save & Continue
             </button>
           </div>
         </div>

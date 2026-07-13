@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { FiArrowLeft, FiCheck, FiSend } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useDraft } from "../layout";
 
 const ACCENT       = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -16,79 +18,98 @@ const TEXT_SECONDARY = "#64748b";
 const BG           = "#f8fafc";
 const CARD_BG      = "#ffffff";
 
-interface ListingDetail {
-  label: string;
-  value: string | number | undefined;
-}
-
-interface ListingData {
-  category: string;
-  title: string;
-  price: string;
-  images: string[];
-  details: ListingDetail[];
-  description: string;
-}
-
-
 export default function PreviewListingPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const { vehicleData, images } = useDraft();
   const [isPublishing, setIsPublishing] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [ listing, setListing] = useState<ListingData | null>(null);
 
-  const handlePublish = () => {
-    setIsPublishing(true);
-    setTimeout(() => {
-      sessionStorage.removeItem("draft-vehicle-listing");
-      setIsPublishing(false);
-      toast.success("Listing published successfully!");
-      router.push("/seller/products");
-    }, 800);
+  const listing = {
+    category: "Vehicle",
+    title: vehicleData.title || "Untitled listing",
+    price: `NPR ${Number(vehicleData.price || 0).toLocaleString("en-IN")}`,
+    images: images.length ? images.map((img) => img.preview) : ["/placeholder.png"],
+    details: [
+      { label: "Vehicle Type", value: vehicleData.vehicleType },
+      { label: "Condition", value: vehicleData.condition },
+      { label: "Brand", value: vehicleData.brand },
+      { label: "Model Year", value: vehicleData.modelYear },
+      { label: "KM Driven", value: `${vehicleData.kmDriven} km` },
+      { label: "Fuel Type", value: vehicleData.fuelType },
+      { label: "Bluebook Status", value: vehicleData.bluebookStatus },
+      { label: "Location", value: vehicleData.address },
+    ],
+    description: vehicleData.description,
   };
 
-  useEffect(() => {
-    const id = sessionStorage.getItem("draft-listing-id");
+const handlePublish = async () => {
+  if (images.length === 0) {
+    toast.error("Please add at least one photo before publishing");
+    router.push("/seller/listing/vehicle/photos");
+    return;
+  }
 
-    if (!id) {
-      const timer = setTimeout(() => {
-        toast.error("No listing found. Start a new listing!");
-        router.push("/seller/listing/vehicle");
-      }, 0);
-      return () => clearTimeout(timer);
+  setIsPublishing(true);
+  try {
+    const vehicleRes = await fetch("/api/vehicles", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+      body: JSON.stringify({
+        type: vehicleData.vehicleType,
+        brand: vehicleData.brand,
+        model: vehicleData.brand,
+        year: vehicleData.modelYear,
+        km_driven: vehicleData.kmDriven,
+        condition: vehicleData.condition,
+        bluebook_status: vehicleData.bluebookStatus,
+        fuel_type: vehicleData.fuelType,
+        ownership_transfer_ready: vehicleData.ownershipTransfer,
+        price: vehicleData.price,
+        details: {
+          customTitle: vehicleData.title,
+          description: vehicleData.description,
+          address: vehicleData.address,
+        },
+      }),
+    });
+
+    if (!vehicleRes.ok) {
+      const err = await vehicleRes.json().catch(() => null);
+      throw new Error(err?.message || "Failed to create listing");
     }
 
-    fetch(`/api/vehicles/${id}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to load listing");
-        return res.json();
-      })
-      .then((data) => {
-        const v = data.vehicle ?? {};
-        const details = v.details ?? {};
-        setListing({
-          category: "Vehicle",
-          title: details.customTitle || data.title,
-          price: `NPR ${data.price?.toLocaleString("en-IN") ?? "—"}`,
-          images: data.images?.length ? data.images : ["/placeholder.png"],
-          details: [
-            { label: "Vehicle Type", value: v.type },
-            { label: "Condition", value: v.condition },
-            { label: "Brand", value: v.brand },
-            { label: "Model Year", value: v.year },
-            { label: "KM Driven", value: `${v.km_driven ?? "—"} km` },
-            { label: "Fuel Type", value: v.fuel_type },
-            { label: "Bluebook Status", value: v.bluebook_status },
-            { label: "Location", value: details.address },
-          ],
-          description: details.description || data.description,
-        });
-      })
-      .catch(() => {
-        toast.error("Could not load listing");
-        router.push("/seller/listing/vehicle");
-      });
-  }, []);
+    const vehicle = await vehicleRes.json();
+
+    const photoFormData = new FormData();
+    images.forEach(({ file }) => photoFormData.append("images", file));
+
+    const photosRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/vehicles/${vehicle.id}/photos`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session?.accessToken}` },
+      body: photoFormData,
+    });
+
+    if (!photosRes.ok) {
+      const err = await photosRes.json().catch(() => null);
+      throw new Error(err?.message || "Vehicle created but photo upload failed");
+    }
+
+    toast.success("Listing published successfully!");
+    router.push("/seller/products");
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      toast.error(err.message);
+    }else {
+    toast.error("Something went wrong publishing");
+  } 
+  }finally {
+    setIsPublishing(false);
+  }
+};
 
   if (!listing) {
     return (
