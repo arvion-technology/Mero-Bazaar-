@@ -5,7 +5,7 @@ export async function GET(req: NextRequest) {
   const months = req.nextUrl.searchParams.get("months") ?? "6";
 
   const res = await fetch(
-    `${process.env.BACKEND_URL}/vendor-sales-overview?months=${months}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/vendor-sales-overview?months=${months}`,
     { headers: { Authorization: token ?? "" } }
   );
 

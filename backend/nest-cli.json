@@ -4,5 +4,9 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": false
+  },
+  "watchOptions": {
+    "watch": true,
+    "ignored": ["uploads/**", "**/uploads/**"]
   }
 }

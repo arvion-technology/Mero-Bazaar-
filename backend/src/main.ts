@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   console.log('JWT_SECRET:', process.env.JWT_SECRET);
@@ -18,6 +19,8 @@ async function bootstrap() {
   });
 
   app.setGlobalPrefix('api');
+  app.use(json({ limit: '15mb' }));
+  app.use(urlencoded({ limit: '15mb', extended: true }));
 
   app.useGlobalPipes(
     new ValidationPipe({
