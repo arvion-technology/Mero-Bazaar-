@@ -46,6 +46,23 @@ export class ListingsService {
     });
   }
 
+  async findAllMine(userId: string) {
+    return this.prisma.listing.findMany({
+      where: { userId },
+      include: {
+        vehicle: true,
+        job: true,
+        medical: true,
+        trades: true,
+        rental: true,
+        agriculture: true,
+        secondhand: true,
+        foods: true,
+        beauty: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
   async update(id: string, dto: UpdateListingDto, userId: string) {
     return this.prisma.listing.update({
       where: { id, userId },

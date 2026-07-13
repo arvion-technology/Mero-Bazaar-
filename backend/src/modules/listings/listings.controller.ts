@@ -30,6 +30,12 @@ export class ListingsController {
   return this.listingsService.getRelated(category, exclude, Number(limit));
  }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('mine')
+  findAllMine(@Request() req) {
+    return this.listingsService.findAllMine(req.user.id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.listingsService.findOne(id);
