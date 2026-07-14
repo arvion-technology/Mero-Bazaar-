@@ -42,6 +42,7 @@ export async function fetchRelatedListings(
 
     const safeCategory = category.toUpperCase();
     const query = new URLSearchParams({ category: safeCategory, exclude: excludeId, limit: "8"});
+    const IMG_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/listings?${query.toString()}`,
@@ -74,9 +75,10 @@ export async function fetchRelatedListings(
           ? `Rs. ${item.price.toLocaleString("en-IN")}`
           : "Price on request",
       location: item.location ?? "Nepal",
-      image: item.images?.[0] ?? "/placeholder.png",
-      verified: item.vehicle?.bluebook_status === "verified",
-    }));
+      image: item.images?.[0]
+        ? `${IMG_BASE}${item.images[0]}`
+        : "/placeholder.png",      verified: item.vehicle?.bluebook_status === "verified",
+        }));
   } catch (err) {
     console.error("[fetchRelatedListings] failed:", err);
     return [];

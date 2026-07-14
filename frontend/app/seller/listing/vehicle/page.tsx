@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useSession } from "next-auth/react";
 import { useDraft } from "./layout";
+import { VEHICLE_DETAILS_LABELS } from "@/app/category/vehicles/[id]/components/shared/vehicleDetailsMap";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -695,17 +696,28 @@ export default function NewListingPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Brand<span className="required">*</span></label>
-                <select className="form-select" value={vehicleData.brand} onChange={(e) => setVehicleData({ ...vehicleData, brand: e.target.value })}>
-                  <option value="Toyota">Toyota</option>
-                  <option value="Honda">Honda</option>
-                  <option value="Suzuki">Suzuki</option>
-                  <option value="Hyundai">Hyundai</option>
-                  <option value="Kia">Kia</option>
-                  <option value="Ford">Ford</option>
-                  <option value="BMW">BMW</option>
-                  <option value="Other">Other</option>
-                </select>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. Toyota, Bajaj, Royal Enfield"
+                  value={vehicleData.brand}
+                  onChange={(e) => setVehicleData({ ...vehicleData, brand: e.target.value })}
+                  required
+                />
               </div>
+
+              <div className="form-group">
+                <label className="form-label">Model<span className="required">*</span></label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. Corolla, Civic"
+                  value={vehicleData.model}
+                  onChange={(e) => setVehicleData({ ...vehicleData, model: e.target.value })}
+                  required
+                />
+              </div>
+
               <div className="form-group">
                 <label className="form-label">Model Year<span className="required">*</span></label>
                 <select className="form-select" value={vehicleData.modelYear} onChange={(e) => setVehicleData({ ...vehicleData, modelYear: e.target.value })}>
@@ -768,6 +780,40 @@ export default function NewListingPage() {
                 </div>
               </div>
             </div>
+
+            <div className="divider" />
+
+              <div className="section-header">
+                <div className="section-icon blue">
+                  <FiTruck size={18} color="#fff" />
+                </div>
+                <div className="section-title-wrap">
+                  <h2>Specifications</h2>
+                  <p>Fields specific to {vehicleData.vehicleType}</p>
+                </div>
+              </div>
+
+              <div className="form-row">
+                {Object.entries(VEHICLE_DETAILS_LABELS[vehicleData.vehicleType as keyof typeof VEHICLE_DETAILS_LABELS] ?? {}).map(
+                  ([key, label]) => (
+                    <div className="form-group" key={key}>
+                      <label className="form-label">{label}</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder={label}
+                        value={vehicleData.details[key] ?? ""}
+                        onChange={(e) =>
+                          setVehicleData({
+                            ...vehicleData,
+                            details: { ...vehicleData.details, [key]: e.target.value },
+                          })
+                        }
+                      />
+                    </div>
+                  )
+                )}
+              </div>
 
             <div className="submit-wrap">
               <button type="submit" className="submit-btn">

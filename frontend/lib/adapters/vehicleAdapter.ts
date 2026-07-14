@@ -62,6 +62,7 @@ export function adaptListing(db: DBListing): ListingDetail {
       : "https://www.google.com/maps";
 
   const categoryLabel = v ? TYPE_LABEL[v.type] : "Vehicles";
+  const IMG_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
   return {
     id: db.id,
@@ -85,7 +86,9 @@ export function adaptListing(db: DBListing): ListingDetail {
 
     breadcrumbs: ["Vehicles", categoryLabel, v?.brand ?? ""].filter(Boolean),
 
-    images: db.images?.length ? db.images : ["/placeholder.png"],
+    images: db.images?.length
+      ? db.images.map((img) => `${IMG_BASE}${img}`)
+      : ["/placeholder.png"],
 
     description: db.description ?? "No description provided.",
     googleMapsUrl,
@@ -106,7 +109,11 @@ export function adaptListing(db: DBListing): ListingDetail {
 
     seller: {
       name: user.name,
-      avatar: user.image ?? "/placeholder-avatar.png",
+      avatar: user.image
+        ? user.image.startsWith("http")
+          ? user.image
+          : `${IMG_BASE}${user.image}`
+        : "/placeholder-avatar.png",
       rating: avgRating,
       reviewCount: reviews.length,
       isVerified: true,

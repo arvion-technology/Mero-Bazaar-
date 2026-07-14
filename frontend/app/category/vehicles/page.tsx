@@ -8,7 +8,6 @@ import {
   FiHeart,
   FiMapPin,
   FiChevronDown,
-  FiZap,
 } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 import { IoSpeedometerOutline } from "react-icons/io5";
@@ -72,6 +71,13 @@ export default function VehiclesPage() {
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [selectedFuels, setSelectedFuels] = useState<string[]>([]);
+  const IMG_BASE = process.env.NEXT_PUBLIC_API_URL;
+  const displayTitle = (v: Vehicle) => {
+  const { brand, model } = v.vehicle;
+  return brand.toLowerCase() === model.toLowerCase()
+    ? `${brand} ${v.vehicle.year}`
+    : v.title;
+  };
 
   useEffect(() => {
     (async () => {
@@ -585,7 +591,7 @@ const displayed = vehicles.filter((v) => {
                           {/* Image */}
                           <div className="vp-card-img-wrap">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={v.images?.[0] || "/placeholder.png"} alt={v.title} className="vp-card-img" />
+                            <img src={v.images?.[0] ? `${IMG_BASE}${v.images[0]}` : "/placeholder.png"} alt={v.title} className="vp-card-img" />
                             <span className="vp-card-cat">{vehicle.type}</span>
                             <button className="vp-heart" aria-label="Save" onClick={(e) => toggleFav(v.id, e)}>
                               {isFav
@@ -596,7 +602,7 @@ const displayed = vehicles.filter((v) => {
 
                           {/* Body */}
                           <div className="vp-card-body">
-                            <p className="vp-card-title">{v.title}</p>
+                            <p className="vp-card-title">{displayTitle(v)}</p>
                             <p className="vp-card-price">{v.price}</p>
 
                             {/* Meta */}

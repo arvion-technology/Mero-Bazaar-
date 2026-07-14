@@ -8,6 +8,7 @@ interface VehicleData {
   description: string;
   vehicleType: string;
   brand: string;
+  model: string;
   modelYear: string;
   kmDriven: string;
   condition: string;
@@ -15,6 +16,7 @@ interface VehicleData {
   fuelType: string;
   ownershipTransfer: boolean;
   address: string;
+  details: Record<string, string>;
 }
 
 interface ImageItem {
@@ -35,6 +37,7 @@ const defaultVehicleData: VehicleData = {
   description: "",
   vehicleType: "car",
   brand: "Toyota",
+  model: "",
   modelYear: "2021",
   kmDriven: "",
   condition: "used",
@@ -42,6 +45,7 @@ const defaultVehicleData: VehicleData = {
   fuelType: "petrol",
   ownershipTransfer: true,
   address: "",
+  details: {},
 };
 
 const DraftContext = createContext<DraftContextType | null>(null);

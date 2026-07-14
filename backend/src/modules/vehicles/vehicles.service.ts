@@ -23,7 +23,7 @@ export class VehiclesService {
       data: {
         title: `${dto.brand} ${dto.model} ${dto.year}`,
         category: ListingCategory.VEHICLE,
-        description: `${dto.brand} ${dto.model}`,
+        description: dto.description ?? `${dto.brand} ${dto.model}`,
         price: dto.price,
         images: dto.images ?? [],
         latitude: dto.latitude,

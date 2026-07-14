@@ -41,6 +41,10 @@ export class CreateVehicleDto {
   @IsInt()
   @Min(0)
   price?: number;
+  
+  @IsOptional()
+  @IsString()
+  description?: string;
 
   @IsOptional()
   @IsArray()
