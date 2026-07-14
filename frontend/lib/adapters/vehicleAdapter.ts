@@ -24,7 +24,7 @@ export function formatPrice(p: number | null): string {
 }
 
 //Main adapter
-export function adaptListing(db: DBListing): ListingDetail {
+export async function adaptListing(db: DBListing): Promise<ListingDetail> {
   const v = db.vehicle ?? null;
 
   // SAFE FALLBACKS
@@ -64,6 +64,21 @@ export function adaptListing(db: DBListing): ListingDetail {
   const categoryLabel = v ? TYPE_LABEL[v.type] : "Vehicles";
   const IMG_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
+  // Reverse geocode location
+  let location = "Nepal";
+  if (db.latitude != null && db.longitude != null) {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${db.latitude}&lon=${db.longitude}`,
+        { headers: { "User-Agent": "MeroBazaar/1.0" } }
+      );
+      const geo = await res.json();
+      location = geo?.address?.suburb || geo?.address?.city || geo?.display_name || "Nepal";
+    } catch {
+      // fall back to "Nepal" silently
+    }
+  }
+
   return {
     id: db.id,
     listingId: `#VH${db.id.slice(-6).toUpperCase()}`,
@@ -71,7 +86,7 @@ export function adaptListing(db: DBListing): ListingDetail {
     price: formatPrice(db.price),
 
     negotiable: true,
-    location: "Nepal",
+    location,
 
     distanceFrom:
       db.latitude && db.longitude

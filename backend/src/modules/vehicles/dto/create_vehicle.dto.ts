@@ -41,7 +41,7 @@ export class CreateVehicleDto {
   @IsInt()
   @Min(0)
   price?: number;
-  
+
   @IsOptional()
   @IsString()
   description?: string;
@@ -60,6 +60,10 @@ export class CreateVehicleDto {
   @Type(() => Number)
   @IsNumber()
   longitude?: number;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
 
   @IsOptional()
   @IsObject()

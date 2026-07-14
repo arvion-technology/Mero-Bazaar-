@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useDraft } from "../layout";
 import { VEHICLE_DETAILS_LABELS } from "@/app/category/vehicles/[id]/components/shared/vehicleDetailsMap";
+import { forwardGeocode } from "@/lib/fetcher";
 
 const ACCENT       = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -62,6 +63,8 @@ const handlePublish = async () => {
 
   setIsPublishing(true);
   try {
+    const { latitude, longitude } = await forwardGeocode(vehicleData.address);
+
     const vehicleRes = await fetch("/api/vehicles", {
       method: "POST",
       headers: {
@@ -80,6 +83,9 @@ const handlePublish = async () => {
         ownership_transfer_ready: vehicleData.ownershipTransfer,
         price: vehicleData.price,
         description: vehicleData.description,
+        address: vehicleData.address,
+        latitude,
+        longitude,
         details: vehicleData.details,
       }),
     });

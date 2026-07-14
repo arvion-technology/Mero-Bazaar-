@@ -70,11 +70,12 @@ export default function ListingInfo({
         </span>
         <span style={{ cursor: "pointer", color: "#2563eb" }}
           onClick={(e) => { e.preventDefault();
-            if (latitude == null || longitude == null) return;
+            if (latitude == null || longitude == null) {
             window.open(
-              `https://www.google.com/maps?q=${latitude},${longitude}`,
-              "_blank"
-            );
+              `https://www.google.com/maps?q=${latitude},${longitude}`,"_blank");
+                } else if (location) {
+                  window.open(`https://www.google.com/maps/search/${encodeURIComponent(location)}`, "_blank");
+                }
           }}
         >
           <FiMapPin size={11} /> View on map
