@@ -36,6 +36,12 @@ export class ListingsController {
     return this.listingsService.findAllMine(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('mine/stats')
+  getMyStats(@Request() req) {
+    return this.listingsService.getMyStats(req.user.id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.listingsService.findOne(id);

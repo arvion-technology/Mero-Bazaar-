@@ -83,6 +83,26 @@ export class ListingsService {
     });
   }
 
+  async getMyStats(userId: string) {
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const [totalProducts, productsThisMonth, productsLastMonth] = await Promise.all([
+      this.prisma.listing.count({ where: { userId } }),
+      this.prisma.listing.count({
+        where: { userId, createdAt: { gte: startOfThisMonth } },
+      }),
+      this.prisma.listing.count({
+        where: {
+          userId,
+          createdAt: { gte: startOfLastMonth, lt: startOfThisMonth },
+        },
+      }),
+    ]);
+    return { totalProducts, productsThisMonth, productsLastMonth };
+  }
+
 async search(query: SearchListingDto) {
   const where = buildListingFilter(query);
 
