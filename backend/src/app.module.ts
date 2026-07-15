@@ -28,6 +28,8 @@ import { AdminUserService } from './modules/admin-user/admin-user.service';
 import { AdminUserController } from './modules/admin-user/admin-user.controller';
 import { AdminUserModule } from './modules/admin-user/admin-user.module';
 import { VendorSalesOverviewModule } from './modules/vendor-sales-overview/vendor-sales-overview.module';
+import { WishlistModule } from './modules/wishlist/wishlist.module';
+import { SellerModule } from './modules/seller/seller.module';
 
 @Module({
   imports: [
@@ -55,6 +57,8 @@ import { VendorSalesOverviewModule } from './modules/vendor-sales-overview/vendo
     NotificationsModule,
     AdminUserModule,
     VendorSalesOverviewModule,
+    WishlistModule,
+    SellerModule,
   ],
   controllers: [AppController, AdminUserController],
   providers: [AppService, AdminUserService],

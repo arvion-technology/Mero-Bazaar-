@@ -66,6 +66,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
             specs={listing.specs}
             latitude={listing.latitude}
             longitude={listing.longitude}
+            listingId={listing.id}
           />
 
           <ListingDescription description={listing.description} />
@@ -76,7 +77,12 @@ export default async function ListingDetailPage({ params }: PageProps) {
         </div>
 
         <div className="ld-right">
-          <SellerCard seller={listing.seller}  reviews={listing.reviews}/>
+        <SellerCard
+          seller={listing.seller}
+          reviews={listing.reviews}
+          listingId={listing.id}
+          sellerId={listing.sellerId}
+        />
           {/* <LocationCard
             location={listing.location}
             distanceFrom={listing.distanceFrom}

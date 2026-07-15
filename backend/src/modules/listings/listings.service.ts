@@ -36,14 +36,43 @@ export class ListingsService {
   }
 
   async findOne(id: string) {
-    return this.prisma.listing.findUnique({
+    const listing = await this.prisma.listing.findUnique({
       where: { id },
       include: {
         vehicle: true,
         job: true,
         medical: true,
+        reviews: true,
+        user: {
+          select: {
+            name: true,
+            image: true,
+            phone: true,
+            createdAt: true,
+            vendorProfile: {
+              select: { isVerified: true },
+            },
+            _count: {
+              select: { listings: true },
+            },
+          },
+        },
       },
     });
+
+    if (!listing) return null;
+
+    const sellerRatingAgg = await this.prisma.review.aggregate({
+      where: { listing: { userId: listing.userId } },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    return {
+      ...listing,
+      sellerRating: sellerRatingAgg._avg.rating ?? 0,
+      sellerReviewCount: sellerRatingAgg._count.rating,
+    };
   }
 
   async findAllMine(userId: string) {

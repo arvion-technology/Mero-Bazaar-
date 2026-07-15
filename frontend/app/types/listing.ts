@@ -6,6 +6,7 @@ export type VehicleDetails = Record<string, unknown>;
 
 export type DBListing = {
   id: string;
+  userId: string;
   title: string;
   description: string | null;
   price: number | null;
@@ -14,6 +15,8 @@ export type DBListing = {
   longitude: number | null;
   images: string[];
   createdAt: Date;
+  sellerRating: number;
+  sellerReviewCount: number;
   vehicle: {
     type: VehicleType;
     brand: string;
@@ -36,6 +39,7 @@ export type DBListing = {
     isTrusted?: boolean;
     responseRate?: string | null;
     avgResponseTime?: string | null;
+    vendorProfile?: { isVerified: boolean } | null;
     _count?: { listings: number };
   };
   reviews: { 
@@ -48,6 +52,7 @@ export type DBListing = {
 
 export type ListingDetail = {
   id: string;
+  sellerId: string;
   listingId: string;
   title: string;
   price: string;
@@ -105,6 +110,52 @@ export type RelatedListing = {
   location: string;
   image: string;
   verified: boolean;
+};
+
+//seller public profile
+export type SellerProfile = {
+  id: string;
+  name: string | null;
+  avatar: string | null;
+  isVerified: boolean;
+  memberSince: string;
+  business: {
+    name: string;
+    type: string;
+    description: string | null;
+    address: string | null;
+    isVerified: boolean;
+  } | null;
+  rating: number;
+  reviewCount: number;
+  totalListings: number;
+};
+
+export type SellerReview = {
+  id: string;
+  reviewerName: string;
+  reviewerAvatar: string | null;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+  listingId: string;
+  listingTitle: string;
+};
+
+export type SellerListingCard = {
+  id: string;
+  title: string;
+  price: number | null;
+  images: string[];
+  category: string;
+  createdAt: string;
+};
+
+export type PaginatedResponse<T> = {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
 };
 
 export type Vehicle = NonNullable<DBListing["vehicle"]>;

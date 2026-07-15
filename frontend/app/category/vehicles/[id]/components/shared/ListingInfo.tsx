@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FiShare2, FiHeart, FiMapPin, FiClock,
   FiTruck, FiTag, FiCalendar, FiDroplet,
@@ -9,21 +9,71 @@ import { FaHeart } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import { TbManualGearbox } from "react-icons/tb";
 import type { ListingDetail } from "../../../../../types/listing";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 
 type Props = Pick<
   ListingDetail,
-  | "title" | "price" | "negotiable" | "driven" | "postedDaysAgo" | "isVerified" | "specs" |"latitude" | "longitude" >;
+  | "title" | "price" | "negotiable" | "driven" | "postedDaysAgo" | "isVerified" | "specs" |"latitude" | "longitude" > & { listingId: string };
 
 export default function ListingInfo({
-  title, price, negotiable, driven, postedDaysAgo, isVerified, specs, latitude, longitude,
+  title, price, negotiable, driven, postedDaysAgo, isVerified, specs, latitude, longitude, listingId,
 }: Props) {
+  const { data: session } = useSession();
   const [isFav, setIsFav]     = useState(false);
+  const [favLoading, setFavLoading] = useState(false);
   const [copied, setCopied]   = useState(false);
+
+  useEffect(() => {
+    if (!session?.accessToken) return;
+
+  fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/check/${listingId}`, {
+    headers: { Authorization: `Bearer ${session.accessToken}` },
+  })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      if (data) setIsFav(data.favorited);
+    })
+    .catch(() => {});
+}, [listingId, session?.accessToken]);
+
 
   const handleShare = () => {
     navigator.clipboard?.writeText(window.location.href).catch(() => {});
     setCopied(true);
+    toast.success("Link copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
+    }
+    setFavLoading(true);
+    const prevState = isFav;
+    setIsFav(!prevState);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        body: JSON.stringify({ listingId }),
+      });
+      if (!res.ok) throw new Error("Failed to update wishlist");
+
+      const data = await res.json();
+      setIsFav(data.favorited);
+      toast.success(data.favorited ? "Added to wishlist" : "Removed from wishlist");
+    } catch {
+      setIsFav(prevState);
+      toast.error("Something went wrong, please try again");
+    } finally {
+      setFavLoading(false);
+    }
   };
 
   return (
@@ -47,7 +97,8 @@ export default function ListingInfo({
           <button
             className={`ld-action-btn${isFav ? " fav-active" : ""}`}
             aria-label="Save to wishlist"
-            onClick={() => setIsFav((v) => !v)}
+            onClick={handleToggleFavorite}
+            disabled={favLoading}
           >
             <span className="ld-tooltip">{isFav ? "Saved" : "Save"}</span>
             {isFav ? <FaHeart size={15} color="#e74c3c" /> : <FiHeart size={15} color="#888" />}
@@ -70,9 +121,8 @@ export default function ListingInfo({
         </span>
         <span style={{ cursor: "pointer", color: "#2563eb" }}
           onClick={(e) => { e.preventDefault();
-            if (latitude == null || longitude == null) {
-            window.open(
-              `https://www.google.com/maps?q=${latitude},${longitude}`,"_blank");
+            if (latitude != null && longitude != null) {
+            window.open(`https://www.google.com/maps?q=${latitude},${longitude}`,"_blank");
             } 
           }}
         >

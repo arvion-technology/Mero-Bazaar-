@@ -26,44 +26,39 @@ import {
 
 const PRIMARY = "#C0392B";
 
-const initialWishlist = [
-  {
-    id: 1,
-    image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=200&h=200&fit=crop",
-    name: "Honda Shine",
-    price: 350000,
-    currency: "NPR",
-    category: "Vehicles",
-    addedDate: "2 days ago",
-  },
-  {
-    id: 2,
-    image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=200&h=200&fit=crop",
-    name: "Organic Tomatoes",
-    price: 50,
-    currency: "NPR",
-    category: "Groceries",
-    addedDate: "5 days ago",
-  },
-  {
-    id: 3,
-    image: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=200&h=200&fit=crop",
-    name: "Wooden Study Table",
-    price: 650,
-    currency: "NPR",
-    category: "Furniture",
-    addedDate: "1 week ago",
-  },
-  {
-    id: 4,
-    image: "https://images.unsplash.com/photo-1516762689617-e1cffcef479d?w=200&h=200&fit=crop",
-    name: "Baby Clothes Set",
-    price: 5000,
-    currency: "NPR",
-    category: "Fashion",
-    addedDate: "2 weeks ago",
-  },
-];
+type WishlistApiItem = {
+  id: string;
+  listingId: string;
+  createdAt: string;
+  listing: {
+    id: string;
+    title: string;
+    price: number | null;
+    images: string[];
+    category: string;
+  };
+};
+
+type WishlistDisplayItem = {
+  id: string;
+  listingId: string;
+  image: string;
+  name: string;
+  price: number;
+  currency: string;
+  category: string;
+  addedDate: string;
+};
+
+function timeAgo(dateStr: string): string {
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (days <= 0) return "Today";
+  if (days === 1) return "1 day ago";
+  if (days < 7) return `${days} days ago`;
+  const weeks = Math.floor(days / 7);
+  return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
+} 
 
 function formatPrice(price: number, currency: string) {
   return `${currency} ${price.toLocaleString("en-IN")}`;
@@ -73,9 +68,10 @@ export default function UserWishlist() {
   const [activeTab, setActiveTab] = useState("wishlist");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [wishlistItems, setWishlistItems] = useState(initialWishlist);
+  const [wishlistItems, setWishlistItems] = useState<WishlistDisplayItem[]>([]);
+  const [loadingWishlist, setLoadingWishlist] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [removingId, setRemovingId] = useState<number | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -118,6 +114,31 @@ export default function UserWishlist() {
     { id: "settings", icon: FiSettings, label: "Settings", href: "/user/settings" },
   ];
 
+
+  useEffect(() => {
+    if (!token) return;
+    setLoadingWishlist(true);
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: WishlistApiItem[]) => {
+        const mapped: WishlistDisplayItem[] = data.map((item) => ({
+          id: item.id,
+          listingId: item.listingId,
+          image: item.listing.images?.[0] ? getImageUrl(item.listing.images[0]) : "/placeholder.png",
+          name: item.listing.title,
+          price: item.listing.price ?? 0,
+          currency: "NPR",
+          category: item.listing.category,
+          addedDate: timeAgo(item.createdAt),
+        }));
+        setWishlistItems(mapped);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingWishlist(false));
+  }, [token]);
 
   function getImageUrl(image?: string | null) {
   if (!image) return "";
@@ -179,12 +200,26 @@ export default function UserWishlist() {
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleRemove = (id: number) => {
-    setRemovingId(id);
-    setTimeout(() => {
-      setWishlistItems((prev) => prev.filter((item) => item.id !== id));
-      setRemovingId(null);
-    }, 300);
+  const handleRemove = async (wishlistId: string, listingId: string) => {
+    setRemovingId(wishlistId);
+
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ listingId }),
+      });
+    } catch {
+      // silently ignore
+    } finally {
+      setTimeout(() => {
+        setWishlistItems((prev) => prev.filter((item) => item.id !== wishlistId));
+        setRemovingId(null);
+      }, 300);
+    }
   };
 
   const userInitials = session?.user?.name
@@ -1470,7 +1505,11 @@ export default function UserWishlist() {
               </div>
             </div>
 
-            {filteredItems.length === 0 ? (
+            {loadingWishlist ? (
+              <div className="ud-empty">
+                <p>Loading your wishlist...</p>
+              </div>
+            ) : filteredItems.length === 0 ? (
               <div className="ud-empty">
                 <div className="ud-empty-icon">
                   <FiHeart size={28} />
@@ -1497,7 +1536,7 @@ export default function UserWishlist() {
                       <button
                         type="button"
                         className="ud-wishlist-remove"
-                        onClick={() => handleRemove(item.id)}
+                        onClick={() => handleRemove(item.id, item.listingId)}
                         title="Remove from wishlist"
                       >
                         <FiTrash2 size={14} />
