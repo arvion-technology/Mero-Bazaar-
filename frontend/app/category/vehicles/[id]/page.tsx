@@ -66,6 +66,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
             specs={listing.specs}
             latitude={listing.latitude}
             longitude={listing.longitude}
+            listingId={listing.id}
           />
 
           <ListingDescription description={listing.description} />

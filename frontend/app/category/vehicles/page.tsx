@@ -11,8 +11,9 @@ import {
 } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 import { IoSpeedometerOutline } from "react-icons/io5";
-import { BsCalendar3, BsShieldCheck, BsArrowRight } from "react-icons/bs";
-import { MdOutlineSwapHoriz } from "react-icons/md";
+import { BsCalendar3, BsShieldCheck } from "react-icons/bs";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 
 type Badge = { label: string; color: string; bg: string };
 type Vehicle = {
@@ -62,6 +63,7 @@ export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { data: session } = useSession();
 
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
@@ -78,6 +80,28 @@ export default function VehiclesPage() {
     ? `${brand} ${v.vehicle.year}`
     : v.title;
   };
+
+  useEffect(() => {
+  if (!session?.accessToken) return;
+
+  (async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
+        headers: { Authorization: `Bearer ${session.accessToken}` },
+      });
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const favMap: Record<string, boolean> = {};
+      data.forEach((item: { listingId: string }) => {
+        favMap[item.listingId] = true;
+      });
+      setFavorites(favMap);
+    } catch {
+      // silently ignore
+    }
+  })();
+}, [session?.accessToken]);
 
   useEffect(() => {
     (async () => {

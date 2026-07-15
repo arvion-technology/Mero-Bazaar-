@@ -84,7 +84,7 @@ const STYLES = `
 
   /* ── Vehicle details table ── */
   .ld-details-card { background: #fff; border-radius: 16px; padding: 20px 22px; box-shadow: 0 2px 14px rgba(0,0,0,.07); border-top: 3px solid #C0392B; }
-  .ld-details-grid { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 0; }
+  .ld-details-grid { display: grid; grid-template-columns: 1fr; gap: 0; }
   .ld-details-col { display: flex; flex-direction: column; }
   .ld-details-divider { background: #f0f0f0; margin: 0 22px; }
   .ld-detail-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; gap: 10px; }

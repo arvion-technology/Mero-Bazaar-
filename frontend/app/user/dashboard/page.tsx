@@ -27,13 +27,6 @@ import {
   FiAlertCircle,
 } from "react-icons/fi";
 
-const stats = [
-  { icon: FiShoppingBag, label: "Total Orders", value: "320", change: "+12%", color: "#4f46e5", bg: "#eef2ff" },
-  { icon: FiDollarSign, label: "Total Spent", value: "NPR 32,890", change: "+8%", color: "#10b981", bg: "#ecfdf5" },
-  { icon: FiHeart, label: "Wishlist", value: "12", change: "+3", color: "#ef4444", bg: "#fef2f2" },
-  { icon: FiMapPin, label: "Saved Items", value: "3", change: "", color: "#f59e0b", bg: "#fffbeb" },
-];
-
 const recentOrders = [
   { id: "#1024", date: "May 23, 2024", status: "Delivered", statusColor: "#22c55e", amount: "NPR 500" },
   { id: "#1023", date: "May 21, 2024", status: "Shipped", statusColor: "#6366f1", amount: "NPR 500" },
@@ -65,6 +58,7 @@ export default function UserDashboard() {
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const notifDropdownRef = useRef<HTMLDivElement>(null);
   const [securityNotifs, setSecurityNotifs] = useState<{ id: string; type: string; createdAt: string; read: boolean }[]>([]);
+  const [wishlistCount, setWishlistCount] = useState<number | null>(null);
 
   // Compute profile-completeness notifications (reused from Navbar logic)
   const notifications: string[] = session
@@ -84,6 +78,16 @@ export default function UserDashboard() {
     { id: "help", icon: FiHelpCircle, label: "Help & Support", href: "/user/help" },
     { id: "settings", icon: FiSettings, label: "Settings", href: "/user/settings" },
   ];
+
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setWishlistCount(Array.isArray(data) ? data.length : 0))
+      .catch(() => setWishlistCount(0));
+  }, [token]);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -158,7 +162,22 @@ export default function UserDashboard() {
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "U";
 
-  return (
+  const stats: {
+    icon: typeof FiShoppingBag;
+    label: string;
+    value: string;
+    change: string;
+    color: string;
+    bg: string;
+    href: string;
+  }[] = [
+    { icon: FiShoppingBag, label: "Total Orders", value: "320", change: "+12%", color: "#4f46e5", bg: "#eef2ff", href: "/user/orders" },
+    { icon: FiDollarSign, label: "Total Spent", value: "NPR 32,890", change: "+8%", color: "#10b981", bg: "#ecfdf5", href: "/user/orders" },
+    { icon: FiHeart, label: "Wishlist", value: wishlistCount === null ? "…" : String(wishlistCount), change: "", color: "#ef4444", bg: "#fef2f2", href: "/user/wishlist" },
+    { icon: FiMapPin, label: "Saved Items", value: "3", change: "", color: "#f59e0b", bg: "#fffbeb", href: "/user/dashboard" },
+  ];
+
+return (
     <>
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1527,7 +1546,7 @@ export default function UserDashboard() {
 
             <div className="ud-stats">
               {stats.map((stat) => (
-                <div key={stat.label} className="ud-stat-card">
+                <Link key={stat.label} href={stat.href} className="ud-stat-card" style={{ textDecoration: "none" }}>
                   <div className="ud-stat-header">
                     <div className="ud-stat-icon" style={{ background: stat.bg, color: stat.color }}>
                       <stat.icon size={20} />
@@ -1541,7 +1560,7 @@ export default function UserDashboard() {
                   </div>
                   <div className="ud-stat-value">{stat.value}</div>
                   <div className="ud-stat-label">{stat.label}</div>
-                </div>
+                </Link>
               ))}
             </div>
 

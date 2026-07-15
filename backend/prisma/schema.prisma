@@ -41,6 +41,7 @@ model User {
   sessions      Session[]
   ActivityLogs  ActivityLog[]
   notifications Notification[]
+  wishlist            Wishlist[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -226,6 +227,19 @@ model Notification {
 
 }
 
+model Wishlist {
+  id           String @id @default(cuid())
+  userId       String
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId    String
+  listing      Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@index([userId])
+  @@index([listingId])
+}
+
 model Listing {
   id          String          @id @default(cuid())
 
@@ -262,6 +276,7 @@ model Listing {
   beautyAppointments  BeautyAppointment[]
   orders              Order[]
   reviews             Review[]
+  wishlist            Wishlist[]
 
   @@index(userId)
   @@index([category])
