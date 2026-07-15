@@ -69,6 +69,11 @@ export default function SellerDashboard() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
   const sliderRef = useRef<HTMLDivElement>(null);
+  const [statsData, setStatsData] = useState<{
+    totalProducts: number;
+    productsThisMonth: number;
+    productsLastMonth: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!session?.accessToken) return;
@@ -105,6 +110,7 @@ export default function SellerDashboard() {
   const netProfit = totalRevenue - totalExpenses;
   const isProfit = netProfit >= 0;
 
+  const productsDelta = statsData ? statsData.productsThisMonth - statsData.productsLastMonth : 0;
   const stats = [
     {
       icon: FiPlus,
@@ -116,9 +122,15 @@ export default function SellerDashboard() {
       locked: isKycLocked,
       action: "open-category-modal" as const,
     },
-    { icon: FiShoppingCart, label: "Total Orders", value: "320", change: "+12.5%", changeType: "up" as const, sub: "vs last month", color: SUCCESS, bg: "#ecfdf5" },
-    { icon: FiClock, label: "Pending", value: "15", change: "-3.2%", changeType: "down" as const, sub: "needs attention", color: WARNING, bg: "#fffbeb" },
-    { icon: FiLayers, label: "Products", value: "58", change: "+5", changeType: "up" as const, sub: "active listings", color: "#8b5cf6", bg: "#f5f3ff" },
+    { icon: FiShoppingCart, label: "Total Orders", value: "-",  sub: "coming soon", color: SUCCESS, bg: "#ecfdf5" },
+    { icon: FiClock, label: "Pending", value: "-", sub: "coming soon", color: WARNING, bg: "#fffbeb" },
+    { icon: FiLayers, label: "Products", 
+      value: statsData ? String(statsData.totalProducts) : "-",
+      change: statsData ? `${productsDelta >= 0 ? "+" : ""}${productsDelta}` : undefined,
+      changeType: productsDelta >= 0 ? ("up" as const) : ("down" as const),
+      sub: "active listings",
+      color: "#8b5cf6", 
+      bg: "#f5f3ff" },
   ];
 
   const linePoints = (key: "revenue" | "loss" | "profit") =>
@@ -150,6 +162,22 @@ export default function SellerDashboard() {
     const amount = 240;
     sliderRef.current.scrollBy({ left: direction === "left" ? -amount : amount, behavior: "smooth" });
   }
+
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    fetch("/api/listings/mine/stats", {
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+    })
+    .then((r) => {
+      if (!r.ok) throw new Error(`Stats fetch failed: ${r.status}`);
+      return r.json();
+    })
+    .then((d) => setStatsData(d))
+    .catch((err) => {
+      console.error(err);
+      setStatsData(null);
+  });
+  }, [session?.accessToken]);
 
   return (
     <>

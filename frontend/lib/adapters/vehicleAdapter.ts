@@ -24,7 +24,7 @@ export function formatPrice(p: number | null): string {
 }
 
 //Main adapter
-export function adaptListing(db: DBListing): ListingDetail {
+export async function adaptListing(db: DBListing): Promise<ListingDetail> {
   const v = db.vehicle ?? null;
 
   // SAFE FALLBACKS
@@ -62,6 +62,22 @@ export function adaptListing(db: DBListing): ListingDetail {
       : "https://www.google.com/maps";
 
   const categoryLabel = v ? TYPE_LABEL[v.type] : "Vehicles";
+  const IMG_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+  // Reverse geocode location
+  let location = "Nepal";
+  if (db.latitude != null && db.longitude != null) {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${db.latitude}&lon=${db.longitude}`,
+        { headers: { "User-Agent": "MeroBazaar/1.0" } }
+      );
+      const geo = await res.json();
+      location = geo?.address?.suburb || geo?.address?.city || geo?.display_name || "Nepal";
+    } catch {
+      // fall back to "Nepal" silently
+    }
+  }
 
   return {
     id: db.id,
@@ -70,7 +86,7 @@ export function adaptListing(db: DBListing): ListingDetail {
     price: formatPrice(db.price),
 
     negotiable: true,
-    location: "Nepal",
+    location,
 
     distanceFrom:
       db.latitude && db.longitude
@@ -85,7 +101,9 @@ export function adaptListing(db: DBListing): ListingDetail {
 
     breadcrumbs: ["Vehicles", categoryLabel, v?.brand ?? ""].filter(Boolean),
 
-    images: db.images?.length ? db.images : ["/placeholder.png"],
+    images: db.images?.length
+      ? db.images.map((img) => `${IMG_BASE}${img}`)
+      : ["/placeholder.png"],
 
     description: db.description ?? "No description provided.",
     googleMapsUrl,
@@ -106,7 +124,11 @@ export function adaptListing(db: DBListing): ListingDetail {
 
     seller: {
       name: user.name,
-      avatar: user.image ?? "/placeholder-avatar.png",
+      avatar: user.image
+        ? user.image.startsWith("http")
+          ? user.image
+          : `${IMG_BASE}${user.image}`
+        : "/placeholder-avatar.png",
       rating: avgRating,
       reviewCount: reviews.length,
       isVerified: true,

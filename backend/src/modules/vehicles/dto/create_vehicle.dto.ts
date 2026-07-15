@@ -43,6 +43,10 @@ export class CreateVehicleDto {
   price?: number;
 
   @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   images?: string[];
@@ -56,6 +60,10 @@ export class CreateVehicleDto {
   @Type(() => Number)
   @IsNumber()
   longitude?: number;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
 
   @IsOptional()
   @IsObject()

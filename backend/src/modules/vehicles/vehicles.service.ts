@@ -14,20 +14,38 @@ export class VehiclesService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateVehicleDto, userId: string) {
-    const cleanDetails = sanitizeVehicleDetails(
-      dto.type,
-      dto.details ?? {},
-    );
+    const cleanDetails = sanitizeVehicleDetails(dto.type, dto.details ?? {});
+
+    let latitude = dto.latitude;
+    let longitude = dto.longitude;
+
+    if((latitude == null || longitude == null) && dto.address) {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(dto.address)}&limit=1`,
+        { headers: { 'User-Agent': 'MeroBazaar/1.0' } }
+        );
+        const results = await res.json();
+        if (results?.[0]) {
+          latitude = parseFloat(results[0].lat);
+          longitude = parseFloat(results[0].lon);
+     } else {
+      console.warn('[VehiclesService.create] no geocode match for address:', dto.address);
+    }
+  } catch (err) {
+    console.error('[VehiclesService.create] geocoding request failed:', err);
+  }
+    }
 
     return this.prisma.listing.create({
       data: {
         title: `${dto.brand} ${dto.model} ${dto.year}`,
         category: ListingCategory.VEHICLE,
-        description: `${dto.brand} ${dto.model}`,
+        description: dto.description ?? `${dto.brand} ${dto.model}`,
         price: dto.price,
         images: dto.images ?? [],
-        latitude: dto.latitude,
-        longitude: dto.longitude,
+        latitude: latitude,
+        longitude: longitude,
         user: {
           connect: {
             id: userId,

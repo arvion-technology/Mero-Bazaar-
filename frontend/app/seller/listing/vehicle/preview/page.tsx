@@ -7,6 +7,8 @@ import { FiArrowLeft, FiCheck, FiSend } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useDraft } from "../layout";
+import { VEHICLE_DETAILS_LABELS } from "@/app/category/vehicles/[id]/components/shared/vehicleDetailsMap";
+import { forwardGeocode } from "@/lib/fetcher";
 
 const ACCENT       = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -25,6 +27,13 @@ export default function PreviewListingPage() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
 
+  const typeSpecificDetails = Object.entries(
+    VEHICLE_DETAILS_LABELS[vehicleData.vehicleType as keyof typeof VEHICLE_DETAILS_LABELS] ?? {}
+  ).map(([key, label]) => ({
+    label,
+    value: vehicleData.details[key] || "-",
+  }));
+
   const listing = {
     category: "Vehicle",
     title: vehicleData.title || "Untitled listing",
@@ -34,11 +43,13 @@ export default function PreviewListingPage() {
       { label: "Vehicle Type", value: vehicleData.vehicleType },
       { label: "Condition", value: vehicleData.condition },
       { label: "Brand", value: vehicleData.brand },
+      { label: "Model", value: vehicleData.model },
       { label: "Model Year", value: vehicleData.modelYear },
       { label: "KM Driven", value: `${vehicleData.kmDriven} km` },
       { label: "Fuel Type", value: vehicleData.fuelType },
       { label: "Bluebook Status", value: vehicleData.bluebookStatus },
       { label: "Location", value: vehicleData.address },
+      ...typeSpecificDetails,
     ],
     description: vehicleData.description,
   };
@@ -52,6 +63,8 @@ const handlePublish = async () => {
 
   setIsPublishing(true);
   try {
+    const { latitude, longitude } = await forwardGeocode(vehicleData.address);
+
     const vehicleRes = await fetch("/api/vehicles", {
       method: "POST",
       headers: {
@@ -61,7 +74,7 @@ const handlePublish = async () => {
       body: JSON.stringify({
         type: vehicleData.vehicleType,
         brand: vehicleData.brand,
-        model: vehicleData.brand,
+        model: vehicleData.model,
         year: vehicleData.modelYear,
         km_driven: vehicleData.kmDriven,
         condition: vehicleData.condition,
@@ -69,11 +82,11 @@ const handlePublish = async () => {
         fuel_type: vehicleData.fuelType,
         ownership_transfer_ready: vehicleData.ownershipTransfer,
         price: vehicleData.price,
-        details: {
-          customTitle: vehicleData.title,
-          description: vehicleData.description,
-          address: vehicleData.address,
-        },
+        description: vehicleData.description,
+        address: vehicleData.address,
+        latitude,
+        longitude,
+        details: vehicleData.details,
       }),
     });
 

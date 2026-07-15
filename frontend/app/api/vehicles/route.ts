@@ -21,3 +21,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const queryString = searchParams.toString();
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/vehicles${queryString ? `?${queryString}` : ""}`
+    );
+
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch (err) {
+    console.error("vehicles GET error:", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
