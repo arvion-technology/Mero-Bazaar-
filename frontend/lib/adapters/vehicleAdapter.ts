@@ -133,8 +133,12 @@ export async function adaptListing(db: DBListing): Promise<ListingDetail> {
       rating: db.sellerRating ?? 0,
       reviewCount: db.sellerReviewCount ?? 0,
       isVerified: db.user?.vendorProfile?.isVerified ?? false,
+      isPro: false,
+      isTrusted: false,
       memberSince,
       totalListing: user._count?.listings ?? 0,
+      responseRate: "N/A",
+      avgResponseTime: "N/A",
       phone: db.user?.phone ?? "N/A",
     },
     reviews: reviews.map((r) => ({

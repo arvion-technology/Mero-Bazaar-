@@ -56,7 +56,6 @@ export default function SellerCard({ seller, reviews: initialReviews, listingId,
   const { data: session } = useSession();
   const router = useRouter();
   const [callRevealed, setCallRevealed] = useState(false);
-  const [reviews, setReviews] = useState(initialReviews);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -87,18 +86,7 @@ export default function SellerCard({ seller, reviews: initialReviews, listingId,
       if (!res.ok) {
         const err = await res.json().catch(() => null);
         throw new Error(err?.message || "Failed to submit review");
-      }
-
-      const newReview = await res.json();
-      setReviews((prev) => [
-        {
-          reviewerName: newReview.reviewerName,
-          rating: newReview.rating,
-          comment: newReview.comment,
-          createdAt: new Date(newReview.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" }),
-        },
-        ...prev,
-      ]);
+      }    
       setRating(0);
       setComment("");
       toast.success("Review submitted!");
@@ -159,22 +147,27 @@ export default function SellerCard({ seller, reviews: initialReviews, listingId,
           </div>
         ))}
       </div>
-
       <div className="ld-cta-btns">
-        <button className="ld-btn-call" onClick={() => setCallRevealed(true)}>
+        <button
+          className="ld-btn-call"
+          onClick={() => {
+            if (!seller.phone || seller.phone === "N/A") {
+              toast.error("Phone number not available");
+              return;
+            }
+            window.location.href = `tel:${seller.phone}`;
+          }}
+        >
           <FiPhone size={16} />
-          {callRevealed ? seller.phone : "Call Seller"}
+          Call Seller
         </button>
 
-        <button className="ld-btn-chat">
+      {/* holding this feature for now */}
+        {/* <button className="ld-btn-chat">
           <FiMessageSquare size={16} />
           Chat with Seller
-        </button>
+        </button> */}
 
-        <button className="ld-btn-msg">
-          <FiMail size={16} />
-          Send Message
-        </button>
       </div>
 
       {!isOwnListing && (
@@ -218,22 +211,22 @@ export default function SellerCard({ seller, reviews: initialReviews, listingId,
           </button>
         </div>
       )}
-
-      {reviews.length > 0 && (
-        <div className="ld-reviews-section" style={{ marginTop: 16 }}>
-          <p className="ld-section-title">Reviews</p>
-          {reviews.map((r, i) => (
-            <div key={i} className="ld-review-row">
-              <div className="ld-review-header">
-                <span className="ld-review-name">{r.reviewerName}</span>
-                <StarRating rating={r.rating} />
-                <span className="ld-review-date">{r.createdAt}</span>
-              </div>
-              {r.comment && <p className="ld-review-comment">{r.comment}</p>}
-            </div>
-          ))}
-        </div>
-      )}
+      <Link
+        href={`/sellers/${sellerId}`}
+        style={{
+          display: "block",
+          textAlign: "center",
+          marginTop: 16,
+          paddingTop: 14,
+          borderTop: "1px solid #f0f0f0",
+          fontSize: 13,
+          fontWeight: 600,
+          color: "black",
+          textDecoration: "none",
+        }}
+      >
+        View full profile & all reviews →
+      </Link>
     </div>
   );
 }
