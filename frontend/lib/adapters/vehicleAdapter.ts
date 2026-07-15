@@ -81,6 +81,7 @@ export async function adaptListing(db: DBListing): Promise<ListingDetail> {
 
   return {
     id: db.id,
+    sellerId: db.userId,
     listingId: `#VH${db.id.slice(-6).toUpperCase()}`,
     title: db.title,
     price: formatPrice(db.price),
@@ -129,15 +130,11 @@ export async function adaptListing(db: DBListing): Promise<ListingDetail> {
           ? user.image
           : `${IMG_BASE}${user.image}`
         : "/placeholder-avatar.png",
-      rating: avgRating,
-      reviewCount: reviews.length,
-      isVerified: true,
-      isPro: db.user?.isPro ?? false,
-      isTrusted: db.user?.isTrusted ?? false,
+      rating: db.sellerRating ?? 0,
+      reviewCount: db.sellerReviewCount ?? 0,
+      isVerified: db.user?.vendorProfile?.isVerified ?? false,
       memberSince,
       totalListing: user._count?.listings ?? 0,
-      responseRate: db.user?.responseRate ?? "N/A",
-      avgResponseTime: db.user?.avgResponseTime ?? "N/A",
       phone: db.user?.phone ?? "N/A",
     },
     reviews: reviews.map((r) => ({

@@ -14,6 +14,8 @@ export type DBListing = {
   longitude: number | null;
   images: string[];
   createdAt: Date;
+  sellerRating: number;
+  sellerReviewCount: number;
   vehicle: {
     type: VehicleType;
     brand: string;
@@ -48,6 +50,7 @@ export type DBListing = {
 
 export type ListingDetail = {
   id: string;
+  sellerId: string;
   listingId: string;
   title: string;
   price: string;

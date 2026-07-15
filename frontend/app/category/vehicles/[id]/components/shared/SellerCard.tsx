@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 import { FiPhone, FiMessageSquare, FiMail } from "react-icons/fi";
 import { FaStar, FaRegStar } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
@@ -9,6 +13,8 @@ import type { ListingDetail } from "../../../../../types/listing";
 type Props = {
   seller: ListingDetail["seller"];
   reviews: ListingDetail["reviews"];
+  listingId: string;
+  sellerId: string;
 };
 
 function StarRating({ rating }: { rating: number }) {
@@ -23,14 +29,92 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-export default function SellerCard({ seller, reviews }: Props) {
+function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <span style={{ display: "flex", gap: 4 }}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => onChange(i)}
+          onMouseEnter={() => setHover(i)}
+          onMouseLeave={() => setHover(0)}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}
+          aria-label={`${i} star${i > 1 ? "s" : ""}`}
+        >
+          {i <= (hover || value)
+            ? <FaStar size={20} color="#F39C12" />
+            : <FaRegStar size={20} color="#F39C12" />}
+        </button>
+      ))}
+    </span>
+  );
+}
+
+export default function SellerCard({ seller, reviews: initialReviews, listingId, sellerId }: Props) {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [callRevealed, setCallRevealed] = useState(false);
+  const [reviews, setReviews] = useState(initialReviews);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const isOwnListing = session?.user?.id === sellerId;
+
+  const handleSubmitReview = async () => {
+    if (!session?.accessToken) {
+      toast.error("Please log in to leave a review");
+      return;
+    }
+    if (rating === 0) {
+      toast.error("Please select a star rating");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        body: JSON.stringify({ listingId, rating, comment: comment.trim() || undefined }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.message || "Failed to submit review");
+      }
+
+      const newReview = await res.json();
+      setReviews((prev) => [
+        {
+          reviewerName: newReview.reviewerName,
+          rating: newReview.rating,
+          comment: newReview.comment,
+          createdAt: new Date(newReview.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+        },
+        ...prev,
+      ]);
+      setRating(0);
+      setComment("");
+      toast.success("Review submitted!");
+      router.refresh();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      toast.error(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="ld-seller-card">
       <p className="ld-seller-card-title">Seller Information</p>
 
-      {/* Avatar + name + rating */}
       <div className="ld-seller-top">
         <div className="ld-seller-avatar-wrap">
           {seller.avatar && seller.avatar !== "/placeholder-avatar.png" ? (
@@ -45,8 +129,10 @@ export default function SellerCard({ seller, reviews }: Props) {
         </div>
 
         <div>
-          <p className="ld-seller-name">{seller.name}</p>
-          <div className="ld-rating-row">
+          <Link href={`/sellers/${sellerId}`} className="ld-seller-name" style={{ textDecoration: "none" }}>
+            {seller.name}
+          </Link>
+            <div className="ld-rating-row">
             <StarRating rating={seller.rating} />
             <span className="ld-rating-num">{seller.rating}</span>
             <span className="ld-reviews">({seller.reviewCount} reviews)</span>
@@ -54,28 +140,18 @@ export default function SellerCard({ seller, reviews }: Props) {
         </div>
       </div>
 
-      {/* Trust badges */}
       <div className="ld-seller-badges">
         {seller.isVerified && (
           <span className="ld-sbadge ld-sbadge-verified">
             <MdVerified size={11} /> Verified
           </span>
         )}
-        {seller.isPro && (
-          <span className="ld-sbadge ld-sbadge-pro">⭐ Pro Seller</span>
-        )}
-        {seller.isTrusted && (
-          <span className="ld-sbadge ld-sbadge-trusted">🛡 Trusted</span>
-        )}
       </div>
 
-      {/* Stats */}
       <div className="ld-seller-stats">
         {[
-          { label: "Member Since",      val: seller.memberSince      },
-          { label: "Total Listings",    val: seller.totalListing     },
-          { label: "Response Rate",     val: seller.responseRate     },
-          { label: "Avg. Response Time",val: seller.avgResponseTime  },
+          { label: "Member Since",   val: seller.memberSince   },
+          { label: "Total Listings", val: seller.totalListing  },
         ].map(({ label, val }) => (
           <div key={label} className="ld-stat-row">
             <span className="ld-stat-label">{label}</span>
@@ -84,10 +160,8 @@ export default function SellerCard({ seller, reviews }: Props) {
         ))}
       </div>
 
-      {/* CTA buttons */}
       <div className="ld-cta-btns">
-        <button
-          className="ld-btn-call" onClick={() => setCallRevealed(true)}>
+        <button className="ld-btn-call" onClick={() => setCallRevealed(true)}>
           <FiPhone size={16} />
           {callRevealed ? seller.phone : "Call Seller"}
         </button>
@@ -103,21 +177,63 @@ export default function SellerCard({ seller, reviews }: Props) {
         </button>
       </div>
 
-       {reviews.length > 0 && (
-          <div className="ld-reviews-section">
-            <p className="ld-section-title">Reviews</p>
-            {reviews.map((r, i) => (
-              <div key={i} className="ld-review-row">
-                <div className="ld-review-header">
-                  <span className="ld-review-name">{r.reviewerName}</span>
-                  <StarRating rating={r.rating} />
-                  <span className="ld-review-date">{r.createdAt}</span>
-                </div>
-                {r.comment && <p className="ld-review-comment">{r.comment}</p>}
+      {!isOwnListing && (
+        <div className="ld-review-form" style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f0f0f0" }}>
+          <p className="ld-section-title" style={{ fontSize: 13, marginBottom: 8 }}>Leave a Review</p>
+          <StarPicker value={rating} onChange={setRating} />
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Share your experience with this seller (optional)"
+            style={{
+              width: "100%",
+              marginTop: 10,
+              padding: 10,
+              borderRadius: 8,
+              border: "1px solid #e2e8f0",
+              fontSize: 13,
+              fontFamily: "inherit",
+              resize: "vertical",
+              minHeight: 60,
+            }}
+          />
+          <button
+            onClick={handleSubmitReview}
+            disabled={submitting}
+            style={{
+              marginTop: 8,
+              width: "100%",
+              padding: "10px",
+              borderRadius: 8,
+              border: "none",
+              background: "#C0392B",
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: 13,
+              cursor: submitting ? "not-allowed" : "pointer",
+              opacity: submitting ? 0.7 : 1,
+            }}
+          >
+            {submitting ? "Submitting..." : "Submit Review"}
+          </button>
+        </div>
+      )}
+
+      {reviews.length > 0 && (
+        <div className="ld-reviews-section" style={{ marginTop: 16 }}>
+          <p className="ld-section-title">Reviews</p>
+          {reviews.map((r, i) => (
+            <div key={i} className="ld-review-row">
+              <div className="ld-review-header">
+                <span className="ld-review-name">{r.reviewerName}</span>
+                <StarRating rating={r.rating} />
+                <span className="ld-review-date">{r.createdAt}</span>
               </div>
-            ))}
-          </div>
-        )}
+              {r.comment && <p className="ld-review-comment">{r.comment}</p>}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
