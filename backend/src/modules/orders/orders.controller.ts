@@ -41,4 +41,9 @@ export class OrdersController {
   confirmPayment(@Param('id') id: string, @Body() dto: ConfirmPaymentDto, @Req() req) {
     return this.ordersService.confirmPayment(id, dto.paymentRef, req.user.id);
   }
+
+  @Post(':id/cancel')
+  cancel(@Param('id') id: string, @Req() req) {
+    return this.ordersService.cancelReservation(id, req.user.id);
+  }
 }

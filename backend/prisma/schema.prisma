@@ -311,6 +311,7 @@ model Vehicle {
   fuel_type                FuelType?
   details                  Json?
   ownership_transfer_ready Boolean @default(false)
+  reservationFee           Int?
 
   createdAt DateTime @default(now())
 }

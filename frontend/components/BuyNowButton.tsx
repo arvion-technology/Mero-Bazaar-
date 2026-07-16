@@ -14,40 +14,14 @@ type Props = {
 export default function BuyNowButton({ listingId, price, status = "ACTIVE" }: Props) {
   const { data: session } = useSession();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
 
-  const handleBuyNow = async () => {
+  const handleBuyNow = () => {
     if (!session?.accessToken) {
       toast.info("Please log in to continue.");
       router.push("/login");
       return;
     }
-
-    setLoading(true);
-    try {
-      const res = await fetch("/api/orders/reservations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
-        },
-        body: JSON.stringify({ listingId }),
-      });
-
-      if (res.status === 409) {
-        toast.error("This vehicle was just reserved by someone else.");
-        router.refresh();
-        return;
-      }
-      if (!res.ok) throw new Error("Failed to reserve");
-
-      const order = await res.json();
-      router.push(`/checkout/${order.id}`);
-    } catch {
-      toast.error("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    router.push(`/checkout/review?listingId=${listingId}`);
   };
 
   if (status === "SOLD") {
@@ -79,8 +53,8 @@ export default function BuyNowButton({ listingId, price, status = "ACTIVE" }: Pr
         .bn-btn:hover { opacity: .9; transform: translateY(-1px); }
         .bn-btn-disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
       `}</style>
-      <button className="bn-btn" onClick={handleBuyNow} disabled={loading}>
-        {loading ? "Reserving…" : `Buy Now — NPR ${price.toLocaleString()}`}
+      <button className="bn-btn" onClick={handleBuyNow}>
+        Buy Now — NPR {price.toLocaleString()}
       </button>
     </>
   );

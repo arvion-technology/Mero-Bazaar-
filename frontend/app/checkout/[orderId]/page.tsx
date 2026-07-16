@@ -8,11 +8,13 @@ import { toast } from "react-toastify";
 type OrderDetail = {
   id: string;
   totalPrice: number;
+  priceAtOrder: number;
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "EXPIRED";
   reservedUntil: string;
   listing: {
     title: string;
     images: string[];
+    category: string;
     user: { name: string | null; phone: string | null };
   };
 };
@@ -25,6 +27,7 @@ export default function CheckoutPage() {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
 
   const accessToken = session?.accessToken;
@@ -32,9 +35,15 @@ export default function CheckoutPage() {
   const fetchOrder = useCallback(async () => {
     if (!accessToken) return;
     try {
-      const res = await fetch(`/api/orders/${orderId}`, {
+      let res = await fetch(`/api/orders/${orderId}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
+      if (res.status === 404) {
+        await new Promise((r) => setTimeout(r, 400));
+        res = await fetch(`/api/orders/${orderId}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+      }
       if (!res.ok) throw new Error();
       const data = await res.json();
       setOrder(data);
@@ -82,6 +91,24 @@ export default function CheckoutPage() {
       setPaying(false);
     }
   };
+  
+    const handleCancel = async () => {
+    if (!accessToken) return;
+    setCancelling(true);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/cancel`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!res.ok) throw new Error();
+      await fetchOrder();
+      toast.info("Reservation cancelled.");
+    } catch {
+      toast.error("Couldn't cancel. Please try again.");
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   if (loading) return <div style={{ padding: 40 }}>Loading…</div>;
   if (!order) return <div style={{ padding: 40 }}>Order not found.</div>;
@@ -93,9 +120,20 @@ export default function CheckoutPage() {
     <div style={{ maxWidth: 560, margin: "40px auto", padding: "0 20px" }}>
       <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 14px rgba(0,0,0,.07)" }}>
         <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{order.listing.title}</h1>
-        <p style={{ fontSize: 24, fontWeight: 900, color: "#C0392B", margin: "8px 0" }}>
-          NPR {order.totalPrice.toLocaleString()}
-        </p>
+            {order.listing.category === "VEHICLE" ? (
+            <>
+            <p style={{ fontSize: 13, color: "#888", margin: "8px 0 2px" }}>
+            Vehicle price: NPR {order.priceAtOrder.toLocaleString()}
+            </p>
+            <p style={{ fontSize: 24, fontWeight: 900, color: "#C0392B", margin: "0 0 8px" }}>
+            Reservation fee: NPR {order.totalPrice.toLocaleString()}
+            </p>
+            </>
+            ) : (
+            <p style={{ fontSize: 24, fontWeight: 900, color: "#C0392B", margin: "8px 0" }}>
+                NPR {order.totalPrice.toLocaleString()}
+            </p>
+            )} 
 
         {order.status === "PENDING" && (
           <>
@@ -108,22 +146,39 @@ export default function CheckoutPage() {
               style={{
                 width: "100%", padding: 13, borderRadius: 10, border: "none",
                 background: secondsLeft === 0 ? "#ccc" : "linear-gradient(135deg, #27ae60, #1e8449)",
-                color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: secondsLeft === 0 ? "not-allowed" : "pointer",
+                color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: secondsLeft === 0 ? "not-allowed" : "pointer", marginBottom: 8,
               }}
             >
               {paying ? "Processing…" : secondsLeft === 0 ? "Reservation Expired" : "Pay Now"}
+            </button>
+            <button
+              onClick={handleCancel}
+              disabled={paying || cancelling}
+              style={{
+                width: "100%", padding: 12, borderRadius: 10,
+                border: "1.5px solid #e0e0e0", background: "#fff",
+                color: "#555", fontWeight: 600, fontSize: 14,
+                cursor: cancelling ? "not-allowed" : "pointer",
+              }}
+            >
+              {cancelling ? "Cancelling…" : "Cancel Reservation"}
             </button>
           </>
         )}
 
         {order.status === "CONFIRMED" && (
-          <div style={{ background: "#eafaf1", border: "1px solid #a9dfbf", borderRadius: 10, padding: 16, marginTop: 12 }}>
-            <p style={{ fontWeight: 700, color: "#1e8449", marginBottom: 6 }}>Payment confirmed!</p>
-            <p style={{ fontSize: 13, color: "#333" }}>
-              Contact {order.listing.user.name ?? "the seller"} at{" "}
-              <strong>{order.listing.user.phone ?? "N/A"}</strong> to arrange handover and document transfer.
+        <div style={{ background: "#eafaf1", border: "1px solid #a9dfbf", borderRadius: 10, padding: 16, marginTop: 12 }}>
+            <p style={{ fontWeight: 700, color: "#1e8449", marginBottom: 6 }}>
+            {order.listing.category === "VEHICLE" ? "Reservation fee paid!" : "Payment confirmed!"}
             </p>
-          </div>
+            <p style={{ fontSize: 13, color: "#333" }}>
+            {order.listing.category === "VEHICLE" &&
+                "This vehicle is reserved for you. The remaining balance and document transfer happen directly with the seller. "}
+            Contact {order.listing.user.name ?? "the seller"} at{" "}
+            <strong>{order.listing.user.phone ?? "N/A"}</strong>
+            {order.listing.category === "VEHICLE" ? " to arrange payment and handover." : " to arrange handover and document transfer."}
+            </p>
+        </div>
         )}
 
         {(order.status === "CANCELLED" || order.status === "EXPIRED") && (
