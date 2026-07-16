@@ -7,6 +7,7 @@ import ListingDescription from "./components/shared/ListingDescription";
 import SellerCard from "./components/shared/SellerCard";
 import RelatedListings from "./components/shared/RelatedListings";
 import VehicleDetails from "./components/category-detail/VehicleDetails";
+import BuyNowButton from "@/components/BuyNowButton";
 
 import { notFound } from "next/navigation";
 
@@ -77,6 +78,11 @@ export default async function ListingDetailPage({ params }: PageProps) {
         </div>
 
         <div className="ld-right">
+        <BuyNowButton                                 
+          listingId={listing.id}
+          price={listing.price}
+          status={listing.status}
+        />
         <SellerCard
           seller={listing.seller}
           reviews={listing.reviews}

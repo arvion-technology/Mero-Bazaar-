@@ -42,7 +42,7 @@ export class ListingsService {
         vehicle: true,
         job: true,
         medical: true,
-        reviews: true,
+        reviews: true,f
         user: {
           select: {
             name: true,
