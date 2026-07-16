@@ -80,7 +80,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
         <div className="ld-right">
         <BuyNowButton                                 
           listingId={listing.id}
-          price={listing.price}
+          price={Number(listing.price)}
           status={listing.status}
         />
         <SellerCard
