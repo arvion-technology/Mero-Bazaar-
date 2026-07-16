@@ -260,6 +260,7 @@ model Listing {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  status      ListingStatus @default(ACTIVE)
 
   vehicle     Vehicle?
   job         Job?
@@ -310,6 +311,7 @@ model Vehicle {
   fuel_type                FuelType?
   details                  Json?
   ownership_transfer_ready Boolean @default(false)
+  reservationFee           Int?
 
   createdAt DateTime @default(now())
 }
@@ -708,7 +710,6 @@ model SecondHandGoods {
   photos       String[]
   city         String
   description  String?
-  status       ListingStatus @default(ACTIVE)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   expiresAt    DateTime
@@ -717,7 +718,6 @@ model SecondHandGoods {
   @@index([condition])
   @@index([city])
   @@index([price])
-  @@index([status])
 }
 
 enum SecondHandCategory {
@@ -740,6 +740,7 @@ enum SecondHandCondition {
 
 enum ListingStatus {
   ACTIVE
+  RESERVED
   SOLD
   EXPIRED
 }
@@ -788,21 +789,28 @@ model Review {
 }
 
 model Order {
-  id String @id @default(cuid())
+  id              String @id @default(cuid())
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  userId          String
+  user            User   @relation(fields: [userId], references: [id])
 
-  listingId String
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId       String
+  listing         Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  quantity        Int
+  type            OrderType @default(DELIVERY)
+
+  quantity        Int @default(1)
   totalPrice      Int
-  deliveryDate    DateTime
-  deliveryAddress String
+  priceAtOrder    Int
+
+  deliveryDate    DateTime?
+  deliveryAddress String?
+
+  reservedUntil   DateTime?
+  paymentRef      String?
+  cancelReason    String?
 
   status       OrderStatus @default(PENDING)
-  priceAtOrder Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -811,6 +819,12 @@ model Order {
   @@index([listingId])
   @@index([status])
   @@index([deliveryDate])
+  @@index([type])
+}
+
+enum OrderType {
+  DELIVERY
+  RESERVATION
 }
 
 enum FoodType {
@@ -847,6 +861,7 @@ enum OrderStatus {
   OUT_FOR_DELIVERY
   DELIVERED
   CANCELLED
+  EXPIRED
 }
 
 model HairBeautyAndWellness {

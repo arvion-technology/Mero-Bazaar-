@@ -7,7 +7,7 @@ export async function fetchListing(id: string): Promise<ListingDetail | null> {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/listings/${id}`,
       {
-        next: { revalidate: 60 },
+        next: { revalidate: 0 },
       }
     );
 

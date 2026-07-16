@@ -33,7 +33,6 @@ export class SecondhandService {
                 city: dto.city,
                 description: dto.description,
                 expiresAt: new Date(dto.expiresAt),
-                status: ListingStatus.ACTIVE,
             },
           },
         },

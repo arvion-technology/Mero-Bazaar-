@@ -30,6 +30,7 @@ import { AdminUserModule } from './modules/admin-user/admin-user.module';
 import { VendorSalesOverviewModule } from './modules/vendor-sales-overview/vendor-sales-overview.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { SellerModule } from './modules/seller/seller.module';
+import { OrdersModule } from './modules/orders/orders.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { SellerModule } from './modules/seller/seller.module';
     VendorSalesOverviewModule,
     WishlistModule,
     SellerModule,
+    OrdersModule,
   ],
   controllers: [AppController, AdminUserController],
   providers: [AppService, AdminUserService],

@@ -85,7 +85,7 @@ export async function adaptListing(db: DBListing): Promise<ListingDetail> {
     listingId: `#VH${db.id.slice(-6).toUpperCase()}`,
     title: db.title,
     price: formatPrice(db.price),
-
+    status: db.status,
     negotiable: true,
     location,
 

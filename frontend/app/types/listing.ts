@@ -11,6 +11,7 @@ export type DBListing = {
   description: string | null;
   price: number | null;
   category: string;
+  status: "ACTIVE" | "RESERVED" | "SOLD" | "EXPIRED";
   latitude: number | null;
   longitude: number | null;
   images: string[];
@@ -56,6 +57,7 @@ export type ListingDetail = {
   listingId: string;
   title: string;
   price: string;
+  status: "ACTIVE" | "RESERVED" | "SOLD" | "EXPIRED";
   negotiable: boolean;
   location: string;
   distanceFrom: string;
