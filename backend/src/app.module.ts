@@ -31,6 +31,7 @@ import { VendorSalesOverviewModule } from './modules/vendor-sales-overview/vendo
 import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { SellerModule } from './modules/seller/seller.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { OrdersModule } from './modules/orders/orders.module';
     WishlistModule,
     SellerModule,
     OrdersModule,
+    PaymentsModule,
   ],
   controllers: [AppController, AdminUserController],
   providers: [AppService, AdminUserService],

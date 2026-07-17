@@ -15,12 +15,16 @@ type OrderDetail = {
     title: string;
     images: string[];
     category: string;
-    user: { name: string | null; phone: string | null };
+    user: {
+      name: string | null;
+      phone: string | null;
+      vendorKyc: { contactNumber: string; status: string } | null;
+    };
   };
 };
 
 export default function CheckoutPage() {
-  const { orderId } = useParams<{ orderId: string }>();
+  const { id: orderId } = useParams<{ id: string }>();
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -74,19 +78,32 @@ export default function CheckoutPage() {
     if (!accessToken) return;
     setPaying(true);
     try {
-      const res = await fetch(`/api/orders/${orderId}/confirm-payment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ paymentRef: `TEST-${Date.now()}` }),
+    const res = await fetch(`/api/payments/esewa/initiate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+        body: JSON.stringify({ orderId }),
       });
       if (!res.ok) throw new Error();
-      await fetchOrder();
-      toast.success("Payment confirmed!");
+      const { gatewayUrl, fields } = await res.json();
+
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = gatewayUrl;
+
+      Object.entries(fields).forEach(([key, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = String(value);
+        form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    form.submit();
     } catch {
-      toast.error("Payment failed. Please try again.");
+      toast.error("Couldn't start payment. Please try again.");
     } finally {
       setPaying(false);
     }
@@ -144,13 +161,27 @@ export default function CheckoutPage() {
               onClick={handlePay}
               disabled={paying || secondsLeft === 0}
               style={{
-                width: "100%", padding: 13, borderRadius: 10, border: "none",
-                background: secondsLeft === 0 ? "#ccc" : "linear-gradient(135deg, #27ae60, #1e8449)",
-                color: "#fff", fontWeight: 700, fontSize: 14.5, cursor: secondsLeft === 0 ? "not-allowed" : "pointer", marginBottom: 8,
+                width: "100%", padding: 13, borderRadius: 10,
+                border: "1.5px solid #e0e0e0",
+                background: secondsLeft === 0 ? "#f5f5f5" : "#fff",
+                color: secondsLeft === 0 ? "#aaa" : "#222",
+                fontWeight: 700, fontSize: 14.5,
+                cursor: secondsLeft === 0 ? "not-allowed" : "pointer", marginBottom: 8,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               }}
             >
-              {paying ? "Processing…" : secondsLeft === 0 ? "Reservation Expired" : "Pay Now"}
+              {paying ? (
+                "Processing…"
+              ) : secondsLeft === 0 ? (
+                "Reservation Expired"
+              ) : (
+                <>
+                  <img src="/esewa_logo.png" alt="eSewa" style={{ height: 18 }} />
+                  Pay with eSewa
+                </>
+              )}
             </button>
+
             <button
               onClick={handleCancel}
               disabled={paying || cancelling}
@@ -174,9 +205,13 @@ export default function CheckoutPage() {
             <p style={{ fontSize: 13, color: "#333" }}>
             {order.listing.category === "VEHICLE" &&
                 "This vehicle is reserved for you. The remaining balance and document transfer happen directly with the seller. "}
-            Contact {order.listing.user.name ?? "the seller"} at{" "}
-            <strong>{order.listing.user.phone ?? "N/A"}</strong>
-            {order.listing.category === "VEHICLE" ? " to arrange payment and handover." : " to arrange handover and document transfer."}
+              Contact {order.listing.user.name ?? "the seller"} at{" "}
+              <strong>
+                {order.listing.user.vendorKyc?.status === "VERIFIED"
+                  ? order.listing.user.vendorKyc.contactNumber
+                  : order.listing.user.phone ?? "N/A"}
+              </strong>            
+              {order.listing.category === "VEHICLE" ? " to arrange payment and handover." : " to arrange handover and document transfer."}
             </p>
         </div>
         )}

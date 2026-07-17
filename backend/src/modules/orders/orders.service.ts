@@ -1,6 +1,6 @@
 import { Injectable, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { OrderType, OrderStatus, ListingStatus } from '@prisma/client';
+import { OrderType, OrderStatus, ListingStatus, PaymentMethod } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 
 const RESERVATION_MINUTES = 15;
@@ -83,7 +83,7 @@ export class OrdersService {
     });
   }
 
-  async confirmPayment(orderId: string, paymentRef: string, buyerId: string) {
+  async confirmPayment(orderId: string, paymentRef: string, buyerId: string, paymentMethod: PaymentMethod ) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: { listing: true }, });
     if (!order) throw new NotFoundException('Order not found.');
     if (order.userId !== buyerId) throw new ForbiddenException('Not your order.');
@@ -94,7 +94,7 @@ export class OrdersService {
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.order.update({
         where: { id: orderId },
-        data: { status: OrderStatus.CONFIRMED, paymentRef },
+        data: { status: OrderStatus.CONFIRMED, paymentRef, paymentMethod },
       });
 
       if (order.type === OrderType.RESERVATION && order.listing.category !== 'VEHICLE') {
@@ -161,21 +161,30 @@ export class OrdersService {
     }
   }
   async getOrderById(orderId: string, buyerId: string) {
-  const order = await this.prisma.order.findUnique({
-    where: { id: orderId },
-    include: {
-      listing: {
-        include: { 
-          user: { select: { id: true, name: true, phone: true } },
-          vehicle: { select: { reservationFee: true } },
-         },
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        listing: {
+          include: { 
+            user: { 
+              select: { 
+                id: true, 
+                name: true, 
+                phone: true,
+                vendorKyc: {
+                  select: { contactNumber: true, status: true },
+                },
+              } 
+            },
+            vehicle: { select: { reservationFee: true } },
+          },
+        },
       },
-    },
-  });
+    });
 
-  if (!order) throw new NotFoundException('Order not found.');
-  if (order.userId !== buyerId) throw new ForbiddenException('Not your order.');
+    if (!order) throw new NotFoundException('Order not found.');
+    if (order.userId !== buyerId) throw new ForbiddenException('Not your order.');
 
-  return order;
-}
+    return order;
+  }
 }
