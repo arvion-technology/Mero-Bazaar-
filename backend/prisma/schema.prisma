@@ -809,6 +809,7 @@ model Order {
   reservedUntil   DateTime?
   paymentRef      String?
   cancelReason    String?
+  paymentMethod   PaymentMethod?
 
   status       OrderStatus @default(PENDING)
 
@@ -825,6 +826,12 @@ model Order {
 enum OrderType {
   DELIVERY
   RESERVATION
+}
+
+enum PaymentMethod {
+  ESEWA
+  KHALTI
+  CONNECT_IPS
 }
 
 enum FoodType {

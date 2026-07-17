@@ -39,7 +39,7 @@ export class OrdersController {
 
   @Post(':id/confirm-payment')
   confirmPayment(@Param('id') id: string, @Body() dto: ConfirmPaymentDto, @Req() req) {
-    return this.ordersService.confirmPayment(id, dto.paymentRef, req.user.id);
+    return this.ordersService.confirmPayment(id, dto.paymentRef, req.user.id, dto.paymentMethod);
   }
 
   @Post(':id/cancel')
