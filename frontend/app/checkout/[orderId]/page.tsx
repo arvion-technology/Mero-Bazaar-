@@ -15,7 +15,11 @@ type OrderDetail = {
     title: string;
     images: string[];
     category: string;
-    user: { name: string | null; phone: string | null };
+    user: {
+      name: string | null;
+      phone: string | null;
+      vendorKyc: { contactNumber: string; status: string } | null;
+    };
   };
 };
 
@@ -174,9 +178,13 @@ export default function CheckoutPage() {
             <p style={{ fontSize: 13, color: "#333" }}>
             {order.listing.category === "VEHICLE" &&
                 "This vehicle is reserved for you. The remaining balance and document transfer happen directly with the seller. "}
-            Contact {order.listing.user.name ?? "the seller"} at{" "}
-            <strong>{order.listing.user.phone ?? "N/A"}</strong>
-            {order.listing.category === "VEHICLE" ? " to arrange payment and handover." : " to arrange handover and document transfer."}
+              Contact {order.listing.user.name ?? "the seller"} at{" "}
+              <strong>
+                {order.listing.user.vendorKyc?.status === "VERIFIED"
+                  ? order.listing.user.vendorKyc.contactNumber
+                  : order.listing.user.phone ?? "N/A"}
+              </strong>            
+              {order.listing.category === "VEHICLE" ? " to arrange payment and handover." : " to arrange handover and document transfer."}
             </p>
         </div>
         )}

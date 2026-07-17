@@ -33,6 +33,7 @@ export default function CheckoutReviewContent() {
   const [reserving, setReserving] = useState(false);
 
   const accessToken = session?.accessToken;
+  const IMG_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
   useEffect(() => {
     if (!listingId || !accessToken) return;
@@ -95,7 +96,7 @@ export default function CheckoutReviewContent() {
 
         {listing.images?.[0] && (
           <img
-            src={listing.images[0]}
+            src={`${IMG_BASE}${listing.images[0]}`}
             alt={listing.title}
             style={{ width: "100%", height: 220, objectFit: "cover", borderRadius: 12, marginBottom: 16 }}
           />

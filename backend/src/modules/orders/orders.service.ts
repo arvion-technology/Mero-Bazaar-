@@ -161,21 +161,30 @@ export class OrdersService {
     }
   }
   async getOrderById(orderId: string, buyerId: string) {
-  const order = await this.prisma.order.findUnique({
-    where: { id: orderId },
-    include: {
-      listing: {
-        include: { 
-          user: { select: { id: true, name: true, phone: true } },
-          vehicle: { select: { reservationFee: true } },
-         },
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        listing: {
+          include: { 
+            user: { 
+              select: { 
+                id: true, 
+                name: true, 
+                phone: true,
+                vendorKyc: {
+                  select: { contactNumber: true, status: true },
+                },
+              } 
+            },
+            vehicle: { select: { reservationFee: true } },
+          },
+        },
       },
-    },
-  });
+    });
 
-  if (!order) throw new NotFoundException('Order not found.');
-  if (order.userId !== buyerId) throw new ForbiddenException('Not your order.');
+    if (!order) throw new NotFoundException('Order not found.');
+    if (order.userId !== buyerId) throw new ForbiddenException('Not your order.');
 
-  return order;
-}
+    return order;
+  }
 }
