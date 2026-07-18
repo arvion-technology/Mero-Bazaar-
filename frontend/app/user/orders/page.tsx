@@ -75,6 +75,11 @@ export default function UserOrders() {
     : `${process.env.NEXT_PUBLIC_API_URL}${image}`;
   }
 
+  // Navigate to an order's detail page (used by table rows and mobile cards)
+  function goToOrder(orderId: string) {
+    router.push(`/user/orders/${orderId.replace("#", "")}`);
+  }
+
   // Notification logic (same as Navbar)
   const notifications: string[] = session
     ? ([
@@ -329,19 +334,17 @@ export default function UserOrders() {
           border-bottom: 1px solid #f1f5f9; background: #fafbfc; white-space: nowrap;
         }
         .orders-table td {
-          padding: 0; font-size: 14px; color: #334155;
+          padding: 14px 20px; font-size: 14px; color: #334155;
           border-bottom: 1px solid #f8fafc; white-space: nowrap;
         }
         .orders-table tr:last-child td { border-bottom: none; }
         .order-row-link {
-          display: table-row;
           text-decoration: none;
           color: inherit;
           transition: background 0.15s;
           cursor: pointer;
         }
         .order-row-link:hover td { background: #fafbfc; }
-        .order-row-link td { padding: 14px 20px; }
         .order-id { font-weight: 600; color: #1e293b; font-family: "SF Mono", "Fira Code", monospace; font-size: 13px; }
         .order-item { color: #475569; font-size: 13px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
         .ud-status {
@@ -625,10 +628,18 @@ export default function UserOrders() {
                   </thead>
                   <tbody>
                     {paginated.length > 0 ? paginated.map((order, idx) => (
-                      <Link
+                      <tr
                         key={idx}
-                        href={`/user/orders/${order.id.replace("#", "")}`}
                         className="order-row-link"
+                        role="link"
+                        tabIndex={0}
+                        onClick={() => goToOrder(order.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            goToOrder(order.id);
+                          }
+                        }}
                       >
                         <td><span className="order-id">{order.id}</span></td>
                         <td><span className="order-item">{order.item}</span></td>
@@ -640,7 +651,7 @@ export default function UserOrders() {
                           </span>
                         </td>
                         <td className="order-amount">{order.amount}</td>
-                      </Link>
+                      </tr>
                     )) : (
                       <tr>
                         <td colSpan={5}>
