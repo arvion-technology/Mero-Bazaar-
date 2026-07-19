@@ -33,6 +33,7 @@ export default function CheckoutPage() {
   const [paying, setPaying] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [payingKhalti, setPayingKhalti] = useState(false);
 
   const accessToken = session?.accessToken;
 
@@ -133,6 +134,28 @@ export default function CheckoutPage() {
   const mins = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const secs = String(secondsLeft % 60).padStart(2, "0");
 
+  //handler for khalti payment
+  const handlePayKhalti = async () => {
+    if (!accessToken) return;
+    setPayingKhalti(true);
+    try {
+      const res =  await fetch(`/api/payments/khalti/initiate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ orderId }),
+      });
+      if (!res.ok) throw new Error();
+      const { paymentUrl } = await res.json();
+      window.location.href = paymentUrl;
+    } catch {
+      toast.error("Couldn't start payment. Please try again.");
+      setPayingKhalti(false);
+    }
+  };
+
   return (
     <div style={{ maxWidth: 560, margin: "40px auto", padding: "0 20px" }}>
       <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 14px rgba(0,0,0,.07)" }}>
@@ -181,6 +204,47 @@ export default function CheckoutPage() {
                 </>
               )}
             </button>
+
+            <button
+            onClick={handlePayKhalti}
+            disabled={payingKhalti || secondsLeft === 0}
+              style={{
+                width: "100%", padding: 13, borderRadius: 10,
+                border: "1.5px solid #e0e0e0",
+                background: secondsLeft === 0 ? "#f5f5f5" : "#fff",
+                color: secondsLeft === 0 ? "#aaa" : "#222",
+                fontWeight: 700, fontSize: 14.5,
+                cursor: secondsLeft === 0 ? "not-allowed" : "pointer", marginBottom: 8,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              }}
+            >
+              {payingKhalti ? (
+                "Processing..." 
+              ): secondsLeft === 0 ? ( 
+                  "REservation Expired"
+                ) : (
+                  <>                         
+                    <img src="/Khalti.png" alt="Khalti" style={{ height: 18 }} />
+                    Pay with Khalti
+                  </>
+                )}
+            </button>
+
+            <button
+              style={{
+                width: "100%", padding: 13, borderRadius: 10,
+                border: "1.5px solid #e0e0e0",
+                background: secondsLeft === 0 ? "#f5f5f5" : "#fff",
+                color: secondsLeft === 0 ? "#aaa" : "#222",
+                fontWeight: 700, fontSize: 14.5,
+                cursor: secondsLeft === 0 ? "not-allowed" : "pointer", marginBottom: 8,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              }}
+            >
+              <img src="/logo_connectIPS.png" alt="Connect IPS" style={{ height: 18 }} />
+              Pay with Connect IPS
+            </button>
+
 
             <button
               onClick={handleCancel}
