@@ -1,15 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiArrowLeft,
   FiCheck,
   FiMapPin,
   FiTag,
-  FiAward,
-  FiDollarSign,
-  FiCalendar,
   FiEdit2,
   FiSend,
 } from "react-icons/fi";
@@ -26,38 +23,101 @@ const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 
-//demo data for preview
-const listingData = {
-  title: "Fresh Organic Vegetable",
-  price: "120",
-  priceUnit: "/ KG",
-  location: "Lalitpur",
-  category: "Furniture",
-  condition: "Good",
-  negotiable: true,
-  expiresAt: "15 Jul 2026",
-  description:
-    "Well maintained wooden study table. Few minor scratches but in good condition.",
-  status: "Active",
-  image: "https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dmVnZXRhYmxlc3xlbnwwfHwwfHx8MA%3D%3D",
-};
+interface ListingData {
+  listingType: string;
+  itemName: string;
+  condition: string;
+  price: string;
+  negotiable: boolean;
+  description: string;
+  brand?: string;
+  quantity?: string;
+  gender?: string;
+  availability?: string;
+  location?: string;
+  color?: string;
+  material?: string;
+  weight?: string;
+  deliveryOption?: string;
+  deliveryCharge?: string;
+  city?: string;
+  expiresAt?: string;
+  status?: string;
+}
+
+interface ListingImage {
+  preview: string;
+  isMain: boolean;
+}
 
 export default function PreviewSecondHandPage() {
   const router = useRouter();
   const [isPublishing, setIsPublishing] = useState(false);
+  const [data, setData] = useState<ListingData | null>(null);
+  const [images, setImages] = useState<ListingImage[]>([]);
+  const [mainImage, setMainImage] = useState<string>("");
+
+  useEffect(() => {
+    const savedData = localStorage.getItem("listingData");
+    const savedImages = localStorage.getItem("listingImages");
+
+    if (savedData) {
+      setData(JSON.parse(savedData));
+    }
+    if (savedImages) {
+      const parsedImages: ListingImage[] = JSON.parse(savedImages);
+      setImages(parsedImages);
+      const main = parsedImages.find((img) => img.isMain);
+      setMainImage(main ? main.preview : parsedImages[0]?.preview || "");
+    }
+  }, []);
 
   const handlePublish = async () => {
     setIsPublishing(true);
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
     toast.success("Listing published successfully!");
     setIsPublishing(false);
+    localStorage.removeItem("listingData");
+    localStorage.removeItem("listingImages");
     router.push("/seller/products");
   };
 
   const handleEdit = () => {
     router.push("/seller/listing/secondhand-goods");
   };
+
+  if (!data) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: BG }}>
+        <p style={{ color: TEXT_MUTED }}>Loading listing data...</p>
+      </div>
+    );
+  }
+
+  const isBaby = data.listingType === "Baby";
+
+  const detailRows = isBaby
+    ? [
+        { label: "Category", value: data.listingType },
+        { label: "Condition", value: data.condition },
+        { label: "Brand", value: data.brand || "-" },
+        { label: "Age range", value: "0-3years" },
+        { label: "Gender", value: data.gender || "-" },
+        { label: "Quantity", value: data.quantity || "-" },
+        { label: "Color", value: data.color || "-" },
+        { label: "Material", value: data.material || "-" },
+        { label: "Weight", value: data.weight ? `${data.weight}kg` : "-" },
+        { label: "Availability", value: data.availability || "-" },
+        { label: "Delivery Option", value: data.deliveryOption || "-" },
+        { label: "Delivery Charge", value: data.deliveryCharge ? `NPR ${data.deliveryCharge}` : "-" },
+      ]
+    : [
+        { label: "Category", value: data.listingType },
+        { label: "Condition", value: data.condition },
+        { label: "City", value: data.city || "-" },
+        { label: "Status", value: data.status || "-" },
+        { label: "Expires At", value: data.expiresAt || "-" },
+      ];
 
   return (
     <>
@@ -133,7 +193,6 @@ export default function PreviewSecondHandPage() {
           color: ${TEXT_SECONDARY};
         }
 
-        /* ── Listing Card ── */
         .listing-card {
           background: ${CARD_BG};
           border: 1.5px solid ${BORDER};
@@ -166,25 +225,62 @@ export default function PreviewSecondHandPage() {
           background: ${SUCCESS};
         }
 
-        /* ── Card Layout ── */
         .card-layout {
           display: flex;
           gap: 28px;
         }
 
-        .card-image {
+        .image-section {
           flex: 0 0 320px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .main-image {
+          width: 100%;
+          aspect-ratio: 4 / 3;
           border-radius: 12px;
           overflow: hidden;
           border: 1.5px solid ${BORDER};
-          aspect-ratio: 4 / 3;
         }
 
-        .card-image img {
+        .main-image img {
           width: 100%;
           height: 100%;
           object-fit: cover;
           display: block;
+        }
+
+        .thumbnail-row {
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+        }
+
+        .thumbnail {
+          width: 60px;
+          height: 60px;
+          border-radius: 8px;
+          overflow: hidden;
+          border: 2px solid ${BORDER};
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: border-color 0.2s;
+        }
+
+        .thumbnail:hover {
+          border-color: ${ACCENT};
+        }
+
+        .thumbnail.active {
+          border-color: ${ACCENT};
+        }
+
+        .thumbnail img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
 
         .card-info {
@@ -211,6 +307,16 @@ export default function PreviewSecondHandPage() {
           gap: 4px;
         }
 
+        .negotiable-badge {
+          font-size: 12px;
+          font-weight: 600;
+          color: #d97706;
+          background: #fef3c7;
+          padding: 4px 10px;
+          border-radius: 20px;
+          margin-left: 8px;
+        }
+
         .listing-location {
           display: flex;
           align-items: center;
@@ -228,7 +334,6 @@ export default function PreviewSecondHandPage() {
           margin: 0 0 14px 0;
         }
 
-        /* ── Info Rows ── */
         .info-rows {
           display: flex;
           flex-direction: column;
@@ -261,7 +366,6 @@ export default function PreviewSecondHandPage() {
           color: ${TEXT_PRIMARY};
         }
 
-        /* ── Description ── */
         .description-section {
           margin-top: 4px;
           padding-top: 14px;
@@ -280,7 +384,6 @@ export default function PreviewSecondHandPage() {
           color: ${TEXT_SECONDARY};
         }
 
-        /* ── Actions ── */
         .actions {
           display: flex;
           gap: 50px;
@@ -345,12 +448,12 @@ export default function PreviewSecondHandPage() {
           to { transform: rotate(360deg); }
         }
 
-        /* ── Responsive ── */
         @media (max-width: 900px) {
           .preview-container { padding: 20px 20px 40px; }
           .listing-card { padding: 20px; }
           .card-layout { flex-direction: column; }
-          .card-image { flex: 0 0 auto; width: 100%; aspect-ratio: 16 / 10; }
+          .image-section { flex: 0 0 auto; width: 100%; }
+          .main-image { aspect-ratio: 16 / 10; }
           .actions { flex-direction: column; gap: 12px; }
           .btn { width: 100%; justify-content: center; }
           .draft-saved { display: none; }
@@ -379,69 +482,67 @@ export default function PreviewSecondHandPage() {
 
           {/* Listing Card */}
           <div className="listing-card">
-            <div className="status-badge">{listingData.status}</div>
+            <div className="status-badge">Active</div>
 
             <div className="card-layout">
-              {/* Image */}
-              <div className="card-image">
-                <img src={listingData.image} alt={listingData.title} />
+              {/* Image Section */}
+              <div className="image-section">
+                <div className="main-image">
+                  {mainImage ? (
+                    <img src={mainImage} alt={data.itemName} />
+                  ) : (
+                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_MUTED, fontSize: "14px" }}>
+                      📷 No Image
+                    </div>
+                  )}
+                </div>
+                {images.length > 1 && (
+                  <div className="thumbnail-row">
+                    {images.map((img, idx) => (
+                      <div
+                        key={idx}
+                        className={`thumbnail ${img.preview === mainImage ? "active" : ""}`}
+                        onClick={() => setMainImage(img.preview)}
+                      >
+                        <img src={img.preview} alt={`Thumbnail ${idx + 1}`} />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Details */}
               <div className="card-info">
-                <h2 className="listing-title">{listingData.title}</h2>
+                <h2 className="listing-title">{data.itemName}</h2>
                 <div className="listing-price">
-                  NPR {listingData.price}
-                  <span style={{ fontWeight: 500, opacity: 0.8 }}>
-                    {" "}{listingData.priceUnit}
-                  </span>
+                  NPR {data.price}
+                  {data.negotiable && <span className="negotiable-badge">Negotiable</span>}
                 </div>
 
                 <div className="listing-location">
                   <FiMapPin size={14} />
-                  {listingData.location}
+                  {isBaby ? data.location : data.city}
                 </div>
 
                 <div className="divider" />
 
                 <div className="info-rows">
-                  <div className="info-row">
-                    <div className="info-row-left">
-                      <FiTag size={16} />
-                      Category
+                  {detailRows.map((row) => (
+                    <div key={row.label} className="info-row">
+                      <div className="info-row-left">
+                        <FiTag size={16} />
+                        {row.label}
+                      </div>
+                      <div className="info-row-right">{row.value}</div>
                     </div>
-                    <div className="info-row-right">{listingData.category}</div>
-                  </div>
-                  <div className="info-row">
-                    <div className="info-row-left">
-                      <FiAward size={16} />
-                      Condition
-                    </div>
-                    <div className="info-row-right">{listingData.condition}</div>
-                  </div>
-                  <div className="info-row">
-                    <div className="info-row-left">
-                      <FiDollarSign size={16} />
-                      Negotiable
-                    </div>
-                    <div className="info-row-right">
-                      {listingData.negotiable ? "Yes" : "No"}
-                    </div>
-                  </div>
-                  <div className="info-row">
-                    <div className="info-row-left">
-                      <FiCalendar size={16} />
-                      Expires At
-                    </div>
-                    <div className="info-row-right">{listingData.expiresAt}</div>
-                  </div>
+                  ))}
                 </div>
 
                 <div className="divider" />
 
                 <div className="description-section">
                   <div className="description-title">Description</div>
-                  <p className="description-text">{listingData.description}</p>
+                  <p className="description-text">{data.description}</p>
                 </div>
               </div>
             </div>
@@ -453,11 +554,7 @@ export default function PreviewSecondHandPage() {
               <FiEdit2 size={15} />
               Edit Listing
             </button>
-            <button
-              className="btn btn-publish"
-              onClick={handlePublish}
-              disabled={isPublishing}
-            >
+            <button className="btn btn-publish" onClick={handlePublish} disabled={isPublishing}>
               {isPublishing ? (
                 <>
                   <span className="spinner" />

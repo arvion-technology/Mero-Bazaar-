@@ -1,178 +1,519 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { FiArrowLeft, FiCheck, FiSend, FiMapPin, FiTag, FiLayers, FiAward, FiCalendar } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiCheck,
+  FiMapPin,
+  FiTag,
+  FiAward,
+  FiDollarSign,
+  FiCalendar,
+  FiEdit2,
+  FiSend,
+  FiGlobe,
+  FiShield,
+  FiHeart,
+  FiTruck,
+  FiClock,
+  FiCheckCircle,
+} from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useDraft } from "../layout";
 
-const ACCENT       = "#2563eb";
+const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
-const SUCCESS      = "#10b981";
-const BORDER       = "#e2e8f0";
-const TEXT_HEADING = "#0f172a";
-const TEXT_PRIMARY = "#1e293b";
+const SUCCESS = "#10b981";
+const BORDER = "#e2e8f0";
+const TEXT_PRIMARY = "#0f172a";
 const TEXT_SECONDARY = "#64748b";
-const BG           = "#f8fafc";
-const CARD_BG      = "#ffffff";
-const SITE_PRIMARY = "#C0392B";
+const TEXT_MUTED = "#94a3b8";
+const BG = "#f8fafc";
+const CARD_BG = "#ffffff";
 
-export default function PreviewListingPage() {
+interface ListingData {
+  listingType: string;
+  itemName: string;
+  price: string;
+  unit: string;
+  location: string;
+  district: string;
+  village: string;
+  description: string;
+  // Produce
+  organicCertified?: boolean;
+  organicVerified?: boolean;
+  seasonalAvailability?: string;
+  // LiveStock
+  animalType?: string;
+  age?: string;
+  breed?: string;
+  healthVaccineStatus?: string;
+  // Vet Service
+  serviceType?: string;
+  experience?: string;
+  mobileService?: boolean;
+  serviceArea?: string;
+  serviceRadius?: string;
+  healthCertificate?: boolean;
+  vaccinationAvailable?: boolean;
+  availabilityDays?: string[];
+}
+
+interface ListingImage {
+  preview: string;
+  isMain: boolean;
+}
+
+export default function PreviewPage() {
   const router = useRouter();
-  const { data: session } = useSession();
-  const { agricultureData, images } = useDraft();
   const [isPublishing, setIsPublishing] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(0);
+  const [data, setData] = useState<ListingData | null>(null);
+  const [images, setImages] = useState<ListingImage[]>([]);
+  const [mainImage, setMainImage] = useState<string>("");
 
-  const listing = {
-    category: "Agriculture And Livestock",
-    title: agricultureData.title || "Fresh Organic Vegetable",
-    price: agricultureData.price ? `NPR ${Number(agricultureData.price).toLocaleString("en-IN")} / ${agricultureData.unit}` : "NPR 120 / KG",
-    location: agricultureData.location || "Budhanilkanta Kathmandu, Nepal",
-    listingType: agricultureData.listingType || "Produce",
-    unit: agricultureData.unit || "KG",
-    organicCertified: agricultureData.organicCertified,
-    seasonalAvailability: agricultureData.seasonalAvailability || "March - June",
-    district: agricultureData.district || "Kathmandu",
-    village: agricultureData.village || "Budhanilkhantha",
-    images: images.length ? images.map((img) => img.preview) : ["/placeholder.png"],
-    description: agricultureData.description || "All our products are grown organically without the use of harmful chemicals or pesticides. We take pride in providing fresh and healthy produce to our customers.",
-  };
+  useEffect(() => {
+    const savedData = localStorage.getItem("agricultureListingData");
+    const savedImages = localStorage.getItem("agricultureListingImages");
+    if (savedData) {
+      const parsed = JSON.parse(savedData);
+      setData(parsed);
+      // Set default itemName if empty
+      if (!parsed.itemName) {
+        parsed.itemName = parsed.listingType === "Vet Service" ? "General Health Checkup at Home" : "Fresh Organic Vegetable";
+      }
+    }
+    if (savedImages) {
+      const parsedImages: ListingImage[] = JSON.parse(savedImages);
+      setImages(parsedImages);
+      const main = parsedImages.find((img) => img.isMain);
+      setMainImage(main ? main.preview : parsedImages[0]?.preview || "");
+    }
+  }, []);
 
   const handlePublish = async () => {
-    if (images.length === 0) {
-      toast.error("Please add at least one photo before publishing");
-      router.push("/seller/listing/agriculture-livestock/photos");
-      return;
-    }
-
     setIsPublishing(true);
-    try {
-      // TODO: Replace with your actual agriculture API endpoint
-      const res = await fetch("/api/agriculture-listings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify({
-          title: agricultureData.title,
-          price: agricultureData.price,
-          description: agricultureData.description,
-          listingType: agricultureData.listingType,
-          district: agricultureData.district,
-          village: agricultureData.village,
-          location: agricultureData.location,
-          unit: agricultureData.unit,
-          organicCertified: agricultureData.organicCertified,
-          organicVerified: agricultureData.organicVerified,
-          seasonalAvailability: agricultureData.seasonalAvailability,
-          animalType: agricultureData.animalType,
-          age: agricultureData.age,
-          breed: agricultureData.breed,
-          healthStatus: agricultureData.healthStatus,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        throw new Error(err?.message || "Failed to create listing");
-      }
-
-      toast.success("Listing published successfully!");
-      router.push("/seller/products");
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("Something went wrong publishing");
-      }
-    } finally {
-      setIsPublishing(false);
-    }
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    toast.success("Listing published successfully!");
+    setIsPublishing(false);
+    localStorage.removeItem("agricultureListingData");
+    localStorage.removeItem("agricultureListingImages");
+    router.push("/seller/products");
   };
 
-  function getStyles(): string {
-  return `
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    .preview-page { min-height: 100vh; background: ${BG}; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
-    .preview-container { max-width: 1300px; width: 100%; margin: 0 auto; padding: 24px 32px 40px; }
+  const handleEdit = () => {
+    router.push("/seller/listing/agriculture-livestock");
+  };
 
-    /* Header */
-    .preview-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-    .back-btn { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 10px; border: 1.5px solid ${BORDER}; background: ${CARD_BG}; color: ${TEXT_SECONDARY}; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; font-family: inherit; }
-    .back-btn:hover { border-color: #cbd5e1; background: #f1f5f9; }
-    .draft-saved { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: ${SUCCESS}; }
-    .draft-saved svg { stroke-width: 3; }
+  if (!data) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: BG }}>
+        <p style={{ color: TEXT_MUTED }}>Loading listing data...</p>
+      </div>
+    );
+  }
 
-    /* Page Header */
-    .page-header { margin-bottom: 20px; }
-    .section-title { font-size: 22px; font-weight: 700; color: ${TEXT_HEADING}; letter-spacing: -0.3px; margin-bottom: 4px; }
-    .section-subtitle { font-size: 14px; color: ${TEXT_SECONDARY}; }
+  const isProduce = data.listingType === "Produce";
+  const isLiveStock = data.listingType === "LiveStock";
+  const isVetService = data.listingType === "Vet Service";
 
-    /* Listing Card */
-    .listing-card { background: ${CARD_BG}; border: 1.5px solid ${BORDER}; border-radius: 16px; padding: 24px; margin-bottom: 20px; }
-    .card-layout { display: flex; gap: 24px; margin-bottom: 20px; }
-
-    /* Images */
-    .card-images { flex: 0 0 380px; }
-    .main-image { width: 100%; aspect-ratio: 4/3; border-radius: 12px; overflow: hidden; border: 1.5px solid ${BORDER}; position: relative; }
-    .main-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .organic-badge { position: absolute; top: 8px; left: 8px; display: flex; align-items: center; gap: 4px; padding: 4px 10px; background: ${SUCCESS}; color: #fff; font-size: 11px; font-weight: 600; border-radius: 6px; z-index: 2; }
-
-    /* Info */
-    .card-info { flex: 1; min-width: 0; }
-    .listing-title { font-size: 20px; font-weight: 700; color: ${TEXT_HEADING}; margin-bottom: 8px; letter-spacing: -0.3px; }
-    .listing-price { font-size: 18px; font-weight: 700; color: ${ACCENT}; margin-bottom: 12px; }
-    .location-row { display: flex; align-items: center; gap: 6px; font-size: 14px; color: ${TEXT_SECONDARY}; margin-bottom: 16px; }
-
-    /* Details Table */
-    .details-table { margin-bottom: 20px; }
-    .details-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; font-size: 14px; border-bottom: 1px solid ${BORDER}; }
-    .details-row:last-child { border-bottom: none; }
-    .details-label { display: flex; align-items: center; gap: 8px; color: ${TEXT_SECONDARY}; }
-    .details-value { color: ${TEXT_PRIMARY}; font-weight: 500; }
-
-    /* Description */
-    .description-section { padding-top: 8px; }
-    .description-title { font-size: 14px; font-weight: 700; color: ${TEXT_HEADING}; margin-bottom: 6px; }
-    .description-text { font-size: 14px; color: ${TEXT_SECONDARY}; line-height: 1.6; }
-
-    /* Location Footer */
-    .location-footer { display: flex; gap: 40px; padding: 16px 0 0; border-top: 1px solid ${BORDER}; }
-    .location-item { display: flex; align-items: flex-start; gap: 10px; }
-    .location-label { font-size: 12px; color: ${TEXT_SECONDARY}; margin-bottom: 2px; }
-    .location-value { font-size: 14px; color: ${TEXT_PRIMARY}; font-weight: 500; }
-
-    /* Actions */
-    .actions { display: flex; gap: 50px; justify-content: center; }
-    .btn { padding: 12px 32px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; font-family: inherit; display: flex; align-items: center; gap: 8px; min-width: 180px; justify-content: center; }
-    .btn-edit { background: ${CARD_BG}; color: ${ACCENT}; border: 1.5px solid ${ACCENT}; }
-    .btn-edit:hover { background: #eff6ff; }
-    .btn-publish { background: linear-gradient(135deg, ${SITE_PRIMARY}, #e0574a); color: #fff; border: none; box-shadow: 0 4px 14px rgba(192, 57, 43, 0.25); }
-    .btn-publish:hover { box-shadow: 0 6px 20px rgba(192, 57, 43, 0.35); transform: translateY(-1px); }
-    .btn-publish:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    @media (max-width: 900px) {
-      .preview-container { padding: 20px 20px 40px; }
-      .card-layout { flex-direction: column; }
-      .card-images { flex: 0 0 auto; width: 100%; }
-      .main-image { aspect-ratio: 4/3; }
-      .actions { flex-direction: column; gap: 12px; }
-      .btn { width: 100%; }
-      .location-footer { flex-direction: column; gap: 16px; }
-    }
-  `;
-}
+  // Build detail rows based on listing type
+  const detailRows = isProduce
+    ? [
+        { label: "Listing Type", value: data.listingType, icon: <FiTag size={16} /> },
+        { label: "Unit", value: data.unit, icon: <FiAward size={16} /> },
+        { label: "Organic Certified", value: data.organicCertified ? "Yes" : "No", icon: <FiCheckCircle size={16} /> },
+        { label: "Season", value: data.seasonalAvailability || "-", icon: <FiCalendar size={16} /> },
+      ]
+    : isLiveStock
+    ? [
+        { label: "Location / Area", value: data.location, icon: <FiMapPin size={16} /> },
+        { label: "Breed", value: data.breed || "-", icon: <FiAward size={16} /> },
+        { label: "Age", value: data.age || "-", icon: <FiCalendar size={16} /> },
+        { label: "Unit", value: data.unit, icon: <FiAward size={16} /> },
+        { label: "Organic Certified", value: data.organicCertified ? "Yes" : "No", icon: <FiCheckCircle size={16} /> },
+        { label: "Health / Vaccine Status", value: data.healthVaccineStatus || "-", icon: <FiShield size={16} /> },
+      ]
+    : [
+        { label: "Service Type", value: data.serviceType || "-", icon: <FiTag size={16} /> },
+        { label: "Animal Type", value: data.animalType || "-", icon: <FiHeart size={16} /> },
+        { label: "Experience", value: data.experience || "-", icon: <FiAward size={16} /> },
+        { label: "Mobile Vet", value: data.mobileService ? "Yes" : "No", icon: <FiTruck size={16} /> },
+        { label: "Vaccination", value: data.vaccinationAvailable ? "Yes" : "No", icon: <FiShield size={16} /> },
+        { label: "Service Radius", value: data.serviceRadius ? `${data.serviceRadius} KM` : "-", icon: <FiGlobe size={16} /> },
+        { label: "Health Certified", value: data.healthCertificate ? "Yes" : "No", icon: <FiCheckCircle size={16} /> },
+        { label: "Availability", value: data.availabilityDays?.join("-") || "-", icon: <FiClock size={16} /> },
+      ];
 
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />
-      <style dangerouslySetInnerHTML={{ __html: getStyles() }} />
+      <style>{`
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        .preview-page {
+          min-height: 100vh;
+          background: ${BG};
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+        }
+
+        .preview-container {
+          max-width: 900px;
+          width: 100%;
+          margin: 0 auto;
+          padding: 24px 32px 40px;
+        }
+
+        .preview-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        }
+
+        .back-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 14px;
+          border-radius: 10px;
+          border: 1.5px solid ${BORDER};
+          background: ${CARD_BG};
+          color: ${TEXT_SECONDARY};
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-family: inherit;
+        }
+
+        .back-btn:hover {
+          border-color: #cbd5e1;
+          background: #f1f5f9;
+        }
+
+        .draft-saved {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+          font-weight: 600;
+          color: ${SUCCESS};
+        }
+
+        .page-header {
+          margin-bottom: 20px;
+        }
+
+        .section-title {
+          font-size: 22px;
+          font-weight: 700;
+          color: ${TEXT_PRIMARY};
+          letter-spacing: -0.3px;
+          margin-bottom: 4px;
+        }
+
+        .section-subtitle {
+          font-size: 14px;
+          color: ${TEXT_SECONDARY};
+        }
+
+        .listing-card {
+          background: ${CARD_BG};
+          border: 1.5px solid ${BORDER};
+          border-radius: 16px;
+          padding: 24px;
+          margin-bottom: 20px;
+          position: relative;
+        }
+
+        .card-layout {
+          display: flex;
+          gap: 28px;
+        }
+
+        .image-section {
+          flex: 0 0 320px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .main-image {
+          width: 100%;
+          aspect-ratio: 1;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1.5px solid ${BORDER};
+          position: relative;
+        }
+
+        .main-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .certified-badge {
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(255,255,255,0.95);
+          padding: 4px 10px;
+          border-radius: 20px;
+          font-size: 11px;
+          font-weight: 600;
+          color: ${SUCCESS};
+        }
+
+        .certified-badge::before {
+          content: '';
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: ${SUCCESS};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .thumbnail-row {
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+        }
+
+        .thumbnail {
+          width: 56px;
+          height: 56px;
+          border-radius: 8px;
+          overflow: hidden;
+          border: 2px solid ${BORDER};
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: border-color 0.2s;
+        }
+
+        .thumbnail:hover {
+          border-color: ${ACCENT};
+        }
+
+        .thumbnail.active {
+          border-color: ${ACCENT};
+        }
+
+        .thumbnail img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .card-info {
+          flex: 1;
+          min-width: 0;
+          padding-top: 4px;
+        }
+
+        .listing-title {
+          font-size: 20px;
+          font-weight: 700;
+          color: ${TEXT_PRIMARY};
+          letter-spacing: -0.2px;
+          margin-bottom: 8px;
+        }
+
+        .listing-price {
+          font-size: 18px;
+          font-weight: 700;
+          color: ${ACCENT};
+          margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .price-unit {
+          font-weight: 500;
+          opacity: 0.8;
+        }
+
+        .listing-location {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13.5px;
+          color: ${TEXT_SECONDARY};
+          margin-bottom: 16px;
+        }
+
+        .divider {
+          height: 1px;
+          background: ${BORDER};
+          margin: 0 0 14px 0;
+        }
+
+        .info-rows {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-bottom: 16px;
+        }
+
+        .info-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 14px;
+          padding: 6px 0;
+        }
+
+        .info-row-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: ${TEXT_SECONDARY};
+        }
+
+        .info-row-left svg {
+          color: ${TEXT_SECONDARY};
+          width: 16px;
+          height: 16px;
+        }
+
+        .info-row-right {
+          font-weight: 500;
+          color: ${TEXT_PRIMARY};
+        }
+
+        .description-section {
+          margin-top: 4px;
+          padding-top: 14px;
+        }
+
+        .description-title {
+          font-size: 14px;
+          font-weight: 700;
+          color: ${TEXT_PRIMARY};
+          margin-bottom: 8px;
+        }
+
+        .description-text {
+          font-size: 14px;
+          line-height: 1.7;
+          color: ${TEXT_SECONDARY};
+        }
+
+        .location-bar {
+          display: flex;
+          gap: 24px;
+          margin-top: 16px;
+          padding: 16px;
+          background: #f8fafc;
+          border-radius: 12px;
+          border: 1px solid ${BORDER};
+        }
+
+        .location-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+          color: ${TEXT_SECONDARY};
+        }
+
+        .location-item svg {
+          color: ${TEXT_MUTED};
+        }
+
+        .location-label {
+          font-weight: 600;
+          color: ${TEXT_PRIMARY};
+          display: block;
+          margin-bottom: 2px;
+        }
+
+        .actions {
+          display: flex;
+          gap: 24px;
+          justify-content: center;
+          margin-top: 24px;
+        }
+
+        .btn {
+          padding: 12px 32px;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.25s ease;
+          font-family: inherit;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .btn-edit {
+          background: ${CARD_BG};
+          color: ${ACCENT};
+          border: 1.5px solid ${ACCENT};
+          min-width: 140px;
+          justify-content: center;
+        }
+
+        .btn-edit:hover {
+          background: #eff6ff;
+        }
+
+        .btn-publish {
+          background: linear-gradient(135deg, ${ACCENT}, ${ACCENT_HOVER});
+          color: #fff;
+          border: none;
+          box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
+          min-width: 180px;
+          justify-content: center;
+        }
+
+        .btn-publish:hover {
+          box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+          transform: translateY(-1px);
+        }
+
+        .btn-publish:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(255,255,255,0.3);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 900px) {
+          .preview-container { padding: 20px 20px 40px; }
+          .listing-card { padding: 20px; }
+          .card-layout { flex-direction: column; }
+          .image-section { flex: 0 0 auto; width: 100%; }
+          .main-image { max-width: 320px; margin: 0 auto; }
+          .actions { flex-direction: column; gap: 12px; }
+          .btn { width: 100%; justify-content: center; }
+          .draft-saved { display: none; }
+        }
+      `}</style>
 
       <div className="preview-page">
         <div className="preview-container">
@@ -187,7 +528,7 @@ export default function PreviewListingPage() {
             </div>
           </div>
 
-          {/* Page Title */}
+          {/* Title */}
           <div className="page-header">
             <h1 className="section-title">Preview your listing</h1>
             <p className="section-subtitle">Review your listing details before publishing.</p>
@@ -196,68 +537,96 @@ export default function PreviewListingPage() {
           {/* Listing Card */}
           <div className="listing-card">
             <div className="card-layout">
-              {/* Left: Images */}
-              <div className="card-images">
+              {/* Image Section */}
+              <div className="image-section">
                 <div className="main-image">
-                  {listing.organicCertified && (
-                    <div className="organic-badge">
-                      <FiCheck size={12} /> Organic certified
+                  {mainImage ? (
+                    <>
+                      <img src={mainImage} alt={data.itemName} />
+                      {(isProduce || isLiveStock) && data.organicCertified && (
+                        <div className="certified-badge">
+                          <FiCheckCircle size={12} />
+                          {isVetService ? "Verified" : "Organic certified"}
+                        </div>
+                      )}
+                      {isVetService && (
+                        <div className="certified-badge">
+                          <FiCheckCircle size={12} />
+                          Verified
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_MUTED }}>
+                      📷 No Image
                     </div>
                   )}
-                  <img src={listing.images[selectedImage]} alt={listing.title} />
                 </div>
+                {images.length > 1 && (
+                  <div className="thumbnail-row">
+                    {images.map((img, idx) => (
+                      <div
+                        key={idx}
+                        className={`thumbnail ${img.preview === mainImage ? "active" : ""}`}
+                        onClick={() => setMainImage(img.preview)}
+                      >
+                        <img src={img.preview} alt={`Thumbnail ${idx + 1}`} />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Right: Info */}
+              {/* Details */}
               <div className="card-info">
-                <h2 className="listing-title">{listing.title}</h2>
-                <div className="listing-price">{listing.price}</div>
-
-                <div className="location-row">
-                  <FiMapPin size={14} color={TEXT_SECONDARY} />
-                  <span>{listing.location}</span>
+                <h2 className="listing-title">{data.itemName}</h2>
+                <div className="listing-price">
+                  NPR {data.price}
+                  <span className="price-unit">/ {data.unit}</span>
                 </div>
 
-                <div className="details-table">
-                  <div className="details-row">
-                    <span className="details-label"><FiTag size={14} /> Listing Type</span>
-                    <span className="details-value">{listing.listingType}</span>
-                  </div>
-                  <div className="details-row">
-                    <span className="details-label"><FiLayers size={14} /> Unit</span>
-                    <span className="details-value">{listing.unit}</span>
-                  </div>
-                  <div className="details-row">
-                    <span className="details-label"><FiAward size={14} /> Organic Certified</span>
-                    <span className="details-value">{listing.organicCertified ? "Yes" : "No"}</span>
-                  </div>
-                  <div className="details-row">
-                    <span className="details-label"><FiCalendar size={14} /> Season</span>
-                    <span className="details-value">{listing.seasonalAvailability}</span>
-                  </div>
+                <div className="listing-location">
+                  <FiMapPin size={14} />
+                  {data.location}
                 </div>
+
+                <div className="divider" />
+
+                <div className="info-rows">
+                  {detailRows.map((row) => (
+                    <div key={row.label} className="info-row">
+                      <div className="info-row-left">
+                        {row.icon}
+                        {row.label}
+                      </div>
+                      <div className="info-row-right">{row.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="divider" />
 
                 <div className="description-section">
                   <div className="description-title">Description</div>
-                  <p className="description-text">{listing.description}</p>
+                  <p className="description-text">{data.description}</p>
                 </div>
-              </div>
-            </div>
 
-            {/* Location Info Footer */}
-            <div className="location-footer">
-              <div className="location-item">
-                <FiMapPin size={16} color={ACCENT} />
-                <div>
-                  <div className="location-label">District</div>
-                  <div className="location-value">{listing.district}</div>
-                </div>
-              </div>
-              <div className="location-item">
-                <FiMapPin size={16} color={ACCENT} />
-                <div>
-                  <div className="location-label">Location</div>
-                  <div className="location-value">{listing.village}, {listing.district}</div>
+                {/* Location Bar */}
+                <div className="location-bar">
+                  <div className="location-item">
+                    <FiMapPin size={16} />
+                    <div>
+                      <span className="location-label">District</span>
+                      <span>{data.district}</span>
+                    </div>
+                  </div>
+                  <div className="location-item">
+                    <FiMapPin size={16} />
+                    <div>
+                      <span className="location-label">{isVetService ? "Service Radius" : "Location"}</span>
+                      <span>{isVetService ? `${data.serviceRadius} KM` : data.location}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -265,7 +634,8 @@ export default function PreviewListingPage() {
 
           {/* Actions */}
           <div className="actions">
-            <button className="btn btn-edit" onClick={() => router.push("/seller/listing/agriculture-livestock/photos")}>
+            <button className="btn btn-edit" onClick={handleEdit}>
+              <FiEdit2 size={15} />
               Edit Listing
             </button>
             <button className="btn btn-publish" onClick={handlePublish} disabled={isPublishing}>
