@@ -831,7 +831,7 @@ enum OrderType {
 enum PaymentMethod {
   ESEWA
   KHALTI
-  CONNECT_IPS
+  CONNECTIPS
 }
 
 enum FoodType {
