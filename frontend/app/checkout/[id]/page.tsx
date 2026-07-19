@@ -34,6 +34,7 @@ export default function CheckoutPage() {
   const [cancelling, setCancelling] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [payingKhalti, setPayingKhalti] = useState(false);
+  // const [payingConnectIPS, setPayingConnectIPS] = useState(false);
 
   const accessToken = session?.accessToken;
 
@@ -156,6 +157,41 @@ export default function CheckoutPage() {
     }
   };
 
+  //handler for connectips payment
+
+  // const handlePayConnectIPS = async () => {
+  //   if (!accessToken) return;
+  //   setPayingConnectIPS(true);
+  //   try {
+  //     const res = await fetch(`/api/payments/connectips/initiate`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${accessToken}`,
+  //       },
+  //       body: JSON.stringify({ orderId }),
+  //     });
+  //     if (!res.ok) throw new Error();
+  //     const { gatewayUrl, fields } = await res.json();
+
+  //     const form = document.createElement("form");
+  //     form.method = "POST";
+  //     form.action = gatewayUrl;
+  //     Object.entries(fields).forEach(([key, value]) => {
+  //       const input = document.createElement("input");
+  //       input.type = "hidden";
+  //       input.name = key;
+  //       input.value = String(value);
+  //       form.appendChild(input);
+  //     });
+  //     document.body.appendChild(form);
+  //     form.submit();
+  //   } catch {
+  //     toast.error("Couldn't start payment. Please try again.");
+  //     setPayingConnectIPS(false);
+  //   }
+  // };
+
   return (
     <div style={{ maxWidth: 560, margin: "40px auto", padding: "0 20px" }}>
       <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 14px rgba(0,0,0,.07)" }}>
@@ -221,7 +257,7 @@ export default function CheckoutPage() {
               {payingKhalti ? (
                 "Processing..." 
               ): secondsLeft === 0 ? ( 
-                  "REservation Expired"
+                  "Reservation Expired"
                 ) : (
                   <>                         
                     <img src="/Khalti.png" alt="Khalti" style={{ height: 18 }} />

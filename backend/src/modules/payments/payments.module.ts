@@ -6,10 +6,12 @@ import { OrdersModule } from '../orders/orders.module';
 import { AuthModule } from '../auth/auth.module';
 import { KhaltiService } from './khalti.service';
 import { KhaltiController } from './khalti.controller';
+import { ConnectipsService } from './connectips.service';
+import { ConnectipsController } from './connectips.controller';
 
 @Module({
   imports: [PrismaModule, OrdersModule, AuthModule],
-  providers: [EsewaService, KhaltiService],
-  controllers: [EsewaController, KhaltiController],
+  providers: [EsewaService, KhaltiService, ConnectipsService],
+  controllers: [EsewaController, KhaltiController, ConnectipsController], 
 })
 export class PaymentsModule {}
