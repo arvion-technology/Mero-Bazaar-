@@ -36,7 +36,7 @@ const SITE_PRIMARY = "#C0392B";
 
 const steps = [
   { label: "Category", icon: FiFileText, status: "done" as const },
-  { label: "photos", icon: FiImage  , status: "active" as const },
+  { label: "Photos", icon: FiImage, status: "active" as const },
   { label: "Preview", icon: FiEye, status: "upcoming" as const },
 ];
 
@@ -59,7 +59,7 @@ export default function NewSecondHandListingPage() {
   // ── Listing Type ──
   const [listingType, setListingType] = useState("Furniture");
 
-  // ── Item Details ──
+  // ── Common Fields ──
   const [itemName, setItemName] = useState("");
   const [condition, setCondition] = useState("");
   const [price, setPrice] = useState("");
@@ -68,6 +68,20 @@ export default function NewSecondHandListingPage() {
   const [description, setDescription] = useState("");
   const [expiresAt, setExpiresAt] = useState("15/07/2026");
   const [status] = useState("Active");
+
+  // ── Baby-specific Fields ──
+  const [brand, setBrand] = useState("");
+  const [quantity, setQuantity] = useState("1");
+  const [gender, setGender] = useState("Unisex");
+  const [availability, setAvailability] = useState("In Stock");
+  const [location, setLocation] = useState("Balkumari, Lalitpur");
+  const [color, setColor] = useState("");
+  const [material, setMaterial] = useState("");
+  const [weight, setWeight] = useState("");
+  const [deliveryOption, setDeliveryOption] = useState("Buyer Pickup");
+  const [deliveryCharge, setDeliveryCharge] = useState("0");
+
+  const isBaby = listingType === "Baby";
 
   const formattedPrice = useMemo(() => {
     if (!price) return "";
@@ -83,11 +97,57 @@ export default function NewSecondHandListingPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!itemName || !condition || !price || !city || !description || !expiresAt) {
+
+    // Validation
+    if (!itemName || !condition || !price || !description) {
       toast.error("Please fill all required fields");
       return;
     }
-    toast.success("Details saved! Now preview your listing.");
+    if (isBaby) {
+      if (!location) {
+        toast.error("Please fill Location / Area");
+        return;
+      }
+    } else {
+      if (!city || !expiresAt) {
+        toast.error("Please fill all required fields");
+        return;
+      }
+    }
+
+    // Build and save data
+    const baseData = {
+      listingType,
+      itemName,
+      condition,
+      price: formattedPrice,
+      negotiable,
+      description,
+    };
+
+    const listingData = isBaby
+      ? {
+          ...baseData,
+          brand,
+          quantity,
+          gender,
+          availability,
+          location,
+          color,
+          material,
+          weight,
+          deliveryOption,
+          deliveryCharge,
+        }
+      : {
+          ...baseData,
+          city,
+          expiresAt,
+          status,
+        };
+
+    localStorage.setItem("listingData", JSON.stringify(listingData));
+    toast.success("Details saved! Now add photos.");
     router.push("/seller/listing/secondhand-goods/photos");
   };
 
@@ -114,7 +174,6 @@ export default function NewSecondHandListingPage() {
           padding: 32px 24px 64px;
         }
 
-        /* ── Header ── */
         .listing-header {
           display: flex;
           align-items: center;
@@ -163,7 +222,6 @@ export default function NewSecondHandListingPage() {
           margin-top: 3px;
         }
 
-        /* ── Draft Saved ── */
         .draft-badge {
           display: flex;
           align-items: center;
@@ -174,7 +232,6 @@ export default function NewSecondHandListingPage() {
           flex-shrink: 0;
         }
 
-        /* ── Stepper ── */
         .stepper {
           display: flex;
           align-items: center;
@@ -246,7 +303,6 @@ export default function NewSecondHandListingPage() {
           background: ${SUCCESS};
         }
 
-        /* ── Form Card ── */
         .form-card {
           background: ${CARD_BG};
           border-radius: 20px;
@@ -266,7 +322,6 @@ export default function NewSecondHandListingPage() {
             0 0 0 1px rgba(0,0,0,0.02);
         }
 
-        /* ── Category ── */
         .category-wrap { margin-bottom: 24px; }
 
         .category-label {
@@ -313,21 +368,18 @@ export default function NewSecondHandListingPage() {
           border-radius: 6px;
         }
 
-        /* ── Divider ── */
         .divider {
           height: 1px;
           background: linear-gradient(90deg, transparent, ${BORDER}, transparent);
           margin: 28px 0;
         }
 
-        /* ── Two Column Layout ── */
         .two-col-layout {
           display: grid;
           grid-template-columns: 260px 1fr;
           gap: 40px;
         }
 
-        /* ── Section Header ── */
         .section-header {
           display: flex;
           align-items: center;
@@ -362,7 +414,6 @@ export default function NewSecondHandListingPage() {
           margin-top: 2px;
         }
 
-        /* ── Radio Group ── */
         .radio-group {
           display: flex;
           flex-direction: column;
@@ -429,7 +480,6 @@ export default function NewSecondHandListingPage() {
           font-weight: 600;
         }
 
-        /* ── Form Grid ── */
         .form-row {
           display: grid;
           gap: 20px;
@@ -438,6 +488,10 @@ export default function NewSecondHandListingPage() {
 
         .form-row.two-col {
           grid-template-columns: 1fr 1fr;
+        }
+
+        .form-row.three-col {
+          grid-template-columns: 1fr 1fr 1fr;
         }
 
         .form-group {
@@ -460,6 +514,7 @@ export default function NewSecondHandListingPage() {
         }
 
         .form-label .required { color: ${DANGER}; font-weight: 700; }
+        .form-label .optional { color: ${TEXT_MUTED}; font-weight: 500; font-size: 12px; }
 
         .form-input,
         .form-select,
@@ -526,7 +581,6 @@ export default function NewSecondHandListingPage() {
 
         .char-counter.near-limit { color: ${DANGER}; font-weight: 600; }
 
-        /* ── Checkbox Inline ── */
         .checkbox-inline {
           display: flex;
           align-items: center;
@@ -568,7 +622,6 @@ export default function NewSecondHandListingPage() {
           margin-top: -2px;
         }
 
-        /* ── Date Input ── */
         .date-input-wrap {
           position: relative;
         }
@@ -586,7 +639,6 @@ export default function NewSecondHandListingPage() {
           pointer-events: none;
         }
 
-        /* ── Status Badge ── */
         .status-badge {
           display: inline-flex;
           align-items: center;
@@ -596,7 +648,50 @@ export default function NewSecondHandListingPage() {
           padding: 10px 0;
         }
 
-        /* ── Submit Button ── */
+        .delivery-group {
+          display: flex;
+          gap: 24px;
+          padding: 10px 0;
+        }
+
+        .delivery-option {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          color: ${TEXT_PRIMARY};
+          font-weight: 500;
+        }
+
+        .delivery-option input[type="radio"] {
+          display: none;
+        }
+
+        .delivery-circle {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          border: 2px solid #cbd5e1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+        }
+
+        .delivery-option input[type="radio"]:checked + .delivery-circle {
+          border-color: ${SITE_PRIMARY};
+          background: ${SITE_PRIMARY};
+        }
+
+        .delivery-option input[type="radio"]:checked + .delivery-circle::after {
+          content: '';
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #fff;
+        }
+
         .submit-wrap {
           display: flex;
           justify-content: space-between;
@@ -663,7 +758,6 @@ export default function NewSecondHandListingPage() {
           box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
         }
 
-        /* ── Responsive ── */
         @media (max-width: 768px) {
           .listing-container { padding: 20px 20px 48px; }
           .form-card { padding: 28px; border-radius: 16px; }
@@ -672,7 +766,7 @@ export default function NewSecondHandListingPage() {
           .stepper { padding: 14px 16px; }
           .step-label { display: none; }
           .step-connector { margin: 0 6px; min-width: 16px; }
-          .form-row.two-col { grid-template-columns: 1fr; }
+          .form-row.two-col, .form-row.three-col { grid-template-columns: 1fr; }
           .submit-wrap { flex-direction: column-reverse; }
           .back-link, .submit-btn { width: 100%; justify-content: center; }
         }
@@ -764,7 +858,7 @@ export default function NewSecondHandListingPage() {
                 </div>
               </div>
 
-              {/* Right: Furniture Details */}
+              {/* Right: Dynamic Details */}
               <div className="right-col">
                 <div className="section-header">
                   <div className="section-icon blue">
@@ -775,116 +869,174 @@ export default function NewSecondHandListingPage() {
                   </div>
                 </div>
 
-                <div className="form-row two-col">
+                {/* Row 1: Item Name | Condition | Brand (Baby only) */}
+                <div className={`form-row ${isBaby ? "three-col" : "two-col"}`}>
                   <div className="form-group">
                     <label className="form-label">Item Name <span className="required">*</span></label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Enter item name"
-                      value={itemName}
-                      onChange={(e) => setItemName(e.target.value)}
-                      required
-                    />
+                    <input type="text" className="form-input" placeholder="Enter item name" value={itemName} onChange={(e) => setItemName(e.target.value)} required />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Condition <span className="required">*</span></label>
                     <div className="select-wrap">
-                      <select
-                        className="form-select"
-                        value={condition}
-                        onChange={(e) => setCondition(e.target.value)}
-                        required
-                      >
+                      <select className="form-select" value={condition} onChange={(e) => setCondition(e.target.value)} required>
                         <option value="">Select condition</option>
-                        {conditions.map((c) => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
+                        {conditions.map((c) => <option key={c} value={c}>{c}</option>)}
                       </select>
                       <FiChevronDown size={16} className="select-chevron" />
                     </div>
                   </div>
+                  {isBaby && (
+                    <div className="form-group">
+                      <label className="form-label">Brand <span className="optional">(Optional)</span></label>
+                      <input type="text" className="form-input" placeholder="e.g. BabyHug" value={brand} onChange={(e) => setBrand(e.target.value)} />
+                    </div>
+                  )}
                 </div>
 
-                <div className="form-row two-col">
-                  <div className="form-group">
-                    <label className="form-label">Price(NPR) <span className="required">*</span></label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      className="form-input"
-                      placeholder="Enter price"
-                      value={formattedPrice}
-                      onChange={(e) => handlePriceChange(e.target.value)}
-                      required
-                    />
+                {/* Row 2: Baby-specific (Quantity | Gender | Availability) */}
+                {isBaby && (
+                  <div className="form-row three-col">
+                    <div className="form-group">
+                      <label className="form-label">Quantity <span className="required">*</span></label>
+                      <input type="number" className="form-input" placeholder="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} min="1" required />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Gender <span className="required">*</span></label>
+                      <div className="select-wrap">
+                        <select className="form-select" value={gender} onChange={(e) => setGender(e.target.value)} required>
+                          <option value="Unisex">Unisex</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                        </select>
+                        <FiChevronDown size={16} className="select-chevron" />
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Availability <span className="optional">(Optional)</span></label>
+                      <div className="select-wrap">
+                        <select className="form-select" value={availability} onChange={(e) => setAvailability(e.target.value)}>
+                          <option value="In Stock">In Stock</option>
+                          <option value="Out of Stock">Out of Stock</option>
+                          <option value="Pre-Order">Pre-Order</option>
+                        </select>
+                        <FiChevronDown size={16} className="select-chevron" />
+                      </div>
+                    </div>
                   </div>
+                )}
+
+                {/* Row 3: Price | Negotiable | Location */}
+                <div className={`form-row ${isBaby ? "three-col" : "two-col"}`}>
                   <div className="form-group">
                     <label className="form-label">Price(NPR) <span className="required">*</span></label>
+                    <input type="text" inputMode="numeric" className="form-input" placeholder="Enter price" value={formattedPrice} onChange={(e) => handlePriceChange(e.target.value)} required />
+                  </div>
+                  <div className="form-group" style={{ minWidth: "140px" }}>
+                    <label className="form-label" style={{ opacity: 0 }}>Negotiable</label>
                     <label className="checkbox-inline">
-                      <input
-                        type="checkbox"
-                        checked={negotiable}
-                        onChange={(e) => setNegotiable(e.target.checked)}
-                      />
+                      <input type="checkbox" checked={negotiable} onChange={(e) => setNegotiable(e.target.checked)} />
                       <span className="check-box"></span>
                       <span>Yes, negotiable</span>
                     </label>
                   </div>
+                  {isBaby ? (
+                    <div className="form-group">
+                      <label className="form-label">Location / Area <span className="required">*</span></label>
+                      <div className="select-wrap">
+                        <select className="form-select" value={location} onChange={(e) => setLocation(e.target.value)} required>
+                          <option value="Balkumari, Lalitpur">Balkumari, Lalitpur</option>
+                          <option value="Patan, Lalitpur">Patan, Lalitpur</option>
+                          <option value="Thamel, Kathmandu">Thamel, Kathmandu</option>
+                          <option value="Lakeside, Pokhara">Lakeside, Pokhara</option>
+                        </select>
+                        <FiChevronDown size={16} className="select-chevron" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="form-group">
+                      <label className="form-label">City <span className="required">*</span></label>
+                      <div className="select-wrap">
+                        <select className="form-select" value={city} onChange={(e) => setCity(e.target.value)} required>
+                          {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                        <FiChevronDown size={16} className="select-chevron" />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
+                {/* Description */}
                 <div className="form-group full-width">
-                  <label className="form-label">City <span className="required">*</span></label>
-                  <div className="select-wrap">
-                    <select
-                      className="form-select"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      required
-                    >
-                      {cities.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                    <FiChevronDown size={16} className="select-chevron" />
-                  </div>
+                  <label className="form-label">Description <span className="optional">(Optional)</span> <span className="required">*</span></label>
+                  <textarea className="form-textarea" placeholder="Describe your item..." value={description} maxLength={descMax} onChange={(e) => setDescription(e.target.value)} required />
+                  <div className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}>{descLength}/{descMax}</div>
                 </div>
 
-                <div className="form-group full-width">
-                  <label className="form-label">Description(Optional) <span className="required">*</span></label>
-                  <textarea
-                    className="form-textarea"
-                    placeholder="Describe your item..."
-                    value={description}
-                    maxLength={descMax}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
-                  />
-                  <div className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}>
-                    {descLength}/{descMax}
-                  </div>
-                </div>
-
-                <div className="form-row two-col">
-                  <div className="form-group">
-                    <label className="form-label">Expires At <span className="required">*</span></label>
-                    <div className="date-input-wrap">
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="DD/MM/YYYY"
-                        value={expiresAt}
-                        onChange={(e) => setExpiresAt(e.target.value)}
-                        required
-                      />
-                      <FiCalendar size={18} className="date-icon" />
+                {/* Row 4: Baby Color | Material | Weight */}
+                {isBaby && (
+                  <div className="form-row three-col">
+                    <div className="form-group">
+                      <label className="form-label">Color <span className="optional">(Optional)</span></label>
+                      <input type="text" className="form-input" placeholder="e.g. Grey" value={color} onChange={(e) => setColor(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Material <span className="optional">(Optional)</span></label>
+                      <input type="text" className="form-input" placeholder="e.g. Aluminum, Fabric" value={material} onChange={(e) => setMaterial(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Weight(kg) <span className="optional">(Optional)</span></label>
+                      <input type="text" className="form-input" placeholder="e.g. 5.2" value={weight} onChange={(e) => setWeight(e.target.value)} />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Status</label>
-                    <span className="status-badge">{status}</span>
+                )}
+
+                {/* Row 5: Baby Delivery Option & Charge */}
+                {isBaby && (
+                  <div className="form-row two-col">
+                    <div className="form-group">
+                      <label className="form-label">Delivery Option</label>
+                      <div className="delivery-group">
+                        {["Buyer Pickup", "Home Delivery"].map((opt) => (
+                          <label key={opt} className="delivery-option">
+                            <input type="radio" name="deliveryOption" value={opt} checked={deliveryOption === opt} onChange={() => setDeliveryOption(opt)} />
+                            <span className="delivery-circle"></span>
+                            <span>{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Delivery Charge(NPR) <span className="required">*</span></label>
+                      <div className="select-wrap">
+                        <select className="form-select" value={deliveryCharge} onChange={(e) => setDeliveryCharge(e.target.value)} required>
+                          <option value="0">Free</option>
+                          <option value="100">100</option>
+                          <option value="200">200</option>
+                          <option value="300">300</option>
+                          <option value="500">500</option>
+                        </select>
+                        <FiChevronDown size={16} className="select-chevron" />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Expires At & Status (non-Baby only) */}
+                {!isBaby && (
+                  <div className="form-row two-col">
+                    <div className="form-group">
+                      <label className="form-label">Expires At <span className="required">*</span></label>
+                      <div className="date-input-wrap">
+                        <input type="text" className="form-input" placeholder="DD/MM/YYYY" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} required />
+                        <FiCalendar size={18} className="date-icon" />
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Status</label>
+                      <span className="status-badge">{status}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

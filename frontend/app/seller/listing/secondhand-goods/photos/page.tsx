@@ -104,15 +104,22 @@ export default function AddPhotosPage() {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (images.length === 0) {
-      toast.error("Please upload at least one photo");
-      return;
-    }
-    toast.success("Photos saved! Proceeding to preview...");
-    router.push("/seller/listing/secondhand-goods/preview");
-  };
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (images.length === 0) {
+    toast.error("Please upload at least one photo");
+    return;
+  }
+
+  const imagePreviews = images.map((img) => ({
+    preview: img.preview,
+    isMain: img.isMain,
+  }));
+  localStorage.setItem("listingImages", JSON.stringify(imagePreviews));
+
+  toast.success("Photos saved! Proceeding to preview...");
+  router.push("/seller/listing/secondhand-goods/preview");
+};
 
   const canAddMore = images.length < MAX_IMAGES;
 
