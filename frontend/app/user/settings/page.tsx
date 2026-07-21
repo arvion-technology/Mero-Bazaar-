@@ -330,7 +330,7 @@ export default function UserSettings() {
 
     setSavingProfile(true);
     try {
-      const res = await fetch("/api/user/profile", {
+      const res = await fetch("/api/user/profile/me", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
