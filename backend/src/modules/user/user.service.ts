@@ -62,8 +62,19 @@ export class UserService {
               },
             }),
           },
-          select: { id: true, email: true, role: true, phone: true, address: true, image: true, name: true },
+          select: { id: true, email: true, role: true, phone: true, address: true, image: true, name: true, twoFactorEnabled: true },
         });
+        if (user.twoFactorEnabled) {
+      if (!user.phone) {
+        throw new BadRequestException('Two-factor is enabled but no verified phone is on file.');
+      }
+      await this.phoneOtpService.sendOtp(user.phone, OtpContext.LOGIN);
+      const tempToken = this.jwtService.sign(
+        { sub: user.id, purpose: 'login_2fa' },
+        { expiresIn: '5m' },
+      );
+      return { requiresTwoFactor: true, tempToken };
+    }
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const opaqueSecret = crypto.randomBytes(32).toString('hex');
   const refreshTokenHash = await bcrypt.hash(opaqueSecret, 10);

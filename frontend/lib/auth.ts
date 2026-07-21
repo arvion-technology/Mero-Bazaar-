@@ -5,6 +5,8 @@ import Credentials from "next-auth/providers/credentials";
 import type { OAuthProfile } from "next-auth/jwt";
 import { cookies, headers } from "next/headers";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Google({
@@ -32,8 +34,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           password: string;
         };
 
-        const res = await fetch("http://localhost:3001/api/auth/login", {
-          method: "POST",
+          const res = await fetch(`${API_URL}/api/auth/login`, {
+            method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         });
@@ -95,7 +97,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const userAgent = headerList.get("user-agent") ?? undefined;
           const ipAddress = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? undefined;
           const res = await fetch(
-            "http://localhost:3001/api/user/oauth-sync",
+            `${API_URL}/api/user/oauth-sync`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
