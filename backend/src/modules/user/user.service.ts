@@ -38,67 +38,99 @@ export class UserService {
   }
 
   async findOrCreateOAuthUser(data: {
-    email: string;
-    name: string;
-    image?: string;
-    role?: string;
-    userAgent?: string;
-    ipAddress?: string;
-  }) {
-    const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
+      email: string;
+      name: string;
+      image?: string;
+      role?: string;
+      userAgent?: string;
+      ipAddress?: string;
+      provider?: string;
+    }) {
+      const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
 
-    const user = existing
-      ? existing
-      : await this.prisma.user.create({
-          data: {
-            email: data.email,
-            name: data.name,
-            image: data.image,
-            role: data.role === 'VENDOR' ? 'VENDOR' : 'USER',
-            isActive: true,
-            ...(data.role === 'VENDOR' && {
-              vendorProfile: {
-                create: { businessName: data.name ?? '', businessType: 'INDIVIDUAL' },
-              },
-            }),
-          },
-          select: { id: true, email: true, role: true, phone: true, address: true, image: true, name: true, twoFactorEnabled: true },
+      const isNewProviderLink = !!existing && existing.lastOAuthProvider && existing.lastOAuthProvider !== data.provider;
+
+      const user = existing
+        ? await this.prisma.user.update({
+            where: { id: existing.id },
+            data: { lastOAuthProvider: data.provider },
+            select: { id: true, email: true, role: true, phone: true, address: true, image: true, name: true, twoFactorEnabled: true },
+          })
+        : await this.prisma.user.create({
+            data: {
+              email: data.email,
+              name: data.name,
+              image: data.image,
+              role: data.role === 'VENDOR' ? 'VENDOR' : 'USER',
+              isActive: true,
+              lastOAuthProvider: data.provider,
+              ...(data.role === 'VENDOR' && {
+                vendorProfile: {
+                  create: { businessName: data.name ?? '', businessType: 'INDIVIDUAL' },
+                },
+              }),
+            },
+            select: { id: true, email: true, role: true, phone: true, address: true, image: true, name: true, twoFactorEnabled: true },
+          });
+
+      if (isNewProviderLink) {
+        await this.activityLogService.log(user.id, 'OAUTH_PROVIDER_LINKED', {
+          ipAddress: data.ipAddress,
+          deviceLabel: parseUserAgent(data.userAgent),
+          description: `Signed in with ${data.provider} (previously used a different method)`,
         });
-        if (user.twoFactorEnabled) {
-      if (!user.phone) {
-        throw new BadRequestException('Two-factor is enabled but no verified phone is on file.');
+        this.notifyNewProviderLinked(data.email, data.provider!).catch(() => {});
       }
-      await this.phoneOtpService.sendOtp(user.phone, OtpContext.LOGIN);
-      const tempToken = this.jwtService.sign(
-        { sub: user.id, purpose: 'login_2fa' },
-        { expiresIn: '5m' },
-      );
-      return { requiresTwoFactor: true, tempToken };
+
+      if (user.twoFactorEnabled) {
+        if (!user.phone) {
+          throw new BadRequestException('Two-factor is enabled but no verified phone is on file.');
+        }
+        await this.phoneOtpService.sendOtp(user.phone, OtpContext.LOGIN);
+        const tempToken = this.jwtService.sign(
+          { sub: user.id, purpose: 'login_2fa' },
+          { expiresIn: '5m' },
+        );
+        return { requiresTwoFactor: true, tempToken };
+      }
+
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const opaqueSecret = crypto.randomBytes(32).toString('hex');
+      const refreshTokenHash = await bcrypt.hash(opaqueSecret, 10);
+
+      const session = await this.prisma.session.create({
+        data: {
+          userId: user.id,
+          refreshTokenHash,
+          expiresAt,
+          deviceLabel: parseUserAgent(data.userAgent),
+          userAgent: data.userAgent,
+          ipAddress: data.ipAddress,
+        },
+      });
+
+      const accessToken = this.jwtService.sign({
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+        sid: session.id,
+      });
+
+      return { id: user.id, role: user.role, phone: user.phone, address: user.address, image: user.image, name: user.name, accessToken };
     }
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  const opaqueSecret = crypto.randomBytes(32).toString('hex');
-  const refreshTokenHash = await bcrypt.hash(opaqueSecret, 10);
 
-  const session = await this.prisma.session.create({
-    data: {
-      userId: user.id,
-      refreshTokenHash,
-      expiresAt,
-      deviceLabel: parseUserAgent(data.userAgent),
-      userAgent: data.userAgent,
-      ipAddress: data.ipAddress,
-    },
-  });
-
-    const accessToken = this.jwtService.sign({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      sid: session.id,
-    });
-
-    return { id: user.id, role: user.role, phone: user.phone, address: user.address, image: user.image, name: user.name, accessToken };
-  }
+    private async notifyNewProviderLinked(email: string, provider: string) {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
+      });
+      await transporter.sendMail({
+        from: `"HamroNepal Bazaar" <${process.env.MAIL_USER}>`,
+        to: email,
+        subject: 'New sign-in method added to your account',
+        html: `<p>Your account was just signed into using <strong>${provider}</strong>, a method not previously used. If this wasn't you, please secure your account immediately.</p>`,
+      });
+    }
 
   async findOne(id: string) {
     const user = await this.prisma.user.findUnique({

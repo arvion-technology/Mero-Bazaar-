@@ -24,6 +24,7 @@ model User {
 
   refreshTokenHash String?
   lastLoginAt      DateTime?
+  lastOAuthProvider     String?
 
   passwordResetToken    String?
   passwordResetExpiry   DateTime?
@@ -188,6 +189,7 @@ enum ActivityType {
   PHONE_CHANGED
   PROFILE_UPDATED
   PROFILE_PHOTO_CHANGED
+  OAUTH_PROVIDER_LINKED
 }
 
 model ActivityLog {

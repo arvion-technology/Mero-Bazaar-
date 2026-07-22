@@ -42,6 +42,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const data = await res.json();
 
+        // console.log(">>> LOGIN AUTHORIZE:", res.status, JSON.stringify(data));
+
         if (!res.ok || !data?.user) return null;
 
         return {
@@ -88,8 +90,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           account.provider === "facebook"
             ? (typeof p?.picture === "object" ? p.picture?.data?.url : undefined)
             : (typeof p?.picture === "string" ? p.picture : p?.image) ?? (token.picture as string | undefined);
+         
+        //rechecking email for facebook OAuth as its Graph API is less secured than Google's OIDC   
+        const emailVerified =
+          account.provider === "google"
+            ? (profile as OAuthProfile & { email_verified?: boolean })?.email_verified !== false
+            : true;    
 
-        if (email) {
+        if (email && emailVerified) {
           const cookieStore = await cookies();
           const headerList = await headers();
           const pendingRole = cookieStore.get("pending_role")?.value;
@@ -101,13 +109,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email, name, image, role, userAgent, ipAddress }),
+              body: JSON.stringify({ email, name, image, role, userAgent, ipAddress, provider: account.provider }),
             }
           );
 
           const dbUser = await res.json();
           if (!res.ok) {
             console.error("oauth-sync failed", account.provider, dbUser);
+          } else if (dbUser.requiresTwoFactor) {
+            console.error("OAuth sign-in blocked: account requireds 2FA, no OAuth OTP flow implemented", account.provider);
+            token.oauthTwoFactorRequired = true;
           } else {
           token.id = dbUser.id;
           token.name = dbUser.name;
@@ -119,7 +130,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.accessToken = dbUser.accessToken ?? dbUser.access_token ?? token.accessToken;
           token.twoFactorEnabled = dbUser.twoFactorEnabled ?? false;
         }
-      } else {
+      } else if (email && !emailVerified) {
+        console.error(`Unverified email from ${account.provider}, refusing to auto-link`, email);
+      }
+      else {
         console.error(`No email from ${account.provider} profile`, p);
       }
     }
@@ -140,6 +154,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       if (typeof token.accessToken === "string") {
         session.accessToken = token.accessToken;
+      }
+      if (token.oauthTwoFacotRequired) {
+        session.oauthTwoFactorRequired = true;
       }
       return session;
     },

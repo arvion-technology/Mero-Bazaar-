@@ -22,4 +22,8 @@ export class OAuthSyncDto {
   @IsOptional()
   @IsString()
   ipAddress?: string;
+
+  @IsOptional()
+  @IsIn(['google', 'facebook'])
+  provider?: string;
 }

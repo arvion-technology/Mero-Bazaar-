@@ -13,6 +13,7 @@ declare module "next-auth" {
 
   interface Session {
     accessToken?: string;
+    oauthTwoFactorRequired?: boolean;
     user: {
       id: string;
       name?: string | null;
@@ -39,6 +40,7 @@ declare module "next-auth/jwt" {
     address?: string | null;a
     provider?: string;
     twoFactorEnabled?: boolean;
+    oauthTwoFactorRequired?: boolean;
   }
 
   type OAuthProfile = {
