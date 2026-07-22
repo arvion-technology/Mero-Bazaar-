@@ -71,6 +71,10 @@ export class AuthService {
 
     if (!user) throw new UnauthorizedException('User not found');
 
+    if (!user.isActive) {
+      throw new UnauthorizedException('This account has been deactivated.');
+    }
+
     if (!user.password) {
       throw new UnauthorizedException(
         "This account uses Google/Facebook login. Please continue with OAuth."
