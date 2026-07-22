@@ -42,6 +42,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const data = await res.json();
 
+        // console.log(">>> LOGIN AUTHORIZE:", res.status, JSON.stringify(data));
+
         if (!res.ok || !data?.user) return null;
 
         return {

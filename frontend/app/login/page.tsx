@@ -8,7 +8,6 @@ import {
   FiEye,
   FiEyeOff,
   FiArrowRight,
-  FiLogIn,
 } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
@@ -33,7 +32,6 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setLoading(true);
 
     const res = await signIn("credentials", {
@@ -43,11 +41,10 @@ export default function LoginPage() {
     });
 
     setLoading(false);
+    // console.log(">>> signIn result:", res);
 
-    if (res?.ok) {
+    if (res?.ok && !res?.error) {
       toast.success("Logged in successfully!");
-      // Hard redirect so the browser re-reads the session cookie from scratch.
-      // router.push() alone races against the cookie being set.
       setTimeout(() => {
         window.location.href = "/";
       }, 800);
