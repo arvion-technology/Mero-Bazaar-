@@ -15,7 +15,9 @@ import {
   FiCheckCircle,
   FiChevronLeft,
   FiChevronRight,
+  FiX,
 } from "react-icons/fi";
+
 import { LuBed } from "react-icons/lu";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
