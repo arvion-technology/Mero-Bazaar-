@@ -54,7 +54,7 @@ export class UserService {
         ? await this.prisma.user.update({
             where: { id: existing.id },
             data: { lastOAuthProvider: data.provider },
-            select: { id: true, email: true, role: true, phone: true, address: true, image: true, name: true, twoFactorEnabled: true },
+            select: { id: true, email: true, role: true, phone: true, phoneVerifiedAt: true, address: true, image: true, name: true, twoFactorEnabled: true },
           })
         : await this.prisma.user.create({
             data: {
@@ -70,7 +70,7 @@ export class UserService {
                 },
               }),
             },
-            select: { id: true, email: true, role: true, phone: true, address: true, image: true, name: true, twoFactorEnabled: true },
+            select: { id: true, email: true, role: true, phone: true, phoneVerifiedAt: true, address: true, image: true, name: true, twoFactorEnabled: true },
           });
 
       if (isNewProviderLink) {
@@ -82,17 +82,21 @@ export class UserService {
         this.notifyNewProviderLinked(data.email, data.provider!).catch(() => {});
       }
 
-      if (user.twoFactorEnabled) {
-        if (!user.phone) {
-          throw new BadRequestException('Two-factor is enabled but no verified phone is on file.');
-        }
+    if (user.twoFactorEnabled) {
+      if (!user.phone || !user.phoneVerifiedAt) {
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: { twoFactorEnabled: false },
+        });
+        await this.activityLogService.log(user.id, 'TWO_FA_DISABLED', {
+          description: 'Auto-disabled: no verified phone on file at login time.',
+        });
+      } else {
         await this.phoneOtpService.sendOtp(user.phone, OtpContext.LOGIN);
-        const tempToken = this.jwtService.sign(
-          { sub: user.id, purpose: 'login_2fa' },
-          { expiresIn: '5m' },
-        );
+        const tempToken = this.jwtService.sign({ sub: user.id, purpose: 'login_2fa' }, { expiresIn: '5m' });
         return { requiresTwoFactor: true, tempToken };
       }
+    }
 
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       const opaqueSecret = crypto.randomBytes(32).toString('hex');

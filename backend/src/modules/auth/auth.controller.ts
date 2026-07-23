@@ -22,6 +22,7 @@ export class AuthController {
 
   @Post('2fa/verify')
   verifyTwoFactor(@Body() dto: VerifyLoginOtpDto, @Req() req: Request) {
+    console.log(">>> 2FA verify request:", dto);
     return this.authService.verifyLoginOtp(dto.tempToken, dto.otp, req);
   }
 

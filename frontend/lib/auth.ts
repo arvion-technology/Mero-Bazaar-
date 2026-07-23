@@ -34,15 +34,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           password: string;
         };
 
-          const res = await fetch(`${API_URL}/api/auth/login`, {
-            method: "POST",
+        const res = await fetch(`${API_URL}/api/auth/login`, {
+          method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         });
 
         const data = await res.json();
+        console.log("========== OTP AUTHORIZE ==========");
+        console.log("Status:", res.status);
+        console.log("Response:", data);
 
-        // console.log(">>> LOGIN AUTHORIZE:", res.status, JSON.stringify(data));
+        // Backend can return { requiresTwoFactor: true, tempToken } instead of a user.
+        // Stash it in a cookie so the register/login page can pick it up and prompt for the OTP.
+        if (res.ok && data?.requiresTwoFactor) {
+          const cookieStore = await cookies();
+          cookieStore.set(
+            "pending_2fa",
+            JSON.stringify({ tempToken: data.tempToken, provider: "credentials" }),
+            { httpOnly: true, maxAge: 300, path: "/" },
+          );
+          return null;
+        }
 
         if (!res.ok || !data?.user) return null;
 
@@ -56,87 +69,177 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+
+    // Second step of the 2FA challenge: submits { tempToken, otp } from the pending_2fa cookie
+    // against POST /api/auth/2fa/verify, then hydrates the full profile.
+    Credentials({
+      id: "otp",
+      name: "OTP",
+      credentials: {
+        tempToken: { label: "tempToken", type: "text" },
+        otp: { label: "otp", type: "text" },
+        provider: { label: "provider", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials) return null;
+
+        const { tempToken, otp, provider } = credentials as {
+          tempToken: string;
+          otp: string;
+          provider?: string;
+        };
+
+        const res = await fetch(`${API_URL}/api/auth/2fa/verify`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ tempToken, otp }),
+        });
+
+        const data = await res.json();
+
+        console.log("========== OTP VERIFY RESPONSE ==========");
+        console.log("Status:", res.status);
+        console.log("Response:", data);
+
+        const accessToken = data?.accessToken ?? data?.access_token;
+
+        if (!res.ok) {
+          console.log("Request failed");
+          return null;
+        }
+
+        console.log("accessToken:", accessToken);
+        console.log("user:", data?.user);
+
+        const profileRes = await fetch(`${API_URL}/api/user/profile/me`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        console.log("PROFILE STATUS:", profileRes.status);
+
+        const profile = profileRes.ok ? await profileRes.json() : {};
+
+        console.log("PROFILE RESPONSE:", profile);
+
+        return {
+          id: data.user.id,
+          email: data.user.email,
+          name: profile.name ?? data.user.email.split("@")[0],
+          image: profile.image ?? undefined,
+          phone: profile.phone ?? null,
+          address: profile.address ?? null,
+          role: data.user.role,
+          twoFactorEnabled: true,
+          accessToken,
+          provider: provider || "credentials",
+        };
+      },
+    }),
   ],
 
   pages: {
     signIn: "/register",
+    error: "/register",
   },
 
   callbacks: {
-    async jwt({ token, user, account, profile, trigger, session }) {
-      if (trigger === "update" && session) {
-        token.name = session.name ?? token.name;
-        token.picture = session.image ?? token.picture;
-        token.phone = session.phone ?? token.phone;
-        token.address = session.address ?? token.address;
-        token.twoFactorEnabled = session.user?.twoFactorEnabled ?? session.twoFactorEnabled ?? token.twoFactorEnabled;
-        return token;
-      }
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.accessToken = user.accessToken ?? token.accessToken;      
-        token.phone = user.phone ?? null;
-        token.address = user.address ?? null;
-        token.provider = "credentials";
-        token.twoFactorEnabled = user.twoFactorEnabled ?? false;
-      }
-      if (account && account.provider !== "credentials") {
+    // Runs BEFORE jwt(). This is where we block sign-in for OAuth accounts that need 2FA,
+    // since jwt() has no way to reject a session — only signIn() can return false.
+    async signIn({ user, account, profile }) {
+      console.log("========== SIGNIN CALLBACK ==========");
+      console.log("Provider:", account?.provider);
+      console.log("User:", user);
+      if (account && account.provider !== "credentials" && account.provider !== "otp") {
         const p = profile as OAuthProfile;
-
-        const email = p?.email ?? token.email;
-        const name = p?.name ?? token.name;
-        const image = 
+        const email = p?.email;
+        const name = p?.name;
+        const image =
           account.provider === "facebook"
             ? (typeof p?.picture === "object" ? p.picture?.data?.url : undefined)
-            : (typeof p?.picture === "string" ? p.picture : p?.image) ?? (token.picture as string | undefined);
-         
-        //rechecking email for facebook OAuth as its Graph API is less secured than Google's OIDC   
+            : (typeof p?.picture === "string" ? p.picture : p?.image);
+
         const emailVerified =
           account.provider === "google"
             ? (profile as OAuthProfile & { email_verified?: boolean })?.email_verified !== false
-            : true;    
+            : true;
 
-        if (email && emailVerified) {
-          const cookieStore = await cookies();
-          const headerList = await headers();
-          const pendingRole = cookieStore.get("pending_role")?.value;
-          const role = pendingRole === "VENDOR" ? "VENDOR" : "USER";
-          const userAgent = headerList.get("user-agent") ?? undefined;
-          const ipAddress = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? undefined;
-          const res = await fetch(
-            `${API_URL}/api/user/oauth-sync`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email, name, image, role, userAgent, ipAddress, provider: account.provider }),
-            }
+        if (!email || !emailVerified) {
+          console.error(`Unverified or missing email from ${account.provider}`, p);
+          return false;
+        }
+
+        const cookieStore = await cookies();
+        const headerList = await headers();
+        const pendingRole = cookieStore.get("pending_role")?.value;
+        const role = pendingRole === "VENDOR" ? "VENDOR" : "USER";
+        const userAgent = headerList.get("user-agent") ?? undefined;
+        const ipAddress = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? undefined;
+
+        const res = await fetch(`${API_URL}/api/user/oauth-sync`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, name, image, role, userAgent, ipAddress, provider: account.provider }),
+        });
+        const dbUser = await res.json();
+        if (!res.ok) {
+          console.error("oauth-sync failed", account.provider, dbUser);
+          return false;
+        }
+
+        if (dbUser.requiresTwoFactor) {
+          cookieStore.set(
+            "pending_2fa",
+            JSON.stringify({ tempToken: dbUser.tempToken, provider: account.provider }),
+            { httpOnly: true, maxAge: 300, path: "/" },
           );
+          return false;
+        }
 
-          const dbUser = await res.json();
-          if (!res.ok) {
-            console.error("oauth-sync failed", account.provider, dbUser);
-          } else if (dbUser.requiresTwoFactor) {
-            console.error("OAuth sign-in blocked: account requireds 2FA, no OAuth OTP flow implemented", account.provider);
-            token.oauthTwoFactorRequired = true;
-          } else {
+        // Stash the synced DB user on the `user` object so jwt() can read it below.
+        user.dbUser = dbUser;
+        user.provider = account.provider;
+        user.oauthImage = image;
+      }
+      return true;
+    },
+
+    async jwt({ token, user, trigger, session }) {
+      if (trigger === "update" && session) {
+        token.name = session.user?.name ?? session.name ?? token.name;
+        token.picture = session.user?.image ?? session.image ?? token.picture;
+        token.phone = session.user?.phone ?? session.phone ?? token.phone;
+        token.address = session.user?.address ?? session.address ?? token.address;
+        token.twoFactorEnabled =
+          session.user?.twoFactorEnabled ?? session.twoFactorEnabled ?? token.twoFactorEnabled;
+        return token;
+      }
+
+      if (user) {
+        const dbUser = user.dbUser;
+        if (dbUser) {
           token.id = dbUser.id;
           token.name = dbUser.name;
           token.role = dbUser.role;
-          token.phone = dbUser.phone ?? null;       
+          token.phone = dbUser.phone ?? null;
           token.address = dbUser.address ?? null;
-          token.picture = dbUser.image ?? image;
-          token.provider = account.provider;
+          token.picture = dbUser.image ?? user.oauthImage;
+          token.provider = user.provider;
           token.accessToken = dbUser.accessToken ?? dbUser.access_token ?? token.accessToken;
           token.twoFactorEnabled = dbUser.twoFactorEnabled ?? false;
+        } else {
+          token.id = user.id;
+          token.role = user.role;
+          token.accessToken = user.accessToken ?? token.accessToken;
+          token.phone = user.phone ?? null;
+          token.address = user.address ?? null;
+          token.provider = user.provider ?? "credentials";
+          token.twoFactorEnabled = user.twoFactorEnabled ?? false;
         }
-      } else if (email && !emailVerified) {
-        console.error(`Unverified email from ${account.provider}, refusing to auto-link`, email);
       }
-      else {
-        console.error(`No email from ${account.provider} profile`, p);
-      }
-    }
       return token;
     },
 
@@ -146,17 +249,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.name = token.name as string;
         session.user.email = token.email as string;
         session.user.role = token.role as string;
-        session.user.image = token.picture ?? session.user.image;
+        session.user.image = (token.picture as string) ?? session.user.image;
         session.user.phone = (token.phone as string) ?? null;
         session.user.address = (token.address as string) ?? null;
         session.user.provider = token.provider as string;
-        session.user.twoFactorEnabled =token.twoFactorEnabled as boolean;
+        session.user.twoFactorEnabled = token.twoFactorEnabled as boolean;
       }
       if (typeof token.accessToken === "string") {
         session.accessToken = token.accessToken;
-      }
-      if (token.oauthTwoFacotRequired) {
-        session.oauthTwoFactorRequired = true;
       }
       return session;
     },
