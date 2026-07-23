@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast, ToastContainer } from "react-toastify";
@@ -42,6 +42,11 @@ function RegisterPageContent() {
     searchParams.get("seller") === "true" ? "seller" : null
   );
   const router = useRouter();
+  const [authError, setAuthError] = useState<{ tempToken: string; provider: string } | null>(null);
+  const [otp, setOtp] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [otpSubmitting, setOtpSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -54,6 +59,17 @@ function RegisterPageContent() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+
+  //handler for tempToken for 2FA state
+  useEffect(() => {
+    (async () => {
+      const res = await fetch("/api/auth/pending-2fa");
+      const pending = await res.json().catch(() => null);
+      if (pending?.tempToken) {
+        setAuthError({ tempToken: pending.tempToken, provider: pending.provider });
+      }
+    })();
+  }, []);
 
   const handleStep1 = (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,6 +144,41 @@ function RegisterPageContent() {
     } catch {
       toast.error("Facebook Sign-in failed. Please try again.");
       setFacebookLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setOtpSubmitting(true);
+    setOtpError("");
+
+    try {
+      if (!otp || otp.length < 6) {
+        setOtpError("Enter the 6-digit code we sent you.");
+        return;
+      }
+      if (!authError) return;
+
+      const res = await signIn("otp", {
+        tempToken: authError.tempToken,
+        otp,
+        provider: authError.provider,
+        redirect: false,
+      });
+
+      if (res?.error) {
+        toast.error("Invalid or expired OTP");
+        setOtpError(res.error);
+        return;
+      }
+      toast.success("Login successful!");
+      setTimeout(() => {
+        router.push("/user/dashboard");
+      }, 800);
+    } finally {
+      submittingRef.current = false;
+      setOtpSubmitting(false);
     }
   };
 
@@ -661,7 +712,28 @@ function RegisterPageContent() {
             </p>
             <div className="reg-divider-line" />
 
-            {step === 1 && (
+            {authError ? (
+            <div className="reg-step">
+              <p style={{ fontSize: 13, color: "#666", marginBottom: 16 }}>
+                Enter the 6-digit code sent to your phone to finish signing in.
+              </p>
+              {otpError && <p className="reg-error-msg" style={{ marginBottom: 12 }}>{otpError}</p>}
+              <input
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                maxLength={6}
+                inputMode="numeric"
+                className="reg-input"
+                style={{ textAlign: "center", fontSize: 20, letterSpacing: 6, marginBottom: 16 }}
+                autoFocus
+              />
+              <div className="reg-actions">
+                <button type="button" className="reg-btn-primary" onClick={handleVerifyOtp} disabled={otpSubmitting}>
+                  {otpSubmitting ? "Verifying..." : "Verify"}
+                </button>
+              </div>
+            </div>
+          ) : step === 1 && (
               <div className="reg-step">
                 <form onSubmit={handleStep1}>
                   <div className="reg-type-grid" style={{ marginBottom: 20 }}>

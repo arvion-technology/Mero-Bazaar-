@@ -9,11 +9,23 @@ declare module "next-auth" {
     phone?: string | null;
     address?: string | null;
     twoFactorEnabled?: boolean;
+    provider?: string;
+    oauthImage?: string;
+    dbUser?: {
+      id: string;
+      name?: string;
+      role: string;
+      phone?: string | null;
+      address?: string | null;
+      image?: string;
+      accessToken?: string;
+      access_token?: string;
+      twoFactorEnabled?: boolean;
+    };
   }
 
   interface Session {
     accessToken?: string;
-    oauthTwoFactorRequired?: boolean;
     user: {
       id: string;
       name?: string | null;
@@ -37,10 +49,9 @@ declare module "next-auth/jwt" {
     name?: string;
     picture?: string;
     phone?: string | null;
-    address?: string | null;a
+    address?: string | null;
     provider?: string;
     twoFactorEnabled?: boolean;
-    oauthTwoFactorRequired?: boolean;
   }
 
   type OAuthProfile = {

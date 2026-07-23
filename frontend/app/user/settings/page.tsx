@@ -174,6 +174,15 @@ export default function UserSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  useEffect(() => {
+    if (!token) return;
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      console.log("Backend token exp:", new Date(payload.exp * 1000), "| now:", new Date());
+    } catch (e) {
+      console.log("Couldn't decode token", e);
+    }
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
@@ -323,7 +332,7 @@ export default function UserSettings() {
       setUploadingAvatar(false);
     }
   }
-
+  
 //profile save
   async function handleProfileSave() {
     const phoneChanged = profileForm.phone !== (session?.user?.phone || "");
