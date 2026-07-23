@@ -63,7 +63,7 @@ const categories = [
     labelNp: "पुराना सामान",
     label: "Secondhand Goods",
     count: "15,000+ Listings",
-    href: "/category/electronics",
+    href: "/category/secondhand",
     bg: "#f0f4ff",
     img: "/thrift.jpg",
   },
