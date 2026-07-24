@@ -1,17 +1,10 @@
-import type { ListingDetail } from "@/app/types/listing";
+import type { DBListing, ListingDetail } from "@/app/types/listing";
 
-type SecondhandApiResponse = {
-  id: string;
-  userId: string;
-  title: string;
-  description: string | null;
-  price: number | null;
-  category: string;
-  status: "ACTIVE" | "RESERVED" | "SOLD" | "EXPIRED";
-  latitude: number | null;
-  longitude: number | null;
-  images: string[];
-  createdAt: string;
+const CONDITION_LABEL: Record<string, string> = {
+  LIKE_NEW: "Like New", GOOD: "Good", FAIR: "Fair", FOR_PARTS: "For parts",
+};
+
+type SecondhandExtras = {
   secondhand: {
     category: string;
     condition: string;
@@ -31,11 +24,8 @@ type SecondhandApiResponse = {
   reviews?: { rating: number; comment?: string | null; reviewerName?: string | null; createdAt?: string }[];
 };
 
-const CONDITION_LABEL: Record<string, string> = {
-  LIKE_NEW: "Like New", GOOD: "Good", FAIR: "Fair", FOR_PARTS: "For parts",
-};
-
-export function adaptSecondhandListing(db: SecondhandApiResponse): ListingDetail {
+export function adaptSecondhandListing(dbInput: DBListing): ListingDetail {
+  const db = dbInput as DBListing & SecondhandExtras;
   const sh = db.secondhand;
   const reviews = db.reviews ?? [];
   const IMG_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
