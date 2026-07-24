@@ -135,4 +135,39 @@ export class SecondhandService {
         where: { id },
       });
     }
+
+  async savePhotos(id: string, files: Express.Multer.File[], userId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      include: { secondhand: true },
+    });
+
+    if (!listing || listing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
+    if (!listing.secondhand) {
+      throw new NotFoundException('Secondhand listing not found');
+    }
+
+    const newPhotoUrls = files.map((file) => `/uploads/secondhand-goods/${file.filename}`);
+
+    const updatedImages = [...listing.images, ...newPhotoUrls];
+    const updatedPhotos = [...listing.secondhand.photos, ...newPhotoUrls];
+
+    return this.prisma.listing.update({
+      where: { id },
+      data: {
+        images: updatedImages,
+        secondhand: {
+          update: {
+            photos: updatedPhotos,
+          },
+        },
+      },
+      include: {
+        secondhand: true,
+      },
+    });
+  }
 }
