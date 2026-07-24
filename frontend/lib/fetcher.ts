@@ -1,4 +1,5 @@
 import { adaptListing } from "./adapter";
+import { adaptSecondhandListing } from "./adapters/secondhandAdapters";
 import type { DBListing, ListingDetail, RelatedListing } from "../app/types/listing";
 
 // Fetch single listing
@@ -22,8 +23,12 @@ export async function fetchListing(id: string): Promise<ListingDetail | null> {
       console.error("[fetchListing] empty db response");
       return null;
     }
-
-    return adaptListing(db);
+    switch (db.category) {
+      case "SECONDHAND":
+        return adaptSecondhandListing(db);
+      default:
+        return adaptListing(db);
+    }
   } catch (err) {
     console.error("[fetchListing] failed:", err);
     return null;

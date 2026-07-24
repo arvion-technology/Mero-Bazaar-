@@ -75,11 +75,23 @@ export class SecondhandService {
       const listing = await this.prisma.listing.findUnique({
         where: { id },
         include: {
-          secondhand:true,
+          secondhand: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              image: true,
+              isVerified: true,
+              createdAt: true,
+              _count: { select: { listings: true } },
+            },
+          },
+          reviews: true, // if Review is scoped per-listing, not per-seller — check this against how vehicles does it
         },
       });
       if (!listing || listing.category !== ListingCategory.SECONDHAND) {
-        throw new ForbiddenException('Secondhand listing not found');
+        throw new NotFoundException('Secondhand listing not found');
       }
       return listing;
     }
@@ -135,4 +147,39 @@ export class SecondhandService {
         where: { id },
       });
     }
+
+  async savePhotos(id: string, files: Express.Multer.File[], userId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      include: { secondhand: true },
+    });
+
+    if (!listing || listing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
+    if (!listing.secondhand) {
+      throw new NotFoundException('Secondhand listing not found');
+    }
+
+    const newPhotoUrls = files.map((file) => `/uploads/secondhand-goods/${file.filename}`);
+
+    const updatedImages = [...listing.images, ...newPhotoUrls];
+    const updatedPhotos = [...listing.secondhand.photos, ...newPhotoUrls];
+
+    return this.prisma.listing.update({
+      where: { id },
+      data: {
+        images: updatedImages,
+        secondhand: {
+          update: {
+            photos: updatedPhotos,
+          },
+        },
+      },
+      include: {
+        secondhand: true,
+      },
+    });
+  }
 }

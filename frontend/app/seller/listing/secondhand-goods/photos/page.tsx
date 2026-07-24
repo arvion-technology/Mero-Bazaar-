@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useDraft } from "../layout";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -30,10 +31,8 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"];
 export default function AddPhotosPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [images, setImages] = useState<
-    { id: string; file: File; preview: string; isMain: boolean }[]
-  >([]);
   const [isDragging, setIsDragging] = useState(false);
+  const { images, setImages } = useDraft();
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
@@ -60,68 +59,48 @@ export default function AddPhotosPage() {
       isMain: images.length === 0 && index === 0,
     }));
 
-    setImages((prev) => [...prev, ...newImages]);
+    setImages([...images, ...newImages]);
   };
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(false);
-      handleFileSelect(e.dataTransfer.files);
-    },
-    [images.length]
-  );
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
   const removeImage = (id: string) => {
-    setImages((prev) => {
-      const filtered = prev.filter((img) => img.id !== id);
-      if (filtered.length > 0 && !filtered.some((img) => img.isMain)) {
-        filtered[0].isMain = true;
-      }
-      return filtered;
-    });
+    const filtered = images.filter((img) => img.id !== id);
+    if (filtered.length > 0 && !filtered.some((img) => img.isMain)) {
+      filtered[0].isMain = true;
+    }
+    setImages(filtered);
   };
 
   const setMainImage = (id: string) => {
-    setImages((prev) =>
-      prev.map((img) => ({
-        ...img,
-        isMain: img.id === id,
-      }))
-    );
+    setImages(images.map((img) => ({ ...img, isMain: img.id === id })));
   };
 
-const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (images.length === 0) {
-    toast.error("Please upload at least one photo");
-    return;
-  }
-
-  const imagePreviews = images.map((img) => ({
-    preview: img.preview,
-    isMain: img.isMain,
-  }));
-  localStorage.setItem("listingImages", JSON.stringify(imagePreviews));
-
-  toast.success("Photos saved! Proceeding to preview...");
-  router.push("/seller/listing/secondhand-goods/preview");
-};
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (images.length === 0) {
+      toast.error("Please upload at least one photo");
+      return;
+    }
+    toast.success("Photos saved! Proceeding to preview...");
+    router.push("/seller/listing/secondhand-goods/preview");
+  };
 
   const canAddMore = images.length < MAX_IMAGES;
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFileSelect(e.dataTransfer.files);
+  };
 
   return (
     <>

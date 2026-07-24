@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiArrowLeft,
@@ -12,6 +12,8 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useSession } from "next-auth/react";
+import { useDraft } from "../layout";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -23,76 +25,92 @@ const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 
-interface ListingData {
-  listingType: string;
-  itemName: string;
-  condition: string;
-  price: string;
-  negotiable: boolean;
-  description: string;
-  brand?: string;
-  quantity?: string;
-  gender?: string;
-  availability?: string;
-  location?: string;
-  color?: string;
-  material?: string;
-  weight?: string;
-  deliveryOption?: string;
-  deliveryCharge?: string;
-  city?: string;
-  expiresAt?: string;
-  status?: string;
-}
-
-interface ListingImage {
-  preview: string;
-  isMain: boolean;
-}
-
 export default function PreviewSecondHandPage() {
   const router = useRouter();
   const [isPublishing, setIsPublishing] = useState(false);
-  const [data, setData] = useState<ListingData | null>(null);
-  const [images, setImages] = useState<ListingImage[]>([]);
-  const [mainImage, setMainImage] = useState<string>("");
+  const { data: session } = useSession();
+  const { data, images } = useDraft();
 
-  useEffect(() => {
-    const savedData = localStorage.getItem("listingData");
-    const savedImages = localStorage.getItem("listingImages");
-
-    if (savedData) {
-      setData(JSON.parse(savedData));
-    }
-    if (savedImages) {
-      const parsedImages: ListingImage[] = JSON.parse(savedImages);
-      setImages(parsedImages);
-      const main = parsedImages.find((img) => img.isMain);
-      setMainImage(main ? main.preview : parsedImages[0]?.preview || "");
-    }
-  }, []);
+  const [mainImage, setMainImage] = useState(
+    images.find((img) => img.isMain)?.preview || images[0]?.preview || ""
+  );
 
   const handlePublish = async () => {
+    if (images.length === 0) {
+      toast.error("Please add at least one photo before publishing");
+      router.push("/seller/listing/secondhand-goods/photos");
+      return;
+    }
+
     setIsPublishing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    toast.success("Listing published successfully!");
-    setIsPublishing(false);
-    localStorage.removeItem("listingData");
-    localStorage.removeItem("listingImages");
-    router.push("/seller/products");
+    try {
+      const res = await fetch("/api/secondhand-goods", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify({
+          listing_type: data.listingType,
+          item_name: data.itemName,
+          condition: data.condition,
+          price: data.price.replace(/,/g, ""),
+          negotiable: data.negotiable,
+          description: data.description,
+          ...(data.listingType === "Baby"
+            ? {
+                brand: data.brand,
+                quantity: data.quantity,
+                gender: data.gender,
+                availability: data.availability,
+                location: data.location,
+                color: data.color,
+                material: data.material,
+                weight: data.weight,
+                delivery_option: data.deliveryOption,
+                delivery_charge: data.deliveryCharge,
+              }
+            : {
+                city: data.city,
+                expires_at: data.expiresAt,
+              }),
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.message || "Failed to create listing");
+      }
+
+      const listing = await res.json();
+
+      const photoFormData = new FormData();
+      images.forEach(({ file }) => photoFormData.append("images", file));
+
+      const photosRes = await fetch(`/api/secondhand-goods/${listing.id}/photos`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session?.accessToken}` },
+        body: photoFormData,
+      }
+      );
+
+      if (!photosRes.ok) {
+        const err = await photosRes.json().catch(() => null);
+        throw new Error(err?.message || "Listing created but photo upload failed");
+      }
+
+      toast.success("Listing published successfully!");
+      router.push("/seller/products");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong publishing");
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleEdit = () => {
     router.push("/seller/listing/secondhand-goods");
   };
-
-  if (!data) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: BG }}>
-        <p style={{ color: TEXT_MUTED }}>Loading listing data...</p>
-      </div>
-    );
-  }
 
   const isBaby = data.listingType === "Baby";
 
@@ -231,7 +249,9 @@ export default function PreviewSecondHandPage() {
         }
 
         .image-section {
-          flex: 0 0 320px;
+          flex: 0 0 38%;
+          max-width: 420px;
+          min-width: 220px;
           display: flex;
           flex-direction: column;
           gap: 12px;
@@ -446,6 +466,47 @@ export default function PreviewSecondHandPage() {
 
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+
+        /* Intermediate / tablet-ish widths — scale down before the full stack breakpoint */
+        @media (max-width: 1150px) and (min-width: 901px) {
+          .card-layout {
+            gap: 20px;
+          }
+
+          .image-section {
+            flex: 0 0 34%;
+            max-width: 340px;
+            min-width: 200px;
+          }
+
+          .listing-title {
+            font-size: 18px;
+          }
+
+          .listing-price {
+            font-size: 16px;
+          }
+
+          .info-row {
+            font-size: 13px;
+          }
+
+          .description-text {
+            font-size: 13px;
+          }
+        }
+
+        @media (max-width: 900px) {
+          .preview-container { padding: 20px 20px 40px; }
+          .listing-card { padding: 20px; }
+          .card-layout { flex-direction: column; }
+          .image-section { flex: 0 0 auto; width: 100%; }
+          .main-image { aspect-ratio: 16 / 10; }
+          .actions { flex-direction: column; gap: 12px; }
+          .btn { width: 100%; justify-content: center; }
+          .draft-saved { display: none; }
+          .status-badge { top: 20px; right: 20px; }
         }
 
         @media (max-width: 900px) {

@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { FiPhone, FiMessageSquare, FiMail } from "react-icons/fi";
 import { FaStar, FaRegStar } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
-import type { ListingDetail } from "../../../../../types/listing";
+import type { ListingDetail } from "../app/types/listing";
 
 type Props = {
   seller: ListingDetail["seller"];
@@ -100,6 +100,35 @@ export default function SellerCard({ seller, reviews: initialReviews, listingId,
   };
 
   return (
+    <>
+    <style>{`
+      .ld-seller-card { background: #fff; border-radius: 16px; padding: 20px 18px; box-shadow: 0 2px 14px rgba(0,0,0,.08); }
+      .ld-seller-card-title { font-size: 14px; font-weight: 800; color: #1a1a1a; margin: 0 0 14px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
+      .ld-seller-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+      .ld-seller-avatar-wrap { position: relative; flex-shrink: 0; }
+      .ld-seller-avatar { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; border: 2.5px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,.14); display: block; }
+      .ld-avatar-placeholder { width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg,#C0392B 0%,#8e1c10 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: #fff; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,.14); }
+      .ld-seller-online { position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; border-radius: 50%; background: #27ae60; border: 2px solid #fff; }
+      .ld-seller-name { font-size: 16px; font-weight: 800; color: #1a1a1a; margin: 0 0 4px; }
+      .ld-rating-row { display: flex; align-items: center; gap: 5px; }
+      .ld-rating-num { font-size: 13.5px; font-weight: 700; color: #1a1a1a; }
+      .ld-reviews { font-size: 11.5px; color: #888; }
+      .ld-seller-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+      .ld-sbadge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+      .ld-sbadge-verified { background: #eafaf1; color: #1e8449; border: 1px solid #a9dfbf; }
+      .ld-sbadge-pro      { background: #fef9e7; color: #b7950b; border: 1px solid #f9e79f; }
+      .ld-sbadge-trusted  { background: #f4ecf7; color: #7d3c98; border: 1px solid #d7bde2; }
+      .ld-seller-stats { border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; margin-bottom: 14px; }
+      .ld-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f8f8f8; font-size: 12.5px; }
+      .ld-stat-row:last-child { border-bottom: none; }
+      .ld-stat-label { color: #777; }
+      .ld-stat-val   { color: #1a1a1a; font-weight: 700; }
+      .ld-cta-btns { display: flex; flex-direction: column; gap: 8px; }
+      .ld-btn-call { width: 100%; padding: 12px; border-radius: 10px; border: none; background: linear-gradient(135deg,#27ae60 0%,#1e8449 100%); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; font-family: inherit; box-shadow: 0 4px 14px rgba(39,174,96,.32); transition: opacity .2s, transform .15s; }
+      .ld-btn-call:hover { opacity: .9; transform: translateY(-1px); }
+      .ld-section-title { font-size: 16px; font-weight: 800; color: #1a1a1a; margin: 0 0 11px; }
+    `}</style>
+
     <div className="ld-seller-card">
       <p className="ld-seller-card-title">Seller Information</p>
 
@@ -228,5 +257,6 @@ export default function SellerCard({ seller, reviews: initialReviews, listingId,
         View full profile & all reviews →
       </Link>
     </div>
+  </>
   );
 }

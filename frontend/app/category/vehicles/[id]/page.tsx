@@ -4,7 +4,7 @@ import { fetchListing, fetchRelatedListings } from "../../../../lib/fetcher";
 import ImageGallery from "./components/shared/ImageGallery";
 import ListingInfo from "./components/shared/ListingInfo";
 import ListingDescription from "./components/shared/ListingDescription";
-import SellerCard from "./components/shared/SellerCard";
+import SellerCard from "../../../../components/SellerCard";
 import RelatedListings from "./components/shared/RelatedListings";
 import VehicleDetails from "./components/category-detail/VehicleDetails";
 import BuyNowButton from "@/components/BuyNowButton";

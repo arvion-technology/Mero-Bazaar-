@@ -3,22 +3,12 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
-  FiArrowLeft,
-  FiChevronRight,
-  FiChevronDown,
-  FiMapPin,
-  FiFileText,
-  FiBriefcase,
-  FiImage,
-  FiEye,
-  FiCheck,
-  FiX,
-  FiPlus,
-  FiBox,
-  FiCalendar,
+  FiArrowLeft, FiChevronRight, FiChevronDown, FiMapPin, FiFileText,
+  FiBriefcase, FiImage, FiEye, FiCheck, FiX, FiPlus, FiBox, FiCalendar,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useDraft } from "./layout";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -40,119 +30,65 @@ const steps = [
   { label: "Preview", icon: FiEye, status: "upcoming" as const },
 ];
 
-const listingTypes = [
-  "Furniture",
-  "Appliance",
-  "Clothing",
-  "Books",
-  "Baby",
-  "Sports",
-  "Instruments",
-];
-
+const listingTypes = ["Furniture", "Appliance", "Clothing", "Books", "Baby", "Sports", "Instruments"];
 const conditions = ["Like New", "Good", "Fair", "Poor"];
-const cities = ["Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur", "Bharatpur"];
 
 export default function NewSecondHandListingPage() {
   const router = useRouter();
-
-  // ── Listing Type ──
-  const [listingType, setListingType] = useState("Furniture");
-
-  // ── Common Fields ──
-  const [itemName, setItemName] = useState("");
-  const [condition, setCondition] = useState("");
-  const [price, setPrice] = useState("");
-  const [negotiable, setNegotiable] = useState(true);
-  const [city, setCity] = useState("Lalitpur");
-  const [description, setDescription] = useState("");
-  const [expiresAt, setExpiresAt] = useState("15/07/2026");
   const [status] = useState("Active");
+  const { data, setData } = useDraft();
+  const isBaby = data.listingType === "Baby";
 
-  // ── Baby-specific Fields ──
-  const [brand, setBrand] = useState("");
-  const [quantity, setQuantity] = useState("1");
-  const [gender, setGender] = useState("Unisex");
-  const [availability, setAvailability] = useState("In Stock");
-  const [location, setLocation] = useState("Balkumari, Lalitpur");
-  const [color, setColor] = useState("");
-  const [material, setMaterial] = useState("");
-  const [weight, setWeight] = useState("");
-  const [deliveryOption, setDeliveryOption] = useState("Buyer Pickup");
-  const [deliveryCharge, setDeliveryCharge] = useState("0");
+  const {
+    listingType, itemName, condition, price, negotiable, description,
+    brand, quantity, gender, availability, location, color, material,
+    weight, deliveryOption, deliveryCharge, city, expiresAt,
+  } = data;
 
-  const isBaby = listingType === "Baby";
+  const descMax = 500;
+  const descLength = description.length;
+
+  const setListingType = (v: string) => setData({ ...data, listingType: v });
+  const setItemName = (v: string) => setData({ ...data, itemName: v });
+  const setCondition = (v: string) => setData({ ...data, condition: v });
+  const setNegotiable = (v: boolean) => setData({ ...data, negotiable: v });
+  const setDescription = (v: string) => setData({ ...data, description: v });
+  const setBrand = (v: string) => setData({ ...data, brand: v });
+  const setQuantity = (v: string) => setData({ ...data, quantity: v });
+  const setGender = (v: string) => setData({ ...data, gender: v });
+  const setAvailability = (v: string) => setData({ ...data, availability: v });
+  const setLocation = (v: string) => setData({ ...data, location: v });
+  const setColor = (v: string) => setData({ ...data, color: v });
+  const setMaterial = (v: string) => setData({ ...data, material: v });
+  const setWeight = (v: string) => setData({ ...data, weight: v });
+  const setDeliveryOption = (v: string) => setData({ ...data, deliveryOption: v });
+  const setDeliveryCharge = (v: string) => setData({ ...data, deliveryCharge: v });
+  const setCity = (v: string) => setData({ ...data, city: v });
+  const setExpiresAt = (v: string) => setData({ ...data, expiresAt: v });
 
   const formattedPrice = useMemo(() => {
-    if (!price) return "";
-    const num = Number(price.replace(/,/g, ""));
-    if (isNaN(num)) return price;
-    return num.toLocaleString("en-IN");
-  }, [price]);
+    if (!data.price) return "";
+    const num = Number(data.price.replace(/,/g, ""));
+    return isNaN(num) ? data.price : num.toLocaleString("en-IN");
+  }, [data.price]);
 
   const handlePriceChange = (val: string) => {
-    const cleaned = val.replace(/[^0-9]/g, "");
-    setPrice(cleaned);
+    setData({ ...data, price: val.replace(/[^0-9]/g, "") });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validation
-    if (!itemName || !condition || !price || !description) {
+    if (!data.itemName || !data.condition || !data.price || !data.description) {
       toast.error("Please fill all required fields");
       return;
     }
-    if (isBaby) {
-      if (!location) {
-        toast.error("Please fill Location / Area");
-        return;
-      }
-    } else {
-      if (!city || !expiresAt) {
-        toast.error("Please fill all required fields");
-        return;
-      }
+    if (isBaby ? !data.location : !data.city || !data.expiresAt) {
+      toast.error("Please fill all required fields");
+      return;
     }
-
-    // Build and save data
-    const baseData = {
-      listingType,
-      itemName,
-      condition,
-      price: formattedPrice,
-      negotiable,
-      description,
-    };
-
-    const listingData = isBaby
-      ? {
-          ...baseData,
-          brand,
-          quantity,
-          gender,
-          availability,
-          location,
-          color,
-          material,
-          weight,
-          deliveryOption,
-          deliveryCharge,
-        }
-      : {
-          ...baseData,
-          city,
-          expiresAt,
-          status,
-        };
-
-    localStorage.setItem("listingData", JSON.stringify(listingData));
     toast.success("Details saved! Now add photos.");
     router.push("/seller/listing/secondhand-goods/photos");
   };
-
-  const descLength = description.length;
-  const descMax = 500;
 
   return (
     <>
@@ -941,26 +877,29 @@ export default function NewSecondHandListingPage() {
                   </div>
                   {isBaby ? (
                     <div className="form-group">
-                      <label className="form-label">Location / Area <span className="required">*</span></label>
-                      <div className="select-wrap">
-                        <select className="form-select" value={location} onChange={(e) => setLocation(e.target.value)} required>
-                          <option value="Balkumari, Lalitpur">Balkumari, Lalitpur</option>
-                          <option value="Patan, Lalitpur">Patan, Lalitpur</option>
-                          <option value="Thamel, Kathmandu">Thamel, Kathmandu</option>
-                          <option value="Lakeside, Pokhara">Lakeside, Pokhara</option>
-                        </select>
-                        <FiChevronDown size={16} className="select-chevron" />
-                      </div>
+                      <label className="form-label">Address<span className="required">*</span></label>
+                      <input
+                        type="text"
+                        list="area-suggestions"
+                        className="form-input"
+                        placeholder="Kathmandu"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        required
+                      />
                     </div>
                   ) : (
                     <div className="form-group">
                       <label className="form-label">City <span className="required">*</span></label>
-                      <div className="select-wrap">
-                        <select className="form-select" value={city} onChange={(e) => setCity(e.target.value)} required>
-                          {cities.map((c) => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                        <FiChevronDown size={16} className="select-chevron" />
-                      </div>
+                      <input
+                        type="text"
+                        list="city-suggestions"
+                        className="form-input"
+                        placeholder="e.g. Kathmandu"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        required
+                      />
                     </div>
                   )}
                 </div>

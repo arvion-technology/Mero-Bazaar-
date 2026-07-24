@@ -26,6 +26,12 @@ export class QuerySecondHandDto {
   @IsInt()
   @Min(0)
   maxPrice?: number;
+  @IsOptional()
+  @IsString()
+  search?: string;
 
+  @IsOptional()
+  @IsString()
+  sort?: 'newest' | 'price-low' | 'price-high';
 
 }
