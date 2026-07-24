@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import { api } from "@/lib/api";
+import type { SecondHandListing, SecondHandCategory, SecondHandCondition } from "@/app/types/secondhand";
 import {
   FiSearch,
   FiMapPin,
@@ -24,131 +26,36 @@ import {
   FaTag,
 } from "react-icons/fa";
 
-/* ─────────── CATEGORY ICONS ─────────── */
-const CATEGORY_ICONS = [
-  { name: "Clothing", icon: FaTshirt, count: 1245, color: "#e11d48", bg: "#fff1f2" },
-  { name: "Furniture", icon: FaCouch, count: 890, color: "#b45309", bg: "#fffbeb" },
-  { name: "Books", icon: FaBook, count: 567, color: "#1d4ed8", bg: "#eff6ff" },
-  { name: "Appliances", icon: FaBlender, count: 445, color: "#0f766e", bg: "#f0fdfa" },
-  { name: "Sports", icon: FaFutbol, count: 345, color: "#15803d", bg: "#f0fdf4" },
-  { name: "Baby", icon: FaBaby, count: 245, color: "#7c3aed", bg: "#faf5ff" },
+const CATEGORY_ICONS: {
+  name: string;
+  value: SecondHandCategory;
+  icon: typeof FaTshirt;
+  color: string;
+  bg: string;
+}[] = [
+  { name: "Clothing", value: "CLOTHING", icon: FaTshirt, color: "#e11d48", bg: "#fff1f2" },
+  { name: "Furniture", value: "FURNITURE", icon: FaCouch, color: "#b45309", bg: "#fffbeb" },
+  { name: "Books", value: "BOOKS", icon: FaBook, color: "#1d4ed8", bg: "#eff6ff" },
+  { name: "Appliances", value: "APPLIANCES", icon: FaBlender, color: "#0f766e", bg: "#f0fdfa" },
+  { name: "Sports", value: "SPORTS", icon: FaFutbol, color: "#15803d", bg: "#f0fdf4" },
+  { name: "Baby", value: "BABY", icon: FaBaby, color: "#7c3aed", bg: "#faf5ff" },
 ];
 
-/* ─────────── TYPES ─────────── */
 type Condition = "Like New" | "Good" | "Fair" | "For parts";
-
-type SecondhandListing = {
-  id: string;
-  title: string;
-  category: string;
-  price: string;
-  location: string;
-  district: string;
-  images: string[];
-  condition: Condition;
-  postedDaysAgo: number;
-  isOpenToOffers: boolean;
-  sellerName?: string;
-  sellerPhone?: string;
-  description?: string;
-};
-
-/* ─────────── DATA ─────────── */
-const LISTINGS: SecondhandListing[] = [
-  {
-    id: "baby-clothes",
-    title: "Newborn Baby Girl Summer Clothes for (0-2years)",
-    category: "Clothing",
-    price: "NPR 500",
-    location: "Balkumari, Lalitpur",
-    district: "Lalitpur",
-    images: ["/baby-clothes.jpg"],
-    condition: "Like New",
-    postedDaysAgo: 1,
-    isOpenToOffers: true,
-    sellerName: "Sunita Sharma",
-    sellerPhone: "9812345678",
-    description: "Gently used baby clothes. All washed and sanitized. Various sizes available.",
-  },
-  {
-    id: "wooden-bed",
-    title: "Wooden Bed",
-    category: "Furniture",
-    price: "NPR 2,500",
-    location: "Balkhu, Kathmandu",
-    district: "Kathmandu",
-    images: ["/bed.jpg"],
-    condition: "Good",
-    postedDaysAgo: 0,
-    isOpenToOffers: true,
-    sellerName: "Hari Prasad",
-    sellerPhone: "9823456789",
-    description: "Single wooden bed in good condition. Minor scratches but sturdy.",
-  },
-  {
-    id: "science-book",
-    title: "Science book(class 10)",
-    category: "Books",
-    price: "NPR 300",
-    location: "Thapathali, Kathmandu",
-    district: "Kathmandu",
-    images: ["/book.jpg"],
-    condition: "Good",
-    postedDaysAgo: 1,
-    isOpenToOffers: false,
-    sellerName: "Anish Thapa",
-    sellerPhone: "9834567890",
-    description: "Class 10 science book in good condition. Some notes written inside.",
-  },
-  {
-    id: "sari",
-    title: "Sari",
-    category: "Clothing",
-    price: "NPR 500",
-    location: "New road, Kathmandu",
-    district: "Kathmandu",
-    images: ["/sari.jpg"],
-    condition: "Fair",
-    postedDaysAgo: 2,
-    isOpenToOffers: false,
-    sellerName: "Maya Devi",
-    sellerPhone: "9845678901",
-    description: "Traditional sari. Slightly faded but still beautiful.",
-  },
-  {
-    id: "badminton",
-    title: "Badminton",
-    category: "Sports",
-    price: "NPR 500",
-    location: "Ratnapark, Kathmandu",
-    district: "Kathmandu",
-    images: ["/badminton.jpg"],
-    condition: "Like New",
-    postedDaysAgo: 2,
-    isOpenToOffers: true,
-    sellerName: "Prakash Rai",
-    sellerPhone: "9856789012",
-    description: "Badminton racket and shuttlecocks. Used only a few times.",
-  },
-  {
-    id: "wooden-study-table",
-    title: "Wooden Study Table",
-    category: "Furniture",
-    price: "NPR 8,500",
-    location: "Kathmandu",
-    district: "Kathmandu",
-    images: ["/table1.jpg"],
-    condition: "Like New",
-    postedDaysAgo: 2,
-    isOpenToOffers: true,
-    sellerName: "Ramesh KC",
-    sellerPhone: "9801234567",
-    description: "Barely used wooden study table. Perfect for students. Solid wood construction.",
-  },
-];
-
 const CONDITIONS: Condition[] = ["Like New", "Good", "Fair", "For parts"];
-const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal"];
+
+const CONDITION_TO_DB: Record<Condition, SecondHandCondition> = {
+  "Like New": "LIKE_NEW",
+  "Good": "GOOD",
+  "Fair": "FAIR",
+  "For parts": "FOR_PARTS",
+};
+const CONDITION_FROM_DB: Record<SecondHandCondition, Condition> = {
+  LIKE_NEW: "Like New",
+  GOOD: "Good",
+  FAIR: "Fair",
+  FOR_PARTS: "For parts",
+};
 
 const CONDITION_BADGE: Record<Condition, { bg: string; color: string; dot: string }> = {
   "Like New": { bg: "#dcfce7", color: "#15803d", dot: "#22c55e" },
@@ -157,16 +64,42 @@ const CONDITION_BADGE: Record<Condition, { bg: string; color: string; dot: strin
   "For parts": { bg: "#fee2e2", color: "#991b1b", dot: "#ef4444" },
 };
 
-/* ─────────── COMPONENT ─────────── */
+const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal"];
+const PLACEHOLDER_IMG = "/placeholder-item.jpg";
+const IMG_BASE = process.env.NEXT_PUBLIC_API_URL;   
+
+function daysAgo(dateStr: string) {
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+}
+
 export default function SecondhandPage() {
+  const [listings, setListings] = useState<SecondHandListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
-  const [activeCategory, setActiveCategory] = useState<string>("");
+  const [activeCategory, setActiveCategory] = useState<SecondHandCategory | "">("");
   const [selectedConditions, setSelectedConditions] = useState<Condition[]>([]);
   const [selectedCity, setSelectedCity] = useState("");
   const [priceRange, setPriceRange] = useState<number>(10000);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
+
+  const loadListings = () => {
+    setLoading(true);
+    setLoadError(false);
+    api
+      .getSecondhandListings()
+      .then(setListings)
+      .catch(() => setLoadError(true))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadListings();
+  }, []);
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -199,21 +132,31 @@ export default function SecondhandPage() {
     setSearch("");
   };
 
-  const displayed = LISTINGS.filter((l) => {
+  const displayed = listings.filter((l) => {
     const s = search.toLowerCase();
-    if (s && !l.title.toLowerCase().includes(s) && !l.location.toLowerCase().includes(s)) return false;
-    if (activeCategory && l.category !== activeCategory) return false;
-    if (selectedConditions.length && !selectedConditions.includes(l.condition)) return false;
-    if (selectedCity && l.district !== selectedCity) return false;
-    const priceNum = parseInt(l.price.replace(/[^0-9]/g, ""));
+    if (
+      s &&
+      !l.title.toLowerCase().includes(s) &&
+      !l.secondhand.city.toLowerCase().includes(s)
+    )
+      return false;
+    if (activeCategory && l.secondhand.category !== activeCategory) return false;
+    if (
+      selectedConditions.length &&
+      !selectedConditions.map((c) => CONDITION_TO_DB[c]).includes(l.secondhand.condition)
+    )
+      return false;
+    if (selectedCity && l.secondhand.city !== selectedCity) return false;
+    const priceNum = l.secondhand.price ?? l.price ?? 0;
     if (priceNum > priceRange) return false;
     return true;
   });
 
   const sortedDisplayed = [...displayed].sort((a, b) => {
-    if (sort === "newest") return a.postedDaysAgo - b.postedDaysAgo;
-    if (sort === "price-low") return parseInt(a.price.replace(/[^0-9]/g, "")) - parseInt(b.price.replace(/[^0-9]/g, ""));
-    if (sort === "price-high") return parseInt(b.price.replace(/[^0-9]/g, "")) - parseInt(a.price.replace(/[^0-9]/g, ""));
+    if (sort === "newest")
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (sort === "price-low") return (a.secondhand.price ?? 0) - (b.secondhand.price ?? 0);
+    if (sort === "price-high") return (b.secondhand.price ?? 0) - (a.secondhand.price ?? 0);
     return 0;
   });
 
@@ -595,16 +538,20 @@ export default function SecondhandPage() {
             <div className="sh-cats-row">
               {CATEGORY_ICONS.map((cat) => (
                 <button
-                  key={cat.name}
-                  className={`sh-cat-card${activeCategory === cat.name ? " active" : ""}`}
-                  onClick={() => setActiveCategory(activeCategory === cat.name ? "" : cat.name)}
+                  key={cat.value}
+                  className={`sh-cat-card${activeCategory === cat.value ? " active" : ""}`}
+                  onClick={() =>
+                    setActiveCategory(activeCategory === cat.value ? "" : cat.value)
+                  }
                 >
                   <span className="sh-cat-icon" style={{ color: cat.color }}>
                     <cat.icon size={22} />
                   </span>
                   <span>
                     <span className="sh-cat-name">{cat.name}</span>
-                    <span className="sh-cat-count">{cat.count.toLocaleString()} listings</span>
+                    <span className="sh-cat-count">
+                      {listings.filter((l) => l.secondhand.category === cat.value).length.toLocaleString()} listings
+                    </span>
                   </span>
                 </button>
               ))}
@@ -626,11 +573,19 @@ export default function SecondhandPage() {
             <div className="sh-sb-section">
               <p className="sh-sb-title">Category</p>
               {CATEGORY_ICONS.map((cat) => (
-                <div key={cat.name} className="sh-check-row" onClick={() => setActiveCategory(activeCategory === cat.name ? "" : cat.name)}>
-                  <div className={`sh-checkbox${activeCategory === cat.name ? " checked" : ""}`}>
-                    {activeCategory === cat.name && <FiCheckCircle size={10} color="#fff" />}
+                <div
+                  key={cat.value}
+                  className="sh-check-row"
+                  onClick={() =>
+                    setActiveCategory(activeCategory === cat.value ? "" : cat.value)
+                  }
+                >
+                  <div className={`sh-checkbox${activeCategory === cat.value ? " checked" : ""}`}>
+                    {activeCategory === cat.value && <FiCheckCircle size={10} color="#fff" />}
                   </div>
-                  <span className={`sh-check-label${activeCategory === cat.name ? " checked" : ""}`}>{cat.name}</span>
+                  <span className={`sh-check-label${activeCategory === cat.value ? " checked" : ""}`}>
+                    {cat.name}
+                  </span>
                 </div>
               ))}
             </div>
@@ -686,7 +641,7 @@ export default function SecondhandPage() {
             {/* Results bar */}
             <div className="sh-results-bar">
               <span className="sh-count">
-                <strong>{sortedDisplayed.length}</strong> results found
+                <strong>{loading ? "…" : sortedDisplayed.length}</strong> results found
               </span>
               <div style={{ position: "relative" }}>
                 <select
@@ -705,107 +660,137 @@ export default function SecondhandPage() {
               </div>
             </div>
 
-            {/* Cards */}
-            {sortedDisplayed.length === 0 ? (
+            {/* Loading */}
+            {loading && (
               <div className="sh-empty">
-                <div style={{ fontSize: 48, marginBottom: 12 }}>🛍️</div>
-                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No listings found</p>
-                <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters or search term</span>
-                <br />
-                <button className="sh-empty-btn" onClick={reset}>Reset Filters</button>
-              </div>
-            ) : (
-              <div className="sh-grid">
-                {sortedDisplayed.map((item) => {
-                  const isFav = !!favorites[item.id];
-                  const currentImg = imageIndices[item.id] || 0;
-                  const hasMultiple = item.images.length > 1;
-                  const badge = CONDITION_BADGE[item.condition];
-
-                  return (
-                    <div key={item.id} className="sh-card">
-                      {/* Image */}
-                      <Link
-                        href={`/category/secondhand/${item.id}`}
-                        className="sh-card-img-wrap"
-                        style={{ display: "block", textDecoration: "none" }}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={item.images[currentImg]} alt={item.title} className="sh-card-img" />
-
-                        {/* Condition badge */}
-                        <span
-                          className="sh-card-condition"
-                          style={{ background: badge.bg, color: badge.color }}
-                        >
-                          <span className="sh-cond-dot" style={{ background: badge.dot }} />
-                          {item.condition}
-                        </span>
-
-                        {/* Fav */}
-                        <button className="sh-card-fav" onClick={(e) => toggleFav(item.id, e)}>
-                          {isFav
-                            ? <FaHeart size={12} color="#ef4444" />
-                            : <FiHeart size={12} color="#9ca3af" />}
-                        </button>
-
-                        {/* Carousel */}
-                        {hasMultiple && (
-                          <>
-                            <button
-                              className="sh-carousel-btn prev"
-                              onClick={(e) => prevImage(item.id, item.images.length, e)}
-                            >
-                              <FiChevronLeft size={14} />
-                            </button>
-                            <button
-                              className="sh-carousel-btn next"
-                              onClick={(e) => nextImage(item.id, item.images.length, e)}
-                            >
-                              <FiChevronRight size={14} />
-                            </button>
-                            <div className="sh-dots">
-                              {item.images.map((_, idx) => (
-                                <div key={idx} className={`sh-dot${idx === currentImg ? " active" : ""}`} />
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </Link>
-
-                      {/* Body */}
-                      <div className="sh-card-body">
-                        <p className="sh-card-title">{item.title}</p>
-                        <p className="sh-card-price">{item.price}</p>
-                        <div className="sh-card-location">
-                          <FiMapPin size={11} />
-                          {item.location}
-                        </div>
-                        <div className="sh-card-tags">
-                          <span className="sh-tag">
-                            {item.postedDaysAgo === 0 ? "Today" : item.postedDaysAgo === 1 ? "1 day ago" : `${item.postedDaysAgo} days ago`}
-                          </span>
-                          {item.isOpenToOffers && (
-                            <span className="sh-tag offer">Open to Offers</span>
-                          )}
-                        </div>
-
-                        <Link
-                          href={`/category/secondhand/${item.id}`}
-                          className="sh-chat-btn"
-                        >
-                          <FiMessageSquare size={13} />
-                          {item.isOpenToOffers ? "Buy Now" : "Contact"}
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })}
+                <div style={{ fontSize: 48, marginBottom: 12 }}>⏳</div>
+                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>Loading listings…</p>
               </div>
             )}
 
+            {/* Error */}
+            {!loading && loadError && (
+              <div className="sh-empty">
+                <div style={{ fontSize: 48, marginBottom: 12 }}>⚠️</div>
+                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>Couldn&apos;t load listings</p>
+                <span style={{ fontSize: 13, color: "#888" }}>Something went wrong fetching data</span>
+                <br />
+                <button className="sh-empty-btn" onClick={loadListings}>Retry</button>
+              </div>
+            )}
+
+            {/* Cards */}
+            {!loading && !loadError && (
+              sortedDisplayed.length === 0 ? (
+                <div className="sh-empty">
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>🛍️</div>
+                  <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No listings found</p>
+                  <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters or search term</span>
+                  <br />
+                  <button className="sh-empty-btn" onClick={reset}>Reset Filters</button>
+                </div>
+              ) : (
+                <div className="sh-grid">
+                  {sortedDisplayed.map((item) => {
+                    const isFav = !!favorites[item.id];
+                    const images = item.images.length ? item.images : [PLACEHOLDER_IMG];
+                    const currentImg = imageIndices[item.id] || 0;
+                    const hasMultiple = images.length > 1;
+                    const conditionLabel = CONDITION_FROM_DB[item.secondhand.condition];
+                    const badge = CONDITION_BADGE[conditionLabel];
+                    const posted = daysAgo(item.createdAt);
+                    const price = item.secondhand.price ?? item.price ?? 0;
+
+                    return (
+                      <div key={item.id} className="sh-card">
+                        {/* Image */}
+                        <Link
+                          href={`/category/secondhand/${item.id}`}
+                          className="sh-card-img-wrap"
+                          style={{ display: "block", textDecoration: "none" }}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={
+                              images[currentImg] && images[currentImg] !== PLACEHOLDER_IMG
+                                ? `${IMG_BASE}${images[currentImg]}`
+                                : PLACEHOLDER_IMG
+                            }
+                            alt={item.title}
+                            className="sh-card-img"
+                          />
+
+                          <span
+                            className="sh-card-condition"
+                            style={{ background: badge.bg, color: badge.color }}
+                          >
+                            <span className="sh-cond-dot" style={{ background: badge.dot }} />
+                            {conditionLabel}
+                          </span>
+
+                          <button className="sh-card-fav" onClick={(e) => toggleFav(item.id, e)}>
+                            {isFav
+                              ? <FaHeart size={12} color="#ef4444" />
+                              : <FiHeart size={12} color="#9ca3af" />}
+                          </button>
+
+                          {hasMultiple && (
+                            <>
+                              <button
+                                className="sh-carousel-btn prev"
+                                onClick={(e) => prevImage(item.id, images.length, e)}
+                              >
+                                <FiChevronLeft size={14} />
+                              </button>
+                              <button
+                                className="sh-carousel-btn next"
+                                onClick={(e) => nextImage(item.id, images.length, e)}
+                              >
+                                <FiChevronRight size={14} />
+                              </button>
+                              <div className="sh-dots">
+                                {images.map((_, idx) => (
+                                  <div key={idx} className={`sh-dot${idx === currentImg ? " active" : ""}`} />
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </Link>
+
+                        {/* Body */}
+                        <div className="sh-card-body">
+                          <p className="sh-card-title">{item.title}</p>
+                          <p className="sh-card-price">NPR {price.toLocaleString()}</p>
+                          <div className="sh-card-location">
+                            <FiMapPin size={11} />
+                            {item.secondhand.city}
+                          </div>
+                          <div className="sh-card-tags">
+                            <span className="sh-tag">
+                              {posted === 0 ? "Today" : posted === 1 ? "1 day ago" : `${posted} days ago`}
+                            </span>
+                            {item.secondhand.isNegotiable && (
+                              <span className="sh-tag offer">Open to Offers</span>
+                            )}
+                          </div>
+
+                          <Link
+                            href={`/category/secondhand/${item.id}`}
+                            className="sh-chat-btn"
+                          >
+                            <FiMessageSquare size={13} />
+                            {item.secondhand.isNegotiable ? "Buy Now" : "Contact"}
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            )}
+
             {/* Load More */}
-            {sortedDisplayed.length > 0 && (
+            {!loading && sortedDisplayed.length > 0 && (
               <div className="sh-load-more">
                 <button className="sh-load-more-btn">View More</button>
               </div>

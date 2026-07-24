@@ -75,11 +75,23 @@ export class SecondhandService {
       const listing = await this.prisma.listing.findUnique({
         where: { id },
         include: {
-          secondhand:true,
+          secondhand: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              image: true,
+              isVerified: true,
+              createdAt: true,
+              _count: { select: { listings: true } },
+            },
+          },
+          reviews: true, // if Review is scoped per-listing, not per-seller — check this against how vehicles does it
         },
       });
       if (!listing || listing.category !== ListingCategory.SECONDHAND) {
-        throw new ForbiddenException('Secondhand listing not found');
+        throw new NotFoundException('Secondhand listing not found');
       }
       return listing;
     }
