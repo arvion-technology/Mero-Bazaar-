@@ -53,6 +53,10 @@ type Restaurant = {
   tags: string[];
   isFreshAndHygienic: boolean;
   postedDaysAgo: number;
+  // FIX: added missing fields so filters have data to work with
+  deliveryFee?: string;
+  subscriptions?: Subscription[];
+  deliveryDays?: DayOfWeek[];
 };
 
 /* ─────────── CATEGORY ICONS ─────────── */
@@ -81,13 +85,16 @@ const RESTAURANTS: Restaurant[] = [
     tags: ["Veg Thali"],
     isFreshAndHygienic: true,
     postedDaysAgo: 1,
+    deliveryFee: "NPR 50",
+    subscriptions: ["Daily Tiffin Available", "Monthly Plan"],
+    deliveryDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
   },
   {
     id: "bhojan-gariha",
     name: "Bhojan Gariha",
     cuisine: "Nepali, Traditional",
     foodType: "Veg",
-    pricePerMeal: "NPR 250/meal",
+    pricePerMeal: "NPR 180/meal",
     distance: "3km",
     location: "Kathmandu",
     rating: 4.6,
@@ -96,13 +103,16 @@ const RESTAURANTS: Restaurant[] = [
     tags: ["Nepali", "Traditional"],
     isFreshAndHygienic: true,
     postedDaysAgo: 2,
+    deliveryFee: "NPR 80",
+    subscriptions: ["Weekly Plan"],
+    deliveryDays: ["Mon", "Tue", "Wed", "Thu", "Fri"],
   },
   {
     id: "thakali-kitchen",
     name: "Thakali Kitchen",
     cuisine: "Veg Thali",
     foodType: "Veg",
-    pricePerMeal: "NPR 250/meal",
+    pricePerMeal: "NPR 220/meal",
     distance: "2km",
     location: "Kathmandu",
     rating: 4.6,
@@ -111,13 +121,16 @@ const RESTAURANTS: Restaurant[] = [
     tags: ["Veg Thali"],
     isFreshAndHygienic: true,
     postedDaysAgo: 0,
+    deliveryFee: "Free",
+    subscriptions: ["Daily Tiffin Available"],
+    deliveryDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
   },
   {
     id: "burger-house-nepal",
     name: "Burger House Nepal",
     cuisine: "Fast Food, Burgers",
     foodType: "Non veg",
-    pricePerMeal: "NPR 250/meal",
+    pricePerMeal: "NPR 350/meal",
     distance: "3km",
     location: "Kathmandu",
     rating: 4.6,
@@ -126,13 +139,16 @@ const RESTAURANTS: Restaurant[] = [
     tags: ["Fast Food", "Burgers"],
     isFreshAndHygienic: true,
     postedDaysAgo: 1,
+    deliveryFee: "NPR 120",
+    subscriptions: ["Monthly Plan"],
+    deliveryDays: ["Fri", "Sat", "Sun"],
   },
   {
     id: "new-momo-hut",
     name: "New Momo Hut",
     cuisine: "Momos, Chinese",
     foodType: "Non veg",
-    pricePerMeal: "NPR 250/meal",
+    pricePerMeal: "NPR 150/meal",
     distance: "3km",
     location: "Kathmandu",
     rating: 4.6,
@@ -141,13 +157,16 @@ const RESTAURANTS: Restaurant[] = [
     tags: ["Momos", "Chinese"],
     isFreshAndHygienic: true,
     postedDaysAgo: 3,
+    deliveryFee: "NPR 60",
+    subscriptions: ["Daily Tiffin Available", "Weekly Plan"],
+    deliveryDays: ["Mon", "Wed", "Fri", "Sun"],
   },
   {
     id: "himalayan-java-coffee",
     name: "Himalayan Java Coffee",
     cuisine: "Cafe, Beverages",
     foodType: "Veg",
-    pricePerMeal: "NPR 250/meal",
+    pricePerMeal: "NPR 400/meal",
     distance: "3km",
     location: "Kathmandu",
     rating: 4.6,
@@ -156,6 +175,9 @@ const RESTAURANTS: Restaurant[] = [
     tags: ["Cafe", "Beverages"],
     isFreshAndHygienic: true,
     postedDaysAgo: 2,
+    deliveryFee: "NPR 1500",
+    subscriptions: ["Monthly Plan"],
+    deliveryDays: ["Tue", "Thu", "Sat"],
   },
 ];
 
@@ -187,6 +209,13 @@ const SUBSCRIPTIONS: Subscription[] = [
 ];
 
 const DAYS_OF_WEEK: DayOfWeek[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/* ─────────── PRICE PARSER ─────────── */
+// FIX: helper to extract numeric value from price strings like "NPR 250/meal"
+const parsePrice = (priceStr: string): number => {
+  const match = priceStr.replace(/,/g, "").match(/\d+/);
+  return match ? parseInt(match[0], 10) : 0;
+};
 
 /* ─────────── COMPONENT ─────────── */
 export default function FoodDeliveryPage() {
@@ -259,12 +288,55 @@ export default function FoodDeliveryPage() {
     if (s && !r.name.toLowerCase().includes(s) && !r.cuisine.toLowerCase().includes(s)) return false;
     if (activeCategory && !r.cuisine.toLowerCase().includes(activeCategory.toLowerCase())) return false;
     if (selectedFoodTypes.length && !selectedFoodTypes.includes(r.foodType)) return false;
+
+    // FIX: Price Range filter
+    if (selectedPriceRanges.length) {
+      const price = parsePrice(r.pricePerMeal);
+      const matches = selectedPriceRanges.some((range) => {
+        if (range === "Under Rs.100") return price < 100;
+        if (range === "Rs.100 - Rs.200") return price >= 100 && price <= 200;
+        if (range === "Rs.200 - Rs.500") return price >= 200 && price <= 500;
+        if (range === "Above Rs.100") return price > 100;
+        return false;
+      });
+      if (!matches) return false;
+    }
+
+    // FIX: Delivery fee filter
+    if (selectedDeliveryRanges.length) {
+      const fee = r.deliveryFee ? parsePrice(r.deliveryFee) : 0;
+      const matches = selectedDeliveryRanges.some((range) => {
+        if (range === "Under Rs.100") return fee < 100;
+        if (range === "Rs.100 - Rs.200") return fee >= 100 && fee <= 200;
+        if (range === "Rs.200 - Rs.500") return fee >= 200 && fee <= 500;
+        if (range === "Above Rs.1000") return fee > 1000;
+        return false;
+      });
+      if (!matches) return false;
+    }
+
+    // FIX: Subscription filter
+    if (selectedSubscriptions.length) {
+      if (!r.subscriptions || !r.subscriptions.some((sub) => selectedSubscriptions.includes(sub))) {
+        return false;
+      }
+    }
+
+    // FIX: Delivery Days filter
+    if (selectedDays.length) {
+      if (!r.deliveryDays || !r.deliveryDays.some((day) => selectedDays.includes(day))) {
+        return false;
+      }
+    }
+
     return true;
   });
 
   const sortedDisplayed = [...displayed].sort((a, b) => {
     if (sort === "newest") return a.postedDaysAgo - b.postedDaysAgo;
     if (sort === "rating") return b.rating - a.rating;
+    // FIX: added missing price-low sort handler
+    if (sort === "price-low") return parsePrice(a.pricePerMeal) - parsePrice(b.pricePerMeal);
     return 0;
   });
 
@@ -798,6 +870,7 @@ export default function FoodDeliveryPage() {
                 >
                   <option value="newest">Newest</option>
                   <option value="rating">Highest Rated</option>
+                  <option value="price-low">Price: Low to High</option>
                 </select>
                 <FiChevronDown
                   size={12}
