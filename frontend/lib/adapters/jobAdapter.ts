@@ -64,8 +64,8 @@ export function toJobDetail(listing: JobListing): JobDetail {
     breadcrumbs: ["Job", job.contractType],   
     images: listing.images?.length ? listing.images : ["/job1.jpg"],
     description: listing.description ?? "",
-    lat: listing.latitude,
-    lng: listing.longitude,
+    lat: listing.latitude ?? null,
+    lng: listing.longitude ?? null,
     company: {
       name: listing.user?.vendorProfile?.businessName ?? "Unknown",
       logo: listing.images?.[0] ?? "/job1.jpg",
