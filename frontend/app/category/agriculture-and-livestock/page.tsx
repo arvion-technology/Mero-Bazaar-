@@ -10,9 +10,6 @@ import {
   FiMessageSquare,
   FiHeart,
   FiCheckCircle,
-  FiSliders,
-  FiPhone,
-  FiShare2,
 } from "react-icons/fi";
 import {
   FaHeart,
@@ -21,7 +18,6 @@ import {
   FaTractor,
   FaWrench,
   FaCarrot,
-  FaAppleAlt,
 } from "react-icons/fa";
 import { FaCow } from "react-icons/fa6";
 
@@ -47,7 +43,8 @@ type AgriListing = {
   breed?: string;
   age?: string;
   isVaccinated?: boolean;
-  healthStatus?: "Vaccinated" | "Non-Vaccinated";
+  // FIX 1: aligned with HEALTH_STATUS constant ("Not Vaccinated", not "Non-Vaccinated")
+  healthStatus?: "Vaccinated" | "Not Vaccinated";
   seasonal?: string;
   description?: string;
   sellerName?: string;
@@ -163,6 +160,13 @@ const SEASONS = ["Spring", "Summer", "Autumn", "Early Fall"];
 const DISTRICTS = ["Chitwan", "Rupandehi", "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara"];
 const HEALTH_STATUS = ["Vaccinated", "Not Vaccinated"];
 
+/* ─────────── PRICE PARSER ─────────── */
+// FIX 2: robust helper used in both filter + sort
+const parsePrice = (priceStr: string): number => {
+  const match = priceStr.replace(/,/g, "").match(/\d+/);
+  return match ? parseInt(match[0], 10) : 0;
+};
+
 /* ─────────── COMPONENT ─────────── */
 export default function AgriculturePage() {
   const [search, setSearch] = useState("");
@@ -214,18 +218,23 @@ export default function AgriculturePage() {
     if (selectedSeasons.length && l.seasonal && !selectedSeasons.includes(l.seasonal)) return false;
     if (selectedDistrict && l.district !== selectedDistrict) return false;
     if (organicOnly && !l.isOrganic) return false;
-    if (selectedHealth.length && l.healthStatus && !selectedHealth.includes(l.healthStatus)) return false;
-    const priceNum = parseInt(l.price.replace(/[^0-9]/g, ""));
+
+    // FIX 3: health filter now excludes Produce & other items that have no healthStatus
+    if (selectedHealth.length && (!l.healthStatus || !selectedHealth.includes(l.healthStatus))) return false;
+
+    // FIX 4: price filter now uses the robust parsePrice helper
+    const priceNum = parsePrice(l.price);
     if (priceNum > priceRange) return false;
+
     return true;
   });
 
   const sortedDisplayed = [...displayed].sort((a, b) => {
     switch (sort) {
       case "price-low":
-        return parseInt(a.price.replace(/[^0-9]/g, "")) - parseInt(b.price.replace(/[^0-9]/g, ""));
+        return parsePrice(a.price) - parsePrice(b.price);
       case "price-high":
-        return parseInt(b.price.replace(/[^0-9]/g, "")) - parseInt(a.price.replace(/[^0-9]/g, ""));
+        return parsePrice(b.price) - parsePrice(a.price);
       default:
         return 0;
     }

@@ -150,6 +150,16 @@ const CATEGORY_CARDS = [
   { id: "Office", label: "Office", icon: FaBriefcase, count: 155, color: "#1565c0" },
 ];
 
+// ── PRICE PARSER: converts "Rs. 20,000/month" → 20000 ──
+const parsePrice = (priceStr: string): number => {
+  const cleaned = priceStr
+    .replace(/Rs\.\s*/i, "")
+    .replace(/\/\s*month/gi, "")
+    .replace(/,/g, "")
+    .trim();
+  return parseInt(cleaned, 10) || 0;
+};
+
 export default function PropertyPage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
@@ -207,7 +217,16 @@ export default function PropertyPage() {
       (filterFurnished && l.isFurnished) ||
       (filterUnfurnished && !l.isFurnished);
 
-    return matchSearch && matchType && matchPurpose && matchBHK && matchCity && matchFurnished;
+    // ── FIXED: Added missing price filter logic ──
+    let matchPrice = true;
+    if (filterPrice) {
+      const numericPrice = parsePrice(l.price);
+      if (filterPrice === "low") matchPrice = numericPrice < 20000;
+      else if (filterPrice === "mid") matchPrice = numericPrice >= 20000 && numericPrice <= 50000;
+      else if (filterPrice === "high") matchPrice = numericPrice > 50000;
+    }
+
+    return matchSearch && matchType && matchPurpose && matchBHK && matchCity && matchFurnished && matchPrice;
   }).sort((a, b) => {
     if (sort === "featured") return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
     if (sort === "rating") return b.rating - a.rating;

@@ -10,9 +10,14 @@ import {
   FiChevronRight,
   FiStar,
   FiHeart,
+  FiGrid,
+  FiScissors,
+  FiDroplet,
 } from "react-icons/fi";
 import {
   FaHeart,
+  FaPaintBrush,
+  FaHandSparkles,
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 
@@ -41,15 +46,17 @@ type BeautyService = {
   tags: string[];
   isHomeVisit: boolean;
   postedDaysAgo: number;
+  // FIX: added gender field so filter has data to work with
+  gender: Gender;
 };
 
 /* ─────────── CATEGORY ICONS ─────────── */
-const SERVICE_CATEGORIES: { name: ServiceCategory; icon: string; count: number }[] = [
-  { name: "All", icon: "🏠", count: 117 },
-  { name: "Makeup", icon: "💄", count: 45 },
-  { name: "Hair", icon: "✂️", count: 32 },
-  { name: "Nails", icon: "💅", count: 18 },
-  { name: "Skin", icon: "🧴", count: 22 },
+const SERVICE_CATEGORIES: { name: ServiceCategory; icon: IconType; count: number }[] = [
+  { name: "All", icon: FiGrid, count: 117 },
+  { name: "Makeup", icon: FaPaintBrush, count: 45 },
+  { name: "Hair", icon: FiScissors, count: 32 },
+  { name: "Nails", icon: FaHandSparkles, count: 18 },
+  { name: "Skin", icon: FiDroplet, count: 22 },
 ];
 
 /* ─────────── DATA ─────────── */
@@ -66,6 +73,7 @@ const SERVICES: BeautyService[] = [
     tags: ["Nails", "Acrylic"],
     isHomeVisit: true,
     postedDaysAgo: 1,
+    gender: "Female Only",
   },
   {
     id: "hair-highlights",
@@ -79,6 +87,7 @@ const SERVICES: BeautyService[] = [
     tags: ["Hair", "Coloring"],
     isHomeVisit: false,
     postedDaysAgo: 2,
+    gender: "Any",
   },
   {
     id: "bridal-makeup",
@@ -92,6 +101,7 @@ const SERVICES: BeautyService[] = [
     tags: ["Makeup", "Bridal"],
     isHomeVisit: true,
     postedDaysAgo: 0,
+    gender: "Female Only",
   },
   {
     id: "facial-treatment",
@@ -105,6 +115,7 @@ const SERVICES: BeautyService[] = [
     tags: ["Skin", "Facial"],
     isHomeVisit: false,
     postedDaysAgo: 1,
+    gender: "Any",
   },
   {
     id: "mehandi-design",
@@ -118,6 +129,7 @@ const SERVICES: BeautyService[] = [
     tags: ["Nails", "Mehandi"],
     isHomeVisit: true,
     postedDaysAgo: 3,
+    gender: "Female Only",
   },
   {
     id: "waxing-service",
@@ -131,6 +143,7 @@ const SERVICES: BeautyService[] = [
     tags: ["Skin", "Waxing"],
     isHomeVisit: false,
     postedDaysAgo: 2,
+    gender: "Any",
   },
 ];
 
@@ -163,6 +176,13 @@ const SORT_OPTIONS = [
   { value: "rating", label: "Highest Rated" },
   { value: "popular", label: "Most Popular" },
 ];
+
+/* ─────────── PRICE PARSER ─────────── */
+// FIX: helper to extract numeric value from price strings like "NPR 2,000"
+const parsePrice = (priceStr: string): number => {
+  const match = priceStr.replace(/,/g, "").match(/\d+/);
+  return match ? parseInt(match[0], 10) : 0;
+};
 
 /* ─────────── COMPONENT ─────────── */
 export default function BeautyWellnessPage() {
@@ -221,14 +241,34 @@ export default function BeautyWellnessPage() {
     if (searchLower && !s.name.toLowerCase().includes(searchLower) && !s.category.toLowerCase().includes(searchLower)) return false;
     if (activeCategory !== "All" && s.category !== activeCategory) return false;
     if (selectedServiceTypes.length && !selectedServiceTypes.some(st => s.subServices.some(sub => sub.toLowerCase().includes(st.toLowerCase()) || s.category.toLowerCase() === st.toLowerCase()))) return false;
+
+    // FIX: Price Range filter
+    if (selectedPriceRanges.length) {
+      const price = parsePrice(s.price);
+      const matches = selectedPriceRanges.some((range) => {
+        if (range === "Under Rs.100") return price < 100;
+        if (range === "Rs.100 - Rs.200") return price >= 100 && price <= 200;
+        if (range === "Rs.200 - Rs.500") return price >= 200 && price <= 500;
+        if (range === "Above Rs.1000") return price > 1000;
+        return false;
+      });
+      if (!matches) return false;
+    }
+
+    // FIX: Home Visit filter
+    if (homeVisit && !s.isHomeVisit) return false;
+
+    // FIX: Gender filter
+    if (selectedGender !== "Any" && s.gender !== selectedGender) return false;
+
     return true;
   });
 
   const sortedDisplayed = [...displayed].sort((a, b) => {
     if (sort === "newest") return a.postedDaysAgo - b.postedDaysAgo;
     if (sort === "rating") return b.rating - a.rating;
-    if (sort === "price-low") return parseInt(a.price.replace(/[^0-9]/g, "")) - parseInt(b.price.replace(/[^0-9]/g, ""));
-    if (sort === "price-high") return parseInt(b.price.replace(/[^0-9]/g, "")) - parseInt(a.price.replace(/[^0-9]/g, ""));
+    if (sort === "price-low") return parsePrice(a.price) - parsePrice(b.price);
+    if (sort === "price-high") return parsePrice(b.price) - parsePrice(a.price);
     if (sort === "popular") return b.reviewCount - a.reviewCount;
     return 0;
   });
@@ -357,7 +397,8 @@ export default function BeautyWellnessPage() {
         .bw-cat-btn.active {
           border-color: #e11d48; background: #ffe4e6;
         }
-        .bw-cat-icon { font-size: 20px; line-height: 1; }
+        .bw-cat-icon { line-height: 1; color: #374151; }
+        .bw-cat-btn.active .bw-cat-icon { color: #e11d48; }
         .bw-cat-label { font-size: 9px; font-weight: 600; color: #374151; }
         .bw-cat-btn.active .bw-cat-label { color: #e11d48; font-weight: 700; }
 
@@ -631,7 +672,7 @@ export default function BeautyWellnessPage() {
                     className={`bw-cat-btn${activeCategory === cat.name ? " active" : ""}`}
                     onClick={() => setActiveCategory(cat.name)}
                   >
-                    <span className="bw-cat-icon">{cat.icon}</span>
+                    <span className="bw-cat-icon"><cat.icon size={20} /></span>
                     <span className="bw-cat-label">{cat.name}</span>
                   </button>
                 ))}
