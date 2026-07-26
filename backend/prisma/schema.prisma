@@ -375,14 +375,20 @@ model Job {
 }
 
 enum PayPeriod {
+  HOURLY
   DAILY
   WEEKLY
+  BIWEEKLY
   MONTHLY
+  YEARLY
 }
 
 enum ContractType {
   FULL_TIME
   PART_TIME
+  CONTRACT
+  FREELANCE
+  INTERNSHIP
   GIG
   LABOUR
   DOMESTIC

@@ -6,6 +6,10 @@ export class CreateJobDto {
   @IsString()
   role: string;
 
+  @IsString()
+  @IsOptional()
+  description?: string;
+
   @Type(() => Number)
   @IsInt()
   @Min(0)

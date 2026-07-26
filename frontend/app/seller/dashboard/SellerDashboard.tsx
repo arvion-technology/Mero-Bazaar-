@@ -50,7 +50,7 @@ const categories = [
   { name: "Rent & Real Estate", slug: "rent-real-estate", icon: FiHome },
   { name: "Secondhand Goods", slug: "secondhand-goods", icon: FiShoppingBag },
   { name: "Hair, Beauty & Wellness", slug: "hair-beauty-wellness", icon: FiScissors },
-  { name: "Jobs & Labour Hire", slug: "jobs-labour-hire", icon: FiBriefcase },
+  { name: "Jobs & Labour Hire", slug: "job", icon: FiBriefcase },
   { name: "Trades & Home Repair", slug: "trades-home-repair", icon: FiTool },
   { name: "Agriculture & Livestock", slug: "agriculture-livestock", icon: FiSun },
   { name: "Food & Home Delivery", slug: "food-home-delivery", icon: FiCoffee },
