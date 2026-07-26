@@ -186,20 +186,12 @@ export type JobDetail = {
   distanceFrom: string;
   type: string;
   postedDaysAgo: number;
-  views: number;
-  experience: string;
-  education: string;
-  vacancies: number;
   postedDate: string;
-  isVerified: boolean;
-  isFeatured: boolean;
-  breadcrumbs: string[];
+  breadcrumbs: string[];   
   images: string[];
   description: string;
-  requirements: string[];
-  benefits: string[];
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
   company: {
     name: string;
     logo: string;
