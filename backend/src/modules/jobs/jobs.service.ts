@@ -14,8 +14,7 @@ export class JobsService {
     return this.prisma.listing.create({
       data: {
         title: `${dto.role} in ${dto.city}`,
-        description: `Hiring for ${dto.role} position in ${dto.city}`,
-        category: ListingCategory.JOB,
+        description: dto.description?.trim() || `Hiring for ${dto.role} position in ${dto.city}`,        category: ListingCategory.JOB,
         images: [],
         user: {
           connect: {

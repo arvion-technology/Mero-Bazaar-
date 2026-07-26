@@ -2,15 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  FiArrowLeft,
-  FiCheck,
-  FiMapPin,
-  FiEdit2,
-  FiSend,
-} from "react-icons/fi";
+import { useSession } from "next-auth/react";
+import { FiArrowLeft, FiCheck, FiMapPin, FiEdit2, FiSend } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useJobDraft } from "../layout";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -22,43 +18,86 @@ const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 
-const listingData = {
-  title: "Frontend developer",
-  company: "Hamro Tech Pvt. Ltd",
-  companyLogo: null,
-  location: "Kathmandu, Nepal",
-  salaryMin: "28,000",
-  salaryMax: "40,000",
-  payPeriod: "month",
-  contractType: "Full Time",
-  postedAt: "Posted just now",
-  urgentHiring: true,
-  skills: ["React", "Next.js", "TypeScript", "Tailwind CSS"],
-  description:
-    "We are looking for a skilled Frontend Developer to build modern, responsive and user-friendly web applications using React, Next.js and TypeScript. You will collaborate with designers and backend developers to deliver high-quality products.",
-  experience: "Not specified",
-  jobCategory: "IT & software",
+const PAY_PERIOD_MAP: Record<string, string> = {
+  Hourly: "HOURLY",
+  Daily: "DAILY",
+  Weekly: "WEEKLY",
+  "Bi-weekly": "BIWEEKLY",
+  Monthly: "MONTHLY",
+  Yearly: "YEARLY",
 };
+
+const CONTRACT_TYPE_MAP: Record<string, string> = {
+  "Full Time": "FULL_TIME",
+  "Part Time": "PART_TIME",
+  Contract: "CONTRACT",
+  Freelance: "FREELANCE",
+  Internship: "INTERNSHIP",
+};
+
+function toCity(location: string) {
+  return location.replace(/,\s*Nepal$/i, "").trim();
+}
 
 export default function PreviewListingPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const { data } = useJobDraft();
+  const [isPublishing, setIsPublishing] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  const handlePublish = () => {
-    toast.success("Listing published successfully!");
-     router.push("/seller/products");
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    try {
+      const res = await fetch("/api/jobs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify({
+          role: data.role,
+          city: toCity(data.location),
+          salaryMin: Number(data.salaryMin.replace(/,/g, "")),
+          salaryMax: Number(data.salaryMax.replace(/,/g, "")),
+          payPeriod: PAY_PERIOD_MAP[data.payPeriod] ?? "MONTHLY",
+          contractType: CONTRACT_TYPE_MAP[data.contractType] ?? "FULL_TIME",
+          skillTags: data.skillTags,
+          isUrgent: data.urgentHiring,
+          employerPhoneVerified: data.phoneVerified,
+          // NOTE: `description` intentionally left out here.
+          // The Job model/DTO has no `description` field (only Listing does),
+          // so sending it trips the backend's whitelist validation
+          // ("property description should not exist"). If you want the
+          // description persisted, save it to the Listing separately
+          // (e.g. a follow-up PATCH to /api/listings/:id) once the DTO
+          // supports it, rather than bundling it into the job payload.
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.message || "Failed to publish job listing");
+      }
+
+      toast.success("Listing published successfully!");
+      router.push("/seller/products");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong publishing");
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleEdit = () => {
     router.push("/seller/listing/job");
   };
 
-  const descriptionPreview = listingData.description;
-  const shouldTruncate = descriptionPreview.length > 180;
+  const shouldTruncate = data.description.length > 180;
   const displayedDesc =
     expanded || !shouldTruncate
-      ? descriptionPreview
-      : descriptionPreview.slice(0, 180) + "...";
+      ? data.description
+      : data.description.slice(0, 180) + "...";
 
   return (
     <>
@@ -142,7 +181,6 @@ export default function PreviewListingPage() {
           margin-bottom: 20px;
         }
 
-        /* ── Badge ── */
         .badge-urgent {
           display: inline-flex;
           align-items: center;
@@ -156,7 +194,6 @@ export default function PreviewListingPage() {
           margin-bottom: 12px;
         }
 
-        /* ── Header Row ── */
         .card-header {
           display: flex;
           align-items: flex-start;
@@ -201,7 +238,6 @@ export default function PreviewListingPage() {
           letter-spacing: 0.5px;
         }
 
-        /* ── Location ── */
         .location-row {
           display: flex;
           align-items: center;
@@ -211,14 +247,12 @@ export default function PreviewListingPage() {
           margin-bottom: 16px;
         }
 
-        /* ── Divider ── */
         .divider {
           height: 1px;
           background: ${BORDER};
           margin: 0 0 14px 0;
         }
 
-        /* ── Meta Row ── */
         .meta-row {
           display: flex;
           align-items: center;
@@ -248,7 +282,6 @@ export default function PreviewListingPage() {
           white-space: nowrap;
         }
 
-        /* ── Skills ── */
         .skills-section {
           margin-bottom: 14px;
         }
@@ -284,7 +317,6 @@ export default function PreviewListingPage() {
           cursor: default;
         }
 
-        /* ── Description ── */
         .description-text {
           font-size: 14px;
           line-height: 1.7;
@@ -305,7 +337,6 @@ export default function PreviewListingPage() {
 
         .view-more-btn:hover { text-decoration: underline; }
 
-        /* ── Details Grid ── */
         .details-section {
           margin-top: 16px;
           padding-top: 14px;
@@ -335,7 +366,6 @@ export default function PreviewListingPage() {
           color: ${TEXT_PRIMARY};
         }
 
-        /* ── Actions ── */
         .actions {
           display: flex;
           gap: 50px;
@@ -400,7 +430,6 @@ export default function PreviewListingPage() {
           to { transform: rotate(360deg); }
         }
 
-        /* ── Responsive: exactly like vehicle page ── */
         @media (max-width: 900px) {
           .preview-container { padding: 20px 20px 40px; }
           .listing-card { padding: 20px; }
@@ -432,58 +461,41 @@ export default function PreviewListingPage() {
           </div>
 
           <div className="listing-card">
-            {/* Badge */}
-            {listingData.urgentHiring && (
-              <div className="badge-urgent">Urgent Hiring</div>
-            )}
+            {data.urgentHiring && <div className="badge-urgent">Urgent Hiring</div>}
 
-            {/* Title + Logo */}
             <div className="card-header">
               <div>
-                <h2 className="listing-title">{listingData.title}</h2>
-                <div className="company-name">{listingData.company}</div>
+                <h2 className="listing-title">{data.role}</h2>
+                <div className="company-name">{data.company}</div>
               </div>
               <div className="company-logo">
-                {listingData.companyLogo ? (
-                  <img
-                    src={listingData.companyLogo}
-                    alt={listingData.company}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                ) : (
-                  <span className="company-logo-text">
-                    HAMRO
-                    <br />
-                    TECH
-                  </span>
-                )}
+                <span className="company-logo-text">
+                  {data.company.slice(0, 5).toUpperCase()}
+                </span>
               </div>
             </div>
 
-            {/* Location */}
             <div className="location-row">
               <FiMapPin size={14} />
-              {listingData.location}
+              {data.location}
             </div>
 
             <div className="divider" />
 
-            {/* Meta */}
             <div className="meta-row">
               <span className="meta-salary">
-                NRP {listingData.salaryMin}- {listingData.salaryMax}/{listingData.payPeriod}
+                NRP {data.salaryMin}- {data.salaryMax}/{data.payPeriod}
               </span>
-              <span className="meta-tag">{listingData.contractType}</span>
-              <span className="meta-posted">{listingData.postedAt}</span>
+              <span className="meta-tag">{data.contractType}</span>
+              <span className="meta-posted">Posted just now</span>
             </div>
 
             <div className="divider" />
 
-            {/* Skills */}
             <div className="skills-section">
               <div className="skills-label">Skills</div>
               <div className="skills-row">
-                {listingData.skills.map((skill) => (
+                {data.skillTags.map((skill) => (
                   <span key={skill} className="skill-pill">
                     {skill}
                     <span className="skill-remove">×</span>
@@ -494,39 +506,26 @@ export default function PreviewListingPage() {
 
             <div className="divider" />
 
-            {/* Description */}
             <p className="description-text">{displayedDesc}</p>
             {shouldTruncate && (
-              <button
-                type="button"
-                className="view-more-btn"
-                onClick={() => setExpanded(!expanded)}
-              >
+              <button type="button" className="view-more-btn" onClick={() => setExpanded(!expanded)}>
                 {expanded ? "View Less" : "View More"}
               </button>
             )}
 
-            {/* Details */}
             <div className="details-section">
               <div className="details-grid">
                 <div className="detail-item">
                   <span className="detail-label">Pay Period</span>
-                  <span className="detail-value">
-                    {listingData.payPeriod.charAt(0).toUpperCase() +
-                      listingData.payPeriod.slice(1)}
-                  </span>
+                  <span className="detail-value">{data.payPeriod}</span>
                 </div>
                 <div className="detail-item">
-                  <span className="detail-label">Contact Type</span>
-                  <span className="detail-value">{listingData.contractType}</span>
+                  <span className="detail-label">Contract Type</span>
+                  <span className="detail-value">{data.contractType}</span>
                 </div>
                 <div className="detail-item">
-                  <span className="detail-label">Experience</span>
-                  <span className="detail-value">{listingData.experience}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Job Category</span>
-                  <span className="detail-value">{listingData.jobCategory}</span>
+                  <span className="detail-label">Employer Phone Verified</span>
+                  <span className="detail-value">{data.phoneVerified ? "Yes" : "No"}</span>
                 </div>
               </div>
             </div>
@@ -537,9 +536,18 @@ export default function PreviewListingPage() {
               <FiEdit2 size={15} />
               Edit Listing
             </button>
-            <button className="btn btn-publish" onClick={handlePublish}>
-              Publish Listing
-              <FiSend size={15} />
+            <button className="btn btn-publish" onClick={handlePublish} disabled={isPublishing}>
+              {isPublishing ? (
+                <>
+                  <span className="spinner" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  Publish Listing
+                  <FiSend size={15} />
+                </>
+              )}
             </button>
           </div>
         </div>
