@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { api } from "@/lib/api";
-import type { SecondHandListing, SecondHandCategory, SecondHandCondition } from "@/app/types/secondhand";
+import type { SecondhandListing, SecondHandCategory, SecondhandCondition } from "@/app/types/secondhand";
 import {
   FiSearch,
   FiMapPin,
@@ -44,13 +44,13 @@ const CATEGORY_ICONS: {
 type Condition = "Like New" | "Good" | "Fair" | "For parts";
 const CONDITIONS: Condition[] = ["Like New", "Good", "Fair", "For parts"];
 
-const CONDITION_TO_DB: Record<Condition, SecondHandCondition> = {
+const CONDITION_TO_DB: Record<Condition, SecondhandCondition> = {
   "Like New": "LIKE_NEW",
   "Good": "GOOD",
   "Fair": "FAIR",
   "For parts": "FOR_PARTS",
 };
-const CONDITION_FROM_DB: Record<SecondHandCondition, Condition> = {
+const CONDITION_FROM_DB: Record<SecondhandCondition, Condition> = {
   LIKE_NEW: "Like New",
   GOOD: "Good",
   FAIR: "Fair",
@@ -66,7 +66,7 @@ const CONDITION_BADGE: Record<Condition, { bg: string; color: string; dot: strin
 
 const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal"];
 const PLACEHOLDER_IMG = "/placeholder-item.jpg";
-const IMG_BASE = process.env.NEXT_PUBLIC_API_URL;   
+const IMG_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 function daysAgo(dateStr: string) {
   const diffMs = Date.now() - new Date(dateStr).getTime();
@@ -74,7 +74,7 @@ function daysAgo(dateStr: string) {
 }
 
 export default function SecondhandPage() {
-  const [listings, setListings] = useState<SecondHandListing[]>([]);
+  const [listings, setListings] = useState<SecondhandListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
@@ -98,7 +98,29 @@ export default function SecondhandPage() {
   };
 
   useEffect(() => {
-    loadListings();
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setLoadError(false);
+
+      try {
+        const data = await api.getSecondhandListings();
+        if (cancelled) return;
+        setListings(data);
+        setLoading(false);
+      } catch {
+        if (cancelled) return;
+        setLoadError(true);
+        setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
@@ -132,7 +154,15 @@ export default function SecondhandPage() {
     setSearch("");
   };
 
-  const displayed = listings.filter((l) => {
+  // Guard out listings with no `secondhand` relation before filtering on its fields —
+  // a SECONDHAND-category listing missing this relation is a backend data issue,
+  // not something this page should try to render.
+  const withSecondhand = listings.filter(
+    (l): l is SecondhandListing & { secondhand: NonNullable<SecondhandListing["secondhand"]> } =>
+      l.secondhand != null
+  );
+
+  const displayed = withSecondhand.filter((l) => {
     const s = search.toLowerCase();
     if (
       s &&
@@ -147,7 +177,7 @@ export default function SecondhandPage() {
     )
       return false;
     if (selectedCity && l.secondhand.city !== selectedCity) return false;
-    const priceNum = l.secondhand.price ?? l.price ?? 0;
+    const priceNum = l.secondhand.price ?? 0;
     if (priceNum > priceRange) return false;
     return true;
   });
@@ -550,7 +580,7 @@ export default function SecondhandPage() {
                   <span>
                     <span className="sh-cat-name">{cat.name}</span>
                     <span className="sh-cat-count">
-                      {listings.filter((l) => l.secondhand.category === cat.value).length.toLocaleString()} listings
+                      {withSecondhand.filter((l) => l.secondhand.category === cat.value).length.toLocaleString()} listings
                     </span>
                   </span>
                 </button>
@@ -693,14 +723,16 @@ export default function SecondhandPage() {
                 <div className="sh-grid">
                   {sortedDisplayed.map((item) => {
                     const isFav = !!favorites[item.id];
-                    const images = item.images.length ? item.images : [PLACEHOLDER_IMG];
+                    const images = item.images?.length ? item.images : [PLACEHOLDER_IMG];
                     const currentImg = imageIndices[item.id] || 0;
                     const hasMultiple = images.length > 1;
                     const conditionLabel = CONDITION_FROM_DB[item.secondhand.condition];
                     const badge = CONDITION_BADGE[conditionLabel];
-                    const posted = daysAgo(item.createdAt);
-                    const price = item.secondhand.price ?? item.price ?? 0;
-
+                    function daysAgo(dateStr: string) { 
+                      const diffMs = Date.now() - new Date(dateStr).getTime();
+                      return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+                    }
+                    const price = item.secondhand.price ?? 0;
                     return (
                       <div key={item.id} className="sh-card">
                         {/* Image */}

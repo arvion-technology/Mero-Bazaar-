@@ -1,7 +1,7 @@
 import { JobListing } from "@/app/types/jobs";
-import type { DBListing, Vehicle } from "../app/types/listing";
-import type { RegisterPayload, LoginPayload, AuthResponse } from "@/app/types/auth";
-import type { SecondHandListing } from "@/app/types/secondhand";   
+import type { DBListing, Vehicle } from "../app/types/vehicle";
+import type { RegisterPayload, LoginPayload, AuthResponse } from "../app/types/auth";
+import type { SecondhandListing } from "../app/types/secondhand";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -33,7 +33,7 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || `Api error ${res.status}`);  // ← fixed
+  if (!res.ok) throw new Error(data.message || `Api error ${res.status}`); 
   return data;
 }
 
@@ -46,7 +46,7 @@ export const api = {
   getJobs:     (params?: URLSearchParams) => get<JobListing[]>('/api/jobs', params),
   getJob:      (id: string) => get<JobListing>(`/api/jobs/${id}`),
   getSecondhandListings: (params?: URLSearchParams) =>
-  get<SecondHandListing[]>('/api/secondhand-goods', params),
+    get<SecondhandListing[]>('/api/secondhand-goods', params),
   getSecondhandListing: (id: string) =>
-  get<SecondHandListing>(`/api/secondhand-goods/${id}`),
+    get<SecondhandListing>(`/api/secondhand-goods/${id}`),
 };
