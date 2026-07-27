@@ -1,47 +1,58 @@
 import type { RealEstateDetail } from "@/app/types/listing";
-import type { RealEstateCard, RealEstateListing } from "@/app/types/realestate";
+import type { RentalCard, RentalListing, AmenityKey } from "@/app/types/realestate";
+import { PROPERTY_TYPE_LABELS, LISTING_TYPE_LABELS } from "@/app/types/realestate";
 
-export function formatPriceRange(min: number, max: number, intent: string): string {
-  const suffix = intent === "Rent" ? "/month" : "";
-  if (min === max) return `NPR ${min.toLocaleString()} ${suffix}`.trim();
-  return `NPR ${min.toLocaleString()}–${max.toLocaleString()} ${suffix}`.trim();
+export function formatMonthlyRent(monthlyRent: number, listingType: RentalListing["rental"]["listingType"]): string {
+  const suffix = listingType === "RENT" ? "/month" : "";
+  return `NPR ${monthlyRent.toLocaleString()} ${suffix}`.trim();
 }
 
-export function toRealEstateCard(listing: RealEstateListing): RealEstateCard {
-  const re = listing.realEstate;
-  if (!re) throw new Error(`Listing ${listing.id} has no realEstate relation`);
+function buildAmenities(rental: RentalListing["rental"]): Record<AmenityKey, boolean> {
   return {
-    id: listing.id,
-    title: listing.title,
-    price: formatPriceRange(re.rentMin, re.rentMax, re.listingType),
-    location: `${re.area}, ${re.city}`,
-    district: re.city,
-    bedrooms: re.bedrooms,
-    bathrooms: re.bathrooms,
-    thumb: listing.images?.[0] ?? "/property1.jpg",
-    category: re.propertyType,
-    postedDaysAgo: Math.floor((Date.now() - new Date(listing.createdAt).getTime()) / 86400000),
-    isVerified: listing.isVerified ?? false,
-    isFeatured: listing.isFeatured ?? false,
+    furnished: rental.furnished,
+    parking: rental.parkingAvailable,
+    wifi: rental.wifiAvailable,
+    water: rental.waterIncluded,
+    electricity: rental.electricityIncluded,
+    pet: rental.petFriendly,
   };
 }
 
-export function toRealEstateDetail(listing: RealEstateListing): RealEstateDetail {
-  const re = listing.realEstate;
-  if (!re) throw new Error(`Listing ${listing.id} has no realEstate relation`);
+export function toRentalCard(listing: RentalListing): RentalCard {
+  const rental = listing.rental;
+  if (!rental) throw new Error(`Listing ${listing.id} has no rental relation`);
+
+  return {
+    id: listing.id,
+    title: listing.title,
+    price: formatMonthlyRent(rental.monthlyRent, rental.listingType),
+    location: rental.area ? `${rental.area}, ${rental.city}` : rental.city,
+    district: rental.city,
+    bedrooms: rental.bedrooms ?? 0,
+    bathrooms: rental.bathrooms ?? 0,
+    thumb: listing.images?.[0] ?? "/property1.jpg",
+    category: PROPERTY_TYPE_LABELS[rental.propertyType],
+    postedDaysAgo: Math.floor((Date.now() - new Date(listing.createdAt).getTime()) / 86400000),
+  };
+}
+
+export function toRentalDetail(listing: RentalListing): RealEstateDetail {
+  const rental = listing.rental;
+  if (!rental) throw new Error(`Listing ${listing.id} has no rental relation`);
+
   return {
     id: listing.id,
     listingId: `#RE${listing.id.slice(-6).toUpperCase()}`,
     title: listing.title,
-    price: formatPriceRange(re.rentMin, re.rentMax, re.listingType),
+    price: formatMonthlyRent(rental.monthlyRent, rental.listingType),
     status: "ACTIVE",
     negotiable: true,
-    location: `${re.area}, ${re.city}`,
+    location: rental.area ? `${rental.area}, ${rental.city}` : rental.city,
     distanceFrom: "",
     postedDaysAgo: Math.floor((Date.now() - new Date(listing.createdAt).getTime()) / 86400000),
-    isVerified: listing.isVerified ?? false,
-    category: re.propertyType,
-    breadcrumbs: ["Real Estate", re.propertyType, re.listingType],
+    isVerified: false,
+    category: PROPERTY_TYPE_LABELS[rental.propertyType],
+    breadcrumbs: ["Real Estate", PROPERTY_TYPE_LABELS[rental.propertyType], LISTING_TYPE_LABELS[rental.listingType]],
     images: listing.images?.length ? listing.images : ["/property1.jpg"],
     description: listing.description ?? "No description provided.",
     googleMapsUrl:
@@ -51,18 +62,18 @@ export function toRealEstateDetail(listing: RealEstateListing): RealEstateDetail
     latitude: listing.latitude ?? null,
     longitude: listing.longitude ?? null,
     specs: {
-      propertyType: re.propertyType,
-      listingType: re.listingType,
-      bedrooms: String(re.bedrooms),
-      bathrooms: String(re.bathrooms),
-      sqft: re.sqft != null ? String(re.sqft) : "N/A",
+      propertyType: PROPERTY_TYPE_LABELS[rental.propertyType],
+      listingType: LISTING_TYPE_LABELS[rental.listingType],
+      bedrooms: rental.bedrooms != null ? String(rental.bedrooms) : "N/A",
+      bathrooms: rental.bathrooms != null ? String(rental.bathrooms) : "N/A",
+      sqft: rental.squareFeet != null ? String(rental.squareFeet) : "N/A",
     },
-    amenities: re.amenities,
-    landmarks: re.landmarks ?? [],
-    houseRules: re.houseRules ?? [],
-    ownerType: re.ownerType,
-    noBroker: re.noBroker,
-    availableFrom: re.availableFrom ?? "N/A",
+    amenities: buildAmenities(rental),
+    landmarks: rental.nearbyLandmarks ?? [],
+    houseRules: rental.rules ?? [],
+    ownerType: rental.isOwnerOrAgent.toLowerCase() as "owner" | "agent",
+    noBroker: rental.noBroker,
+    availableFrom: rental.availableFrom ?? "N/A",
     seller: {
       name: listing.user?.name ?? "Unknown",
       avatar: "/placeholder-avatar.png",

@@ -2,6 +2,7 @@ import { JobListing } from "@/app/types/jobs";
 import type { DBListing, Vehicle } from "../app/types/vehicle";
 import type { RegisterPayload, LoginPayload, AuthResponse } from "../app/types/auth";
 import type { SecondhandListing } from "../app/types/secondhand";
+import type { RentalListing } from "../app/types/realestate";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -49,4 +50,8 @@ export const api = {
     get<SecondhandListing[]>('/api/secondhand-goods', params),
   getSecondhandListing: (id: string) =>
     get<SecondhandListing>(`/api/secondhand-goods/${id}`),
+  getRentals: (params?: URLSearchParams) =>
+    get<RentalListing[]>('/api/rental', params),
+  getRental:  (id: string) =>
+    get<RentalListing>(`/api/rental/${id}`),
 };

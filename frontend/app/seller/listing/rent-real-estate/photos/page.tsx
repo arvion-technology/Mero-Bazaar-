@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiArrowLeft,
@@ -13,6 +13,8 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useListingForm } from "../ListingFormContext";
+import { useState } from "react";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -37,26 +39,10 @@ const MAX_PHOTOS = 10;
 export default function RealEstatePhotosPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [photos, setPhotos] = useState<{ id: string; preview: string }[]>([]);
+  const { formData, updateForm } = useListingForm();
   const [isDragging, setIsDragging] = useState(false);
 
-  // Load any previously saved photos from sessionStorage
-  useEffect(() => {
-    const saved = sessionStorage.getItem("listingPhotos");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) setPhotos(parsed);
-      } catch {
-        // ignore parse errors
-      }
-    }
-  }, []);
-
-  // Save to sessionStorage whenever photos change
-  useEffect(() => {
-    sessionStorage.setItem("listingPhotos", JSON.stringify(photos));
-  }, [photos]);
+  const photos = formData.photos;
 
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files) return;
@@ -71,17 +57,16 @@ export default function RealEstatePhotosPage() {
       }
       const reader = new FileReader();
       reader.onload = (e) => {
-        setPhotos((prev) => [
-          ...prev,
-          {
-            id: Math.random().toString(36).slice(2),
-            preview: e.target?.result as string,
-          },
-        ]);
+        const newPhoto = {
+          id: Math.random().toString(36).slice(2),
+          preview: e.target?.result as string,
+          file, // keep the raw File for the actual upload
+        };
+        updateForm((prev) => ({ photos: [...prev.photos, newPhoto] }));
       };
       reader.readAsDataURL(file);
     });
-  }, [photos.length]);
+  }, [photos.length, updateForm]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -99,7 +84,7 @@ export default function RealEstatePhotosPage() {
     setIsDragging(false);
   }, []);
   const removePhoto = (id: string) => {
-    setPhotos((prev) => prev.filter((p) => p.id !== id));
+    updateForm((prev) => ({ photos: prev.photos.filter((p) => p.id !== id) }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
