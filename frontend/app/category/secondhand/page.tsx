@@ -68,7 +68,7 @@ const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "But
 const PLACEHOLDER_IMG = "/placeholder-item.jpg";
 const IMG_BASE = process.env.NEXT_PUBLIC_API_URL;
 
-function daysAgo(dateStr: string) {
+function daysAgo(dateStr: string | Date) {
   const diffMs = Date.now() - new Date(dateStr).getTime();
   return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 }
@@ -87,15 +87,18 @@ export default function SecondhandPage() {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
 
-  const loadListings = () => {
+  async function loadListings() {
     setLoading(true);
     setLoadError(false);
-    api
-      .getSecondhandListings()
-      .then(setListings)
-      .catch(() => setLoadError(true))
-      .finally(() => setLoading(false));
-  };
+    try {
+      const data = await api.getSecondhandListings();
+      setListings(data);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -728,11 +731,9 @@ export default function SecondhandPage() {
                     const hasMultiple = images.length > 1;
                     const conditionLabel = CONDITION_FROM_DB[item.secondhand.condition];
                     const badge = CONDITION_BADGE[conditionLabel];
-                    function daysAgo(dateStr: string) { 
-                      const diffMs = Date.now() - new Date(dateStr).getTime();
-                      return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-                    }
+                    const posted = daysAgo(item.createdAt);
                     const price = item.secondhand.price ?? 0;
+
                     return (
                       <div key={item.id} className="sh-card">
                         {/* Image */}

@@ -38,7 +38,7 @@ export function toSecondhandDetail(listing: SecondhandListing): SecondhandDetail
     distanceFrom: "Location not specified",
     postedDaysAgo: daysAgo(listing.createdAt),
     isVerified: listing.isVerified ?? false,
-    category: sh.category,
+    category: listing.category,
     breadcrumbs: ["Secondhand", sh.category].filter(Boolean),
     images: resolveImages(listing.images, "/placeholder-item.jpg"),
     description: sh.description ?? listing.description ?? "No description provided.",
