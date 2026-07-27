@@ -65,7 +65,7 @@ export default function PreviewListingPage() {
   const location = `${formData.area}, ${formData.city}, ${formData.ward}`;
 
   const handlePublish = async () => {
-    if (!formData.city || !formData.monthlyRentMin || !formData.depositAmount) {
+    if (!formData.city || !formData.monthlyRentMin ) {
       toast.error("Please complete all required fields before publishing");
       return;
     }

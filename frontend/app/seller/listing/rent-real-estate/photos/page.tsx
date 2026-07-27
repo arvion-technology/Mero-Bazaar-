@@ -60,7 +60,7 @@ export default function RealEstatePhotosPage() {
         const newPhoto = {
           id: Math.random().toString(36).slice(2),
           preview: e.target?.result as string,
-          file, // keep the raw File for the actual upload
+          file, 
         };
         updateForm((prev) => ({ photos: [...prev.photos, newPhoto] }));
       };
