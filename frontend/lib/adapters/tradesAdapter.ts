@@ -85,9 +85,20 @@ export function toTradesDetail(listing: TradesListing): TradesDetail {
   };
 }
 
-type RawTradesForm = Record<string, unknown> & {
+interface RawTradesForm {
+  serviceTitle?: string;
+  description?: string;
+  city?: string;
+  ward?: string;
+  skills?: string[];
+  serviceArea?: string | number;
+  calloutCharge?: string | number;
+  emergencyService?: boolean;
+  warrantyGiven?: boolean;
+  latitude?: number;
+  longitude?: number;
   mapPosition?: [number, number];
-};
+}
 
 function toNumber(value: unknown): number | undefined {
   if (value === null || value === undefined || value === "") return undefined;
