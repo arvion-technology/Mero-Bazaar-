@@ -130,19 +130,47 @@ export class RentalService {
       },
     });
   }
-
+  
   async findOne(id: string) {
-    const listing = await this.prisma.listing.findUnique({
-      where: { id },
-      include: { rental: true },
-    });
+  const listing = await this.prisma.listing.findUnique({
+    where: { id },
+    include: {
+      rental: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          isVerified: true,
+          phone: true,
+          createdAt: true,
+          vendorProfile: {
+            select: { businessName: true, rating: true },
+          },
+        },
+      },
+    },
+  });
 
-    if (!listing || listing.category !== ListingCategory.RENTAL) {
-      throw new NotFoundException('Rental not found');
-    }
-
-    return listing;
+  if (!listing || listing.category !== ListingCategory.RENTAL) {
+    throw new NotFoundException('Rental not found');
   }
+
+  const [totalListing, reviewAgg] = await Promise.all([
+    this.prisma.listing.count({ where: { userId: listing.userId } }),
+    this.prisma.review.aggregate({
+      where: { listing: { userId: listing.userId } },
+      _avg: { rating: true },
+      _count: { rating: true },
+    }),
+  ]);
+
+  return {
+    ...listing,
+    sellerTotalListing: totalListing,
+    sellerRating: reviewAgg._avg.rating ?? 0,
+    sellerReviewCount: reviewAgg._count.rating,
+  };
+}
 
   async update(id: string, dto: UpdateRentalDto, userId: string) {
     await this.findOne(id);

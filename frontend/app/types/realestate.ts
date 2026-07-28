@@ -48,6 +48,7 @@ export type AmenityKey = (typeof AMENITIES)[number];
 
 export interface RentalListing {
   id: string;
+  userId: string;
   title: string;
   category: "RENTAL";
   description?: string | null;
@@ -56,6 +57,9 @@ export interface RentalListing {
   latitude?: number | null;
   longitude?: number | null;
   images: string[];
+  sellerTotalListing?: number;
+  sellerRating?: number;
+  sellerReviewCount?: number;
 
   rental: {
     propertyType: PropertyType;
@@ -91,14 +95,16 @@ export interface RentalListing {
   };
 
   user?: {
-    name?: string | null;
-    isVerified?: boolean;
-    vendorProfile?: {
-      businessName?: string;
-      rating?: number;
-      website?: string;
-    };
+  name?: string | null;
+  isVerified?: boolean;
+  phone?: string | null;
+  createdAt?: string;
+  vendorProfile?: {
+    businessName?: string;
+    rating?: number;
+    website?: string;
   };
+};
 }
 
 export interface CreateRentalPayload {

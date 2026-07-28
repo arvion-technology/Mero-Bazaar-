@@ -86,6 +86,7 @@ export type JobDetail = {
 
 export type RealEstateDetail = {
   id: string;
+  sellerId: string;
   listingId: string;
   title: string;
   price: string;
@@ -129,6 +130,12 @@ export type RealEstateDetail = {
     avgResponseTime: string;
     phone: string;
   };
+    reviews: {
+    reviewerName: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+  }[];
 };
 
 export type SecondhandDetail = {

@@ -42,6 +42,7 @@ export function toRentalDetail(listing: RentalListing): RealEstateDetail {
 
   return {
     id: listing.id,
+    sellerId: listing.userId,
     listingId: `#RE${listing.id.slice(-6).toUpperCase()}`,
     title: listing.title,
     price: formatMonthlyRent(rental.monthlyRent, rental.listingType),
@@ -74,19 +75,22 @@ export function toRentalDetail(listing: RentalListing): RealEstateDetail {
     ownerType: rental.isOwnerOrAgent.toLowerCase() as "owner" | "agent",
     noBroker: rental.noBroker,
     availableFrom: rental.availableFrom ?? "N/A",
+    reviews: [],
     seller: {
       name: listing.user?.name ?? "Unknown",
       avatar: "/placeholder-avatar.png",
-      rating: listing.user?.vendorProfile?.rating ?? 0,
-      reviewCount: 0,
+      rating: listing.sellerRating ?? listing.user?.vendorProfile?.rating ?? 0,
+      reviewCount: listing.sellerReviewCount ?? 0,
       isVerified: listing.user?.isVerified ?? false,
       isPro: false,
       isTrusted: false,
-      memberSince: "N/A",
-      totalListing: 0,
+      memberSince: listing.user?.createdAt
+        ? new Date(listing.user.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+        : "N/A",
+      totalListing: listing.sellerTotalListing ?? 0,
       responseRate: "N/A",
       avgResponseTime: "N/A",
-      phone: "N/A",
+      phone: listing.user?.phone ?? "N/A",
     },
   };
 }
