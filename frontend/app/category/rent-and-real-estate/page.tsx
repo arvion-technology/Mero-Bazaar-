@@ -161,7 +161,7 @@ export default function PropertyPage() {
     if (filterSales) purposeFilters.push("Sale");
     if (filterRent) purposeFilters.push("Rent");
     const matchPurpose = filterBuy
-      ? false // no "Buy" data exists on the backend yet
+      ? false 
       : purposeFilters.length === 0 || purposeFilters.includes(l.purpose);
 
     const bhkFilters = [];

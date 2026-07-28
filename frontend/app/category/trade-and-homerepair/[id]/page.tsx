@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
 import {
   FiShare2, FiHeart, FiMapPin, FiClock, FiCheckCircle,
-  FiMessageSquare, FiChevronRight, FiTool, FiShield, FiZap,
+  FiChevronRight, FiTool, FiShield, FiZap,
 } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { toTradesDetail, toTradesCard } from "@/lib/adapters/tradesAdapter";
@@ -43,10 +43,10 @@ export default function TradeDetailPage() {
   const [showFull, setShowFull] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const [leadMessage, setLeadMessage] = useState("");
-  const [leadPhone, setLeadPhone] = useState("");
-  const [sendingLead, setSendingLead] = useState(false);
-  const [leadSent, setLeadSent] = useState(false);
+  // const [leadMessage, setLeadMessage] = useState("");
+  // const [leadPhone, setLeadPhone] = useState("");
+  // const [sendingLead, setSendingLead] = useState(false);
+  // const [leadSent, setLeadSent] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -95,20 +95,20 @@ export default function TradeDetailPage() {
     setTimeout(() => setCopied(false), 2000);
   }, []);
 
-  const handleSendLead = async () => {
-    if (!listing || !leadMessage.trim()) return;
-    setSendingLead(true);
-    try {
-      await api.createTradeLead(listing.id, { message: leadMessage, phone: leadPhone || undefined });
-      setLeadSent(true);
-      setLeadMessage("");
-      setLeadPhone("");
-    } catch {
-      alert("Couldn't send your request. Please try again.");
-    } finally {
-      setSendingLead(false);
-    }
-  };
+  // const handleSendLead = async () => {
+  //   if (!listing || !leadMessage.trim()) return;
+  //   setSendingLead(true);
+  //   try {
+  //     await api.createTradeLead(listing.id, { message: leadMessage, phone: leadPhone || undefined });
+  //     setLeadSent(true);
+  //     setLeadMessage("");
+  //     setLeadPhone("");
+  //   } catch {
+  //     alert("Couldn't send your request. Please try again.");
+  //   } finally {
+  //     setSendingLead(false);
+  //   }
+  // };
 
   if (loading) {
     return <div style={{ padding: 60, textAlign: "center", color: "#888" }}>Loading listing…</div>;
