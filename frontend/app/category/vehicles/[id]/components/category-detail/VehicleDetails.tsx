@@ -1,5 +1,5 @@
 import { VEHICLE_DETAILS_LABELS} from "../shared/vehicleDetailsMap";
-import type { VehicleType } from "../../../../../types/listing";
+import type { VehicleType } from "../../../../../types/vehicle";
 
 type Props = {
   type: VehicleType | undefined;
