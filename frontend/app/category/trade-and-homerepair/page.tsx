@@ -507,17 +507,15 @@ export default function TradeAndHomeRepairPage() {
                         </button>
                         </div>
 
-                        {l.isVerified && <span className="th-badge-verified">✓ Verified</span>}
-
                         <p className="th-card-name">{l.title}</p>
                         {l.skillTags[0] && <p className="th-card-cat">{l.skillTags[0]}</p>}
-                        {l.rating > 0 && (
+                        {/* {l.rating > 0 && (
                         <div className="th-card-rating">
                             <FaStar size={12} color="#f5a623" />
                             <span className="th-card-rating-num">{l.rating.toFixed(1)}</span>
                             <span className="th-card-reviews">({l.reviewCount})</span>
                         </div>
-                        )}
+                        )} */}
                         <div className="th-card-location">
                         <FiMapPin size={11} color="#bbb" />
                         {l.location}
