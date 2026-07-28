@@ -219,7 +219,7 @@ export default function NewTradesHomeRepairListingPage() {
           height: 40px;
           border-radius: 12px;
           border: 1.5px solid ${BORDER};
-          background: ${CARD_BG};
+          background: ${CARD_BG};t
           display: flex;
           align-items: center;
           justify-content: center;

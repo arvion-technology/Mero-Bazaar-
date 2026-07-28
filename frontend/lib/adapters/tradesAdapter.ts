@@ -29,6 +29,7 @@ export function toTradesCard(listing: TradesListing): TradesCard {
     emergencyAvailable: trades.emergencyAvailable,
     warrantyGiven: trades.warrantyGiven,
     postedDaysAgo: Math.floor((Date.now() - new Date(listing.createdAt).getTime()) / 86400000),
+    rating: listing.sellerRating ?? 0,
   };
 }
 

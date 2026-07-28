@@ -96,4 +96,5 @@ export interface TradesCard {
   emergencyAvailable: boolean;
   warrantyGiven: boolean;
   postedDaysAgo: number;
+  rating: number;
 }
