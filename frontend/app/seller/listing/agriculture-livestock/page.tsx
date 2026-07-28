@@ -190,9 +190,9 @@ export default function AgricultureListingPage() {
   const [listingType, setListingType] = useState("Produce");
 
   // ── Location (Common) ──
-  const [district, setDistrict] = useState("Kathmandu");
-  const [village, setVillage] = useState("Budhanilkantha");
-  const [location, setLocation] = useState("Budhanilkantha, Kathmandu");
+  const [district, setDistrict] = useState("");
+  const [village, setVillage] = useState("");
+  const [location, setLocation] = useState("");
 
   // ── Pricing (Common) ──
   const [price, setPrice] = useState("");
@@ -204,18 +204,18 @@ export default function AgricultureListingPage() {
   const [seasonalAvailability, setSeasonalAvailability] = useState("March - June");
 
   // ── LiveStock-specific ──
-  const [animalType, setAnimalType] = useState("Cow");
+  const [animalType, setAnimalType] = useState("");
   const [age, setAge] = useState("3 Years");
   const [breed, setBreed] = useState("Jersey");
   const [healthVaccineStatus, setHealthVaccineStatus] = useState("VACCINATED");
 
   // ── Vet Service-specific ──
   const [serviceType, setServiceType] = useState("General Health Checkup");
-  const [experience, setExperience] = useState("5+ Years");
+  const [experience, setExperience] = useState("");
   const [mobileService, setMobileService] = useState(true);
   const [servicePrice, setServicePrice] = useState("");
   const [priceUnit, setPriceUnit] = useState("Per Visit");
-  const [serviceArea, setServiceArea] = useState("Maharajgunj, Kathmandu");
+  const [serviceArea, setServiceArea] = useState("");
   const [serviceRadius, setServiceRadius] = useState("10");
   const [healthCertificate, setHealthCertificate] = useState(true);
   const [vaccinationAvailable, setVaccinationAvailable] = useState(true);
@@ -229,9 +229,7 @@ export default function AgricultureListingPage() {
   const isLiveStock = listingType === "LiveStock";
   const isVetService = listingType === "Vet Service";
 
-  const availableVillages = useMemo(() => districtVillages[district] || districtVillages["Kathmandu"], [district]);
-
-const formattedPrice = useMemo(() => {
+  const formattedPrice = useMemo(() => {
     if (!price && !servicePrice) return "";
     const val = isVetService ? servicePrice : price;
     const num = Number(val.replace(/,/g, ""));
@@ -322,9 +320,7 @@ const formattedPrice = useMemo(() => {
         }
 
         .listing-header {
-          display: flex;
-          align-items: center;
-          gap: 16px;
+          display: flex; align-items: center; gap: 16px;
           margin-bottom: 24px;
         }
 
@@ -688,7 +684,6 @@ const formattedPrice = useMemo(() => {
               <div className="left-col">
                 <div className="section-header">
                   <h2>Listing Type</h2>
-                  <p>Select what you are listing</p>
                 </div>
 
                 <div className="radio-group">
@@ -720,29 +715,35 @@ const formattedPrice = useMemo(() => {
                   <div className="form-row two-col">
                     <div className="form-group">
                       <label className="form-label">District <span className="required">*</span></label>
-                      <CustomSelect
-                        options={districts}
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Enter district"
                         value={district}
-                        onChange={(val) => { setDistrict(val); setVillage(districtVillages[val]?.[0] || ""); }}
+                        onChange={(e) => setDistrict(e.target.value)}
                         required
                       />
                     </div>
                     <div className="form-group">
                       <label className="form-label">Village <span className="required">*</span></label>
-                      <CustomSelect
-                        options={availableVillages}
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Enter village"
                         value={village}
-                        onChange={(val) => setVillage(val)}
+                        onChange={(e) => setVillage(e.target.value)}
                         required
                       />
                     </div>
                   </div>
                   <div className="form-group">
                     <label className="form-label">Location /Area <span className="required">*</span></label>
-                    <CustomSelect
-                      options={locations}
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Enter location/area"
                       value={location}
-                      onChange={(val) => setLocation(val)}
+                      onChange={(e) => setLocation(e.target.value)}
                       required
                     />
                   </div>
@@ -875,10 +876,12 @@ const formattedPrice = useMemo(() => {
                       </div>
                       <div className="form-group">
                         <label className="form-label">Animal Type <span className="required">*</span></label>
-                        <CustomSelect
-                          options={animalTypes}
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="e.g. Cow, Dog, Goat"
                           value={animalType}
-                          onChange={(val) => setAnimalType(val)}
+                          onChange={(e) => setAnimalType(e.target.value)}
                           required
                         />
                       </div>
@@ -886,10 +889,12 @@ const formattedPrice = useMemo(() => {
                     <div className="form-row two-col">
                       <div className="form-group">
                         <label className="form-label">Experience(years) <span className="required">*</span></label>
-                        <CustomSelect
-                          options={experiences}
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="e.g. 5+ Years"
                           value={experience}
-                          onChange={(val) => setExperience(val)}
+                          onChange={(e) => setExperience(e.target.value)}
                           required
                         />
                       </div>
@@ -905,10 +910,12 @@ const formattedPrice = useMemo(() => {
                     <div className="form-row two-col">
                       <div className="form-group">
                         <label className="form-label">Service Area/Location <span className="required">*</span></label>
-                        <CustomSelect
-                          options={locations}
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="Enter service area/location"
                           value={serviceArea}
-                          onChange={(val) => setServiceArea(val)}
+                          onChange={(e) => setServiceArea(e.target.value)}
                           required
                         />
                       </div>
