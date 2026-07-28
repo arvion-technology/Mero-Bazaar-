@@ -64,7 +64,7 @@ export function toTradesDetail(listing: TradesListing): TradesDetail {
     avgResponseTime: formatAvgResponse(trades.avgResponseHours),
     city: trades.city,
     ward: trades.ward ?? "N/A",
-    reviews: [],
+    reviews: listing.reviews ?? [],
     seller: {
       name: listing.user?.name ?? "Unknown",
       avatar: "/placeholder-avatar.png",

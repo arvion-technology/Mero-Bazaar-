@@ -85,13 +85,48 @@ export class TradesService {
   }
 
   async findOne(id: string) {
-    return this.prisma.listing.findUnique({
-      where: { id },
-      include: {
-        trades: true,
+  const listing = await this.prisma.listing.findUnique({
+    where: { id },
+    include: {
+      trades: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          isVerified: true,
+          phone: true,
+          createdAt: true,
+          vendorProfile: {
+            select: { businessName: true, rating: true },
+          },
+        },
       },
-    });
+      reviews: {
+        orderBy: { createdAt: 'desc' },
+      },
+    },
+  });
+
+  if (!listing || listing.category !== ListingCategory.TRADES) {
+    throw new NotFoundException('Trades listing not found');
   }
+
+  const [totalListing, reviewAgg] = await Promise.all([
+    this.prisma.listing.count({ where: { userId: listing.userId } }),
+    this.prisma.review.aggregate({
+      where: { listing: { userId: listing.userId } },
+      _avg: { rating: true },
+      _count: { rating: true },
+    }),
+  ]);
+
+  return {
+    ...listing,
+    sellerTotalListing: totalListing,
+    sellerRating: reviewAgg._avg.rating ?? 0,
+    sellerReviewCount: reviewAgg._count.rating,
+  };
+}
 
   async nearby(lat: number, lng: number, km: number) {
     return this.geoSearchNearby(lat, lng, km);

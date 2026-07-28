@@ -61,6 +61,13 @@ export interface TradesListing {
       website?: string;
     };
   };
+
+  reviews?: {
+    reviewerName: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+  }[];
 }
 
 export interface CreateTradesPayload {
