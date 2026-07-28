@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ListingCategory } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 
@@ -162,4 +162,28 @@ export class TradesService {
       where: { id },
     });
   }
+
+  async addPhotos(id: string, files: Express.Multer.File[], userId: string) {
+  const listing = await this.prisma.listing.findUnique({
+    where: { id },
+    include: { trades: true },
+  });
+
+  if (!listing || listing.userId !== userId) {
+    throw new ForbiddenException('Unauthorized');
+  }
+
+  if (!listing.trades) {
+    throw new NotFoundException('Trades listing not found');
+  }
+
+  const newPhotoUrls = files.map((file) => `/uploads/trades/${file.filename}`);
+  const updatedImages = [...listing.images, ...newPhotoUrls];
+
+  return this.prisma.listing.update({
+    where: { id },
+    data: { images: updatedImages },
+    include: { trades: true },
+  });
+}
 }

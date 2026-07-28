@@ -235,3 +235,50 @@ export type PaginatedResponse<T> = {
   page: number;
   pageSize: number;
 };
+
+export type TradesDetail = {
+  id: string;
+  sellerId: string;
+  listingId: string;
+  title: string;
+  calloutCharge: string;
+  status: "ACTIVE" | "RESERVED" | "SOLD" | "EXPIRED";
+  location: string;
+  distanceFrom: string;
+  postedDaysAgo: number;
+  isVerified: boolean;
+  category: "TRADES";
+  breadcrumbs: string[];
+  images: string[];
+  description: string;
+  googleMapsUrl: string;
+  latitude: number | null;
+  longitude: number | null;
+  serviceAreaKm: number;
+  skillTags: string[];
+  warrantyGiven: boolean;
+  emergencyAvailable: boolean;
+  avgResponseTime: string;
+  city: string;
+  ward: string;
+  seller: {
+    name: string;
+    avatar: string;
+    rating: number;
+    reviewCount: number;
+    isVerified: boolean;
+    isPro: boolean;
+    isTrusted: boolean;
+    memberSince: string;
+    totalListing: number;
+    responseRate: string;
+    avgResponseTime: string;
+    phone: string;
+  };
+  reviews: {
+    reviewerName: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+  }[];
+};
