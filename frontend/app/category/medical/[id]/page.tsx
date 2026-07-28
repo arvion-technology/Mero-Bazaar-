@@ -981,11 +981,19 @@ export default function MedicalDetailPage() {
           width: 100%; height: 100%; object-fit: cover; display: block;
           filter: saturate(0.6) brightness(0.85);
         }
+        .md2-map-iframe {
+          width: 100%;
+          height: 100%;
+          border: 0;
+          display: block;
+          filter: saturate(0.7) brightness(0.9);
+        }
         .md2-map-overlay {
           position: absolute; inset: 0;
           background: rgba(13,148,136,0.15);
           display: flex; flex-direction: column;
           align-items: center; justify-content: center; gap: 4px;
+          pointer-events: none;
         }
         .md2-map-place-name {
           font-size: 22px; font-weight: 900; color: #fff;
@@ -998,6 +1006,7 @@ export default function MedicalDetailPage() {
         .md2-map-pin-anim {
           position: absolute; top: 12px; right: 16px;
           animation: md2PinBounce 2s ease-in-out infinite;
+          pointer-events: none;
         }
         @keyframes md2PinBounce {
           0%, 100% { transform: translateY(0); }
@@ -1340,8 +1349,14 @@ export default function MedicalDetailPage() {
             <div className="md2-location-card" id="location">
               <p className="md2-location-card-title">Location Map</p>
               <div className="md2-map-area">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={listing.mapImage} alt="Location" className="md2-map-img" />
+                <iframe
+                  className="md2-map-iframe"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(listing.mapLocation + ", " + listing.mapCity)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Location Map"
+                />
                 <div className="md2-map-overlay">
                   <span className="md2-map-place-name">{listing.mapCity.split(",")[0]}</span>
                   <span className="md2-map-place-sub">{listing.mapCity.split(",")[1]?.trim() || "Nepal"}</span>
