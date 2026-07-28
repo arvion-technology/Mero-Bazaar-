@@ -190,9 +190,9 @@ export default function AgricultureListingPage() {
   const [listingType, setListingType] = useState("Produce");
 
   // ── Location (Common) ──
-  const [district, setDistrict] = useState("Kathmandu");
-  const [village, setVillage] = useState("Budhanilkantha");
-  const [location, setLocation] = useState("Budhanilkantha, Kathmandu");
+  const [district, setDistrict] = useState("");
+  const [village, setVillage] = useState("");
+  const [location, setLocation] = useState("");
 
   // ── Pricing (Common) ──
   const [price, setPrice] = useState("");
@@ -204,18 +204,18 @@ export default function AgricultureListingPage() {
   const [seasonalAvailability, setSeasonalAvailability] = useState("March - June");
 
   // ── LiveStock-specific ──
-  const [animalType, setAnimalType] = useState("Cow");
+  const [animalType, setAnimalType] = useState("");
   const [age, setAge] = useState("3 Years");
   const [breed, setBreed] = useState("Jersey");
   const [healthVaccineStatus, setHealthVaccineStatus] = useState("VACCINATED");
 
   // ── Vet Service-specific ──
   const [serviceType, setServiceType] = useState("General Health Checkup");
-  const [experience, setExperience] = useState("5+ Years");
+  const [experience, setExperience] = useState("");
   const [mobileService, setMobileService] = useState(true);
   const [servicePrice, setServicePrice] = useState("");
   const [priceUnit, setPriceUnit] = useState("Per Visit");
-  const [serviceArea, setServiceArea] = useState("Maharajgunj, Kathmandu");
+  const [serviceArea, setServiceArea] = useState("");
   const [serviceRadius, setServiceRadius] = useState("10");
   const [healthCertificate, setHealthCertificate] = useState(true);
   const [vaccinationAvailable, setVaccinationAvailable] = useState(true);
