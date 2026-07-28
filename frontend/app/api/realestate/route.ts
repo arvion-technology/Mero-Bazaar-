@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { formToCreateRentalPayload } from "@/lib/adapters";
+import { formToCreateRentalPayload } from "@/lib/adapters/realEstateAdapter";
 
 export async function POST(req: NextRequest) {
   try {

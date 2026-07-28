@@ -17,7 +17,7 @@ import {
   FiChevronRight,
   FiX,
 } from "react-icons/fi";
-
+import { useSession } from "next-auth/react";
 import { LuBed } from "react-icons/lu";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
@@ -50,7 +50,7 @@ function formatDate(iso: string) {
 export default function PreviewListingPage() {
   const router = useRouter();
   const { formData, resetForm } = useListingForm();
-
+  const { data: session } = useSession();
   const [mainImageIndex, setMainImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -65,19 +65,38 @@ export default function PreviewListingPage() {
   const location = `${formData.area}, ${formData.city}, ${formData.ward}`;
 
   const handlePublish = async () => {
-    if (!formData.city || !formData.monthlyRentMin ) {
+    if (!formData.city || !formData.monthlyRentMin) {
       toast.error("Please complete all required fields before publishing");
       return;
     }
 
     setIsPublishing(true);
     try {
-      const created = await api.createRental(formData);
+      const res = await fetch("/api/realestate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: session?.accessToken ? `Bearer ${session.accessToken}` : "",
+        },
+        body: JSON.stringify({
+          ...formData,
+          monthlyRent: formData.monthlyRentMin,
+        }),
+      });
+      const created = await res.json();
+      if (!res.ok) throw new Error(created?.message || "Failed to publish listing");
 
       if (formData.photos.length > 0) {
-        const form = new FormData();
-        formData.photos.forEach((p) => form.append("images", p.file));
-        await api.uploadRentalPhotos(created.id, form);
+        const photoForm = new FormData();
+        formData.photos.forEach((p) => photoForm.append("images", p.file));
+        const photoRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/rental/${created.id}/photos`, {
+          method: "POST",
+          headers: {
+            Authorization: session?.accessToken ? `Bearer ${session.accessToken}` : "",
+          },
+          body: photoForm,
+        });
+        if (!photoRes.ok) throw new Error("Listing created, but photo upload failed");
       }
 
       toast.success("Listing published successfully!");

@@ -1,6 +1,6 @@
 import type { RealEstateDetail } from "@/app/types/listing";
-import type { RentalCard, RentalListing, AmenityKey } from "@/app/types/realestate";
-import { PROPERTY_TYPE_LABELS, LISTING_TYPE_LABELS } from "@/app/types/realestate";
+import type { RentalCard, RentalListing, AmenityKey, CreateRentalPayload, PropertyType, ListingType, OwnerType } from "@/app/types/realestate";
+import { PROPERTY_TYPE_LABELS, LISTING_TYPE_LABELS, AMENITIES } from "@/app/types/realestate";
 
 export function formatMonthlyRent(monthlyRent: number, listingType: RentalListing["rental"]["listingType"]): string {
   const suffix = listingType === "RENT" ? "/month" : "";
@@ -89,4 +89,148 @@ export function toRentalDetail(listing: RentalListing): RealEstateDetail {
       phone: "N/A",
     },
   };
+}
+
+type RawRentalForm = Record<string, unknown> & {
+  amenities?: Partial<Record<AmenityKey, boolean>>;
+};
+
+function toNumber(value: unknown): number | undefined {
+  if (value === null || value === undefined || value === "") return undefined;
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isNaN(n) ? undefined : n;
+}
+
+function toBool(value: unknown, fallback = false): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value === "true";
+  return fallback;
+}
+
+function toStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  return value.filter((v): v is string => typeof v === "string" && v.trim().length > 0);
+}
+
+type AmenityFlags = {
+  furnished: boolean;
+  parkingAvailable: boolean;
+  wifiAvailable: boolean;
+  waterIncluded: boolean;
+  electricityIncluded: boolean;
+  petFriendly: boolean;
+};
+
+const AMENITY_TO_DTO_FIELD: Record<AmenityKey, keyof AmenityFlags> = {
+  furnished: "furnished",
+  parking: "parkingAvailable",
+  wifi: "wifiAvailable",
+  water: "waterIncluded",
+  electricity: "electricityIncluded",
+  pet: "petFriendly",
+};
+
+const PROPERTY_TYPE_MAP: Record<string, PropertyType> = {
+  ROOM: "ROOM",
+  FLAT: "FLAT",
+  APARTMENT: "APARTMENT",
+  HOUSE: "HOUSE",
+  HOSTEL: "HOSTEL",
+  LAND: "LAND",
+  SHUTTER: "SHUTTER",
+  OFFICE: "OFFICE",
+  "OFFICE SPACE": "OFFICE",
+  VILLA: "HOUSE",
+  SHOP: "SHUTTER",
+};
+
+const LISTING_TYPE_MAP: Record<string, ListingType> = {
+  RENT: "RENT",
+  SALE: "SALE",
+};
+
+const OWNER_TYPE_MAP: Record<string, OwnerType> = {
+  OWNER: "OWNER",
+  AGENT: "AGENT",
+};
+
+function normalizePropertyType(value: unknown): PropertyType {
+  const key = String(value ?? "").trim().toUpperCase();
+  const mapped = PROPERTY_TYPE_MAP[key];
+  if (!mapped) throw new Error(`Unknown property type: "${value}"`);
+  return mapped;
+}
+
+function normalizeListingType(value: unknown): ListingType {
+  const key = String(value ?? "").trim().toUpperCase();
+  const mapped = LISTING_TYPE_MAP[key];
+  if (!mapped) throw new Error(`Unknown listing type: "${value}"`);
+  return mapped;
+}
+
+function normalizeOwnerType(value: unknown): OwnerType {
+  const key = String(value ?? "").trim().toUpperCase();
+  const mapped = OWNER_TYPE_MAP[key];
+  if (!mapped) throw new Error(`Unknown owner type: "${value}"`);
+  return mapped;
+}
+
+export function formToCreateRentalPayload(raw: RawRentalForm): CreateRentalPayload {
+  const initialAmenities: AmenityFlags = {
+    furnished: false,
+    parkingAvailable: false,
+    wifiAvailable: false,
+    waterIncluded: false,
+    electricityIncluded: false,
+    petFriendly: false,
+  };
+
+  const flatAmenities = AMENITIES.reduce(function (acc, key) {
+    const dtoField = AMENITY_TO_DTO_FIELD[key];
+    const nested = raw.amenities ? raw.amenities[key] : undefined;
+    const flatTopLevel = raw[dtoField];
+    acc[dtoField] = toBool(nested !== undefined ? nested : flatTopLevel, false);
+    return acc;
+  }, initialAmenities);
+
+  const payload: CreateRentalPayload = {
+    description: typeof raw.description === "string" ? raw.description : undefined,
+    price: toNumber(raw.price),
+    images: toStringArray(raw.images),
+
+    propertyType: normalizePropertyType(raw.propertyType),
+    listingType: normalizeListingType(raw.listingType),
+    city: String(raw.city ?? ""),
+    area: typeof raw.area === "string" ? raw.area : undefined,
+    ward: typeof raw.ward === "string" ? raw.ward : undefined,
+    address: typeof raw.address === "string" ? raw.address : undefined,
+    latitude: toNumber(raw.latitude),
+    longitude: toNumber(raw.longitude),
+
+    monthlyRent: toNumber(raw.monthlyRent) ?? 0,
+    depositAmount: toNumber(raw.depositAmount) ?? 0,
+
+    bedrooms: toNumber(raw.bedrooms),
+    bathrooms: toNumber(raw.bathrooms),
+    squareFeet: toNumber(raw.squareFeet),
+
+    furnished: flatAmenities.furnished,
+    parkingAvailable: flatAmenities.parkingAvailable,
+    wifiAvailable: flatAmenities.wifiAvailable,
+    waterIncluded: flatAmenities.waterIncluded,
+    electricityIncluded: flatAmenities.electricityIncluded,
+    petFriendly: flatAmenities.petFriendly,
+
+    availableFrom: typeof raw.availableFrom === "string" && raw.availableFrom.trim() !== ""
+      ? raw.availableFrom
+      : undefined,
+
+    isOwnerOrAgent: normalizeOwnerType(raw.ownerType),
+    noBroker: toBool(raw.noBroker, false),
+
+    nearbyLandmarks: toStringArray(raw.nearbyLandmarks) ?? [],
+    rules: toStringArray(raw.rules) ?? [],
+  };
+
+  return payload;
 }
