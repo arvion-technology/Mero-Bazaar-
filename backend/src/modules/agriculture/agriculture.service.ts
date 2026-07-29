@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateAgricultureDto } from './dto/create_agriculture.dto';
 import { UpdateAgricultureDto } from './dto/update_agriculture.dto';
@@ -31,15 +31,20 @@ export class AgricultureService {
             location: dto.location,
             pricePerUnit: dto.pricePerUnit,
             unit: dto.unit,
-
             organicCertified: dto.organicCertified,
             organicVerified: dto.organicVerified,
             seasonalAvailability: dto.seasonalAvailability,
-
             animalType: dto.animalType,
             breed: dto.breed,
             age: dto.age,
             healthVaccineStatus: dto.healthVaccineStatus,
+            vetServiceType: dto.vetServiceType,
+            experienceYears: dto.experienceYears,
+            mobileService: dto.mobileService,
+            vaccinationAvailable: dto.vaccinationAvailable,
+            serviceRadiusKm: dto.serviceRadiusKm,
+            healthCertificate: dto.healthCertificate,
+            availabilityDays: dto.availabilityDays,
           },
         },
       },
@@ -74,7 +79,19 @@ export class AgricultureService {
   async findOne(id: string) {
     const listing = await this.prisma.listing.findUnique({
       where: { id },
-      include: { agriculture: true },
+      include: {
+        agriculture: true,
+        user: {
+          select: {
+            name: true,
+            phone: true,
+            image: true,
+            isVerified: true,
+            createdAt: true,
+            _count: { select: { listings: true } },
+          },
+        },
+      },
     });
 
     if (!listing || listing.category !== ListingCategory.AGRICULTURE) {
@@ -101,15 +118,20 @@ export class AgricultureService {
             location: dto.location,
             pricePerUnit: dto.pricePerUnit,
             unit: dto.unit,
-
             organicCertified: dto.organicCertified,
             organicVerified: dto.organicVerified,
             seasonalAvailability: dto.seasonalAvailability,
-
             animalType: dto.animalType,
             breed: dto.breed,
             age: dto.age,
             healthVaccineStatus: dto.healthVaccineStatus,
+            vetServiceType: dto.vetServiceType,
+            experienceYears: dto.experienceYears,
+            mobileService: dto.mobileService,
+            vaccinationAvailable: dto.vaccinationAvailable,
+            serviceRadiusKm: dto.serviceRadiusKm,
+            healthCertificate: dto.healthCertificate,
+            availabilityDays: dto.availabilityDays,
           },
         },
       },
@@ -124,6 +146,31 @@ export class AgricultureService {
 
     return this.prisma.listing.delete({
       where: { id },
+    });
+  }
+
+  
+    async addPhotos(id: string, files: Express.Multer.File[], userId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      include: { agriculture: true },
+    });
+  
+    if (!listing || listing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
+  
+    if (!listing.agriculture) {
+      throw new NotFoundException('Trades listing not found');
+    }
+  
+    const newPhotoUrls = files.map((file) => `/uploads/agriculture/${file.filename}`);
+    const updatedImages = [...listing.images, ...newPhotoUrls];
+  
+    return this.prisma.listing.update({
+      where: { id },
+      data: { images: updatedImages },
+      include: { agriculture: true },
     });
   }
 }

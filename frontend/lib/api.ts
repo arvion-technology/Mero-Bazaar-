@@ -4,6 +4,7 @@ import type { RegisterPayload, LoginPayload, AuthResponse } from "../app/types/a
 import type { SecondhandListing } from "../app/types/secondhand";
 import type { RentalListing } from "../app/types/realestate";
 import type { TradesListing, CreateTradesPayload } from "../app/types/trades";
+import type { AgricultureListing } from "../app/types/agriculture";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -105,4 +106,9 @@ export const api = {
     patch<TradesListing>(`/api/trades/${id}`, payload),
   removeTrade: (id: string) =>
     del<{ success: boolean }>(`/api/trades/${id}`),
+
+  getAgricultureListings: (params?: URLSearchParams) =>
+   get<AgricultureListing[]>('/api/agriculture', params),
+  getAgricultureListing: (id: string) =>
+    get<AgricultureListing>(`/api/agriculture/${id}`),
 };

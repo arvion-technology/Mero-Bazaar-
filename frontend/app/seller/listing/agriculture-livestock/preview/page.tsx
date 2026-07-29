@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiArrowLeft,
@@ -8,7 +8,6 @@ import {
   FiMapPin,
   FiTag,
   FiAward,
-  FiDollarSign,
   FiCalendar,
   FiEdit2,
   FiSend,
@@ -21,6 +20,8 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useDraft, defaultAgricultureData } from "../layout";
+import { useSession } from "next-auth/react";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -32,93 +33,19 @@ const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 
-interface ListingData {
-  listingType: string;
-  itemName: string;
-  price: string;
-  unit: string;
-  location: string;
-  district: string;
-  village: string;
-  description: string;
-  // Produce
-  organicCertified?: boolean;
-  organicVerified?: boolean;
-  seasonalAvailability?: string;
-  // LiveStock
-  animalType?: string;
-  age?: string;
-  breed?: string;
-  healthVaccineStatus?: string;
-  // Vet Service
-  serviceType?: string;
-  experience?: string;
-  mobileService?: boolean;
-  serviceArea?: string;
-  serviceRadius?: string;
-  healthCertificate?: boolean;
-  vaccinationAvailable?: boolean;
-  availabilityDays?: string[];
-}
-
-interface ListingImage {
-  preview: string;
-  isMain: boolean;
-}
-
 export default function PreviewPage() {
   const router = useRouter();
+  const { agricultureData: data, setAgricultureData, images, setImages } = useDraft();
   const [isPublishing, setIsPublishing] = useState(false);
-  const [data, setData] = useState<ListingData | null>(null);
-  const [images, setImages] = useState<ListingImage[]>([]);
-  const [mainImage, setMainImage] = useState<string>("");
-
-  useEffect(() => {
-    const savedData = localStorage.getItem("agricultureListingData");
-    const savedImages = localStorage.getItem("agricultureListingImages");
-    if (savedData) {
-      const parsed = JSON.parse(savedData);
-      setData(parsed);
-      // Set default itemName if empty
-      if (!parsed.itemName) {
-        parsed.itemName = parsed.listingType === "Vet Service" ? "General Health Checkup at Home" : "Fresh Organic Vegetable";
-      }
-    }
-    if (savedImages) {
-      const parsedImages: ListingImage[] = JSON.parse(savedImages);
-      setImages(parsedImages);
-      const main = parsedImages.find((img) => img.isMain);
-      setMainImage(main ? main.preview : parsedImages[0]?.preview || "");
-    }
-  }, []);
-
-  const handlePublish = async () => {
-    setIsPublishing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    toast.success("Listing published successfully!");
-    setIsPublishing(false);
-    localStorage.removeItem("agricultureListingData");
-    localStorage.removeItem("agricultureListingImages");
-    router.push("/seller/products");
-  };
-
-  const handleEdit = () => {
-    router.push("/seller/listing/agriculture-livestock");
-  };
-
-  if (!data) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: BG }}>
-        <p style={{ color: TEXT_MUTED }}>Loading listing data...</p>
-      </div>
-    );
-  }
+  const [mainImage, setMainImage] = useState<string>(
+    images.find((img) => img.isMain)?.preview || images[0]?.preview || ""
+  );
+  const { data: session } = useSession();
 
   const isProduce = data.listingType === "Produce";
   const isLiveStock = data.listingType === "LiveStock";
   const isVetService = data.listingType === "Vet Service";
 
-  // Build detail rows based on listing type
   const detailRows = isProduce
     ? [
         { label: "Listing Type", value: data.listingType, icon: <FiTag size={16} /> },
@@ -145,6 +72,59 @@ export default function PreviewPage() {
         { label: "Health Certified", value: data.healthCertificate ? "Yes" : "No", icon: <FiCheckCircle size={16} /> },
         { label: "Availability", value: data.availabilityDays?.join("-") || "-", icon: <FiClock size={16} /> },
       ];
+
+  const handlePublish = async () => {
+  if (images.length === 0) {
+    toast.error("Please add at least one photo before publishing");
+    return;
+  }
+
+  setIsPublishing(true);
+  try {
+    const listingRes = await fetch("/api/agriculture", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+      body: JSON.stringify(data), 
+    });
+
+    if (!listingRes.ok) {
+      const err = await listingRes.json().catch(() => null);
+      throw new Error(err?.message || "Failed to create listing");
+    }
+
+    const listing = await listingRes.json();
+
+    const photoFormData = new FormData();
+    images.forEach(({ file }) => photoFormData.append("images", file));
+
+    const photosRes = await fetch(`/api/agriculture/${listing.id}/photos`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session?.accessToken}` },
+      body: photoFormData,
+    });
+
+    if (!photosRes.ok) {
+      const err = await photosRes.json().catch(() => null);
+      throw new Error(err?.message || "Listing created but photo upload failed");
+    }
+
+    toast.success("Listing published successfully!");
+    setAgricultureData(defaultAgricultureData);
+    setImages([]);
+    router.push("/seller/products");
+  } catch (err: unknown) {
+    toast.error(err instanceof Error ? err.message : "Something went wrong publishing");
+  } finally {
+    setIsPublishing(false);
+  }
+};
+
+  const handleEdit = () => {
+    router.push("/seller/listing/agriculture-livestock");
+  };
 
   return (
     <>
@@ -272,17 +252,6 @@ export default function PreviewPage() {
           color: ${SUCCESS};
         }
 
-        .certified-badge::before {
-          content: '';
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: ${SUCCESS};
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
         .thumbnail-row {
           display: flex;
           gap: 8px;
@@ -380,12 +349,6 @@ export default function PreviewPage() {
           color: ${TEXT_SECONDARY};
         }
 
-        .info-row-left svg {
-          color: ${TEXT_SECONDARY};
-          width: 16px;
-          height: 16px;
-        }
-
         .info-row-right {
           font-weight: 500;
           color: ${TEXT_PRIMARY};
@@ -425,10 +388,6 @@ export default function PreviewPage() {
           gap: 8px;
           font-size: 13px;
           color: ${TEXT_SECONDARY};
-        }
-
-        .location-item svg {
-          color: ${TEXT_MUTED};
         }
 
         .location-label {
@@ -517,7 +476,6 @@ export default function PreviewPage() {
 
       <div className="preview-page">
         <div className="preview-container">
-          {/* Header */}
           <div className="preview-header">
             <button className="back-btn" onClick={() => router.back()}>
               <FiArrowLeft size={16} />
@@ -528,16 +486,13 @@ export default function PreviewPage() {
             </div>
           </div>
 
-          {/* Title */}
           <div className="page-header">
             <h1 className="section-title">Preview your listing</h1>
             <p className="section-subtitle">Review your listing details before publishing.</p>
           </div>
 
-          {/* Listing Card */}
           <div className="listing-card">
             <div className="card-layout">
-              {/* Image Section */}
               <div className="image-section">
                 <div className="main-image">
                   {mainImage ? (
@@ -546,7 +501,7 @@ export default function PreviewPage() {
                       {(isProduce || isLiveStock) && data.organicCertified && (
                         <div className="certified-badge">
                           <FiCheckCircle size={12} />
-                          {isVetService ? "Verified" : "Organic certified"}
+                          Organic certified
                         </div>
                       )}
                       {isVetService && (
@@ -577,12 +532,11 @@ export default function PreviewPage() {
                 )}
               </div>
 
-              {/* Details */}
               <div className="card-info">
                 <h2 className="listing-title">{data.itemName}</h2>
                 <div className="listing-price">
                   NPR {data.price}
-                  <span className="price-unit">/ {data.unit}</span>
+                  <span className="price-unit">/ {isVetService ? data.priceUnit : data.unit}</span>
                 </div>
 
                 <div className="listing-location">
@@ -611,7 +565,6 @@ export default function PreviewPage() {
                   <p className="description-text">{data.description}</p>
                 </div>
 
-                {/* Location Bar */}
                 <div className="location-bar">
                   <div className="location-item">
                     <FiMapPin size={16} />
@@ -632,7 +585,6 @@ export default function PreviewPage() {
             </div>
           </div>
 
-          {/* Actions */}
           <div className="actions">
             <button className="btn btn-edit" onClick={handleEdit}>
               <FiEdit2 size={15} />
