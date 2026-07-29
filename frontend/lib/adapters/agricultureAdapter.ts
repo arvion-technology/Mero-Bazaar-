@@ -106,11 +106,17 @@ export function toAgricultureCard(listing: AgricultureListing): AgricultureCard 
     title: listing.title,
     price: `NPR ${ag.pricePerUnit.toLocaleString("en-IN")}`,
     location: ag.village ? `${ag.village}, ${ag.district}` : ag.district,
+    district: ag.district,
     listingType: LISTING_TYPE_LABEL[ag.listingType],
     thumb: listing.images?.[0] ? resolveImage(listing.images[0]) : "/placeholder-item.jpg",
     postedDaysAgo: daysAgo(listing.createdAt),
     isVerified: listing.isVerified ?? false,
     isFeatured: listing.isFeatured ?? false,
+    organicCertified: ag.organicCertified,
+    seasonalAvailability: ag.seasonalAvailability,
+    breed: ag.breed,
+    age: ag.age,
+    healthVaccineStatus: ag.healthVaccineStatus,
   };
 }
 
@@ -161,15 +167,15 @@ export function toAgricultureDetail(listing: AgricultureListing): AgricultureDet
     seller: {
       name: listing.user?.name || "Verified Seller",
       avatar: listing.user?.image ? resolveImage(listing.user.image) : "/placeholder-avatar.png",
-      rating: 0,
-      reviewCount: reviews.length,
+      rating: listing.sellerRating ?? 0,
+      reviewCount: listing.sellerReviewCount ?? reviews.length,
       isVerified: listing.user?.isVerified ?? false,
       isPro: false,
       isTrusted: false,
       memberSince: listing.user?.createdAt
         ? new Date(listing.user.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })
         : "N/A",
-      totalListing: listing.user?._count?.listings ?? 0,
+      totalListing: listing.sellerTotalListing ?? 0,
       responseRate: "N/A",
       avgResponseTime: "N/A",
       phone: listing.user?.phone || "N/A",

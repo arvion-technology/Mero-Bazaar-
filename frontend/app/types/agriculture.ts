@@ -43,7 +43,10 @@ export interface AgricultureListing {
   isFeatured?: boolean;
   latitude?: number | null;
   longitude?: number | null;
-
+  sellerRating?: number;
+  sellerReviewCount?: number;
+  sellerTotalListing?: number;
+  
   agriculture: {
     listingType: AgricultureListingType;
     district: string;
@@ -89,9 +92,15 @@ export interface AgricultureCard {
   title: string;
   price: string;
   location: string;
+  district: string;
   listingType: string;
   thumb: string;
   postedDaysAgo: number;
   isVerified?: boolean;
   isFeatured?: boolean;
+  organicCertified?: boolean;
+  seasonalAvailability?: string | null;
+  breed?: string | null;
+  age?: number | null;
+  healthVaccineStatus?: HealthVaccineStatus | null;
 }
