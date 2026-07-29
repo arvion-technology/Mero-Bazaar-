@@ -1,25 +1,24 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiArrowLeft,
   FiChevronRight,
   FiChevronDown,
-  FiMapPin,
+  FiCalendar,
+  FiMapPin, 
   FiFileText,
   FiBriefcase,
   FiImage,
   FiEye,
   FiCheck,
   FiX,
-  FiPlus,
-  FiBox,
-  FiTool,
-  FiDollarSign,
-  FiHash,
-  FiList,
+  FiLayers , 
+  FiPlus, 
+
 } from "react-icons/fi";
+
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 
@@ -39,39 +38,52 @@ const SITE_PRIMARY = "#C0392B";
 
 const steps = [
   { label: "Category", icon: FiFileText, status: "done" as const },
-  { label: "Detail", icon: FiList, status: "active" as const },
+  { label: "Details", icon: FiBriefcase, status: "active" as const },
+  { label: "Photos", icon: FiImage, status: "upcoming" as const },
   { label: "Preview", icon: FiEye, status: "upcoming" as const },
+]
+const whoIsThisForOptions = [
+  "Women",
+  "Men",
+  "Kids",
+  "Unisex",
+];
+const requiredGenderOptions = [
+  "Female (Preferred)",
+  "Male (Preferred)",
+  "No Preference",
 ];
 
-const services = [
-  "Plumbing",
-  "Electrical",
-  "Carpentry",
-  "Painting",
-  "Masonry",
-  "HVAC",
-  "Roofing",
-  "Tiling",
+const genderPreferenceOptions = [
+  "Female",
+  "Male",
+  "No Preference",
 ];
 
-const cities = ["Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur", "Bharatpur"];
-const wards = [
-  "Ward 1",
-  "Ward 2",
-  "Ward 3",
-  "Ward 4",
-  "Ward 5",
-  "Ward 6",
-  "Ward 7",
-  "Ward 8",
-  "Ward 9",
-  "Ward 10",
-  "Ward 11",
-  "Ward 12",
-  "Ward 13",
-  "Ward 14",
-  "Ward 15",
+const experienceOptions = [
+  "1+ Years",
+  "3+ Years",
+  "5+ Years",
+  "10+ Years",
 ];
+
+const preparationTimeOptions = [
+  "15 Minutes",
+  "30 Minutes",
+  "45 Minutes",
+  "60 Minutes",
+  "90 Minutes",
+];
+const tags = [
+  "Bridal",
+  "Makeup",
+  "HD Makeup",
+  "Hair Styling",
+  "Party Makeup",
+];
+
+// const [tagInput, setTagInput] = useState("");
+
 
 interface CustomSelectProps {
   options: string[];
@@ -137,8 +149,8 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
     <div
       ref={containerRef}
       className="custom-select-container"
-      onKeyDown={handleKeyDown}
       tabIndex={0}
+      onKeyDown={handleKeyDown}
     >
       <div
         className={`custom-select-trigger ${isOpen ? "open" : ""}`}
@@ -158,9 +170,8 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
             {options.map((option, index) => (
               <div
                 key={option}
-                className={`custom-select-option ${option === value ? "selected" : ""} ${
-                  index === highlightedIndex ? "highlighted" : ""
-                }`}
+                className={`custom-select-option ${option === value ? "selected" : ""} ${index === highlightedIndex ? "highlighted" : ""
+                  }`}
                 onClick={() => {
                   onChange(option);
                   setIsOpen(false);
@@ -177,77 +188,86 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
   );
 }
 
-export default function NewTradesHomeRepairListingPage() {
+
+
+
+export default function NewBeautyListingPage() {
+
   const router = useRouter();
+  // const [tagInput, setTagInput] = useState("");
+  // ── Additional Details ──
 
-  // ── Basic Information ──
-  const [serviceTitle, setServiceTitle] = useState("Professional Plumbing Service");
-  const [startingPrice, setStartingPrice] = useState("800");
-  const [description, setDescription] = useState("");
-
-  // ── Service Details ──
-  const [selectedService, setSelectedService] = useState("Plumbing");
-  const [city, setCity] = useState("Kathmandu");
-  const [ward, setWard] = useState("Ward 14");
-  const [skills, setSkills] = useState<string[]>([
-    "Plumbing",
-    "Leak Repair",
-    "Bathroom Fitting",
+  const [whoisthisfor, setWhoisthisfor] = useState("Women")
+  const [genderPreference, setGenderPreference] = useState("Female");
+  const [preparationTime, setPreparationTime] = useState("60 Minutes");
+  const [requiredGenderofProffessional, setRequiredGenderofProffessional] = useState("Female(Preferred")
+  const [experienceLevel, setserExperienceLevel] = useState("5+ Years")
+  const [tags, setTags] = useState<string[]>([
+    "Bridal",
+    "Makeup",
+    "HD Makeup",
+    "Hair Styling",
+    "Party Makeup",
   ]);
-  const [skillInput, setSkillInput] = useState("");
-
-  const formattedPrice = useMemo(() => {
-    if (!startingPrice) return "";
-    const num = Number(startingPrice.replace(/,/g, ""));
-    if (isNaN(num)) return startingPrice;
-    return num.toLocaleString("en-IN");
-  }, [startingPrice]);
-
-  const handlePriceChange = (val: string) => {
-    const cleaned = val.replace(/[^0-9]/g, "");
-    setStartingPrice(cleaned);
-  };
-
-  const addSkill = () => {
-    const trimmed = skillInput.trim();
-    if (!trimmed) return;
-    if (skills.includes(trimmed)) {
-      toast.info("Skill already added");
-      return;
-    }
-    setSkills([...skills, trimmed]);
-    setSkillInput("");
-  };
-
-  const removeSkill = (skill: string) => {
-    setSkills(skills.filter((s) => s !== skill));
-  };
-
-  const handleSkillKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addSkill();
-    } 
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!serviceTitle || !startingPrice || !description || !selectedService || !city || !ward) {
-      toast.error("Please fill all required fields");
+
+    if (
+      !whoisthisfor ||
+      !genderPreference ||
+      !preparationTime ||
+      !requiredGenderofProffessional ||
+      !experienceLevel
+    ) {
+      toast.error("Please fill all required fields.");
       return;
     }
-    toast.success("Details saved! Now preview your listing.");
-    router.push("/seller/listing/trades-home-repair/detail");
+    if (tags.length === 0) {
+      toast.error("Please add at least one tag.");
+      return;
+    }
+
+    toast.success("Beauty service saved successfully!");
+    router.push("/seller/listing/hair-beauty-wellness/beauty/photos");
   };
 
-  const descLength = description.length;
-  const descMax = 500;
+  const [tagInput, setTagInput] = useState("");
+
+  const addTag = () => {
+    const trimmed = tagInput.trim();
+
+    if (!trimmed) return;
+
+    if (tags.includes(trimmed)) {
+      toast.info("Tag already added");
+      return;
+    }
+
+    setTags([...tags, trimmed]);
+    setTagInput("");
+  };
+
+  const removeTag = (tag: string) => {
+    setTags(tags.filter((t) => t !== tag));
+  };
+
+  const handleTagKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTag();
+    }
+  };
 
   return (
+
     <>
       <ToastContainer position="top-right" autoClose={3000} />
-      <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      <style>{
+        `
+          * { box-sizing: border-box; margin: 0; padding: 0; }
 
         .listing-page {
           min-height: 100vh;
@@ -258,7 +278,7 @@ export default function NewTradesHomeRepairListingPage() {
         }
 
         .listing-container {
-          max-width: 1000px;
+          max-width: 900px;
           margin: 0 auto;
           padding: 32px 24px 64px;
         }
@@ -395,7 +415,7 @@ export default function NewTradesHomeRepairListingPage() {
           background: ${SUCCESS};
         }
 
-        /* ── Form Card ── */
+ /* ── Form Card ── */
         .form-card {
           background: ${CARD_BG};
           border-radius: 20px;
@@ -460,31 +480,41 @@ export default function NewTradesHomeRepairListingPage() {
           background: #ede9fe;
           padding: 2px 8px;
           border-radius: 6px;
-        }
-
-        /* ── Divider ── */
+        }/* ── Divider ── */
         .divider {
           height: 1px;
           background: linear-gradient(90deg, transparent, ${BORDER}, transparent);
           margin: 28px 0;
         }
 
-        /* ── Two Column Layout ── */
+            /* ── Two Column Layout ── */
         .two-col-layout {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 40px;
         }
+.two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+}
 
-        /* ── Section Header ── */
+.left-col,
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+           /* ── Section Header ── */
         .section-header {
           display: flex;
           align-items: center;
           gap: 12px;
           margin-bottom: 24px;
         }
-
-        .section-icon {
+ .section-icon {
           width: 36px;
           height: 36px;
           border-radius: 10px;
@@ -493,25 +523,22 @@ export default function NewTradesHomeRepairListingPage() {
           justify-content: center;
           flex-shrink: 0;
         }
-
-        .section-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+           .section-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
         .section-icon.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
         .section-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
 
-        .section-title-wrap h2 {
+ .section-title-wrap h2 {
           font-size: 18px;
           font-weight: 700;
           color: ${TEXT_PRIMARY};
           letter-spacing: -0.3px;
         }
-
-        .section-title-wrap p {
+ .section-title-wrap p {
           font-size: 13px;
           color: ${TEXT_MUTED};
           margin-top: 2px;
         }
-
-        /* ── Form Grid ── */
+ /* ── Form Grid ── */
         .form-row {
           display: grid;
           gap: 20px;
@@ -567,6 +594,7 @@ export default function NewTradesHomeRepairListingPage() {
         .form-input::placeholder, .form-textarea::placeholder {
           color: #a1a8b5;
           font-weight: 400;
+          
         }
 
         .form-textarea {
@@ -584,66 +612,9 @@ export default function NewTradesHomeRepairListingPage() {
 
         .char-counter.near-limit { color: ${DANGER}; font-weight: 600; }
 
-        /* ── Price Hint ── */
-        .price-hint {
-          font-size: 11.5px;
-          color: ${TEXT_MUTED};
-          margin-top: 4px;
-        }
 
-        /* ── Skills Tags ── */
-        .skills-wrap {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-bottom: 10px;
-        }
 
-        .skill-tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          background: linear-gradient(135deg, #ede9fe, #f3e8ff);
-          border: 1.5px solid #c4b5fd;
-          border-radius: 10px;
-          font-size: 13px;
-          font-weight: 500;
-          color: #6d28d9;
-          transition: all 0.2s ease;
-        }
-
-        .skill-tag:hover {
-          border-color: #a78bfa;
-          box-shadow: 0 2px 6px rgba(109, 40, 217, 0.1);
-        }
-
-        .skill-tag .remove-skill {
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          transition: all 0.2s;
-        }
-
-        .skill-tag .remove-skill:hover {
-          background: rgba(109, 40, 217, 0.1);
-        }
-
-        .skill-input-wrap {
-          position: relative;
-        }
-
-        .skill-input-hint {
-          font-size: 11.5px;
-          color: ${TEXT_MUTED};
-          margin-top: 4px;
-        }
-
-        /* ── Custom Select ── */
+/* ── Custom Select ── */
         .custom-select-container {
           position: relative;
           width: 100%;
@@ -732,8 +703,285 @@ export default function NewTradesHomeRepairListingPage() {
           color: ${ACCENT};
           font-weight: 600;
         }
+          
+          /* Tags Container */
+.skills-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+  min-height: 44px;
+  padding: 8px;
+  border: 1.5px solid #dbe3ef;
+  border-radius: 12px;
+  background: #fff;
+  transition: all 0.2s ease;
+}
 
-        /* ── Submit Button ── */
+.skills-wrap:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Tag Chip */
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* Remove Icon */
+.remove-skill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.remove-skill:hover {
+  background: #dbeafe;
+  color: #dc2626;
+}
+
+/* Input */
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #dbe3ef;
+  border-radius: 12px;
+  outline: none;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-input::placeholder {
+  color: #94a3b8;
+}
+
+/*================ Availability =================*/
+
+.availability-wrapper{
+    display:flex;
+    justify-content:space-between;
+    gap:32px;
+    width:100%;
+    padding:28px;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:20px;
+    box-sizing:border-box;
+}
+
+/* LEFT */
+
+.availability-left{
+    flex:1;
+}
+
+.availability-left h2{
+    font-size:42px;
+    font-weight:700;
+    color:#2952e3;
+    margin-bottom:12px;
+}
+
+.availability-left p{
+    color:#555;
+    font-size:18px;
+    line-height:1.5;
+    margin-bottom:28px;
+    max-width:320px;
+}
+
+.set-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:14px 28px;
+    background:#2952e3;
+    color:#fff;
+    border:none;
+    border-radius:14px;
+    cursor:pointer;
+    font-size:16px;
+    font-weight:600;
+}
+
+/* RIGHT */
+
+.availability-right{
+    width:360px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.availability-card{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    padding:20px;
+}
+
+.availability-info{
+    display:flex;
+    gap:14px;
+}
+
+.icon-box{
+    color:#2952e3;
+    margin-top:3px;
+}
+
+.availability-text h3{
+    color:#2952e3;
+    font-size:28px;
+    margin-bottom:6px;
+}
+
+.availability-text p{
+    color:#555;
+    margin-bottom:4px;
+    font-size:18px;
+}
+
+.availability-text span{
+    color:#333;
+    font-size:18px;
+}
+
+.edit-btn{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    background:none;
+    border:none;
+    color:#2952e3;
+    cursor:pointer;
+    font-size:15px;
+    font-weight:600;
+    white-space:nowrap;
+}
+
+.cancel-btn{
+    align-self:flex-end;
+    width:120px;
+    height:42px;
+    background:#fff;
+    border:1px solid #d1d5db;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+/*================ Tablet =================*/
+
+@media (max-width:768px){
+
+    .availability-wrapper{
+        flex-direction:column;
+        padding:20px;
+        gap:24px;
+    }
+
+    .availability-left h2{
+        font-size:32px;
+    }
+
+    .availability-left p{
+        max-width:100%; 
+        font-size:15px;
+    }
+
+    .set-btn{
+        width:100%;
+    }
+
+    .availability-right{
+        width:100%;
+    }
+
+    .availability-card{
+        width:100%;
+    }
+
+    .cancel-btn{
+        width:100%;
+        align-self:stretch;
+    }
+}
+
+/*================ Mobile =================*/
+
+@media (max-width:480px){
+
+    .availability-wrapper{
+        padding:16px;
+    }
+
+    .availability-left h2{
+        font-size:28px;
+    }
+
+    .availability-left p{
+        font-size:14px;
+    }
+
+    .availability-card{
+        flex-direction:column;
+        gap:16px;
+    }
+
+    .availability-info{
+        width:100%;
+    }
+
+    .availability-text h3{
+        font-size:22px;
+    }
+
+    .availability-text p,
+    .availability-text span{
+        font-size:14px;
+    }
+
+    .edit-btn{
+        width:100%;
+        justify-content:center;
+        border:1px solid #e5e7eb;
+        padding:10px;
+        border-radius:10px;
+    }
+
+    .cancel-btn{
+        width:100%;
+    }
+}
+
+
+
+           
+/* ── Submit Button ── */
         .submit-wrap {
           display: flex;
           justify-content: space-between;
@@ -762,10 +1010,9 @@ export default function NewTradesHomeRepairListingPage() {
         .back-link:hover {
           border-color: ${ACCENT};
           background: ${ACCENT_LIGHT};
-          transform: translateX(-2px);
-        }
+          transform: translateX(-2px);}
 
-        .submit-btn {
+.submit-btn {
           padding: 14px 40px;
           background: linear-gradient(135deg, ${ACCENT}, #1d4ed8);
           color: #fff;
@@ -799,6 +1046,31 @@ export default function NewTradesHomeRepairListingPage() {
           transform: none;
           box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
         }
+           
+.two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.left-col,
+.right-col {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .two-column {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .left-col,
+  .right-col {
+    width: 100%;
+  }
+}
 
         /* ── Responsive ── */
         @media (max-width: 768px) {
@@ -811,6 +1083,14 @@ export default function NewTradesHomeRepairListingPage() {
             grid-template-columns: 1fr; 
             gap: 24px; 
           }
+            .left-col,
+  .right-col {
+    gap: 16px;
+  }
+
+  .form-group.full-width {
+    margin-bottom: 0;
+  }
           .listing-title { font-size: 20px; }
           .listing-subtitle { font-size: 12px; }
           .stepper { padding: 14px 16px; }
@@ -833,6 +1113,45 @@ export default function NewTradesHomeRepairListingPage() {
           .custom-select-dropdown {
             max-height: 200px;
           }
+            <div className="availability-wrapper">
+      <div className="availability-container">
+        {/* Left */}
+        <div className="availability-left">
+          <h2>Availability</h2>
+          <p>Select days and times when you are available.</p>
+
+          <button className="set-btn">
+            <FiCalendar size={16} />
+            Set Availability
+          </button>
+        </div>
+
+        {/* Right */}
+        <div className="availability-right">
+          <div className="availability-card">
+            <div className="availability-info">
+              <div className="icon-box">
+                <FiCalendar size={22} />
+              </div>
+
+              <div>
+                <h3>Availability</h3>
+                <p>Mon – Sun</p>
+                <span>10:00 AM - 8:00 PM</span>
+              </div>
+            </div>
+
+            <button className="edit-btn">
+              Edit <FiChevronRight size={16} />
+            </button>
+          </div>
+
+          <button className="cancel-btn">Cancel</button>
+        </div>
+      </div>
+
+      <div className="bottom-buttons">
+        <button className="back-btn">Back</button>
         }
 
         @media (max-width: 480px) {
@@ -841,9 +1160,71 @@ export default function NewTradesHomeRepairListingPage() {
           .listing-header { gap: 12px; margin-bottom: 16px; }
           .back-btn { width: 36px; height: 36px; }
           .listing-title { font-size: 18px; }
-        }
-      `}</style>
+          .availability-container {
+    padding: 16px;
+    border-radius: 14px;
+    gap: 18px;
+  }
 
+  .availability-left h2 {
+    font-size: 22px;
+  }
+
+  .availability-left p {
+    font-size: 13px;
+  }
+
+  .set-btn {
+    height: 44px;
+    font-size: 14px;
+    padding: 0 16px;
+  }
+
+  .availability-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .availability-info {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .availability-info h3 {
+    font-size: 18px;
+  }
+
+  .availability-info p,
+  .availability-info span {
+    font-size: 13px;
+  }
+
+  .edit-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f8fafc;
+  }
+
+  .cancel-btn,
+  .back-btn,
+  .continue-btn {
+    width: 100%;
+    height: 44px;
+    font-size: 14px;
+  }
+
+  .icon-box svg {
+    width: 20px;
+    height: 20px;
+  }
+        }
+          
+          `}</style>
       <div className="listing-page">
         <div className="listing-container">
           {/* Header */}
@@ -866,160 +1247,161 @@ export default function NewTradesHomeRepairListingPage() {
               <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "active" ? <FiCheck size={16} /> : <step.icon size={14} />}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div className={`step-connector ${step.status === "active" ? "filled" : ""}`} />
                 )}
               </div>
             ))}
           </div>
 
           <form onSubmit={handleSubmit} className="form-card">
-            {/* Category Pill */}
-            <div className="category-wrap">
-              <label className="category-label">Category</label>
-              <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
-                <FiTool size={16} />
-                Trades & Home Repair
-                <span className="change-badge">Change</span>
-              </button>
+            {/* Left: Additional Information */}
+            <div className="section-header">
+              <div className="section-icon blue">
+                <FiFileText size={18} color="#fff" />
+              </div>
+              <div className="section-title-wrap">
+                <h2>Additional Information</h2>
+              </div>
             </div>
 
-            <div className="divider" />
-
-            {/* Two Column Layout */}
-            <div className="two-col-layout">
-              {/* Left: Basic Information */}
+            <div className="two-column">
               <div className="left-col">
-                <div className="section-header">
-                  <div className="section-icon blue">
-                    <FiFileText size={18} color="#fff" />
-                  </div>
-                  <div className="section-title-wrap">
-                    <h2>Basic Information</h2>
-                  </div>
-                </div>
 
                 <div className="form-group full-width">
                   <label className="form-label">
-                    Service Title <span className="required">*</span>
+                    Who is this for <span className="required">*</span>
                   </label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Enter service title"
-                    value={serviceTitle}
-                    onChange={(e) => setServiceTitle(e.target.value)}
-                    required
+                  <CustomSelect
+                    options={whoIsThisForOptions}
+                    value={whoisthisfor}
+                    onChange={setWhoisthisfor}
+                    placeholder="Who is this for"
                   />
                 </div>
-
-                <div className="form-group full-width">
-                  <label className="form-label">Starting Price(NPR)</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    className="form-input"
-                    placeholder="Enter starting price"
-                    value={formattedPrice}
-                    onChange={(e) => handlePriceChange(e.target.value)}
-                  />
-                  <p className="price-hint">Charge applied per unit</p>
-                </div>
-
                 <div className="form-group full-width">
                   <label className="form-label">
-                    Description <span className="required">*</span>
+                    Required Gender of Professional <span className="required">*</span>
                   </label>
-                  <textarea
-                    className="form-textarea"
-                    placeholder="Enter Description"
-                    value={description}
-                    maxLength={descMax}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
+                  <CustomSelect
+                    options={requiredGenderOptions}
+                    value={requiredGenderofProffessional}
+                    onChange={setRequiredGenderofProffessional}
                   />
-                  <div className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}>
-                    {descLength}/{descMax}
-                  </div>
+                </div>
+                <div className="form-group full-width">
+                  <label className="form-label">
+                    Gender Preference <span className="required">*</span>
+                  </label>
+                  <CustomSelect
+                    options={genderPreferenceOptions}
+                    value={genderPreference}
+                    onChange={setGenderPreference}
+                  />
+
                 </div>
               </div>
 
-              {/* Right: Service Details */}
               <div className="right-col">
-                <div className="section-header">
-                  <div className="section-icon red">
-                    <FiBriefcase size={18} color="#fff" />
-                  </div>
-                  <div className="section-title-wrap">
-                    <h2>Service Details</h2>
-                  </div>
-                </div>
 
                 <div className="form-group full-width">
                   <label className="form-label">
-                    Select Service <span className="required">*</span>
+                    Experience Level <span className="required">*</span>
                   </label>
                   <CustomSelect
-                    options={services}
-                    value={selectedService}
-                    onChange={setSelectedService}
-                    placeholder="Select service"
+                    options={experienceOptions}
+                    value={experienceLevel}
+                    onChange={setserExperienceLevel}
                   />
-                </div>
 
+                </div>
                 <div className="form-group full-width">
                   <label className="form-label">
-                    City <span className="required">*</span>
+                    Preparation Time <span className="required">*</span>
                   </label>
                   <CustomSelect
-                    options={cities}
-                    value={city}
-                    onChange={setCity}
-                    placeholder="Select city"
+                    options={preparationTimeOptions}
+                    value={preparationTime}
+                    onChange={setPreparationTime}
                   />
                 </div>
-
                 <div className="form-group full-width">
                   <label className="form-label">
-                    Ward <span className="required">*</span>
+                    Tags <span style={{ color: "#94a3b8" }}>(Optional)</span>
                   </label>
-                  <CustomSelect
-                    options={wards}
-                    value={ward}
-                    onChange={setWard}
-                    placeholder="Select ward"
-                  />
-                </div>
-
-                <div className="form-group full-width">
-                  <label className="form-label">Skills</label>
                   <div className="skills-wrap">
-                    {skills.map((skill) => (
-                      <span key={skill} className="skill-tag">
-                        {skill}
-                        <span className="remove-skill" onClick={() => removeSkill(skill)}>
+                    {tags.map((tag) => (
+                      <span key={tag} className="skill-tag">
+                        {tag}
+                        <span
+                          className="remove-skill"
+                          onClick={() => removeTag(tag)}
+                        >
                           <FiX size={12} />
                         </span>
                       </span>
                     ))}
                   </div>
-                  <div className="skill-input-wrap">
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Type and press Enter to add more"
-                      value={skillInput}
-                      onChange={(e) => setSkillInput(e.target.value)}
-                      onKeyDown={handleSkillKeyDown}
-                    />
-                  </div>
-                  <p className="skill-input-hint">Type and press Enter to add more</p>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Type and press Enter to add more"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                  />
                 </div>
               </div>
+
+                {/* Left */}
+                <div className="availability-left">
+                  <h2>Availability</h2>
+                  <p>Select days and times when you are available.</p>
+
+                  <button className="set-btn">
+                    <FiCalendar size={16} />
+                    Set Availability
+                  </button>
+                </div>
+
+                {/* Right */}
+                <div className="availability-right">
+                  <div className="availability-card">
+
+                    <div className="availability-info">
+
+                      <div className="icon-box">
+                        <FiCalendar size={22} />
+                      </div>
+
+                      <div className="availability-text">
+                        
+                        <h3>Availability</h3>
+                        <p>Mon – Sun</p>
+                        <span>10:00 AM - 8:00 PM</span>
+                      </div>
+
+                    </div>
+
+                    <button className="edit-btn">
+                      Edit <FiChevronRight size={16} />
+                    </button>
+
+                  </div>
+
+                  <button className="cancel-btn">
+                    Cancel
+                  </button>
+                </div>
+              
+
+
+
+
             </div>
 
             <div className="divider" />
@@ -1035,9 +1417,15 @@ export default function NewTradesHomeRepairListingPage() {
                 <FiChevronRight size={16} />
               </button>
             </div>
-          </form>
-        </div>
-      </div>
+
+
+          </form >
+
+        </div >
+      </div >
+
     </>
+
+
   );
 }

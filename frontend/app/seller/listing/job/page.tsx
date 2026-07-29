@@ -44,7 +44,7 @@ const contractTypes = ["Full Time", "Part Time", "Contract", "Freelance", "Inter
 
 export default function NewJobListingPage() {
   const router = useRouter();
-
+ 
   const [title, setTitle] = useState("");
   const { data, setData } = useJobDraft();
   const { role, company, salaryMin, salaryMax, payPeriod, location, contractType, skillTags, urgentHiring, phoneVerified, description } = data;

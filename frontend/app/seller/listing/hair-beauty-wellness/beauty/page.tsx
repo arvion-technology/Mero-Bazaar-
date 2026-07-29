@@ -1,6 +1,7 @@
 "use client";
-
 import { useState, useMemo, useRef, useEffect } from "react";
+
+
 import { useRouter } from "next/navigation";
 import {
   FiArrowLeft,
@@ -14,12 +15,20 @@ import {
   FiCheck,
   FiX,
   FiPlus,
-  FiBox,
-  FiTool,
-  FiDollarSign,
-  FiHash,
-  FiList,
+  FiClock
+
 } from "react-icons/fi";
+import {
+  FaStethoscope,
+  FaSpa,
+  FaBriefcase,
+  FaCar,
+  FaBoxOpen,
+  FaLeaf,
+  FaStore,
+  FaHammer,
+  FaUtensils,
+} from "react-icons/fa";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 
@@ -38,39 +47,77 @@ const CARD_BG = "#ffffff";
 const SITE_PRIMARY = "#C0392B";
 
 const steps = [
-  { label: "Category", icon: FiFileText, status: "done" as const },
-  { label: "Detail", icon: FiList, status: "active" as const },
+  { label: "Category", icon: FiFileText, status: "active" as const },
+  { label: "Details", icon: FiBriefcase, status: "upcoming" as const },
+  { label: "Photos", icon: FiImage, status: "upcoming" as const },
   { label: "Preview", icon: FiEye, status: "upcoming" as const },
 ];
-
 const services = [
-  "Plumbing",
-  "Electrical",
-  "Carpentry",
-  "Painting",
-  "Masonry",
-  "HVAC",
-  "Roofing",
-  "Tiling",
-];
+  "At Salon",
+  "At Home",
+  "Online Consultation",
+]
 
-const cities = ["Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur", "Bharatpur"];
-const wards = [
-  "Ward 1",
-  "Ward 2",
-  "Ward 3",
-  "Ward 4",
-  "Ward 5",
-  "Ward 6",
-  "Ward 7",
-  "Ward 8",
-  "Ward 9",
-  "Ward 10",
-  "Ward 11",
-  "Ward 12",
-  "Ward 13",
-  "Ward 14",
-  "Ward 15",
+const minutes = ["30 Minutes",
+  "45 Minutes",
+  "60 Minutes",
+  "90 Minutes",
+  "120 Minutes",]
+
+
+
+
+const categories = [
+  {
+    name: "Medical & Dental",
+    icon: <FaStethoscope />,
+    path: "/seller/listing/medical-dental",
+  },
+  {
+    name: "Hair, Beauty & Wellness",
+    icon: <FaSpa />,
+    path: "/seller/listing/hair-beauty-wellness/beauty",
+  },
+  {
+    name: "Job",
+    icon: <FaBriefcase />,
+    path: "/seller/listing/job",
+  },
+  {
+    name: "Vehicle",
+    icon: <FaCar />,
+    path: "/seller/listing/vehicle",
+  },
+  {
+    name: "Secondhand Goods",
+    icon: <FaBoxOpen />,
+    path: "/seller/listing/secondhand-goods",
+  },
+  {
+    name: "Agriculture & Livestock",
+    icon: <FaLeaf />,
+    path: "/seller/listing/agriculture-livestock",
+  },
+  {
+    name: "Trade",
+    icon: <FaStore />,
+    path: "/seller/listing/trades-home-repair",
+  },
+  {
+    name: "Rent",
+    icon: <FaHammer />,
+    path: "/seller/listing/rent-real-estate",
+  },
+  {
+    name: "Food & Delivery",
+    icon: <FaUtensils />,
+    path: "/seller/listing/food",
+  },
+];
+const beautyServices = [
+  "Beauty",
+  "Hair",
+  "Wellness",
 ];
 
 interface CustomSelectProps {
@@ -78,13 +125,13 @@ interface CustomSelectProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-}
+  icon?: React.ReactNode;
 
+}
 function CustomSelect({ options, value, onChange, placeholder }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -101,7 +148,6 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
       setHighlightedIndex(idx >= 0 ? idx : 0);
     }
   }, [isOpen, options, value]);
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!isOpen) {
       if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
@@ -110,7 +156,6 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
       }
       return;
     }
-
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
@@ -132,7 +177,6 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
         break;
     }
   };
-
   return (
     <div
       ref={containerRef}
@@ -158,9 +202,8 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
             {options.map((option, index) => (
               <div
                 key={option}
-                className={`custom-select-option ${option === value ? "selected" : ""} ${
-                  index === highlightedIndex ? "highlighted" : ""
-                }`}
+                className={`custom-select-option ${option === value ? "selected" : ""} ${index === highlightedIndex ? "highlighted" : ""
+                  }`}
                 onClick={() => {
                   onChange(option);
                   setIsOpen(false);
@@ -175,79 +218,64 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
       )}
     </div>
   );
+
 }
 
-export default function NewTradesHomeRepairListingPage() {
+
+
+
+
+export default function NewBeautyListingPage() {
+
   const router = useRouter();
 
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
+  const handleCategoryChange = (path: string) => {
+    setShowCategoryMenu(false); // close menu first
+    router.push(path);
+  };
+
+  const [showServiceMenu, setShowServiceMenu] = useState(false);
+
   // ── Basic Information ──
-  const [serviceTitle, setServiceTitle] = useState("Professional Plumbing Service");
-  const [startingPrice, setStartingPrice] = useState("800");
-  const [description, setDescription] = useState("");
+
+  const [serviceTitle, setServiceTitle] = useState("Relaxation Message Therapy")
+  const [shortDescription, setShortDescription] = useState("Professional bridal makeup for your special day using premium products ");
+  const [detailedDescription, setDetailedDescription] = useState("Our Bridal makeup service includes HD makeup, skin prep, eyelash application and long lasting finish. We use prmium, skin-friendly products to give you a flawless and elegant look for your big day");
 
   // ── Service Details ──
-  const [selectedService, setSelectedService] = useState("Plumbing");
-  const [city, setCity] = useState("Kathmandu");
-  const [ward, setWard] = useState("Ward 14");
-  const [skills, setSkills] = useState<string[]>([
-    "Plumbing",
-    "Leak Repair",
-    "Bathroom Fitting",
-  ]);
-  const [skillInput, setSkillInput] = useState("");
 
-  const formattedPrice = useMemo(() => {
-    if (!startingPrice) return "";
-    const num = Number(startingPrice.replace(/,/g, ""));
-    if (isNaN(num)) return startingPrice;
-    return num.toLocaleString("en-IN");
-  }, [startingPrice]);
-
-  const handlePriceChange = (val: string) => {
-    const cleaned = val.replace(/[^0-9]/g, "");
-    setStartingPrice(cleaned);
-  };
-
-  const addSkill = () => {
-    const trimmed = skillInput.trim();
-    if (!trimmed) return;
-    if (skills.includes(trimmed)) {
-      toast.info("Skill already added");
-      return;
-    }
-    setSkills([...skills, trimmed]);
-    setSkillInput("");
-  };
-
-  const removeSkill = (skill: string) => {
-    setSkills(skills.filter((s) => s !== skill));
-  };
-
-  const handleSkillKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addSkill();
-    } 
-  };
-
+  const [price, setPrice] = useState("Rs. 3,500")
+  const [serviceType, setServiceType] = useState("At Studio")
+  const [duration, setDuration] = useState("");
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!serviceTitle || !startingPrice || !description || !selectedService || !city || !ward) {
-      toast.error("Please fill all required fields");
+
+    if (
+      !serviceTitle ||
+      !shortDescription ||
+      !detailedDescription ||
+      !price ||
+      !serviceType ||
+      !duration
+    ) {
+      toast.error("Please fill all required fields.");
       return;
     }
-    toast.success("Details saved! Now preview your listing.");
-    router.push("/seller/listing/trades-home-repair/detail");
-  };
 
-  const descLength = description.length;
-  const descMax = 500;
+    toast.success("Beauty service saved successfully!");
+    router.push("/seller/listing/hair-beauty-wellness/beauty/details");
+  };
+  const descLength = detailedDescription.length;
+  const descMax = 1000;
+  const descMim = 500;
 
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />
-      <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+      <style>{
+        `
+          * { box-sizing: border-box; margin: 0; padding: 0; }
 
         .listing-page {
           min-height: 100vh;
@@ -258,7 +286,7 @@ export default function NewTradesHomeRepairListingPage() {
         }
 
         .listing-container {
-          max-width: 1000px;
+          max-width: 900px;
           margin: 0 auto;
           padding: 32px 24px 64px;
         }
@@ -394,8 +422,7 @@ export default function NewTradesHomeRepairListingPage() {
         .step-connector.filled {
           background: ${SUCCESS};
         }
-
-        /* ── Form Card ── */
+ /* ── Form Card ── */
         .form-card {
           background: ${CARD_BG};
           border-radius: 20px;
@@ -425,7 +452,61 @@ export default function NewTradesHomeRepairListingPage() {
           margin-bottom: 10px;
           display: block;
         }
+.category-pill{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  width:100%;
+  padding:12px 16px;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  background:#fff;
+}
 
+.category-info{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.change-btn{
+  border:none;
+  background:#2563eb;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.change-btn:hover{
+  background:#1d4ed8;
+}
+
+.category-menu{
+  margin-top:10px;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  background:#fff;
+  overflow:hidden;
+  box-shadow:0 8px 24px rgba(0,0,0,.08);
+}
+
+.category-item{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:14px 16px;
+  background:#fff;
+  border:none;
+  cursor:pointer;
+  text-align:left;
+}
+
+.category-item:hover{
+  background:#eff6ff;
+}
         .category-pill {
           display: inline-flex;
           align-items: center;
@@ -460,31 +541,26 @@ export default function NewTradesHomeRepairListingPage() {
           background: #ede9fe;
           padding: 2px 8px;
           border-radius: 6px;
-        }
-
-        /* ── Divider ── */
+        }/* ── Divider ── */
         .divider {
           height: 1px;
           background: linear-gradient(90deg, transparent, ${BORDER}, transparent);
           margin: 28px 0;
         }
-
-        /* ── Two Column Layout ── */
+            /* ── Two Column Layout ── */
         .two-col-layout {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 40px;
         }
-
-        /* ── Section Header ── */
+           /* ── Section Header ── */
         .section-header {
           display: flex;
           align-items: center;
           gap: 12px;
           margin-bottom: 24px;
         }
-
-        .section-icon {
+ .section-icon {
           width: 36px;
           height: 36px;
           border-radius: 10px;
@@ -493,30 +569,28 @@ export default function NewTradesHomeRepairListingPage() {
           justify-content: center;
           flex-shrink: 0;
         }
-
-        .section-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+           .section-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
         .section-icon.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
         .section-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
 
-        .section-title-wrap h2 {
+ .section-title-wrap h2 {
           font-size: 18px;
           font-weight: 700;
           color: ${TEXT_PRIMARY};
           letter-spacing: -0.3px;
         }
-
-        .section-title-wrap p {
+ .section-title-wrap p {
           font-size: 13px;
           color: ${TEXT_MUTED};
           margin-top: 2px;
         }
-
-        /* ── Form Grid ── */
-        .form-row {
-          display: grid;
-          gap: 20px;
-          margin-bottom: 20px;
-        }
+          
+ /* ── Form Grid ── */
+        // .form-row {
+        //   display: grid;
+        //   gap: 20px;
+        //   margin-bottom: 20px;
+        // }
 
         .form-group {
           display: flex;
@@ -567,6 +641,7 @@ export default function NewTradesHomeRepairListingPage() {
         .form-input::placeholder, .form-textarea::placeholder {
           color: #a1a8b5;
           font-weight: 400;
+          
         }
 
         .form-textarea {
@@ -584,66 +659,9 @@ export default function NewTradesHomeRepairListingPage() {
 
         .char-counter.near-limit { color: ${DANGER}; font-weight: 600; }
 
-        /* ── Price Hint ── */
-        .price-hint {
-          font-size: 11.5px;
-          color: ${TEXT_MUTED};
-          margin-top: 4px;
-        }
 
-        /* ── Skills Tags ── */
-        .skills-wrap {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-bottom: 10px;
-        }
-
-        .skill-tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          background: linear-gradient(135deg, #ede9fe, #f3e8ff);
-          border: 1.5px solid #c4b5fd;
-          border-radius: 10px;
-          font-size: 13px;
-          font-weight: 500;
-          color: #6d28d9;
-          transition: all 0.2s ease;
-        }
-
-        .skill-tag:hover {
-          border-color: #a78bfa;
-          box-shadow: 0 2px 6px rgba(109, 40, 217, 0.1);
-        }
-
-        .skill-tag .remove-skill {
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          transition: all 0.2s;
-        }
-
-        .skill-tag .remove-skill:hover {
-          background: rgba(109, 40, 217, 0.1);
-        }
-
-        .skill-input-wrap {
-          position: relative;
-        }
-
-        .skill-input-hint {
-          font-size: 11.5px;
-          color: ${TEXT_MUTED};
-          margin-top: 4px;
-        }
-
-        /* ── Custom Select ── */
+       
+/* ── Custom Select ── */
         .custom-select-container {
           position: relative;
           width: 100%;
@@ -732,8 +750,119 @@ export default function NewTradesHomeRepairListingPage() {
           color: ${ACCENT};
           font-weight: 600;
         }
+          /* Mobile Service */
 
-        /* ── Submit Button ── */
+.mobile-service{
+    margin-top:24px;
+}
+
+.mobile-title{
+    display:block;
+    font-size:20px;
+    font-weight:600;
+    color:#111827;
+    margin-bottom:14px;
+}
+
+.mobile-option{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.mobile-text{
+    font-size:17px;
+    color:#666;
+    line-height:1.4;
+}
+
+/* Switch */
+
+.switch{
+    position:relative;
+    display:inline-block;
+    width:44px;
+    height:24px;
+    flex-shrink:0;
+}
+
+.switch input{
+    opacity:0;
+    width:0;
+    height:0;
+}
+
+.slider{
+    position:absolute;
+    inset:0;
+    background:#d1d5db;
+    border-radius:999px;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.slider::before{
+    content:"";
+    position:absolute;
+    width:18px;
+    height:18px;
+    left:3px;
+    top:3px;
+    background:#fff;
+    border-radius:50%;
+    transition:.3s;
+    box-shadow:0 2px 5px rgba(0,0,0,.2);
+}
+
+.switch input:checked + .slider{
+    background:#2563eb;
+}
+
+.switch input:checked + .slider::before{
+    transform:translateX(20px);
+}
+
+/* Tablet */
+
+@media (max-width:768px){
+
+    .mobile-title{
+        font-size:18px;
+    }
+
+    .mobile-text{
+        font-size:15px;
+    }
+}
+
+/* Mobile */
+
+@media (max-width:480px){
+
+    .mobile-option{
+        align-items:flex-start;
+    }
+
+    .mobile-text{
+        font-size:14px;
+    }
+
+    .switch{
+        width:40px;
+        height:22px;
+    }
+
+    .slider::before{
+        width:16px;
+        height:16px;
+    }
+
+    .switch input:checked + .slider::before{
+        transform:translateX(18px);
+    }
+}
+          
+/* ── Submit Button ── */
         .submit-wrap {
           display: flex;
           justify-content: space-between;
@@ -762,10 +891,9 @@ export default function NewTradesHomeRepairListingPage() {
         .back-link:hover {
           border-color: ${ACCENT};
           background: ${ACCENT_LIGHT};
-          transform: translateX(-2px);
-        }
+          transform: translateX(-2px);}
 
-        .submit-btn {
+.submit-btn {
           padding: 14px 40px;
           background: linear-gradient(135deg, ${ACCENT}, #1d4ed8);
           color: #fff;
@@ -799,7 +927,7 @@ export default function NewTradesHomeRepairListingPage() {
           transform: none;
           box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
         }
-
+            
         /* ── Responsive ── */
         @media (max-width: 768px) {
           .listing-container { padding: 16px; }
@@ -842,9 +970,10 @@ export default function NewTradesHomeRepairListingPage() {
           .back-btn { width: 36px; height: 36px; }
           .listing-title { font-size: 18px; }
         }
-      `}</style>
-
+          
+          `}</style>
       <div className="listing-page">
+
         <div className="listing-container">
           {/* Header */}
           <div className="listing-header">
@@ -859,33 +988,109 @@ export default function NewTradesHomeRepairListingPage() {
               Draft Saved <FiCheck size={16} />
             </div>
           </div>
-
           {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
               <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "active" ? <FiCheck size={16} /> : <step.icon size={14} />}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div className={`step-connector ${step.status === "active" ? "filled" : ""}`} />
                 )}
               </div>
             ))}
           </div>
 
+
           <form onSubmit={handleSubmit} className="form-card">
             {/* Category Pill */}
-            <div className="category-wrap">
-              <label className="category-label">Category</label>
-              <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
-                <FiTool size={16} />
-                Trades & Home Repair
-                <span className="change-badge">Change</span>
-              </button>
+            <div className="two-col-layout">
+              <div className="left-col">
+
+                <div className="category-wrap">
+                  <label className="category-label">Category</label>
+
+                  <div className="category-pill">
+                    <div className="category-info">
+                      <FaSpa size={18} />
+                      <span>Hair, Beauty & Wellness Service</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="change-btn"
+                      onClick={() => setShowCategoryMenu(!showCategoryMenu)}
+                    >
+                      Change
+                    </button>
+                  </div>
+
+                  {showCategoryMenu && (
+                    <div className="category-menu">
+                      {categories.map((item) => (
+                        <button
+                          key={item.name}
+                          type="button"
+                          className="category-item"
+                          onClick={() => handleCategoryChange(item.path)}
+                        >
+                          {item.icon}
+                          <span>{item.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="right-col">
+
+                <label className="category-label">Select Service</label>
+
+                <div className="category-pill">
+                  <div className="category-info">
+                    <FaSpa size={18} />
+                    <span>Beauty</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="change-btn"
+                    onClick={() => setShowServiceMenu(!showServiceMenu)}
+                  >
+                    Change
+                  </button>
+                </div>
+
+                {showServiceMenu && (
+                  <div className="category-menu">
+                    {beautyServices.map((service) => (
+                      <button
+                        key={service}
+                        type="button"
+                        className="category-item"
+                        onClick={() => {
+                          setShowServiceMenu(false);
+
+                          if (service === "Beauty") {
+                            router.push("/seller/listing/hair-beauty-wellness/beauty");
+                          } else if (service === "Hair") {
+                            router.push("/seller/listing/hair-beauty-wellness/hair");
+                          } else if (service === "Wellness") {
+                            router.push("/seller/listing/hair-beauty-wellness/wellness");
+                          }
+                        }}
+                      >
+                        <FaSpa />
+                        <span>{service}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="divider" />
@@ -902,7 +1107,6 @@ export default function NewTradesHomeRepairListingPage() {
                     <h2>Basic Information</h2>
                   </div>
                 </div>
-
                 <div className="form-group full-width">
                   <label className="form-label">
                     Service Title <span className="required">*</span>
@@ -916,39 +1120,40 @@ export default function NewTradesHomeRepairListingPage() {
                     required
                   />
                 </div>
-
-                <div className="form-group full-width">
-                  <label className="form-label">Starting Price(NPR)</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    className="form-input"
-                    placeholder="Enter starting price"
-                    value={formattedPrice}
-                    onChange={(e) => handlePriceChange(e.target.value)}
-                  />
-                  <p className="price-hint">Charge applied per unit</p>
-                </div>
-
                 <div className="form-group full-width">
                   <label className="form-label">
-                    Description <span className="required">*</span>
+                    Short Description <span className="required">*</span>
                   </label>
+
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Enter short description"
+                    value={shortDescription}
+                    onChange={(e) => setShortDescription(e.target.value)}
+                  />
+                  <div className={`char-counter ${descLength > descMim * 0.5 ? "near-limit" : ""}`}>
+                    {descLength}/{descMim}
+                  </div>
+                </div>
+                <div className="form-group full-width">
+                  <label className="form-label">
+                    Detailed Description <span className="required">*</span>
+                  </label>
+
                   <textarea
                     className="form-textarea"
-                    placeholder="Enter Description"
-                    value={description}
-                    maxLength={descMax}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
+                    placeholder="Describe your beauty service"
+                    value={detailedDescription}
+                    onChange={(e) => setDetailedDescription(e.target.value)}
                   />
                   <div className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}>
                     {descLength}/{descMax}
                   </div>
                 </div>
-              </div>
 
-              {/* Right: Service Details */}
+
+              </div>
               <div className="right-col">
                 <div className="section-header">
                   <div className="section-icon red">
@@ -958,84 +1163,81 @@ export default function NewTradesHomeRepairListingPage() {
                     <h2>Service Details</h2>
                   </div>
                 </div>
+                <div className="form-group full-width">
+                  <label className="form-label">
+                    Price (NPR) <span className="required">*</span>
+                  </label>
+
+                  <input
+                    type="number"
+                    className="form-input"
+                    placeholder="3500"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                  />
+                </div>
 
                 <div className="form-group full-width">
                   <label className="form-label">
-                    Select Service <span className="required">*</span>
+                    Service Type <span className="required">*</span>
                   </label>
+
                   <CustomSelect
                     options={services}
-                    value={selectedService}
-                    onChange={setSelectedService}
-                    placeholder="Select service"
+                    value={serviceType}
+                    onChange={setServiceType}
+                    placeholder="Select Service Type"
                   />
+                  <p>At Studio: Service at your Location</p>
+                  <p>At Home: Professional will come to customer</p>
                 </div>
 
                 <div className="form-group full-width">
                   <label className="form-label">
-                    City <span className="required">*</span>
+                    Duration <span className="required">*</span>
                   </label>
+
                   <CustomSelect
-                    options={cities}
-                    value={city}
-                    onChange={setCity}
-                    placeholder="Select city"
+                    icon={<FiClock size={18} />}
+                    options={
+                      minutes
+
+                    }
+                    value={duration}
+                    onChange={setDuration}
+                    placeholder="Select Duration"
                   />
                 </div>
+                <div className="mobile-service">
+                  <label className="mobile-title">Mobile Service</label>
 
-                <div className="form-group full-width">
-                  <label className="form-label">
-                    Ward <span className="required">*</span>
-                  </label>
-                  <CustomSelect
-                    options={wards}
-                    value={ward}
-                    onChange={setWard}
-                    placeholder="Select ward"
-                  />
-                </div>
+                  <div className="mobile-option">
+                    <label className="switch">
+                      <input type="checkbox" />
+                      <span className="slider"></span>
+                    </label>
 
-                <div className="form-group full-width">
-                  <label className="form-label">Skills</label>
-                  <div className="skills-wrap">
-                    {skills.map((skill) => (
-                      <span key={skill} className="skill-tag">
-                        {skill}
-                        <span className="remove-skill" onClick={() => removeSkill(skill)}>
-                          <FiX size={12} />
-                        </span>
-                      </span>
-                    ))}
+                    <span className="mobile-text">
+                      I provide this service at customer's location
+                    </span>
                   </div>
-                  <div className="skill-input-wrap">
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Type and press Enter to add more"
-                      value={skillInput}
-                      onChange={(e) => setSkillInput(e.target.value)}
-                      onKeyDown={handleSkillKeyDown}
-                    />
-                  </div>
-                  <p className="skill-input-hint">Type and press Enter to add more</p>
                 </div>
               </div>
             </div>
-
-            <div className="divider" />
-
-            {/* Submit Row */}
-            <div className="submit-wrap">
-              <button type="button" className="back-link" onClick={() => router.back()}>
-                <FiArrowLeft size={16} />
-                Back
-              </button>
-              <button type="submit" className="submit-btn">
-                Save & Continue
-                <FiChevronRight size={16} />
-              </button>
-            </div>
           </form>
+          <div className="divider" />
+
+          {/* Submit Row */}
+          <div className="submit-wrap">
+            <button type="button" className="back-link" onClick={() => router.back()}>
+              <FiArrowLeft size={16} />
+              Back
+            </button>
+            <button type="submit" className="submit-btn">
+              Save & Continue
+              <FiChevronRight size={16} />
+            </button>
+          </div>
         </div>
       </div>
     </>
