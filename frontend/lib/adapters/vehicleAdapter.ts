@@ -1,4 +1,5 @@
-import type { DBListing, FuelType, VehicleType, ListingDetail } from "@/app/types/listing";
+import type { DBListing, FuelType, VehicleType } from "@/app/types/vehicle";
+import type { ListingDetail } from "@/app/types/listing";
 
 //Label maps
 export const FUEL_LABEL: Record<FuelType, string> = {

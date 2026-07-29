@@ -42,6 +42,7 @@ export class ListingsService {
         vehicle: true,
         job: true,
         medical: true,
+        secondhand: true,
         reviews: true,
         user: {
           select: {

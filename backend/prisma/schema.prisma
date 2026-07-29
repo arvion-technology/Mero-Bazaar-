@@ -671,6 +671,15 @@ model AgricultureAndLivestock {
   breed                String?
   age                  Int?
   healthVaccineStatus  HealthVaccineStatus?
+
+  vetServiceType       VetServiceType?
+  experienceYears      Int?
+  mobileService        Boolean  @default(false)
+  vaccinationAvailable Boolean  @default(false)
+  serviceRadiusKm      Int?
+  healthCertificate    Boolean  @default(false)
+  availabilityDays     WeekDay[]
+
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
@@ -678,6 +687,7 @@ model AgricultureAndLivestock {
   @@index([listingType])
   @@index([organicCertified])
   @@index([healthVaccineStatus])
+  @@index([vetServiceType])
 }
 
 enum AgricultureListingType {
@@ -702,6 +712,16 @@ enum HealthVaccineStatus {
   VACCINATED
   NOT_VACCINATED
   UNKNOWN
+}
+
+enum VetServiceType {
+  GENERAL_CHECKUP
+  VACCINATION
+  SURGERY
+  DEWORMING
+  BREEDING_CONSULTATION
+  EMERGENCY
+  OTHER
 }
 
 model SecondHandGoods {

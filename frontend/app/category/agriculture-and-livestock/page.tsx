@@ -1,174 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import {
-  FiSearch,
-  FiMapPin,
-  FiChevronDown,
-  FiMessageSquare,
-  FiHeart,
-  FiCheckCircle,
+  FiSearch, FiMapPin, FiChevronDown, FiMessageSquare, FiHeart, FiCheckCircle,
 } from "react-icons/fi";
-import {
-  FaHeart,
-  FaLeaf,
-  FaSeedling,
-  FaTractor,
-  FaWrench,
-  FaCarrot,
-} from "react-icons/fa";
+import { FaHeart, FaLeaf, FaSeedling, FaTractor, FaWrench, FaCarrot } from "react-icons/fa";
 import { FaCow } from "react-icons/fa6";
+import { api } from "@/lib/api";
+import { toAgricultureCard } from "@/lib/adapters/agricultureAdapter";
+import type { AgricultureListing, AgricultureCard } from "@/app/types/agriculture";
 
 const CATEGORY_ICONS = [
-  { name: "Produce",   icon: FaCarrot,   count: 1245, color: "#f97316", bg: "#fff7ed" },
-  { name: "Livestock", icon: FaCow,       count: 567,  color: "#b45309", bg: "#fffbeb" },
-  { name: "Tools",     icon: FaWrench,    count: 245,  color: "#475569", bg: "#f8fafc" },
-  { name: "Service",   icon: FaTractor,   count: 345,  color: "#15803d", bg: "#f0fdf4" },
+  { name: "Produce",     icon: FaCarrot, color: "#f97316" },
+  { name: "Livestock",   icon: FaCow,     color: "#b45309" },
+  { name: "Tool",        icon: FaWrench,  color: "#475569" },
+  { name: "Vet Service", icon: FaTractor, color: "#15803d" },
 ];
 
-/* ─────────── TYPES ─────────── */
-type AgriListing = {
-  id: string;
-  title: string;
-  category: "Produce" | "Livestock" | "Tools" | "Service";
-  price: string;
-  unit?: string;
-  location: string;
-  district: string;
-  image: string;
-  isOrganic?: boolean;
-  availability?: string;
-  breed?: string;
-  age?: string;
-  isVaccinated?: boolean;
-  // FIX 1: aligned with HEALTH_STATUS constant ("Not Vaccinated", not "Non-Vaccinated")
-  healthStatus?: "Vaccinated" | "Not Vaccinated";
-  seasonal?: string;
-  description?: string;
-  sellerName?: string;
-  sellerPhone?: string;
-  postedDaysAgo?: number;
-};
-
-/* ─────────── DATA ─────────── */
-const LISTINGS: AgriListing[] = [
-  {
-    id: "organic-tomatoes",
-    title: "Organic Tomatoes",
-    category: "Produce",
-    price: "NPR 120/Kg",
-    location: "Chitwan",
-    district: "Chitwan",
-    image: "/tomatoes.jpg",
-    isOrganic: true,
-    availability: "Available Always",
-    seasonal: "Spring",
-    description: "Fresh organic tomatoes grown without pesticides.",
-    sellerName: "Ram Bahadur",
-    sellerPhone: "9801234567",
-    postedDaysAgo: 2,
-  },
-  {
-    id: "cow-brown",
-    title: "Cow",
-    category: "Livestock",
-    price: "NRP 150,000",
-    location: "Rupandehi",
-    district: "Rupandehi",
-    image: "/cow.jpg",
-    breed: "Cow",
-    age: "3 years",
-    isVaccinated: true,
-    healthStatus: "Vaccinated",
-    description: "Healthy vaccinated cow, good milk production.",
-    sellerName: "Hari Prasad",
-    sellerPhone: "9807654321",
-    postedDaysAgo: 1,
-  },
-  {
-    id: "cauliflower",
-    title: "Cauliflower",
-    category: "Produce",
-    price: "NPR 100/Kg",
-    location: "Chitwan",
-    district: "Chitwan",
-    image: "/cauliflower.jpg",
-    isOrganic: true,
-    availability: "Available Oct-Dec",
-    seasonal: "Autumn",
-    description: "Fresh organic cauliflower from local farms.",
-    sellerName: "Sita Devi",
-    sellerPhone: "9812345678",
-    postedDaysAgo: 3,
-  },
-  {
-    id: "jersey-1",
-    title: "Jersey",
-    category: "Livestock",
-    price: "NRP 150,000",
-    location: "Rupandehi",
-    district: "Rupandehi",
-    image: "/jersey.jpg",
-    breed: "Jersey",
-    age: "5 years",
-    isVaccinated: true,
-    healthStatus: "Vaccinated",
-    description: "Pure breed Jersey cow, high milk yield.",
-    sellerName: "Gopal Sharma",
-    sellerPhone: "9823456789",
-    postedDaysAgo: 1,
-  },
-  {
-    id: "organic-potatoes",
-    title: "Organic Potatos",
-    category: "Produce",
-    price: "NPR 140/Kg",
-    location: "Chitwan",
-    district: "Chitwan",
-    image: "/potatoes.jpg",
-    isOrganic: true,
-    availability: "Available Oct-Dec",
-    seasonal: "Autumn",
-    description: "Farm fresh organic potatoes.",
-    sellerName: "Mohan Thapa",
-    sellerPhone: "9834567890",
-    postedDaysAgo: 5,
-  },
-  {
-    id: "jersey-2",
-    title: "Jersey",
-    category: "Livestock",
-    price: "NRP 150,000",
-    location: "Rupandehi",
-    district: "Rupandehi",
-    image: "/jersey2.jpg",
-    breed: "Jersey",
-    age: "5 years",
-    isVaccinated: true,
-    healthStatus: "Vaccinated",
-    description: "Healthy Jersey cow for sale.",
-    sellerName: "Krishna Adhikari",
-    sellerPhone: "9845678901",
-    postedDaysAgo: 2,
-  },
-];
-
-const LISTING_TYPES = ["Produce", "Livestock", "Tools", "Service"];
-const SEASONS = ["Spring", "Summer", "Autumn", "Early Fall"];
+const LISTING_TYPES = ["Produce", "Livestock", "Tool", "Seed", "Fertilizer", "Vet Service", "Farm Labour"];
+const SEASONS = ["Spring", "Summer", "Autumn", "Winter"];
 const DISTRICTS = ["Chitwan", "Rupandehi", "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara"];
-const HEALTH_STATUS = ["Vaccinated", "Not Vaccinated"];
+const HEALTH_STATUS = ["VACCINATED", "NOT_VACCINATED"];
+const HEALTH_LABEL: Record<string, string> = { VACCINATED: "Vaccinated", NOT_VACCINATED: "Not Vaccinated" };
 
-/* ─────────── PRICE PARSER ─────────── */
-// FIX 2: robust helper used in both filter + sort
 const parsePrice = (priceStr: string): number => {
   const match = priceStr.replace(/,/g, "").match(/\d+/);
   return match ? parseInt(match[0], 10) : 0;
 };
 
-/* ─────────── COMPONENT ─────────── */
 export default function AgriculturePage() {
+  const [cards, setCards] = useState<AgricultureCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -180,6 +46,22 @@ export default function AgriculturePage() {
   const [priceRange, setPriceRange] = useState<number>(500000);
   const [showMore, setShowMore] = useState(false);
 
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    api.getAgricultureListings()
+      .then((raw: AgricultureListing[]) => {
+        if (cancelled) return;
+        setCards(raw.map(toAgricultureCard));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Failed to load listings");
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
   const toggleFav = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -187,19 +69,11 @@ export default function AgriculturePage() {
   };
 
   const toggleType = (t: string) =>
-    setSelectedTypes((prev) =>
-      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
-    );
-
+    setSelectedTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
   const toggleSeason = (s: string) =>
-    setSelectedSeasons((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
-    );
-
+    setSelectedSeasons((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
   const toggleHealth = (h: string) =>
-    setSelectedHealth((prev) =>
-      prev.includes(h) ? prev.filter((x) => x !== h) : [...prev, h]
-    );
+    setSelectedHealth((prev) => (prev.includes(h) ? prev.filter((x) => x !== h) : [...prev, h]));
 
   const reset = () => {
     setSelectedTypes([]);
@@ -211,32 +85,23 @@ export default function AgriculturePage() {
     setSearch("");
   };
 
-  const displayed = LISTINGS.filter((l) => {
+  const displayed = cards.filter((l) => {
     const s = search.toLowerCase();
     if (s && !l.title.toLowerCase().includes(s) && !l.location.toLowerCase().includes(s)) return false;
-    if (selectedTypes.length && !selectedTypes.includes(l.category)) return false;
-    if (selectedSeasons.length && l.seasonal && !selectedSeasons.includes(l.seasonal)) return false;
+    if (selectedTypes.length && !selectedTypes.includes(l.listingType)) return false;
+    if (selectedSeasons.length && l.seasonalAvailability && !selectedSeasons.includes(l.seasonalAvailability)) return false;
     if (selectedDistrict && l.district !== selectedDistrict) return false;
-    if (organicOnly && !l.isOrganic) return false;
-
-    // FIX 3: health filter now excludes Produce & other items that have no healthStatus
-    if (selectedHealth.length && (!l.healthStatus || !selectedHealth.includes(l.healthStatus))) return false;
-
-    // FIX 4: price filter now uses the robust parsePrice helper
-    const priceNum = parsePrice(l.price);
-    if (priceNum > priceRange) return false;
-
+    if (organicOnly && !l.organicCertified) return false;
+    if (selectedHealth.length && (!l.healthVaccineStatus || !selectedHealth.includes(l.healthVaccineStatus))) return false;
+    if (parsePrice(l.price) > priceRange) return false;
     return true;
   });
 
   const sortedDisplayed = [...displayed].sort((a, b) => {
     switch (sort) {
-      case "price-low":
-        return parsePrice(a.price) - parsePrice(b.price);
-      case "price-high":
-        return parsePrice(b.price) - parsePrice(a.price);
-      default:
-        return 0;
+      case "price-low": return parsePrice(a.price) - parsePrice(b.price);
+      case "price-high": return parsePrice(b.price) - parsePrice(a.price);
+      default: return a.postedDaysAgo - b.postedDaysAgo;
     }
   });
 
@@ -244,11 +109,10 @@ export default function AgriculturePage() {
     switch (category) {
       case "Livestock": return { background: "#ec4899", color: "#fff" };
       case "Produce":   return { background: "#10b981", color: "#fff" };
-      case "Tools":     return { background: "#3b82f6", color: "#fff" };
+      case "Tool":      return { background: "#3b82f6", color: "#fff" };
       default:          return { background: "#8b5cf6", color: "#fff" };
     }
   };
-
   return (
     <>
       <style>{`
@@ -589,49 +453,32 @@ export default function AgriculturePage() {
       `}</style>
 
       <div className="al-wrap">
-
-        {/* ── HERO ── */}
         <section className="al-hero">
           <div className="al-hero-bg" />
           <div className="al-hero-overlay" />
           <div className="al-hero-watermark">Agri</div>
           <div className="al-hero-inner">
-            <div className="al-hero-tag">
-              <FaSeedling size={12} />
-              Nepal&apos;s #1 Agri Marketplace
-            </div>
+            <div className="al-hero-tag"><FaSeedling size={12} /> Nepal&apos;s #1 Agri Marketplace</div>
             <h1>Find The Best</h1>
             <h2>Agriculture &amp; Livestock services</h2>
             <p>Trusted Agriculture &amp; livestock near you</p>
             <div className="al-search-wrap">
               <FiSearch className="al-search-icon" size={15} />
-              <input
-                className="al-search"
-                placeholder="Search sales, buy........"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+              <input className="al-search" placeholder="Search sales, buy........" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
           </div>
         </section>
 
-        {/* ── CATEGORY ICON STRIP ── */}
         <section className="al-cats-strip">
           <div className="al-cats-inner">
             <p className="al-cats-label">Browse Categories</p>
             <div className="al-cats-row">
               {CATEGORY_ICONS.map((cat) => (
-                <button
-                  key={cat.name}
-                  className={`al-cat-card${selectedTypes.includes(cat.name) ? " active" : ""}`}
-                  onClick={() => toggleType(cat.name)}
-                >
-                  <span className="al-cat-icon" style={{ color: cat.color }}>
-                    <cat.icon size={22} />
-                  </span>
+                <button key={cat.name} className={`al-cat-card${selectedTypes.includes(cat.name) ? " active" : ""}`} onClick={() => toggleType(cat.name)}>
+                  <span className="al-cat-icon" style={{ color: cat.color }}><cat.icon size={22} /></span>
                   <span>
                     <span className="al-cat-name">{cat.name}</span>
-                    <span className="al-cat-count">{cat.count.toLocaleString()} listings</span>
+                    <span className="al-cat-count">{cards.filter((c) => c.listingType === cat.name).length} listings</span>
                   </span>
                 </button>
               ))}
@@ -639,14 +486,10 @@ export default function AgriculturePage() {
           </div>
         </section>
 
-        {/* ── BODY ── */}
         <div className="al-body">
-
-          {/* ── SIDEBAR ── */}
           <aside className="al-sidebar">
             <div className="al-sb-head">Filter</div>
 
-            {/* Listing Type */}
             <div className="al-sb-section">
               <p className="al-sb-title">Listing Type</p>
               {LISTING_TYPES.map((t) => (
@@ -659,7 +502,6 @@ export default function AgriculturePage() {
               ))}
             </div>
 
-            {/* Seasonal Product */}
             <div className="al-sb-section">
               <p className="al-sb-title">Seasonal Product</p>
               {SEASONS.map((s) => (
@@ -672,50 +514,30 @@ export default function AgriculturePage() {
               ))}
             </div>
 
-            {/* Price Range */}
             <div className="al-sb-section">
               <p className="al-sb-title">Price Range</p>
-              <input
-                type="range"
-                min={0}
-                max={500000}
-                value={priceRange}
-                onChange={(e) => setPriceRange(Number(e.target.value))}
-                className="al-range"
-              />
-              <div className="al-range-vals">
-                <span>0</span>
-                <span className="hi">{priceRange.toLocaleString()}</span>
-              </div>
+              <input type="range" min={0} max={500000} value={priceRange} onChange={(e) => setPriceRange(Number(e.target.value))} className="al-range" />
+              <div className="al-range-vals"><span>0</span><span className="hi">{priceRange.toLocaleString()}</span></div>
             </div>
 
-            {/* Certificated */}
             <div className="al-sb-section">
               <p className="al-sb-title">Certificated</p>
               <div className="al-check-row" onClick={() => setOrganicOnly(!organicOnly)}>
                 <div className={`al-checkbox${organicOnly ? " checked" : ""}`}>
                   {organicOnly && <FiCheckCircle size={10} color="#fff" />}
                 </div>
-                <span className={`al-check-label${organicOnly ? " checked" : ""}`}>
-                  Organic Certified
-                </span>
+                <span className={`al-check-label${organicOnly ? " checked" : ""}`}>Organic Certified</span>
               </div>
             </div>
 
-            {/* District */}
             <div className="al-sb-section">
               <p className="al-sb-title">District</p>
-              <select
-                className="al-district-select"
-                value={selectedDistrict}
-                onChange={(e) => setSelectedDistrict(e.target.value)}
-              >
+              <select className="al-district-select" value={selectedDistrict} onChange={(e) => setSelectedDistrict(e.target.value)}>
                 <option value="">Select District</option>
                 {DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
 
-            {/* Livestock health Status */}
             <div className="al-sb-section">
               <p className="al-sb-title">Livestock health Status</p>
               {HEALTH_STATUS.map((h) => (
@@ -723,42 +545,32 @@ export default function AgriculturePage() {
                   <div className={`al-checkbox${selectedHealth.includes(h) ? " checked" : ""}`}>
                     {selectedHealth.includes(h) && <FiCheckCircle size={10} color="#fff" />}
                   </div>
-                  <span className={`al-check-label${selectedHealth.includes(h) ? " checked" : ""}`}>{h}</span>
+                  <span className={`al-check-label${selectedHealth.includes(h) ? " checked" : ""}`}>{HEALTH_LABEL[h]}</span>
                 </div>
               ))}
             </div>
 
-            <button className="al-more-btn" onClick={() => setShowMore(!showMore)}>
-              {showMore ? "Less" : "More"}
-            </button>
+            <button className="al-more-btn" onClick={() => setShowMore(!showMore)}>{showMore ? "Less" : "More"}</button>
           </aside>
 
-          {/* ── MAIN ── */}
           <div className="al-main">
-            {/* Results bar */}
             <div className="al-results-bar">
-              <span className="al-count">
-                <strong>{sortedDisplayed.length}</strong> results found
-              </span>
+              <span className="al-count"><strong>{sortedDisplayed.length}</strong> results found</span>
               <div style={{ position: "relative" }}>
-                <select
-                  className="al-sort"
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                >
+                <select className="al-sort" value={sort} onChange={(e) => setSort(e.target.value)}>
                   <option value="newest">Newest</option>
                   <option value="price-low">Price: Low to High</option>
                   <option value="price-high">Price: High to Low</option>
                 </select>
-                <FiChevronDown
-                  size={12}
-                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#666" }}
-                />
+                <FiChevronDown size={12} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#666" }} />
               </div>
             </div>
 
-            {/* Cards */}
-            {sortedDisplayed.length === 0 ? (
+            {loading ? (
+              <div className="al-empty"><p style={{ fontWeight: 700, fontSize: 16, color: "#111" }}>Loading listings...</p></div>
+            ) : error ? (
+              <div className="al-empty"><p style={{ fontWeight: 700, fontSize: 16, color: "#111" }}>{error}</p></div>
+            ) : sortedDisplayed.length === 0 ? (
               <div className="al-empty">
                 <div style={{ fontSize: 48, marginBottom: 12 }}>🌾</div>
                 <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No listings found</p>
@@ -770,92 +582,42 @@ export default function AgriculturePage() {
               <div className="al-grid">
                 {sortedDisplayed.map((item) => {
                   const isFav = !!favorites[item.id];
-                  const badgeStyle = getCategoryBadgeStyle(item.category);
-
+                  const badgeStyle = getCategoryBadgeStyle(item.listingType);
                   return (
                     <div key={item.id} className="al-card">
-                      {/* Image */}
-                      <Link
-                        href={`/category/agriculture-and-livestock/${item.id}`}
-                        className="al-card-img-wrap"
-                        style={{ display: "block", textDecoration: "none" }}
-                      >
+                      <Link href={`/category/agriculture-and-livestock/${item.id}`} className="al-card-img-wrap" style={{ display: "block", textDecoration: "none" }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={item.image} alt={item.title} className="al-card-img" />
-                        <span className="al-card-cat-badge" style={badgeStyle}>
-                          #{item.category}
-                        </span>
+                        <img src={item.thumb} alt={item.title} className="al-card-img" />
+                        <span className="al-card-cat-badge" style={badgeStyle}>#{item.listingType}</span>
                         <button className="al-card-fav" onClick={(e) => toggleFav(item.id, e)}>
-                          {isFav
-                            ? <FaHeart size={12} color="#ef4444" />
-                            : <FiHeart size={12} color="#9ca3af" />}
+                          {isFav ? <FaHeart size={12} color="#ef4444" /> : <FiHeart size={12} color="#9ca3af" />}
                         </button>
                       </Link>
-
-                      {/* Body */}
                       <div className="al-card-body">
                         <p className="al-card-title">{item.title}</p>
-
-                        {/* Breed & Age (Livestock) */}
                         {item.breed && (
                           <div className="al-card-breed-row">
                             <span>Breed: <strong>{item.breed}</strong></span>
-                            {item.age && <span>Age: <strong>{item.age}</strong></span>}
+                            {item.age != null && <span>Age: <strong>{item.age}</strong></span>}
                           </div>
                         )}
-
-                        {/* Price */}
                         <p className="al-card-price">{item.price}</p>
-
-                        {/* Organic Certified */}
-                        {item.isOrganic && (
-                          <div className="al-organic-badge">
-                            <FaLeaf size={11} />
-                            Organic Certified
-                          </div>
+                        {item.organicCertified && (
+                          <div className="al-organic-badge"><FaLeaf size={11} /> Organic Certified</div>
                         )}
-
-                        {/* Location */}
-                        <div className="al-card-location">
-                          <FiMapPin size={11} />
-                          {item.location}
-                        </div>
-
-                        {/* Availability */}
-                        {item.availability && (
-                          <div className="al-avail-bar">
-                            <span className="al-avail-dot" />
-                            {item.availability}
-                          </div>
-                        )}
-
-                        {/* Vaccinated */}
-                        {item.healthStatus && (
+                        <div className="al-card-location"><FiMapPin size={11} /> {item.location}</div>
+                        {item.healthVaccineStatus && (
                           <div className="al-vaccinated-row">
-                            <span className="al-vax-dot" />
-                            {item.healthStatus}
+                            <span className="al-vax-dot" /> {HEALTH_LABEL[item.healthVaccineStatus] ?? item.healthVaccineStatus}
                           </div>
                         )}
-
-                        {/* Chat Seller */}
-                        <Link
-                          href={`/category/agriculture-and-livestock/${item.id}`}
-                          className="al-chat-btn"
-                        >
-                          <FiMessageSquare size={13} />
-                          Chat Seller
+                        <Link href={`/category/agriculture-and-livestock/${item.id}`} className="al-chat-btn">
+                          <FiMessageSquare size={13} /> Chat Seller
                         </Link>
                       </div>
                     </div>
                   );
                 })}
-              </div>
-            )}
-
-            {/* Load More */}
-            {sortedDisplayed.length > 0 && (
-              <div className="al-load-more">
-                <button className="al-load-more-btn">Views More</button>
               </div>
             )}
           </div>
