@@ -1,3 +1,14 @@
+export type FoodType =
+  | "TIFFIN"
+  | "BAKERY"
+  | "DAIRY"
+  | "MEAT"
+  | "ORGANIC"
+  | "HOME_COOK"
+  | "WHOLESALE";
+export type PriceUnit = "PER_MEAL" | "PER_KG" | "PER_LITRE" | "PER_PIECE";
+export type WeekDay = "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN";
+
 export interface CreateFoodsPayload {
   title: string;
   description: string;

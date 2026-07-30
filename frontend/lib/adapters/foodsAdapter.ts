@@ -56,7 +56,7 @@ export function formToCreateFoodsPayload(raw: RawFoodsForm): CreateFoodsPayload 
   };
 }
 
-const FOOD_TYPE_LABEL: Record<FoodType, string> = {
+export const FOOD_TYPE_LABEL: Record<FoodType, string> = {
   TIFFIN: "Tiffin",
   BAKERY: "Bakery",
   DAIRY: "Dairy",
@@ -66,7 +66,7 @@ const FOOD_TYPE_LABEL: Record<FoodType, string> = {
   WHOLESALE: "Wholesale",
 };
 
-const PRICE_UNIT_LABEL: Record<PriceUnit, string> = {
+export const PRICE_UNIT_LABEL: Record<PriceUnit, string> = {
   PER_MEAL: "per meal",
   PER_KG: "per kg",
   PER_LITRE: "per litre",
