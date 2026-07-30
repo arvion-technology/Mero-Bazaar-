@@ -781,18 +781,12 @@ model FoodsAndHomeDelivery {
   foodType  FoodType
   price     Int
   priceUnit PriceUnit
-
-  deliveryRadiusKm      Int
-  hygieneRating         Float     @default(0)
-  subscriptionAvailable Boolean   @default(false)
   deliveryDays          WeekDay[]
-  minOrderAmount        Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([foodType])
-  @@index([deliveryRadiusKm])
 }
 
 model Review {
