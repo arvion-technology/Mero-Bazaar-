@@ -43,16 +43,6 @@ const weekDays = [
   { key: "SUN", label: "Sunday" },
 ];
 
-const timeOptions = [
-  "06:00 AM","06:30 AM","07:00 AM","07:30 AM","08:00 AM","08:30 AM",
-  "09:00 AM","09:30 AM","10:00 AM","10:30 AM","11:00 AM","11:30 AM",
-  "12:00 PM","12:30 PM","01:00 PM","01:30 PM","02:00 PM","02:30 PM",
-  "03:00 PM","03:30 PM","04:00 PM","04:30 PM","05:00 PM","05:30 PM",
-  "06:00 PM","06:30 PM","07:00 PM","07:30 PM","08:00 PM","08:30 PM",
-  "09:00 PM",
-];
-
-const slotDurations = ["15 minutes","30 minutes","45 minutes","60 minutes","90 minutes"];
 const bufferTimes = ["No buffer","5 minutes","10 minutes","15 minutes","30 minutes"];
 
 type TimeSlot = { id: string; start: string; end: string };
@@ -176,17 +166,17 @@ export default function MedicalAvailabilityPage() {
   const [selectedDays, setSelectedDays] = useState<string[]>(["MON","TUE","WED","THU","FRI"]);
   const [slots, setSlots] = useState<Record<string, TimeSlot[]>>({
     MON: [
-      { id: "1", start: "09:00 AM", end: "09:00 AM" },
-      { id: "2", start: "09:00 AM", end: "09:00 AM" },
+      { id: "1", start: "", end: "" },
+      { id: "2", start: "", end: "" },
     ],
-    TUE: [{ id: "3", start: "09:00 AM", end: "09:00 AM" }],
-    WED: [{ id: "4", start: "09:00 AM", end: "09:00 AM" }],
-    THU: [{ id: "5", start: "09:00 AM", end: "09:00 AM" }],
-    FRI: [{ id: "6", start: "09:00 AM", end: "09:00 AM" }],
+    TUE: [{ id: "3", start: "", end: "" }],
+    WED: [{ id: "4", start: "", end: "" }],
+    THU: [{ id: "5", start: "", end: "" }],
+    FRI: [{ id: "6", start: "", end: "" }],
   });
 
   const [activeDay, setActiveDay] = useState("MON");
-  const [slotDuration, setSlotDuration] = useState("30 minutes");
+  const [slotDuration, setSlotDuration] = useState("");
   const [bufferTime, setBufferTime] = useState("10 minutes");
   const [sameDayBooking, setSameDayBooking] = useState(false);
 
@@ -199,7 +189,7 @@ export default function MedicalAvailabilityPage() {
         return next;
       } else {
         if (!slots[day]) {
-          setSlots((s) => ({ ...s, [day]: [{ id: Date.now().toString(), start: "09:00 AM", end: "09:00 AM" }] }));
+          setSlots((s) => ({ ...s, [day]: [{ id: Date.now().toString(), start: "", end: "" }] }));
         }
         setActiveDay(day);
         return [...prev, day];
@@ -210,7 +200,7 @@ export default function MedicalAvailabilityPage() {
   const addSlot = (day: string) => {
     setSlots((prev) => ({
       ...prev,
-      [day]: [...(prev[day] || []), { id: Date.now().toString() + Math.random().toString(36).slice(2), start: "09:00 AM", end: "09:00 AM" }],
+      [day]: [...(prev[day] || []), { id: Date.now().toString() + Math.random().toString(36).slice(2), start: "", end: "" }],
     }));
   };
 
@@ -232,9 +222,16 @@ export default function MedicalAvailabilityPage() {
       return;
     }
     for (const day of selectedDays) {
-      if ((slots[day] || []).length === 0) {
+      const daySlots = slots[day] || [];
+      if (daySlots.length === 0) {
         toast.error(`Please add at least one time slot for ${weekDays.find((d) => d.key === day)?.label}`);
         return;
+      }
+      for (const slot of daySlots) {
+        if (!slot.start.trim() || !slot.end.trim()) {
+          toast.error(`Please fill in all time fields for ${weekDays.find((d) => d.key === day)?.label}`);
+          return;
+        }
       }
     }
 
@@ -436,6 +433,22 @@ export default function MedicalAvailabilityPage() {
           color: #334155;
         }
         .slot-label .required { color: ${DANGER}; }
+
+        .time-input {
+          padding: 12px 16px;
+          border: 1.5px solid ${BORDER};
+          border-radius: 12px;
+          font-size: 14px;
+          color: ${TEXT_PRIMARY};
+          background: ${CARD_BG};
+          font-family: inherit;
+          transition: all 0.25s ease;
+          width: 100%;
+          outline: none;
+        }
+        .time-input:hover { border-color: #cbd5e1; background: #fafafa; }
+        .time-input:focus { border-color: ${ACCENT}; background: ${CARD_BG}; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08); }
+        .time-input::placeholder { color: #9ca3af; font-weight: 400; }
 
         .delete-btn {
           width: 36px;
@@ -681,18 +694,24 @@ export default function MedicalAvailabilityPage() {
                       <div key={slot.id} className="slot-row">
                         <div className="slot-group">
                           <label className="slot-label">Start Time <span className="required">*</span></label>
-                          <Dropdown
+                          <input
+                            type="text"
+                            className="time-input"
+                            placeholder="09:00 AM"
                             value={slot.start}
-                            options={timeOptions}
-                            onChange={(val) => updateSlot(activeDay, slot.id, "start", val)}
+                            onChange={(e) => updateSlot(activeDay, slot.id, "start", e.target.value)}
+                            required
                           />
                         </div>
                         <div className="slot-group">
                           <label className="slot-label">End Time <span className="required">*</span></label>
-                          <Dropdown
+                          <input
+                            type="text"
+                            className="time-input"
+                            placeholder="05:00 PM"
                             value={slot.end}
-                            options={timeOptions}
-                            onChange={(val) => updateSlot(activeDay, slot.id, "end", val)}
+                            onChange={(e) => updateSlot(activeDay, slot.id, "end", e.target.value)}
+                            required
                           />
                         </div>
                         <button type="button" className="delete-btn" onClick={() => removeSlot(activeDay, slot.id)}>
@@ -710,10 +729,12 @@ export default function MedicalAvailabilityPage() {
                       <div className="settings-grid">
                         <div className="setting-group">
                           <label className="setting-label">Slot Duration</label>
-                          <Dropdown
+                          <input
+                            type="text"
+                            className="time-input"
+                            placeholder="e.g. 30 minutes"
                             value={slotDuration}
-                            options={slotDurations}
-                            onChange={setSlotDuration}
+                            onChange={(e) => setSlotDuration(e.target.value)}
                           />
                         </div>
                         <div className="setting-group">

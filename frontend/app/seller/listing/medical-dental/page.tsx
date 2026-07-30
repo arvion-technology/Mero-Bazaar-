@@ -49,7 +49,6 @@ const serviceTitles = [
   "Other",
 ];
 
-const cities = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Other"];
 const languagesList = ["English", "Nepali", "Hindi", "Newari", "Maithili", "Bhojpuri"];
 const experienceOptions = ["1-2 Years", "3-5 Years", "5-7 Years", "7+ Years", "10+ Years", "15+ Years"];
 
@@ -1024,10 +1023,13 @@ export default function MedicalListingDetailsPage() {
                 <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
                   <div className="form-group">
                     <label className="form-label">City <span className="required">*</span></label>
-                    <CustomSelect
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Kathmandu"
                       value={city}
-                      options={cities}
-                      onChange={setCity}
+                      onChange={(e) => setCity(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
@@ -1036,18 +1038,18 @@ export default function MedicalListingDetailsPage() {
 
             <div className="divider" />
 
-            {/* Additional Information */}
+            
+            <div className="section-header">
+              <div className="section-icon purple">
+                <FiInfo size={18} color="#fff" />
+              </div>
+              <div className="section-title-wrap">
+                <h2>Additional Information</h2>
+              </div>
+            </div>
+
             <div className="two-col-section">
               <div>
-                <div className="section-header">
-                  <div className="section-icon purple">
-                    <FiInfo size={18} color="#fff" />
-                  </div>
-                  <div className="section-title-wrap">
-                    <h2>Additional Information</h2>
-                  </div>
-                </div>
-
                 <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
                   <div className="form-group">
                     <label className="form-label">Short Bio / About <span style={{ color: TEXT_MUTED, fontWeight: 400 }}>(optional)</span></label>
@@ -1066,7 +1068,7 @@ export default function MedicalListingDetailsPage() {
               </div>
 
               <div>
-                <div className="form-row" style={{ gridTemplateColumns: "1fr", marginTop: "52px" }}>
+                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
                   <div className="form-group">
                     <label className="form-label">Language Known</label>
                     <LanguageSelector
