@@ -52,7 +52,6 @@ const serviceTitles = [
 const languagesList = ["English", "Nepali", "Hindi", "Newari", "Maithili", "Bhojpuri"];
 const experienceOptions = ["1-2 Years", "3-5 Years", "5-7 Years", "7+ Years", "10+ Years", "15+ Years"];
 
-/* ── Portal-based Custom Select ── */
 function CustomSelect({
   value,
   options,
@@ -364,6 +363,7 @@ export default function MedicalListingDetailsPage() {
 
   // ── Service Information ──
   const [serviceTitle, setServiceTitle] = useState("General Medicine");
+  const [servicesOffered, setServicesOffered] = useState("");
   const [doctorName, setDoctorName] = useState("");
   const [licenseNumber, setLicenseNumber] = useState("");
   const [appointmentFee, setAppointmentFee] = useState("");
@@ -384,7 +384,7 @@ export default function MedicalListingDetailsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!serviceTitle || !doctorName || !licenseNumber || !appointmentFee) {
+    if (!serviceTitle || !servicesOffered || !doctorName || !licenseNumber || !appointmentFee) {
       toast.error("Please fill all required fields in Service Information");
       return;
     }
@@ -399,6 +399,7 @@ export default function MedicalListingDetailsPage() {
 
     const listingData = {
       serviceTitle,
+      servicesOffered,
       doctorName,
       licenseNumber,
       appointmentFee,
@@ -911,6 +912,20 @@ export default function MedicalListingDetailsPage() {
                       value={serviceTitle}
                       options={serviceTitles}
                       onChange={setServiceTitle}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                  <div className="form-group">
+                    <label className="form-label">Services Offered <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. General Checkup, Blood Test, Vaccination, Minor Surgery"
+                      value={servicesOffered}
+                      onChange={(e) => setServicesOffered(e.target.value)}
+                      required
                     />
                   </div>
                 </div>

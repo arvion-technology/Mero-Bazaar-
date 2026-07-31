@@ -35,14 +35,6 @@ const steps = [
   { label: "Preview", icon: FiInfo, status: "active" as const },
 ];
 
-const defaultServices = [
-  "Fever & Cold",
-  "Diabetes",
-  "Hypertension",
-  "Thyroid Disorder",
-  "Respiratory Problems",
-];
-
 export default function MedicalPreviewPage() {
   const router = useRouter();
 
@@ -57,6 +49,7 @@ export default function MedicalPreviewPage() {
 
     setDetails(d ? JSON.parse(d) : {
       doctorName: "Dr. Sandhya Yadav",
+      servicesOffered: "General Checkup, Blood Test, Vaccination",
       licenseNumber: "NMC-123456",
       appointmentFee: "800",
       homeVisit: true,
@@ -72,6 +65,11 @@ export default function MedicalPreviewPage() {
   }, []);
 
   const mainPhoto = photos.find((p) => p.isMain) || photos[0];
+
+  
+  const servicesList = details?.servicesOffered
+    ? details.servicesOffered.split(",").map((s: string) => s.trim()).filter(Boolean)
+    : [];
 
   const handlePublish = () => {
     toast.success("Listing published successfully!");
@@ -552,12 +550,16 @@ export default function MedicalPreviewPage() {
             <div>
               <h3 className="section-title">
                 <FiBriefcase size={16} />
-                Service Offered
+                Services Offered
               </h3>
               <div className="tags-row">
-                {defaultServices.map((service) => (
-                  <span key={service} className="service-tag">{service}</span>
-                ))}
+                {servicesList.length > 0 ? (
+                  servicesList.map((service: string, idx: number) => (
+                    <span key={idx} className="service-tag">{service}</span>
+                  ))
+                ) : (
+                  <span style={{ fontSize: 13, color: TEXT_MUTED }}>No services listed.</span>
+                )}
               </div>
             </div>
 
