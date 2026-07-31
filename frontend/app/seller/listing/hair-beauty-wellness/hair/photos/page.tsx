@@ -7,8 +7,8 @@ import {
   FiCheck,
   FiUploadCloud,
   FiX,
-  FiCheck as FiCheckIcon, 
-  FiFileText, 
+  FiCheck as FiCheckIcon,
+  FiFileText,
   FiBriefcase,
   FiImage,
   FiEye,
@@ -18,7 +18,7 @@ import { ToastContainer } from "react-toastify";
 import { useDraft } from "../layout";
 
 const ACCENT = "#2563eb";
-const ACCENT_HOVER = "#1d4ed8"; 
+const ACCENT_HOVER = "#1d4ed8";
 const ACCENT_LIGHT = "#eff6ff";
 const DANGER = "#dc2626";
 const SUCCESS = "#10b981";
@@ -93,7 +93,7 @@ export default function AddPhotosPage() {
       return;
     }
     toast.success("Photos saved! Proceeding to preview...");
-        router.push("/seller/listing/hair-beauty-wellness/beauty/preview");
+    router.push("/seller/listing/hair-beauty-wellness/hair/preview");
   };
 
   const canAddMore = images.length < MAX_IMAGES;
@@ -118,7 +118,7 @@ export default function AddPhotosPage() {
       toast.error("Please upload at least one photo");
       return;
     }
-    router.push("/seller/listing/hair-beauty-wellness/beauty/preview");
+    router.push("/seller/listing/hair-beauty-wellness/hair/preview");
   };
 
 
@@ -600,21 +600,21 @@ export default function AddPhotosPage() {
             </div>
           </div>
           {/* Stepper */}
-                    <div className="stepper">
-                      {steps.map((step, idx) => (
-                        <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
-                          <div className={`step ${step.status}`}>
-                            <div className="step-icon-wrap">
-                              {step.status === "active" ? <FiCheck size={16} /> : <step.icon size={14} />}
-                            </div>
-                            <span className="step-label">{step.label}</span>
-                          </div>
-                          {idx < steps.length - 1 && (
-                            <div className={`step-connector ${step.status === "active" ? "filled" : ""}`} />
-                          )}
-                        </div>
-                      ))}
-                    </div>
+          <div className="stepper">
+            {steps.map((step, idx) => (
+              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+                <div className={`step ${step.status}`}>
+                  <div className="step-icon-wrap">
+                    {step.status === "active" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                  </div>
+                  <span className="step-label">{step.label}</span>
+                </div>
+                {idx < steps.length - 1 && (
+                  <div className={`step-connector ${step.status === "active" ? "filled" : ""}`} />
+                )}
+              </div>
+            ))}
+          </div>
 
           {/* Title */}
           <div className="title-section">

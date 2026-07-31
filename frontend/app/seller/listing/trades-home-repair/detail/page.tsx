@@ -735,7 +735,7 @@ export default function TradesHomeRepairDetailPage() {
               Draft Saved <FiCheck size={16} />
             </div>
           </div>
-
+ 
           {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (

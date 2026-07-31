@@ -1,12 +1,12 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
 
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
 import {
   FiArrowLeft,
   FiChevronRight,
   FiChevronDown,
+  FiCalendar,
   FiMapPin,
   FiFileText,
   FiBriefcase,
@@ -14,20 +14,11 @@ import {
   FiEye,
   FiCheck,
   FiX,
+  FiLayers,
   FiPlus,
-  FiClock,
+
 } from "react-icons/fi";
-import {
-  FaStethoscope,
-  FaSpa,
-  FaBriefcase,
-  FaCar,
-  FaBoxOpen,
-  FaLeaf,
-  FaStore,
-  FaHammer,
-  FaUtensils,
-} from "react-icons/fa";
+
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 
@@ -46,46 +37,69 @@ const CARD_BG = "#ffffff";
 const SITE_PRIMARY = "#C0392B";
 
 const steps = [
-  { label: "Category", icon: FiFileText, status: "active" as const },
-  { label: "Details", icon: FiBriefcase, status: "upcoming" as const },
+  { label: "Category", icon: FiFileText, status: "done" as const },
+  { label: "Details", icon: FiBriefcase, status: "active" as const },
   { label: "Photos", icon: FiImage, status: "upcoming" as const },
   { label: "Preview", icon: FiEye, status: "upcoming" as const },
+]
+const whoIsThisForOptions = [
+  "Women",
+  "Men",
+  "Kids",
+  "Unisex",
 ];
-const services = ["At studio", "At Salon", "At Home", "Online Consultation"];
-const studio = ["Balkumari", "Sanepa", "Balkhu"];
+const requiredGenderOptions = [
+  "Female (Preferred)",
+  "Male (Preferred)",
+  "No Preference",
+];
 
-const minutes = [
+const genderPreferenceOptions = [
+  "Female",
+  "Male",
+  "No Preference",
+];
+
+const experienceOptions = [
+  "1+ Years",
+  "3+ Years",
+  "5+ Years",
+  "10+ Years",
+];
+
+const preparationTimeOptions = [
+  "15 Minutes",
   "30 Minutes",
   "45 Minutes",
   "60 Minutes",
   "90 Minutes",
-  "120 Minutes",
 ];
-const beautyServices = ["Beauty", "Hair", "Wellness"];
+const tags = [
+  "Bridal",
+  "Makeup",
+  "HD Makeup",
+  "Hair Styling",
+  "Party Makeup",
+];
+
+// const [tagInput, setTagInput] = useState("");
+
 
 interface CustomSelectProps {
   options: string[];
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  icon?: React.ReactNode;
 }
 
-function CustomSelect({
-  options,
-  value,
-  onChange,
-  placeholder,
-}: CustomSelectProps) {
+function CustomSelect({ options, value, onChange, placeholder }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -99,6 +113,7 @@ function CustomSelect({
       setHighlightedIndex(idx >= 0 ? idx : 0);
     }
   }, [isOpen, options, value]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!isOpen) {
       if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
@@ -107,6 +122,7 @@ function CustomSelect({
       }
       return;
     }
+
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
@@ -114,9 +130,7 @@ function CustomSelect({
         break;
       case "ArrowUp":
         e.preventDefault();
-        setHighlightedIndex(
-          (prev) => (prev - 1 + options.length) % options.length,
-        );
+        setHighlightedIndex((prev) => (prev - 1 + options.length) % options.length);
         break;
       case "Enter":
         e.preventDefault();
@@ -130,22 +144,19 @@ function CustomSelect({
         break;
     }
   };
+
   return (
     <div
       ref={containerRef}
       className="custom-select-container"
-      onKeyDown={handleKeyDown}
       tabIndex={0}
+      onKeyDown={handleKeyDown}
     >
       <div
         className={`custom-select-trigger ${isOpen ? "open" : ""}`}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span
-          className={
-            value ? "custom-select-value" : "custom-select-placeholder"
-          }
-        >
+        <span className={value ? "custom-select-value" : "custom-select-placeholder"}>
           {value || placeholder || "Select..."}
         </span>
         <FiChevronDown
@@ -175,73 +186,90 @@ function CustomSelect({
       )}
     </div>
   );
-
-
 }
 
 
 
 
-
-export default function NewBeautyListingPage() {
+export default function NewWellnessListingPage() {
 
   const router = useRouter();
-  const [selectedService, setSelectedService] = useState("Beauty");
+  const [showAvailability, setShowAvailability] = useState(false);
 
-  const [showServiceMenu, setShowServiceMenu] = useState(false);
+  const [workingDays, setWorkingDays] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");  
 
-  // ── Basic Information ──
+  // ── Additional Details ──
 
-  const [serviceTitle, setServiceTitle] = useState("");
-  const [shortDescription, setShortDescription] = useState("");
-  const [detailedDescription, setDetailedDescription] = useState("");
-
-  // ── Service Details ──
-
-  const [price, setPrice] = useState("");
-  const [serviceType, setServiceType] = useState("");
-    const [studioLocation, setStudioLocation] = useState("");
-
-  const [duration, setDuration] = useState("");
-
-  const [errors, setErrors] = useState({
-    serviceTitle: "",
-    shortDescription: "",
-    detailedDescription: "",
-    price: "",
-    serviceType: "",
-    duration: "",
-  });
+  const [whoisthisfor, setWhoisthisfor] = useState(" ")
+  const [genderPreference, setGenderPreference] = useState(" ");
+  const [preparationTime, setPreparationTime] = useState(" ");
+  const [experienceLevel, setserExperienceLevel] = useState(" ")
+  const [tags, setTags] = useState<string[]>([
+    "Bridal",
+    "Makeup",
+    "HD Makeup",
+    "Hair Styling",
+    "Party Makeup",
+  ]);
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors = {
-      serviceTitle: serviceTitle ? "" : "Service title is required.",
-      shortDescription: shortDescription ? "" : "Short description is required.",
-      detailedDescription: detailedDescription ? "" : "Detailed description is required.",
-      price: price ? "" : "Price is required.",
-      serviceType: serviceType ? "" : "Select a service type.",
-      duration: duration ? "" : "Duration is required.",
-    };
 
-    setErrors(newErrors);
-
-    if (Object.values(newErrors).some(Boolean)) {
+    if (
+      !whoisthisfor ||
+      !genderPreference ||
+      !preparationTime ||
+      !experienceLevel
+    ) {
       toast.error("Please fill all required fields.");
       return;
     }
+    if (tags.length === 0) {
+      toast.error("Please add at least one tag.");
+      return;
+    }
 
-    toast.success("Beauty service saved successfully!");
-    router.push("/seller/listing/hair-beauty-wellness/beauty/details");
+    toast.success("Wellness service saved successfully!");
+    router.push("/seller/listing/hair-beauty-wellness/wellness/photos");
   };
 
-  const descLength = detailedDescription.length;
-  const shortLength = shortDescription.length;
-  const descMax = 1000;
-  const descMin = 500;
+  const [tagInput, setTagInput] = useState("");
+
+  const addTag = () => {
+    const trimmed = tagInput.trim();
+
+    if (!trimmed) return;
+
+    if (tags.includes(trimmed)) {
+      toast.info("Tag already added");
+      return;
+    }
+
+    setTags([...tags, trimmed]);
+    setTagInput("");
+  };
+
+  const removeTag = (tag: string) => {
+    setTags(tags.filter((t) => t !== tag));
+  };
+
+  const handleTagKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTag();
+    }
+  };
+
   return (
+
     <>
       <ToastContainer position="top-right" autoClose={3000} />
-      <style>{`
+
+      <style>{
+        `
           * { box-sizing: border-box; margin: 0; padding: 0; }
 
         .listing-page {
@@ -258,6 +286,7 @@ export default function NewBeautyListingPage() {
           padding: 32px 24px 64px;
         }
 
+        
         /* ── Header ── */
         .listing-header {
           display: flex;
@@ -390,7 +419,7 @@ export default function NewBeautyListingPage() {
           background: ${SUCCESS};
         }
 
-         /* ── Form Card ── */
+ /* ── Form Card ── */
         .form-card {
           background: ${CARD_BG};
           border-radius: 20px;
@@ -420,63 +449,6 @@ export default function NewBeautyListingPage() {
           margin-bottom: 10px;
           display: block;
         }
-        .category-pill{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        width:100%;
-        // padding:12px ;
-        border:1px solid #e2e8f0;
-        border-radius: 10px;
-        background:#fff;
-       }
-
-       .category-info{
-        display:flex;
-        align-items:center;
-        gap:10px;
-        }
-
-       .change-btn{
-       border:none;
-      background:#2563eb;
-      color:#fff;
-      padding:4px ;
-      border-radius:8px;
-      cursor:pointer;
-     font-weight:600;
-     }
-
-    .change-btn:hover{
-    background:#1d4ed8;
-   }
-
-.category-menu{
-  margin-top:10px;
-  border:1px solid #e2e8f0;
-  border-radius:12px;
-  background:#fff;
-  overflow:hidden;
-  box-shadow:0 8px 24px rgba(0,0,0,.08);
-}
-
-.category-item{
-  width:100%;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:14px 16px;
-  background:#fff;
-  border:none;
-  cursor:pointer;
-  text-align:left;
-}
-
-.category-item:hover{
-  background:#eff6ff;
-}  
-          
- 
 
         .category-pill {
           display: inline-flex;
@@ -512,20 +484,33 @@ export default function NewBeautyListingPage() {
           background: #ede9fe;
           padding: 2px 8px;
           border-radius: 6px;
-
-        }
-          /* ── Divider ── */
+        }/* ── Divider ── */
         .divider {
           height: 1px;
           background: linear-gradient(90deg, transparent, ${BORDER}, transparent);
           margin: 28px 0;
         }
+
             /* ── Two Column Layout ── */
         .two-col-layout {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 40px;
         }
+.two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.left-col,
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
            /* ── Section Header ── */
         .section-header {
           display: flex;
@@ -533,7 +518,7 @@ export default function NewBeautyListingPage() {
           gap: 12px;
           margin-bottom: 24px;
         }
-      .section-icon {
+ .section-icon {
           width: 36px;
           height: 36px;
           border-radius: 10px;
@@ -546,24 +531,23 @@ export default function NewBeautyListingPage() {
         .section-icon.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
         .section-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
 
-      .section-title-wrap h2 {
+ .section-title-wrap h2 {
           font-size: 18px;
           font-weight: 700;
           color: ${TEXT_PRIMARY};
           letter-spacing: -0.3px;
         }
-      .section-title-wrap p {
+ .section-title-wrap p {
           font-size: 13px;
           color: ${TEXT_MUTED};
           margin-top: 2px;
         }
-          
-      /* ── Form Grid ── */
-        // .form-row {
-        //   display: grid;
-        //   gap: 20px;
-        //   margin-bottom: 20px;
-        // }
+ /* ── Form Grid ── */
+        .form-row {
+          display: grid;
+          gap: 20px;
+          margin-bottom: 20px;
+        }
 
         .form-group {
           display: flex;
@@ -603,6 +587,7 @@ export default function NewBeautyListingPage() {
         .form-input:hover, .form-textarea:hover {
           border-color: #cbd5e1;
           background: #fafafa;
+          
         }
 
         .form-input:focus, .form-textarea:focus {
@@ -631,8 +616,10 @@ export default function NewBeautyListingPage() {
         }
 
         .char-counter.near-limit { color: ${DANGER}; font-weight: 600; }
-  
-      /* ── Custom Select ── */
+
+
+
+/* ── Custom Select ── */
         .custom-select-container {
           position: relative;
           width: 100%;
@@ -721,120 +708,231 @@ export default function NewBeautyListingPage() {
           color: ${ACCENT};
           font-weight: 600;
         }
-          /* Mobile Service */
-
-.mobile-service{
-    margin-top:24px;
-}
-
-.mobile-title{
-    display:block;
-    font-size:20px;
-    font-weight:600;
-    color:#111827;
-    margin-bottom:14px;
-}
-
-.mobile-option{
-    display:flex;
-    align-items:center;
-    gap:10px;
-}
-
-.mobile-text{
-    font-size:17px;
-    color:#666;
-    line-height:1.4;
-}
-
-/* Switch */
-
-.switch{
-    position:relative;
-    display:inline-block;
-   width:36px;
-    height:20px;
-    flex-shrink:0;
-}
-
-.switch input{
-    opacity:0;
-    width:0;
-    height:0;
-}
-
-.slider{
-    position:absolute;
-    inset:0;
-    background:#d1d5db;
-    border-radius:999px;
-    cursor:pointer;
-    transition:.3s;
-}
-
-.slider::before{
-    content:"";
-    position:absolute;
-    width:14px;
-    height:14px;
-    left:3px;
-    top:3px;
-    background:#fff;
-    border-radius:50%;
-    transition:.3s;
-    box-shadow:0 2px 5px rgba(0,0,0,.2);
-}
-
-.switch input:checked + .slider{
-    background:#2563eb;
-}
-
-.switch input:checked + .slider::before{
-    transform:translateX(16px);
-}
-
-/* Tablet */
-
-@media (max-width:768px){
-
-    .mobile-title{
-        font-size:18px;
-    }
-
-    .mobile-text{
-        font-size:15px;
-    }
-}
-
-/* Mobile */
-
-@media (max-width:480px){
-
-    .mobile-option{
-        align-items:flex-start;
-    }
-
-    .mobile-text{
-        font-size:14px;
-    }
-
-    .switch{
-width:32px;
-height:18px;
-}
-
-.slider::before{
-width:12px;
-height:12px;
-left:3px;
-top:3px;
-}
-
-.switch input:checked + .slider::before{
-transform:translateX(14px);
-}
-}
           
+          /* Tags Container */
+.skills-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+  min-height: 44px;
+  padding: 8px;
+  border: 1.5px solid #dbe3ef;
+  border-radius: 12px;
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.skills-wrap:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Tag Chip */
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* Remove Icon */
+.remove-skill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.remove-skill:hover {
+  background: #dbeafe;
+  color: #dc2626;
+}
+
+/* Input */
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #dbe3ef;
+  border-radius: 12px;
+  outline: none;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-input::placeholder {
+  color: #94a3b8;
+}
+
+/*================ Availability =================*/
+
+/* Wrapper */
+.availability-wrapper {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+/* Left */
+.availability-left {
+  flex: 1;
+  gap:1;
+  
+}
+
+/* Right */
+.availability-right {
+  width: 300px;
+  animation: slideInRight 0.35s ease;
+}
+
+/* Card */
+.availability-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 5px;
+}
+
+.availability-info {
+  display: flex;
+  gap: 14px;
+}
+ 
+.icon-box{
+  color: #2952e3;
+
+}
+.availability-text {
+  width: 100%;
+}
+
+.availability-text h3 {
+  margin-bottom: 16px;
+  color: #2952e3;
+}
+
+/* Inputs */
+.availability-text input {
+  width: 80%;
+  height: 30px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 0 14px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  outline: none;
+  transition: .25s;
+}
+
+.availability-text input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+/* Cancel button */
+.cancel-btn {
+  width: 40%;
+  margin-top: 16px;
+  height: 30px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  
+
+}
+
+.cancel-btn:hover {
+  background: #f8fafc;
+  
+}
+
+/* Animation */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive */
+@media (max-width:768px) {
+  .availability-wrapper {
+    flex-direction: column;
+  }
+
+  .availability-right {
+    width: 100%;
+  }
+}
+// .availability-wrapper{
+//     display:flex;
+//     justify-content:space-between;
+//     gap:32px;
+//     width:100%;
+//     padding:28px;
+//     background:#fff;
+//     border:1px solid #e5e7eb;
+//     border-radius:20px;
+//     box-sizing:border-box;
+// }
+// /* LEFT */
+
+    .availability-left h2{
+    font-size: 18px;
+    font-weight: 700;
+    color: ${TEXT_PRIMARY};
+    letter-spacing: -0.3px;
+}
+
+.availability-left p{
+    color:#555;
+    font-size:15px;
+    line-height:1;
+    margin-bottom:28px;
+    max-width:320px;
+}
+
+.set-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:4px 8px;
+    background:#2952e3;
+    color:#fff;
+    border:none;
+    border-radius:14px;
+    cursor:pointer;
+    font-size:10px;
+    font-weight:600;
+}
+
+
+
+           
 /* ── Submit Button ── */
         .submit-wrap {
           display: flex;
@@ -900,8 +998,33 @@ transform:translateX(14px);
           transform: none;
           box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
         }
-            
-        /* ── Responsive ── */
+           
+.two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.left-col,
+.right-col {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .two-column {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .left-col,
+  .right-col {
+    width: 100%;
+  }
+}
+
+          /* ── Responsive ── */
         @media (max-width: 768px) {
           .listing-container { padding: 16px; }
           .form-card { 
@@ -942,14 +1065,75 @@ transform:translateX(14px);
           .listing-header { gap: 12px; margin-bottom: 16px; }
           .back-btn { width: 36px; height: 36px; }
           .listing-title { font-size: 18px; }
+          .availability-container {
+    padding: 16px;
+    border-radius: 14px;
+    gap: 18px;
+  }
+
+  .availability-left h2 {
+    font-size: 22px;
+  }
+
+  .availability-left p {
+    font-size: 13px;
+  }
+
+  .set-btn {
+    height: 44px;
+    font-size: 14px;
+    padding: 0 16px;
+  }
+
+  .availability-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .availability-info {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .availability-info h3 {
+    font-size: 18px;
+  }
+
+  .availability-info p,
+  .availability-info span {
+    font-size: 13px;
+  }
+
+  .edit-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f8fafc;
+  }
+
+  .cancel-btn,
+  .back-btn,
+  .continue-btn {
+    width: 100%;
+    height: 44px;
+    font-size: 14px;
+  }
+
+  .icon-box svg {
+    width: 20px;
+    height: 20px;
+  }
         }
           
           `}</style>
-
       <div className="listing-page">
         <div className="listing-container">
           {/* Header */}
-          <div className="listing-header">
+         <div className="listing-header">
             <button
               type="button"
               className="back-btn"
@@ -965,237 +1149,202 @@ transform:translateX(14px);
               Draft Saved <FiCheck size={16} />
             </div>
           </div>
+
           {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div
-                key={step.label}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
-                }}
-              >
+              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "active" ? (
-                      <FiCheck size={16} />
-                    ) : (
-                      <step.icon size={14} />
-                    )}
+                    {step.status === "active" ? <FiCheck size={16} /> : <step.icon size={14} />}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div
-                    className={`step-connector ${step.status === "active" ? "filled" : ""}`}
-                  />
+                  <div className={`step-connector ${step.status === "active" ? "filled" : ""}`} />
                 )}
               </div>
             ))}
           </div>
 
-
           <form onSubmit={handleSubmit} className="form-card">
-            {/* Category Pill */}
-            <div className="two-col-layout">
+            {/* Left: Additional Information */}
+            <div className="section-header">
+              <div className="section-icon blue">
+                <FiFileText size={18} color="#fff" />
+              </div>
+              <div className="section-title-wrap">
+                <h2>Additional Information</h2>
+              </div>
+            </div>
+
+            <div className="two-column">
               <div className="left-col">
 
-                <div className="category-wrap">
-                  <label className="category-label">Category</label>
-
-                  <div className="category-pill">
-                    <div className="category-info">
-                      <FaSpa size={18} />
-                      <span>Hair, Beauty & Wellness Service</span>
-                    </div>
-                  </div>
+                <div className="form-group full-width">
+                  <label className="form-label">
+                    Who is this for <span className="required">*</span>
+                  </label>
+                  <CustomSelect
+                    options={whoIsThisForOptions}
+                    value={whoisthisfor}
+                    onChange={setWhoisthisfor}
+                    placeholder="Who is this for"
+                  />
                 </div>
 
+                <div className="form-group full-width">
+                  <label className="form-label">
+                    Gender Preference <span className="required">*</span>
+                  </label>
+                  <CustomSelect
+                    options={genderPreferenceOptions}
+                    value={genderPreference}
+                    onChange={setGenderPreference}
+                  />
+                </div>
+                <div className="form-group full-width">
+                  <label className="form-label">
+                    Experience Level <span className="required">*</span>
+                  </label>
+
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. 5+ Years"
+                    value={experienceLevel}
+                    onChange={(e) => setserExperienceLevel(e.target.value)}
+                  />
+                </div>
               </div>
-
-
 
               <div className="right-col">
-                <label className="category-label">Select Service</label>
-
-                <CustomSelect
-                  options={beautyServices}
-                  value={selectedService}
-                  placeholder="Select Service"
-                  onChange={(value) => {
-                    setSelectedService(value);
-
-                    switch (value) {
-                      case "Beauty":
-                        router.push("/seller/listing/hair-beauty-wellness/beauty");
-                        break;
-
-                      case "Hair":
-                        router.push("/seller/listing/hair-beauty-wellness/hair");
-                        break;
-
-                      case "Wellness":
-                        router.push("/seller/listing/hair-beauty-wellness/wellness");
-                        break;
-                    }
-                  }}
-                />
+                
+                <div className="form-group full-width">
+                  <label className="form-label">
+                    Preparation Time <span className="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. 30 minutes"
+                    value={preparationTime}
+                    onChange={(e) => setPreparationTime(e.target.value)}
+                  />
+                </div>
+                <div className="form-group full-width">
+                  <label className="form-label">
+                    Tags <span style={{ color: "#94a3b8" }}>(Optional)</span>
+                  </label>
+                  <div className="skills-wrap">
+                    {tags.map((tag) => (
+                      <span key={tag} className="skill-tag">
+                        {tag}
+                        <span
+                          className="remove-skill"
+                          onClick={() => removeTag(tag)}
+                        >
+                          <FiX size={12} />
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Type and press Enter to add more"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                  />
+                </div>
               </div>
+
+              {/* Left */}
+              <div className="availability-left">
+                <h2>Availability</h2>
+                <p>Select days and times when you are available.</p>
+
+                <button
+                  type="button"
+                  className="set-btn"
+                  onClick={() => setShowAvailability(true)}
+                >
+                  <FiCalendar size={16} />
+                  Set Availability
+                </button>
+              </div>
+
+              {/* Right */}
+              {showAvailability && (
+                <div className="availability-right">
+                  <div className="availability-card">
+                    <div className="availability-info">
+
+                      <div className="icon-box">
+                        <FiCalendar size={22} />
+                      </div>
+
+                      <div className="availability-text">
+                        <h3>Availability</h3>
+
+                        <input
+                          type="text"
+                          value={workingDays}
+                          placeholder="Mon - Sat"
+                          onChange={(e) => setWorkingDays(e.target.value)}
+                        />
+
+                        <input
+                          type="time"
+                          value={startTime}
+                          onChange={(e) => setStartTime(e.target.value)}
+                        />
+
+                        <input
+                          type="time"
+                          value={endTime}
+                          onChange={(e) => setEndTime(e.target.value)}
+                        />
+                      </div>
+
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="cancel-btn"
+                    onClick={() => setShowAvailability(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+
             </div>
 
             <div className="divider" />
 
-            {/* Two Column Layout */}
-            <div className="two-col-layout">
-              {/* Left: Basic Information */}
-              <div className="left-col">
-                <div className="section-header">
-                  <div className="section-icon blue">
-                    <FiFileText size={18} color="#fff" />
-                  </div>
-                  <div className="section-title-wrap">
-                    <h2>Basic Information</h2>
-                  </div>
-                </div>
-                <div className="form-group full-width">
-                  <label className="form-label">
-                    Service Title <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Enter service title"
-                    value={serviceTitle}
-                    onChange={(e) => setServiceTitle(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="form-group full-width">
-                  <label className="form-label">
-                    Short Description <span className="required">*</span>
-                  </label>
-
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Enter short description"
-                    value={shortDescription}
-                    onChange={(e) => setShortDescription(e.target.value)}
-                  />
-                  <div
-                    className={`char-counter ${descLength > descMin * 0.5 ? "near-limit" : ""}`}
-                  >
-                    {shortLength}/150
-                  </div>
-                </div>
-                <div className="form-group full-width">
-                  <label className="form-label">
-                    Detailed Description <span className="required">*</span>
-                  </label>
-
-                  <textarea
-                    className="form-textarea"
-                    placeholder="Describe your beauty service"
-                    value={detailedDescription}
-                    onChange={(e) => setDetailedDescription(e.target.value)}
-                  />
-                  <div
-                    className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}
-                  >
-                    {descLength}/{descMax}
-                  </div>
-                </div>
-
-
-              </div>
-
-              <div className="right-col">
-                <div className="section-header">
-                  <div className="section-icon red">
-                    <FiBriefcase size={18} color="#fff" />
-                  </div>
-                  <div className="section-title-wrap">
-                    <h2>Service Details</h2>
-                  </div>
-                </div>
-
-                <div className="form-group full-width">
-                  <label className="form-label">
-                    Price (NPR) <span className="required">*</span>
-                  </label>
-
-                  <input
-                    type="number"
-                    className="form-input"
-                    placeholder="Enter price"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group full-width">
-                  <label className="form-label">
-                    Service Location Type <span className="required">*</span>
-                  </label>
-                  <CustomSelect
-                    options={services}
-                    value={serviceType}
-                    onChange={setServiceType}
-                    placeholder="Select Service Type"
-                  />
-                </div>
-
-                <div className="form-group full-width">
-                  <label className="form-label">
-                    Studio Location <span className="required">*</span>
-                  </label>
-                  <CustomSelect
-                    options={studio}
-                    value={studioLocation}
-                    onChange={setStudioLocation}
-                    placeholder="Select Studio Location"
-                  />
-                </div>
-
-
-                <div className="form-group full-width">
-                  <label className="form-label">
-                    Duration <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Enter duration (e.g. 60 Minutes)"
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                  />
-
-                </div>
-
-              </div>
+            {/* Submit Row */}
+            <div className="submit-wrap">
+              <button type="button" className="back-link" onClick={() => router.back()}>
+                <FiArrowLeft size={16} />
+                Back
+              </button>
+              <button type="submit" className="submit-btn">
+                Save & Continue
+                <FiChevronRight size={16} />
+              </button>
             </div>
-          </form>
-          <div className="divider" />
 
-          {/* Submit Row */}
-          <div className="submit-wrap">
-            <button
-              type="button"
-              className="back-link"
-              onClick={() => router.back()}
-            >
-              <FiArrowLeft size={16} />
-              Back
-            </button>
-            <button type="submit" className="submit-btn">
-              Save & Continue
-              <FiChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      </div>
+
+          </form >
+
+        </div >
+      </div >
+
     </>
+
+
   );
 }

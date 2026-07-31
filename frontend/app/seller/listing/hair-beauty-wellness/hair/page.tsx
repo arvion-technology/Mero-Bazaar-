@@ -1,8 +1,6 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -61,7 +59,9 @@ const minutes = [
   "90 Minutes",
   "120 Minutes",
 ];
-const beautyServices = ["Beauty", "Hair", "Wellness"];
+
+
+const hairServices = ["Beauty", "Hair", "Wellness"];
 
 interface CustomSelectProps {
   options: string[];
@@ -175,18 +175,12 @@ function CustomSelect({
       )}
     </div>
   );
-
-
 }
 
-
-
-
-
-export default function NewBeautyListingPage() {
-
+export default function NewHairListingPage() {
   const router = useRouter();
-  const [selectedService, setSelectedService] = useState("Beauty");
+  const [selectedService, setSelectedService] = useState("Hair")
+
 
   const [showServiceMenu, setShowServiceMenu] = useState(false);
 
@@ -200,8 +194,7 @@ export default function NewBeautyListingPage() {
 
   const [price, setPrice] = useState("");
   const [serviceType, setServiceType] = useState("");
-    const [studioLocation, setStudioLocation] = useState("");
-
+  const [studioLocation, setStudioLocation] = useState("");
   const [duration, setDuration] = useState("");
 
   const [errors, setErrors] = useState({
@@ -212,6 +205,7 @@ export default function NewBeautyListingPage() {
     serviceType: "",
     duration: "",
   });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors = {
@@ -230,10 +224,10 @@ export default function NewBeautyListingPage() {
       return;
     }
 
-    toast.success("Beauty service saved successfully!");
-    router.push("/seller/listing/hair-beauty-wellness/beauty/details");
-  };
 
+    toast.success("Hair service saved successfully!");
+    router.push("/seller/listing/hair-beauty-wellness/hair/details");
+  };
   const descLength = detailedDescription.length;
   const shortLength = shortDescription.length;
   const descMax = 1000;
@@ -945,7 +939,6 @@ transform:translateX(14px);
         }
           
           `}</style>
-
       <div className="listing-page">
         <div className="listing-container">
           {/* Header */}
@@ -995,12 +988,11 @@ transform:translateX(14px);
             ))}
           </div>
 
-
           <form onSubmit={handleSubmit} className="form-card">
             {/* Category Pill */}
             <div className="two-col-layout">
-              <div className="left-col">
 
+              <div className="left-col">
                 <div className="category-wrap">
                   <label className="category-label">Category</label>
 
@@ -1011,16 +1003,13 @@ transform:translateX(14px);
                     </div>
                   </div>
                 </div>
-
               </div>
-
-
 
               <div className="right-col">
                 <label className="category-label">Select Service</label>
 
                 <CustomSelect
-                  options={beautyServices}
+                  options={hairServices}
                   value={selectedService}
                   placeholder="Select Service"
                   onChange={(value) => {
@@ -1050,6 +1039,7 @@ transform:translateX(14px);
             <div className="two-col-layout">
               {/* Left: Basic Information */}
               <div className="left-col">
+
                 <div className="section-header">
                   <div className="section-icon blue">
                     <FiFileText size={18} color="#fff" />
@@ -1058,6 +1048,7 @@ transform:translateX(14px);
                     <h2>Basic Information</h2>
                   </div>
                 </div>
+
                 <div className="form-group full-width">
                   <label className="form-label">
                     Service Title <span className="required">*</span>
@@ -1070,13 +1061,13 @@ transform:translateX(14px);
                     onChange={(e) => setServiceTitle(e.target.value)}
                     required
                   />
+
                 </div>
 
                 <div className="form-group full-width">
                   <label className="form-label">
                     Short Description <span className="required">*</span>
                   </label>
-
                   <input
                     type="text"
                     className="form-input"
@@ -1087,17 +1078,16 @@ transform:translateX(14px);
                   <div
                     className={`char-counter ${descLength > descMin * 0.5 ? "near-limit" : ""}`}
                   >
-                    {shortLength}/150
-                  </div>
+                    {shortLength}/150                  </div>
                 </div>
+
                 <div className="form-group full-width">
                   <label className="form-label">
                     Detailed Description <span className="required">*</span>
                   </label>
-
                   <textarea
                     className="form-textarea"
-                    placeholder="Describe your beauty service"
+                    placeholder="Describe your hair service"
                     value={detailedDescription}
                     onChange={(e) => setDetailedDescription(e.target.value)}
                   />
@@ -1107,8 +1097,6 @@ transform:translateX(14px);
                     {descLength}/{descMax}
                   </div>
                 </div>
-
-
               </div>
 
               <div className="right-col">
@@ -1125,7 +1113,6 @@ transform:translateX(14px);
                   <label className="form-label">
                     Price (NPR) <span className="required">*</span>
                   </label>
-
                   <input
                     type="number"
                     className="form-input"
@@ -1159,7 +1146,6 @@ transform:translateX(14px);
                   />
                 </div>
 
-
                 <div className="form-group full-width">
                   <label className="form-label">
                     Duration <span className="required">*</span>
@@ -1171,7 +1157,6 @@ transform:translateX(14px);
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
                   />
-
                 </div>
 
               </div>

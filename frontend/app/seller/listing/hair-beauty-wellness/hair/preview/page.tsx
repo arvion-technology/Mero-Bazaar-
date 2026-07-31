@@ -34,8 +34,13 @@ const CARD_BG = "#ffffff";
 const SITE_PRIMARY = "#C0392B";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+const serviceLocations = [
+  "At Studio",
+  "At Customer Location",
+  "Online",
+];
 
-export default function PreviewBeautyPage() {
+export default function PreviewWellnessPage() {
   const router = useRouter();
 
   const [serviceLocationType, setServiceLocationType] = useState("");
@@ -48,19 +53,17 @@ export default function PreviewBeautyPage() {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     toast.success("Listing published successfully!");
     setIsPublishing(false);
-    localStorage.removeItem("beautyBasic");
-    localStorage.removeItem("beautyDetail");
+    localStorage.removeItem("hairBasic");
+    localStorage.removeItem("hairDetail");
     router.push("/seller/products");
   };
 
-
   const handleEdit = (step: string) => {
-    if (step === "basic") router.push("/seller/listing/hair-beauty-wellness/beauty");
-    if (step === "details") router.push("/seller/listing/hair-beauty-wellness/beauty/details");
-    if (step === "photos") router.push("/seller/listing/hair-beauty-wellness/beauty/photos");
+    if (step === "basic") router.push("/seller/listing/hair-beauty-wellness/hair");
+    if (step === "details") router.push("/seller/listing/hair-beauty-wellness/hair/details");
+    if (step === "photos") router.push("/seller/listing/hair-beauty-wellness/hair/photos");
 
   };
-
 
   return (
     <>
@@ -746,40 +749,12 @@ width:px:
           .btn { width: 100%; justify-content: center; }
           .draft-saved { display: none; }
           .map-small { height: 140px; }
-          }
-          
-    @media (max-width: 480px) {
-          .listing-container { padding: 12px; }
-          .form-card { padding: 16px; border-radius: 14px; }
-          .listing-header { gap: 12px; margin-bottom: 16px; }
-          .back-btn { width: 36px; height: 36px; }
-          .listing-title { font-size: 18px; }
-        }
-          .gallery-section{
-    display:flex;
-    gap:7px;
-    flex-direction:column;
 
-}
-
-.main-image{
-    width:350px;
-    height:420px;
-    border-radius:16px;
-    overflow:hidden;
-}
-
-
-.main-image img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-}
-
-.side-images{
-    width:350px;
-    display:flex;
-    gap:12px;
+          .service-header{
+    // display:flex;
+    // justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
 }
 
 .service-title{
@@ -839,20 +814,20 @@ width:px:
               <div className="card-left">
                 <div className="gallery-section">
                   <div className="main-image">
-                    <img src="/bridal-main.png" alt="Bridal Makeup" />
+                    <img src="/hair-main.png" alt="Bridal Makeup" />
                   </div>
 
                   <div className="side-images">
                     <div className="thumb">
-                      <img src="/bridal-1.png" alt="" />
+                      <img src="/hair-1.png" alt="" />
                     </div>
 
                     <div className="thumb">
-                      <img src="/bridal-2.png" alt="" />
+                      <img src="/hair-2.png" alt="" />
                     </div>
 
                     <div className="thumb">
-                      <img src="/bridal-3.png" alt="" />
+                      <img src="/hair-3.png" alt="" />
                     </div>
                   </div>
                 </div>
@@ -864,15 +839,14 @@ width:px:
                 <div className="service-details">
                   <div className="service-header">
                     <div>
-                      <h2 className="service-title">Bridal Makeup</h2>
+                      <h2 className="service-title">Haircut & Styling</h2>
                     </div>
-
                     <span className="verified-badge">Verified</span>
                   </div>
 
                   <div className="top-cards">
                     <div className="info-card">
-                      <h3>NPR 3500</h3>
+                      <h3>NPR 2,500</h3>
                       <span>Starting price</span>
                     </div>
 
@@ -885,7 +859,7 @@ width:px:
                   <div className="details-list">
                     <div className="detail-row">
                       <span>Duration</span>
-                      <strong>120 minutes</strong>
+                      <strong>45 minutes</strong>
                     </div>
 
                     <div className="detail-row">
@@ -895,17 +869,16 @@ width:px:
 
                     <div className="detail-row">
                       <span>Experience</span>
-                      <strong>5+ Years</strong>
+                      <strong>3+ Years</strong>
                     </div>
-                    <div className="detail-row">
+                     <div className="detail-row">
                       <span>Service Location Type</span>
-                      <strong>Studio</strong>
+                      <strong>Salon</strong>
                     </div>
                     <div className="detail-row">
                       <span>Studio Location</span>
-                      <strong>Sanepa</strong>
+                      <strong>Balkhu</strong>
                     </div>
-
 
                     {/* <div className="detail-row">
                       <span>Service Location Type</span>
@@ -919,63 +892,46 @@ width:px:
                   </div>
                 </div>
               </div>
+            </div> 
 
-            </div>
             <div className="service-left">
               <div className="about-section">
                 <h2>About</h2>
-
                 <p>
-                  Professional bridal makeup service using premium cosmetic brands to
-                  create a flawless and long-lasting look for your special day.
-                  Includes skin preparation, bridal makeup and finishing touch.
+                  Our layer haircut service includes a personalized consultation, precision haicut, wash, styling and blow dry
                 </p>
               </div>
-
               <div className="tags-section">
                 <h2>Tags</h2>
-
                 <div className="tags">
-                  <span>Bridal Makeup</span>
-                  <span>Wedding</span>
-                  <span>Professional</span>
-                  <span>Premium</span>
-                  <span>Beauty</span>
-                  <span>Salon</span>
+                  <span>Haircut</span>
+                  <span>Hair Styling</span>
+                  <span>Blow Dry</span>
+                  <span>Hair Color</span>
                 </div>
               </div>
-
             </div>
-
-
 
             <div className="service-extra">
               <div className="availability-section">
                 <div className="availability-right">
                   <div className="availability-card">
-
                     < div className="availability-info">
-
                       <div className="icon-box">
                         <FiCalendar size={22} />
                       </div>
-
                       <div className="availability-text">
-
                         <h3>Availability</h3>
                         <p>Mon – Sun</p>
-                        <span>10:00 AM - 8:00 PM</span>
+                        <span>9:00 AM - 8:00 PM</span>
                       </div>
                     </div>
-
                   </div>
-
                 </div>
-
               </div>
             </div>
-            <div className="divider" />
 
+            <div className="divider" />
 
             <div className="actions">
               <button className="btn btn-edit" onClick={() => handleEdit("detail")}>
@@ -1001,14 +957,8 @@ width:px:
               </button>
             </div>
           </div>
-
-
-          <div className="divider" />
-
         </div>
-
       </div>
-
     </>
   );
 }
