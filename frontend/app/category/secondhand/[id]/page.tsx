@@ -5,8 +5,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import SellerCard from "@/components/SellerCard";
-import { fetchListing, fetchRelatedListings } from "@/lib/fetcher";
-import type { ListingDetail, RelatedListing } from "@/app/types/listing";
+import { fetchListing, fetchRelatedListings } from "../../../../lib/fetcher";
+import type { SecondhandDetail, RelatedListing } from "@/app/types/listing"; // fixed: SecondhandDetail, not ListingDetail
 import {
   FiArrowLeft,
   FiMapPin,
@@ -24,7 +24,7 @@ export default function SecondhandDetailPage() {
   const params = useParams();
   const id = params?.id as string;
 
-  const [item, setItem] = useState<ListingDetail | null>(null);
+  const [item, setItem] = useState<SecondhandDetail | null>(null);
   const [related, setRelated] = useState<RelatedListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -32,21 +32,44 @@ export default function SecondhandDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
-    setNotFound(false);
 
-    fetchListing(id)
-      .then((data) => {
-        if (!data) {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setNotFound(false);
+
+      try {
+        const data = await fetchListing(id);
+
+        if (cancelled) return;
+
+        if (!data || data.category !== "SECONDHAND") {
           setNotFound(true);
+          setLoading(false);
           return;
         }
+
+        const rel = await fetchRelatedListings(data.category, data.id);
+
+        if (cancelled) return;
+
         setItem(data);
-        return fetchRelatedListings(data.category, data.id);
-      })
-      .then((rel) => rel && setRelated(rel))
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false));
+        setRelated(rel ?? []);
+        setLoading(false);
+      } catch {
+        if (!cancelled) {
+          setNotFound(true);
+          setLoading(false);
+        }
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (loading) {
@@ -79,15 +102,16 @@ export default function SecondhandDetailPage() {
     );
   }
 
-  const conditionLabel = item.details.condition as string;
-  const cityLabel = item.details.city as string;
+  // fixed: these are top-level fields on SecondhandDetail, not nested in `details`
+  const conditionLabel = item.condition;
+  const cityLabel = item.city;
   const categoryLabel = item.breadcrumbs[1] ?? "";
 
   const CONDITION_COLORS: Record<string, { bg: string; color: string; border: string }> = {
     "Like New": { bg: "#e8f5e9", color: "#2e7d32", border: "#c8e6c9" },
     "Good": { bg: "#e8f5e9", color: "#1b5e20", border: "#a5d6a7" },
     "Fair": { bg: "#fff8e1", color: "#f57f17", border: "#ffe082" },
-    "For parts": { bg: "#ffebee", color: "#c62828", border: "#ffcdd2" },
+    "For Parts": { bg: "#ffebee", color: "#c62828", border: "#ffcdd2" },
   };
 
   return (

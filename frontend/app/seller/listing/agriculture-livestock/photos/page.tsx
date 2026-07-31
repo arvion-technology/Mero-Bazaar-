@@ -1,18 +1,13 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  FiArrowLeft,
-  FiCheck,
-  FiUploadCloud,
-  FiX,
-} from "react-icons/fi";
+import { FiArrowLeft, FiCheck, FiUploadCloud, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useDraft } from "../layout";
 
 const ACCENT = "#2563eb";
-const DANGER = "#dc2626";
 const SUCCESS = "#10b981";
 const BORDER = "#e2e8f0";
 const TEXT_PRIMARY = "#0f172a";
@@ -27,7 +22,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"];
 export default function AddPhotosPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [images, setImages] = useState<{ id: string; file: File; preview: string; isMain: boolean }[]>([]);
+  const { images, setImages } = useDraft();
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileSelect = (files: FileList | null) => {
@@ -45,45 +40,43 @@ export default function AddPhotosPage() {
       toast.warning(`Only ${remainingSlots} more image(s) can be added`);
     }
     const newImages = filesToAdd.map((file, index) => ({
-      id: `${Date.now()}-${index}`,
       file,
       preview: URL.createObjectURL(file),
       isMain: images.length === 0 && index === 0,
     }));
-    setImages((prev) => [...prev, ...newImages]);
+    setImages([...images, ...newImages]);
   };
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
     handleFileSelect(e.dataTransfer.files);
-  }, [images.length]);
+  };
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
-  }, []);
+  };
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
+  const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-  }, []);
-
-  const removeImage = (id: string) => {
-    setImages((prev) => {
-      const filtered = prev.filter((img) => img.id !== id);
-      if (filtered.length > 0 && !filtered.some((img) => img.isMain)) {
-        filtered[0].isMain = true;
-      }
-      return filtered;
-    });
   };
 
-  const setMainImage = (id: string) => {
-    setImages((prev) => prev.map((img) => ({ ...img, isMain: img.id === id })));
+  const removeImage = (idx: number) => {
+    URL.revokeObjectURL(images[idx].preview);
+    const filtered = images.filter((_, i) => i !== idx);
+    if (filtered.length > 0 && !filtered.some((img) => img.isMain)) {
+      filtered[0] = { ...filtered[0], isMain: true };
+    }
+    setImages(filtered);
+  };
+
+  const setMainImage = (idx: number) => {
+    setImages(images.map((img, i) => ({ ...img, isMain: i === idx })));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -92,8 +85,6 @@ export default function AddPhotosPage() {
       toast.error("Please upload at least one photo");
       return;
     }
-    const imagePreviews = images.map((img) => ({ preview: img.preview, isMain: img.isMain }));
-    localStorage.setItem("agricultureListingImages", JSON.stringify(imagePreviews));
     toast.success("Photos saved! Proceeding to preview...");
     router.push("/seller/listing/agriculture-livestock/preview");
   };
@@ -157,11 +148,11 @@ export default function AddPhotosPage() {
           ) : (
             <>
               <div className="image-grid">
-                {images.map((img) => (
-                  <div key={img.id} className={`image-card ${img.isMain ? "main" : ""}`} onClick={() => !img.isMain && setMainImage(img.id)}>
+                {images.map((img, idx) => (
+                  <div key={idx} className={`image-card ${img.isMain ? "main" : ""}`} onClick={() => !img.isMain && setMainImage(idx)}>
                     <img src={img.preview} alt={img.file.name} />
                     {img.isMain && <div className="main-badge">MAIN</div>}
-                    <button type="button" className="remove-btn" onClick={(e) => { e.stopPropagation(); removeImage(img.id); }}><FiX size={14} /></button>
+                    <button type="button" className="remove-btn" onClick={(e) => { e.stopPropagation(); removeImage(idx); }}><FiX size={14} /></button>
                   </div>
                 ))}
                 {canAddMore && (

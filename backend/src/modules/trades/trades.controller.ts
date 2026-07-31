@@ -1,23 +1,13 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Query,
-  Param,
-  ParseFloatPipe,
-  Patch,
-  Delete,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
-
+import { Controller, Get, Post, Body, Query, Param, ParseFloatPipe, Patch, Delete, UseGuards, Request, UseInterceptors, UploadedFiles} from '@nestjs/common';
 import { TradesService } from './trades.service';
 import { CreateTradesDto } from './dto/create_trades.dto';
 import { QueryTradesDto } from './dto/query_trades.dto';
 import { CreateLeadDto } from '../leads/dto/create_lead.dto';
 import { UpdateTradesDto } from './dto/update_trades.dto';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @Controller('trades')
 export class TradesController {
@@ -69,5 +59,28 @@ export class TradesController {
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.tradesService.remove(id, req.user.id);
+  }
+
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/photos')
+  @UseInterceptors(
+    FilesInterceptor('photos', 10, {
+      storage: diskStorage({
+        destination: './uploads/trades',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per file
+    }),
+  )
+  addPhotos(
+    @Param('id') id: string,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Request() req,
+  ) {
+    return this.tradesService.addPhotos(id, files, req.user.id);
   }
 }
