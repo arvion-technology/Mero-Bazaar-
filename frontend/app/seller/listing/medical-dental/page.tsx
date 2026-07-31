@@ -15,6 +15,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { MedicalData, useDraft } from "./layout";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -214,7 +215,7 @@ function CustomSelect({
   );
 }
 
-/* ── Multi-select Language Tags ── */
+/* Multi-select Language Tags */
 function LanguageSelector({
   selected,
   options,
@@ -361,8 +362,9 @@ function LanguageSelector({
 export default function MedicalListingDetailsPage() {
   const router = useRouter();
 
-  // ── Service Information ──
-  const [serviceTitle, setServiceTitle] = useState("General Medicine");
+  // Service Information
+  const { medicalData, setMedicalData } = useDraft();
+  const update = (patch: Partial<MedicalData>) => setMedicalData({ ...medicalData, ...patch});
   const [servicesOffered, setServicesOffered] = useState("");
   const [doctorName, setDoctorName] = useState("");
   const [licenseNumber, setLicenseNumber] = useState("");

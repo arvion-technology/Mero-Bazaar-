@@ -1,4 +1,7 @@
-import { PartialType } from "@nestjs/mapped-types";
-import { CreateMedicalAppointmentDto } from "./create_medical_appointment.dto";
+import { IsEnum } from 'class-validator';
+import { AppointmentStatus } from '@prisma/client';
 
-export class UpdateMedicalAppointmentDto extends PartialType(CreateMedicalAppointmentDto) {}
+export class UpdateMedicalAppointmentStatusDto {
+  @IsEnum(AppointmentStatus)
+  status: AppointmentStatus;
+}

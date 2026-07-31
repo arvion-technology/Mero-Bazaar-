@@ -6,6 +6,7 @@ import type { RentalListing } from "../app/types/realestate";
 import type { TradesListing, CreateTradesPayload } from "../app/types/trades";
 import type { AgricultureListing } from "../app/types/agriculture";
 import type { FoodsListing } from "../app/types/foods";
+import type { MedicalListing } from "@/app/types/medical";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -117,4 +118,9 @@ export const api = {
     get<FoodsListing[]>('/api/foods', params),
   getFood: (id: string) =>
     get<FoodsListing>(`/api/foods/${id}`),
-};
+
+  getMedicalListings: (params?: URLSearchParams) =>
+    get<MedicalListing[]>('/api/medical', params),
+  getMedicalListing: (id: string) =>
+    get<MedicalListing>(`/api/medical/${id}`),
+};c
