@@ -18,7 +18,6 @@ import { ToastContainer } from "react-toastify";
 import { MedicalData, useDraft } from "./layout";
 
 const ACCENT = "#2563eb";
-const ACCENT_HOVER = "#1d4ed8";
 const ACCENT_LIGHT = "#eff6ff";
 const DANGER = "#dc2626";
 const SUCCESS = "#10b981";
@@ -361,31 +360,25 @@ function LanguageSelector({
 
 export default function MedicalListingDetailsPage() {
   const router = useRouter();
-
-  // Service Information
   const { medicalData, setMedicalData } = useDraft();
-  const update = (patch: Partial<MedicalData>) => setMedicalData({ ...medicalData, ...patch});
-  const [servicesOffered, setServicesOffered] = useState("");
-  const [doctorName, setDoctorName] = useState("");
-  const [licenseNumber, setLicenseNumber] = useState("");
-  const [appointmentFee, setAppointmentFee] = useState("");
-  const [homeVisit, setHomeVisit] = useState(true);
-  const [onlineAppointments, setOnlineAppointments] = useState(false);
+  const update = (patch: Partial<MedicalData>) => setMedicalData({ ...medicalData, ...patch });
 
-  // ── Clinic Information ──
-  const [clinicAddress, setClinicAddress] = useState("");
-  const [city, setCity] = useState("Kathmandu");
-
-  // ── Additional Information ──
-  const [shortBio, setShortBio] = useState("");
-  const [languages, setLanguages] = useState<string[]>(["English", "Nepali", "Hindi"]);
-  const [experience, setExperience] = useState("7+ Years");
-
-  const bioLength = shortBio.length;
   const bioMax = 300;
+  const bioLength = medicalData.shortBio.length;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const {
+      serviceTitle,
+      servicesOffered,
+      doctorName,
+      licenseNumber,
+      appointmentFee,
+      clinicAddress,
+      city,
+      languages,
+    } = medicalData;
+
     if (!serviceTitle || !servicesOffered || !doctorName || !licenseNumber || !appointmentFee) {
       toast.error("Please fill all required fields in Service Information");
       return;
@@ -398,22 +391,6 @@ export default function MedicalListingDetailsPage() {
       toast.error("Please select at least one language");
       return;
     }
-
-    const listingData = {
-      serviceTitle,
-      servicesOffered,
-      doctorName,
-      licenseNumber,
-      appointmentFee,
-      homeVisit,
-      onlineAppointments,
-      clinicAddress,
-      city,
-      shortBio,
-      languages,
-      experience,
-    };
-    localStorage.setItem("medicalListingDetails", JSON.stringify(listingData));
 
     toast.success("Details saved! Now set your availability.");
     router.push("/seller/listing/medical-dental/availability");
@@ -695,7 +672,7 @@ export default function MedicalListingDetailsPage() {
         .form-textarea {
           padding: 12px 16px;
           border: 1.5px solid ${BORDER};
-          borderRadius: 12px;
+          border-radius: 12px;
           font-size: 14px;
           color: ${TEXT_PRIMARY};
           background: ${CARD_BG};
@@ -851,7 +828,6 @@ export default function MedicalListingDetailsPage() {
 
       <div className="listing-page">
         <div className="listing-container">
-          {/* Header */}
           <div className="listing-header">
             <button type="button" className="back-btn" onClick={() => router.back()}>
               <FiArrowLeft size={18} />
@@ -865,7 +841,6 @@ export default function MedicalListingDetailsPage() {
             </div>
           </div>
 
-          {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
               <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
@@ -883,7 +858,6 @@ export default function MedicalListingDetailsPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="form-card">
-            {/* Category */}
             <div className="category-wrap">
               <label className="category-label">Category</label>
               <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
@@ -896,7 +870,6 @@ export default function MedicalListingDetailsPage() {
             <div className="divider" />
 
             <div className="two-col-section">
-              {/* Left Column: Service Information */}
               <div>
                 <div className="section-header">
                   <div className="section-icon blue">
@@ -911,9 +884,9 @@ export default function MedicalListingDetailsPage() {
                   <div className="form-group">
                     <label className="form-label">Service Title <span className="required">*</span></label>
                     <CustomSelect
-                      value={serviceTitle}
+                      value={medicalData.serviceTitle}
                       options={serviceTitles}
-                      onChange={setServiceTitle}
+                      onChange={(v) => update({ serviceTitle: v })}
                     />
                   </div>
                 </div>
@@ -925,8 +898,8 @@ export default function MedicalListingDetailsPage() {
                       type="text"
                       className="form-input"
                       placeholder="e.g. General Checkup, Blood Test, Vaccination, Minor Surgery"
-                      value={servicesOffered}
-                      onChange={(e) => setServicesOffered(e.target.value)}
+                      value={medicalData.servicesOffered}
+                      onChange={(e) => update({ servicesOffered: e.target.value })}
                       required
                     />
                   </div>
@@ -939,8 +912,8 @@ export default function MedicalListingDetailsPage() {
                       type="text"
                       className="form-input"
                       placeholder="Dr. Sandhya Yadav"
-                      value={doctorName}
-                      onChange={(e) => setDoctorName(e.target.value)}
+                      value={medicalData.doctorName}
+                      onChange={(e) => update({ doctorName: e.target.value })}
                       required
                     />
                   </div>
@@ -948,13 +921,13 @@ export default function MedicalListingDetailsPage() {
 
                 <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
                   <div className="form-group">
-                    <label className="form-label">NMN License Number <span className="required">*</span></label>
+                    <label className="form-label">NMC License Number <span className="required">*</span></label>
                     <input
                       type="text"
                       className="form-input"
                       placeholder="NMC-123456"
-                      value={licenseNumber}
-                      onChange={(e) => setLicenseNumber(e.target.value)}
+                      value={medicalData.licenseNumber}
+                      onChange={(e) => update({ licenseNumber: e.target.value })}
                       required
                     />
                   </div>
@@ -980,8 +953,8 @@ export default function MedicalListingDetailsPage() {
                         className="form-input"
                         style={{ paddingLeft: "46px" }}
                         placeholder="800"
-                        value={appointmentFee}
-                        onChange={(e) => setAppointmentFee(e.target.value.replace(/[^0-9]/g, ""))}
+                        value={medicalData.appointmentFee}
+                        onChange={(e) => update({ appointmentFee: e.target.value.replace(/[^0-9]/g, "") })}
                         required
                       />
                     </div>
@@ -994,8 +967,8 @@ export default function MedicalListingDetailsPage() {
                       <input
                         type="checkbox"
                         className="checkbox-input"
-                        checked={homeVisit}
-                        onChange={(e) => setHomeVisit(e.target.checked)}
+                        checked={medicalData.homeVisit}
+                        onChange={(e) => update({ homeVisit: e.target.checked })}
                       />
                       Home Visit Available
                     </label>
@@ -1003,8 +976,8 @@ export default function MedicalListingDetailsPage() {
                       <input
                         type="checkbox"
                         className="checkbox-input"
-                        checked={onlineAppointments}
-                        onChange={(e) => setOnlineAppointments(e.target.checked)}
+                        checked={medicalData.onlineAppointments}
+                        onChange={(e) => update({ onlineAppointments: e.target.checked })}
                       />
                       Accept Online Appointments
                     </label>
@@ -1012,7 +985,6 @@ export default function MedicalListingDetailsPage() {
                 </div>
               </div>
 
-              {/* Right Column: Clinic Information */}
               <div>
                 <div className="section-header">
                   <div className="section-icon green">
@@ -1030,8 +1002,8 @@ export default function MedicalListingDetailsPage() {
                       type="text"
                       className="form-input"
                       placeholder="Shankhamul Marg, Opp, Civil Hospital"
-                      value={clinicAddress}
-                      onChange={(e) => setClinicAddress(e.target.value)}
+                      value={medicalData.clinicAddress}
+                      onChange={(e) => update({ clinicAddress: e.target.value })}
                       required
                     />
                   </div>
@@ -1044,8 +1016,8 @@ export default function MedicalListingDetailsPage() {
                       type="text"
                       className="form-input"
                       placeholder="Kathmandu"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
+                      value={medicalData.city}
+                      onChange={(e) => update({ city: e.target.value })}
                       required
                     />
                   </div>
@@ -1055,7 +1027,6 @@ export default function MedicalListingDetailsPage() {
 
             <div className="divider" />
 
-            
             <div className="section-header">
               <div className="section-icon purple">
                 <FiInfo size={18} color="#fff" />
@@ -1073,9 +1044,9 @@ export default function MedicalListingDetailsPage() {
                     <textarea
                       className="form-textarea"
                       placeholder="I am a General Physician with 7+ Years of experience in treating acute and chronic medical conditions. Patient care and satisfaction is my priority."
-                      value={shortBio}
+                      value={medicalData.shortBio}
                       maxLength={bioMax}
-                      onChange={(e) => setShortBio(e.target.value)}
+                      onChange={(e) => update({ shortBio: e.target.value })}
                     />
                     <div className={`char-counter ${bioLength > bioMax * 0.9 ? "near-limit" : ""}`}>
                       {bioLength}/{bioMax}
@@ -1089,9 +1060,9 @@ export default function MedicalListingDetailsPage() {
                   <div className="form-group">
                     <label className="form-label">Language Known</label>
                     <LanguageSelector
-                      selected={languages}
+                      selected={medicalData.languages}
                       options={languagesList}
-                      onChange={setLanguages}
+                      onChange={(langs) => update({ languages: langs })}
                     />
                   </div>
                 </div>
@@ -1100,9 +1071,9 @@ export default function MedicalListingDetailsPage() {
                   <div className="form-group">
                     <label className="form-label">Experience <span className="required">*</span></label>
                     <CustomSelect
-                      value={experience}
+                      value={medicalData.experience}
                       options={experienceOptions}
-                      onChange={setExperience}
+                      onChange={(v) => update({ experience: v })}
                     />
                   </div>
                 </div>

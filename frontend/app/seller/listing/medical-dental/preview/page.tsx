@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiArrowLeft,
@@ -17,6 +17,9 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useDraft, defaultMedicalData } from "../layout";
+import { draftToCreateMedicalPayload } from "@/lib/adapters/medicalAdapter";
+import { api } from "@/lib/api";
 
 const ACCENT = "#2563eb";
 const SUCCESS = "#10b981";
@@ -37,52 +40,36 @@ const steps = [
 
 export default function MedicalPreviewPage() {
   const router = useRouter();
+  const { medicalData, setMedicalData, images, setImages } = useDraft();
+  const [submitting, setSubmitting] = useState(false);
 
-  const [details, setDetails] = useState<any>(null);
-  const [availability, setAvailability] = useState<any>(null);
-  const [photos, setPhotos] = useState<{ preview: string; isMain: boolean }[]>([]);
+  const mainPhoto = images.find((p) => p.isMain) || images[0];
 
-  useEffect(() => {
-    const d = localStorage.getItem("medicalListingDetails");
-    const a = localStorage.getItem("medicalListingAvailability");
-    const p = localStorage.getItem("medicalListingPhotos");
-
-    setDetails(d ? JSON.parse(d) : {
-      doctorName: "Dr. Sandhya Yadav",
-      servicesOffered: "General Checkup, Blood Test, Vaccination",
-      licenseNumber: "NMC-123456",
-      appointmentFee: "800",
-      homeVisit: true,
-      clinicAddress: "Shankhamul Marg, Opp, Civil Hospital",
-      city: "Kathmandu",
-      languages: ["English", "Nepali", "Hindi"],
-      experience: "7+ Years",
-      shortBio: "I am a General Physician with 7+ years experience in treating acute and chronic medical conditions.",
-      serviceTitle: "General Medicine",
-    });
-    setAvailability(a ? JSON.parse(a) : {});
-    setPhotos(p ? JSON.parse(p) : []);
-  }, []);
-
-  const mainPhoto = photos.find((p) => p.isMain) || photos[0];
-
-  
-  const servicesList = details?.servicesOffered
-    ? details.servicesOffered.split(",").map((s: string) => s.trim()).filter(Boolean)
+  const servicesList = medicalData.servicesOffered
+    ? medicalData.servicesOffered.split(",").map((s) => s.trim()).filter(Boolean)
     : [];
 
-  const handlePublish = () => {
-    toast.success("Listing published successfully!");
-    setTimeout(() => router.push("/seller/products"), 1500);
-  };
+  const handlePublish = async () => {
+    setSubmitting(true);
+    try {
+      const payload = draftToCreateMedicalPayload(medicalData, medicalData);
+      const listing = await api.createMedical(payload);
 
-  if (!details) {
-    return (
-      <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: TEXT_MUTED }}>Loading preview...</p>
-      </div>
-    );
-  }
+      if (images.length > 0) {
+        await api.uploadMedicalPhotos(listing.id, images.map((img) => img.file));
+      }
+
+      toast.success("Listing published successfully!");
+      setMedicalData(defaultMedicalData);
+      setImages([]);
+      setTimeout(() => router.push("/seller/products"), 1200);
+    } catch (err: any) {
+      console.error("publish error:", err);
+      toast.error(err.message || "Failed to publish listing. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <>
@@ -397,6 +384,10 @@ export default function MedicalPreviewPage() {
           border-color: ${ACCENT};
           background: #eff6ff;
         }
+        .edit-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
 
         .publish-btn {
           padding: 12px 40px;
@@ -419,6 +410,12 @@ export default function MedicalPreviewPage() {
         .publish-btn:hover {
           box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
           transform: translateY(-1px);
+        }
+        .publish-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
         }
 
         @media (max-width: 768px) {
@@ -444,7 +441,7 @@ export default function MedicalPreviewPage() {
       <div className="page">
         <div className="container">
           <div className="header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button type="button" className="back-btn" onClick={() => router.back()} disabled={submitting}>
               <FiArrowLeft size={18} />
               Back
             </button>
@@ -490,7 +487,7 @@ export default function MedicalPreviewPage() {
               {/* Content */}
               <div className="preview-content">
                 <div className="name-row">
-                  <h2 className="doctor-name">{details.doctorName || "Doctor Name"}</h2>
+                  <h2 className="doctor-name">{medicalData.doctorName || "Doctor Name"}</h2>
                   <span className="verified-badge">
                     <FiCheck size={10} strokeWidth={3} />
                     Verified
@@ -498,15 +495,15 @@ export default function MedicalPreviewPage() {
                 </div>
 
                 <p className="license-text">
-                  NMC License: {details.licenseNumber || "N/A"}
+                  NMC License: {medicalData.licenseNumber || "N/A"}
                 </p>
 
                 <div className="badges-row">
                   <div className="info-badge">
-                    <div className="badge-value">NPR {details.appointmentFee || "0"}</div>
+                    <div className="badge-value">NPR {medicalData.appointmentFee || "0"}</div>
                     <div className="badge-label">Appointment fee</div>
                   </div>
-                  {details.homeVisit && (
+                  {medicalData.homeVisit && (
                     <div className="info-badge">
                       <div className="badge-value">Home</div>
                       <div className="badge-label">Available</div>
@@ -517,19 +514,19 @@ export default function MedicalPreviewPage() {
                 <div className="info-table">
                   <div className="info-row">
                     <span className="info-key">Clinic Address</span>
-                    <span className="info-value">{details.clinicAddress || "-"}</span>
+                    <span className="info-value">{medicalData.clinicAddress || "-"}</span>
                   </div>
                   <div className="info-row">
                     <span className="info-key">City</span>
-                    <span className="info-value">{details.city || "-"}</span>
+                    <span className="info-value">{medicalData.city || "-"}</span>
                   </div>
                   <div className="info-row">
                     <span className="info-key">Languages</span>
-                    <span className="info-value">{(details.languages || []).join(", ")}</span>
+                    <span className="info-value">{(medicalData.languages || []).join(", ")}</span>
                   </div>
                   <div className="info-row">
                     <span className="info-key">Experience</span>
-                    <span className="info-value">{details.experience || "-"}</span>
+                    <span className="info-value">{medicalData.experience || "-"}</span>
                   </div>
                 </div>
               </div>
@@ -543,7 +540,7 @@ export default function MedicalPreviewPage() {
                 About Doctor
               </h3>
               <p className="about-text">
-                {details.shortBio || "No bio provided."}
+                {medicalData.shortBio || "No bio provided."}
               </p>
             </div>
 
@@ -564,16 +561,12 @@ export default function MedicalPreviewPage() {
             </div>
 
             <div className="actions-wrap">
-              <button
-                type="button"
-                className="edit-btn"
-                onClick={() => router.back()}
-              >
+              <button type="button" className="edit-btn" onClick={() => router.back()} disabled={submitting}>
                 <FiEdit3 size={16} />
                 Edit Listing
               </button>
-              <button type="button" className="publish-btn" onClick={handlePublish}>
-                Publish Listing
+              <button type="button" className="publish-btn" onClick={handlePublish} disabled={submitting}>
+                {submitting ? "Publishing..." : "Publish Listing"}
                 <FiSend size={16} />
               </button>
             </div>
