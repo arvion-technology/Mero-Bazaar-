@@ -7,7 +7,7 @@ import { useState } from "react";
 import {
   FiMapPin, FiMessageSquare, FiArrowLeft,
   FiPhone, FiShare2, FiHeart, FiCheckCircle,
-  FiCalendar, FiUser,
+  FiCalendar, FiUser, FiAlertTriangle, FiSun,
 } from "react-icons/fi";
 import { FaHeart, FaLeaf, FaShieldAlt } from "react-icons/fa";
 
@@ -173,7 +173,7 @@ export default function AgriDetailPage() {
           }
         `}</style>
         <div className="al-404">
-          <div style={{ fontSize: 56 }}>🌾</div>
+          <div style={{ fontSize: 56, color: "#15803d" }}><FiSun /></div>
           <h1>Listing Not Found</h1>
           <p>The item you are looking for does not exist.</p>
           <Link href="/category/agriculture-and-livestock" className="al-back-btn">
@@ -193,6 +193,7 @@ export default function AgriDetailPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
+        html, body { overflow-x: hidden; }
         .ald-wrap {
           min-height: 100vh; background: #f5f5f5;
           font-family: 'Inter', -apple-system, sans-serif;
@@ -243,11 +244,17 @@ export default function AgriDetailPage() {
           box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         .ald-main-img-wrap {
-          position: relative; aspect-ratio: 4/3; overflow: hidden;
+          position: relative;
+          width: 100%;
+          height: 390px;
+          overflow: hidden;
           background: #e5e7eb;
         }
         .ald-main-img {
-          width: 100%; height: 100%; object-fit: cover;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
         }
         .ald-img-cat-badge {
           position: absolute; top: 12px; right: 12px;
@@ -503,18 +510,18 @@ export default function AgriDetailPage() {
 
                   {/* Organic ribbon */}
                   {item.isOrganic && (
-                    <span className="ald-organic-tag">🌿 Organic</span>
+                    <span className="ald-organic-tag"><FaLeaf size={10} /> Organic</span>
                   )}
                 </div>
               </div>
 
               {/* Safety Tips */}
               <div className="ald-tips" style={{ marginTop: 16 }}>
-                <p className="ald-tips-title">⚠️ Safety Tips</p>
-                <div className="ald-tip-item">✓ Meet in a safe, public location</div>
-                <div className="ald-tip-item">✓ Verify livestock health certificates before buying</div>
-                <div className="ald-tip-item">✓ Never pay full amount before receiving the item</div>
-                <div className="ald-tip-item">✓ Report suspicious listings to our support team</div>
+                <p className="ald-tips-title"><FiAlertTriangle size={12} style={{ marginRight: 6 }} /> Safety Tips</p>
+                <div className="ald-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Meet in a safe, public location</div>
+                <div className="ald-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Verify livestock health certificates before buying</div>
+                <div className="ald-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Never pay full amount before receiving the item</div>
+                <div className="ald-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Report suspicious listings to our support team</div>
               </div>
             </div>
 

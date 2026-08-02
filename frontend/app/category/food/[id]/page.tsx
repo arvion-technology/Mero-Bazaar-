@@ -8,6 +8,7 @@ import {
   FiMapPin, FiMessageSquare, FiArrowLeft,
   FiPhone, FiShare2, FiHeart, FiCheckCircle,
   FiCalendar, FiUser, FiStar, FiClock, FiTruck,
+  FiAlertTriangle,
 } from "react-icons/fi";
 import { FaHeart, FaLeaf, FaShieldAlt, FaUtensils } from "react-icons/fa";
 
@@ -236,7 +237,7 @@ export default function FoodDetailPage() {
           }
         `}</style>
         <div className="fd-404">
-          <div style={{ fontSize: 56 }}>🍽️</div>
+          <div style={{ fontSize: 56, color: "#16a34a" }}><FaUtensils /></div>
           <h1>Restaurant Not Found</h1>
           <p>The restaurant you are looking for does not exist.</p>
           <Link href="/category/food" className="fd-back-btn">
@@ -306,11 +307,17 @@ export default function FoodDetailPage() {
           box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         .fd-main-img-wrap {
-          position: relative; aspect-ratio: 4/3; overflow: hidden;
+          position: relative;
+          width: 100%;
+          height: 390px;
+          overflow: hidden;
           background: #e5e7eb;
         }
         .fd-main-img {
-          width: 100%; height: 100%; object-fit: cover;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
         }
         .fd-img-cat-badge {
           position: absolute; top: 12px; right: 12px;
@@ -343,16 +350,18 @@ export default function FoodDetailPage() {
 
         /* Thumbnail strip */
         .fd-thumb-strip {
-          display: flex; gap: 8px; padding: 12px;
-          overflow-x: auto;
+          display: flex; gap: 8px;
+          margin-top: 10px;
+          padding: 0 2px;
         }
         .fd-thumb {
-          width: 72px; height: 72px; border-radius: 8px;
+          width: 64px; height: 64px; border-radius: 8px;
           object-fit: cover; cursor: pointer; border: 2px solid transparent;
-          transition: border-color 0.15s, opacity 0.15s;
+          transition: border-color 0.15s, opacity 0.15s, transform 0.15s;
           flex-shrink: 0;
+          background: #e5e7eb;
         }
-        .fd-thumb:hover { opacity: 0.8; }
+        .fd-thumb:hover { opacity: 0.85; transform: translateY(-1px); }
         .fd-thumb.active { border-color: #16a34a; }
 
         /* ── RIGHT: DETAILS PANEL ── */
@@ -596,29 +605,30 @@ export default function FoodDetailPage() {
                   )}
                 </div>
 
-                {/* Thumbnail strip */}
-                {item.images.length > 1 && (
-                  <div className="fd-thumb-strip">
-                    {item.images.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt={`${item.name} ${idx + 1}`}
-                        className={`fd-thumb${activeImg === idx ? " active" : ""}`}
-                        onClick={() => setActiveImg(idx)}
-                      />
-                    ))}
-                  </div>
-                )}
               </div>
+
+              {/* Thumbnails — OUTSIDE the white card */}
+              {item.images.length > 1 && (
+                <div className="fd-thumb-strip">
+                  {item.images.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={`${item.name} ${idx + 1}`}
+                      className={`fd-thumb${activeImg === idx ? " active" : ""}`}
+                      onClick={() => setActiveImg(idx)}
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Safety Tips */}
               <div className="fd-tips" style={{ marginTop: 16 }}>
-                <p className="fd-tips-title">⚠️ Food Safety Tips</p>
-                <div className="fd-tip-item">✓ Check food hygiene rating before ordering</div>
-                <div className="fd-tip-item">✓ Verify seller has proper food handling license</div>
-                <div className="fd-tip-item">✓ Report any food quality issues immediately</div>
-                <div className="fd-tip-item">✓ Prefer restaurants with Fresh & Hygienic badge</div>
+                <p className="fd-tips-title"><FiAlertTriangle size={12} style={{ marginRight: 6 }} /> Food Safety Tips</p>
+                <div className="fd-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Check food hygiene rating before ordering</div>
+                <div className="fd-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Verify seller has proper food handling license</div>
+                <div className="fd-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Report any food quality issues immediately</div>
+                <div className="fd-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Prefer restaurants with Fresh & Hygienic badge</div>
               </div>
             </div>
 

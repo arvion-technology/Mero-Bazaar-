@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import {
@@ -12,6 +12,7 @@ import {
   FiStar,
   FiCheckCircle,
   FiHeart,
+  FiCoffee,
 } from "react-icons/fi";
 import {
   FaLeaf,
@@ -53,7 +54,6 @@ type Restaurant = {
   tags: string[];
   isFreshAndHygienic: boolean;
   postedDaysAgo: number;
-  // FIX: added missing fields so filters have data to work with
   deliveryFee?: string;
   subscriptions?: Subscription[];
   deliveryDays?: DayOfWeek[];
@@ -211,7 +211,6 @@ const SUBSCRIPTIONS: Subscription[] = [
 const DAYS_OF_WEEK: DayOfWeek[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /* ─────────── PRICE PARSER ─────────── */
-// FIX: helper to extract numeric value from price strings like "NPR 250/meal"
 const parsePrice = (priceStr: string): number => {
   const match = priceStr.replace(/,/g, "").match(/\d+/);
   return match ? parseInt(match[0], 10) : 0;
@@ -221,6 +220,8 @@ const parsePrice = (priceStr: string): number => {
 export default function FoodDeliveryPage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [selectedFoodTypes, setSelectedFoodTypes] = useState<FoodType[]>([]);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>([]);
@@ -229,6 +230,17 @@ export default function FoodDeliveryPage() {
   const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>([]);
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+
+  // Close sort dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setIsSortOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const toggleFoodType = (ft: FoodType) =>
     setSelectedFoodTypes((prev) =>
@@ -289,7 +301,6 @@ export default function FoodDeliveryPage() {
     if (activeCategory && !r.cuisine.toLowerCase().includes(activeCategory.toLowerCase())) return false;
     if (selectedFoodTypes.length && !selectedFoodTypes.includes(r.foodType)) return false;
 
-    // FIX: Price Range filter
     if (selectedPriceRanges.length) {
       const price = parsePrice(r.pricePerMeal);
       const matches = selectedPriceRanges.some((range) => {
@@ -302,7 +313,6 @@ export default function FoodDeliveryPage() {
       if (!matches) return false;
     }
 
-    // FIX: Delivery fee filter
     if (selectedDeliveryRanges.length) {
       const fee = r.deliveryFee ? parsePrice(r.deliveryFee) : 0;
       const matches = selectedDeliveryRanges.some((range) => {
@@ -315,14 +325,12 @@ export default function FoodDeliveryPage() {
       if (!matches) return false;
     }
 
-    // FIX: Subscription filter
     if (selectedSubscriptions.length) {
       if (!r.subscriptions || !r.subscriptions.some((sub) => selectedSubscriptions.includes(sub))) {
         return false;
       }
     }
 
-    // FIX: Delivery Days filter
     if (selectedDays.length) {
       if (!r.deliveryDays || !r.deliveryDays.some((day) => selectedDays.includes(day))) {
         return false;
@@ -335,10 +343,15 @@ export default function FoodDeliveryPage() {
   const sortedDisplayed = [...displayed].sort((a, b) => {
     if (sort === "newest") return a.postedDaysAgo - b.postedDaysAgo;
     if (sort === "rating") return b.rating - a.rating;
-    // FIX: added missing price-low sort handler
     if (sort === "price-low") return parsePrice(a.pricePerMeal) - parsePrice(b.pricePerMeal);
     return 0;
   });
+
+  const sortLabel: Record<string, string> = {
+    newest: "Newest",
+    rating: "Highest Rated",
+    "price-low": "Price: Low to High",
+  };
 
   const renderStars = (rating: number, reviewCount: number) => {
     const fullStars = Math.floor(rating);
@@ -552,24 +565,39 @@ export default function FoodDeliveryPage() {
         }
         .fd-count { font-size: 15px; color: #6b7280; font-weight: 600; }
         .fd-count strong { color: #111; font-weight: 800; }
-        .fd-sort-wrap {
-          position: relative;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          background: #fff;
-          padding: 0;
-          min-width: 120px;
+
+        /* ── CUSTOM SORT DROPDOWN (No overflow issues) ── */
+        .fd-sort-dropdown { position: relative; }
+        .fd-sort-btn {
+          display: flex; align-items: center; gap: 8px;
+          padding: 8px 14px;
+          background: #fff; border: 1px solid #e0e4f0;
+          border-radius: 8px; font-size: 13px; font-weight: 600;
+          color: #333; cursor: pointer; font-family: inherit;
+          transition: border-color 0.2s;
         }
-        .fd-sort {
-          padding: 8px 28px 8px 12px;
-          border: none;
-          border-radius: 6px;
-          font-size: 13px; font-weight: 600;
-          color: #333; background: transparent; outline: none;
-          cursor: pointer; font-family: inherit;
-          appearance: none;
-          width: 100%;
+        .fd-sort-btn:hover { border-color: #bbb; }
+        .fd-sort-menu {
+          position: absolute; top: calc(100% + 6px); right: 0;
+          min-width: 180px;
+          background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+          z-index: 200;
+          overflow: hidden;
+          animation: sortFade 0.15s ease;
         }
+        @keyframes sortFade {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .fd-sort-option {
+          padding: 10px 16px; font-size: 13px; color: #444;
+          cursor: pointer; transition: all 0.15s;
+          border-bottom: 1px solid #f5f5f5;
+        }
+        .fd-sort-option:last-child { border-bottom: none; }
+        .fd-sort-option:hover { background: #fff1f2; color: #e11d48; }
+        .fd-sort-option.active { background: #e11d48; color: #fff; }
 
         /* ── CARD GRID ── */
         .fd-grid {
@@ -686,6 +714,9 @@ export default function FoodDeliveryPage() {
           background: #fff; border-radius: 10px;
           border: 1px solid #e5e7eb;
         }
+        .fd-empty-icon { margin-bottom: 12px; color: #bbb; }
+        .fd-empty p { font-weight: 700; font-size: 16px; color: #111; margin: 0 0 4px; }
+        .fd-empty span { font-size: 13px; color: #888; }
         .fd-empty-btn {
           margin-top: 12px; padding: 9px 22px;
           background: #e11d48; color: #fff; font-weight: 700;
@@ -700,11 +731,35 @@ export default function FoodDeliveryPage() {
           .fd-cats-row { gap: 8px; }
           .fd-cat-card { min-width: 120px; padding: 8px 12px; }
         }
-        @media (max-width: 540px) {
+
+        /* ── MOBILE: Compact horizontal-scroll categories ── */
+        @media (max-width: 640px) {
           .fd-grid { grid-template-columns: 1fr; }
           .fd-body { padding: 14px 14px 40px; }
-          .fd-cats-row { gap: 6px; }
-          .fd-cat-card { min-width: 0; flex: 1; }
+          .fd-cats-strip { padding: 14px 0; }
+          .fd-cats-inner { padding: 0 12px; }
+          .fd-cats-label { font-size: 11px; margin-bottom: 10px; }
+          .fd-cats-row {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 8px;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+          }
+          .fd-cats-row::-webkit-scrollbar { display: none; }
+          .fd-cat-card {
+            min-width: auto;
+            padding: 8px 14px;
+            gap: 8px;
+            border-radius: 10px;
+            border-width: 1.5px;
+            flex-shrink: 0;
+          }
+          .fd-cat-icon { font-size: 18px; }
+          .fd-cat-icon svg { width: 18px; height: 18px; }
+          .fd-cat-name { font-size: 13px; white-space: nowrap; }
+          .fd-cat-count { font-size: 11px; white-space: nowrap; }
         }
       `}</style>
 
@@ -760,7 +815,7 @@ export default function FoodDeliveryPage() {
           <aside className="fd-sidebar">
             <div className="fd-sb-head">
               Filter
-              <FiChevronRight size={16} />
+              <FiChevronDown size={16} />
             </div>
 
             {/* Food Type */}
@@ -862,29 +917,43 @@ export default function FoodDeliveryPage() {
               <span className="fd-count">
                 <strong>{sortedDisplayed.length}</strong> Resturants found
               </span>
-              <div className="fd-sort-wrap">
-                <select
-                  className="fd-sort"
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                >
-                  <option value="newest">Newest</option>
-                  <option value="rating">Highest Rated</option>
-                  <option value="price-low">Price: Low to High</option>
-                </select>
-                <FiChevronDown
-                  size={12}
-                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#666" }}
-                />
+
+              {/* ── CUSTOM SORT DROPDOWN (fixes overflow) ── */}
+              <div className="fd-sort-dropdown" ref={sortRef}>
+                <button className="fd-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                  {sortLabel[sort]}
+                  <FiChevronDown
+                    size={14}
+                    style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                  />
+                </button>
+                {isSortOpen && (
+                  <div className="fd-sort-menu">
+                    {(["newest", "rating", "price-low"] as const).map((key) => (
+                      <div
+                        key={key}
+                        className={`fd-sort-option${sort === key ? " active" : ""}`}
+                        onClick={() => {
+                          setSort(key);
+                          setIsSortOpen(false);
+                        }}
+                      >
+                        {sortLabel[key]}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Cards */}
             {sortedDisplayed.length === 0 ? (
               <div className="fd-empty">
-                <div style={{ fontSize: 48, marginBottom: 12 }}>🍽️</div>
-                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No restaurants found</p>
-                <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters or search term</span>
+                <div className="fd-empty-icon">
+                  <FiCoffee size={48} />
+                </div>
+                <p>No restaurants found</p>
+                <span>Try adjusting your filters or search term</span>
                 <br />
                 <button className="fd-empty-btn" onClick={reset}>Reset Filters</button>
               </div>
@@ -944,13 +1013,13 @@ export default function FoodDeliveryPage() {
                         </div>
                         <p className="fd-card-cuisine">
                           <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                            <span style={{ fontSize: 10 }}>🍽️</span>
+                            <FiCoffee size={10} />
                             {item.cuisine}
                           </span>
                         </p>
                         {item.isFreshAndHygienic && (
                           <div className="fd-card-hygienic">
-                            <span style={{ fontSize: 12 }}>🌿</span>
+                            <FaLeaf size={12} />
                             Fresh and Hygenic
                           </div>
                         )}

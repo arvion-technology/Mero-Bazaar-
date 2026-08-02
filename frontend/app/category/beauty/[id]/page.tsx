@@ -5,12 +5,10 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import { useState } from "react";
 import {
-  FiMapPin, FiMessageSquare, FiArrowLeft,
-  FiPhone, FiShare2, FiHeart, FiCheckCircle,
-  FiCalendar, FiUser, FiStar, FiClock, FiTruck,
-  FiScissors, FiHome, FiDollarSign,
+  FiMapPin, FiArrowLeft, FiPhone, FiShare2,
+  FiCalendar, FiStar, FiClock, FiScissors, FiHome,
 } from "react-icons/fi";
-import { FaHeart, FaLeaf, FaShieldAlt, FaSpa } from "react-icons/fa";
+import { FaHeart, FaSpa } from "react-icons/fa";
 
 type Gender = "Any" | "Female Only" | "Male Only";
 
@@ -244,6 +242,7 @@ export default function BeautyDetailPage() {
       <>
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+          html, body { overflow-x: hidden; }
           .bd-404 {
             min-height: 80vh; display: flex; align-items: center; justify-content: center;
             font-family: 'Inter', sans-serif; background: #f5f5f5; flex-direction: column;
@@ -278,6 +277,7 @@ export default function BeautyDetailPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
+        html, body { overflow-x: hidden; }
         .bd-wrap {
           min-height: 100vh; background: #f5f5f5;
           font-family: 'Inter', -apple-system, sans-serif;
@@ -320,7 +320,7 @@ export default function BeautyDetailPage() {
           align-items: start;
         }
 
-        /* ── LEFT: IMAGE + THUMBNAILS ── */
+        /* ── LEFT: IMAGE CARD ── */
         .bd-img-section {
           background: #fff; border-radius: 12px;
           border: 1px solid #e5e7eb;
@@ -328,21 +328,27 @@ export default function BeautyDetailPage() {
           box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         .bd-main-img-wrap {
-          position: relative; aspect-ratio: 4/3; overflow: hidden;
+          position: relative;
+          width: 100%;
+          height: 390px;
+          overflow: hidden;
           background: #e5e7eb;
         }
         .bd-main-img {
-          width: 100%; height: 100%; object-fit: cover;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
         }
         .bd-img-cat-badge {
-          position: absolute; top: 12px; right: 12px;
+          position: absolute; top: 10px; right: 10px;
           font-size: 10px; font-weight: 800;
-          padding: 4px 10px; border-radius: 5px;
+          padding: 3px 8px; border-radius: 5px;
           text-transform: uppercase; letter-spacing: 0.4px;
         }
         .bd-img-fav-btn {
-          position: absolute; top: 12px; left: 12px;
-          width: 36px; height: 36px; border-radius: 50%;
+          position: absolute; top: 10px; left: 10px;
+          width: 32px; height: 32px; border-radius: 50%;
           background: rgba(255,255,255,0.92); border: none;
           display: flex; align-items: center; justify-content: center;
           cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
@@ -351,30 +357,32 @@ export default function BeautyDetailPage() {
         .bd-img-fav-btn:hover { transform: scale(1.12); }
 
         .bd-posted-tag {
-          position: absolute; bottom: 12px; left: 12px;
+          position: absolute; bottom: 10px; left: 10px;
           background: rgba(0,0,0,0.58); color: #fff;
-          font-size: 10.5px; font-weight: 600; border-radius: 6px;
-          padding: 3px 9px; backdrop-filter: blur(4px);
+          font-size: 10px; font-weight: 600; border-radius: 6px;
+          padding: 3px 8px; backdrop-filter: blur(4px);
         }
         .bd-home-tag {
-          position: absolute; bottom: 12px; right: 12px;
+          position: absolute; bottom: 10px; right: 10px;
           background: rgba(225,29,72,0.88); color: #fff;
-          font-size: 10.5px; font-weight: 700; border-radius: 6px;
-          padding: 3px 9px; display: flex; align-items: center; gap: 4px;
+          font-size: 10px; font-weight: 700; border-radius: 6px;
+          padding: 3px 8px; display: flex; align-items: center; gap: 4px;
         }
 
-        /* Thumbnail strip */
+        /* ── THUMBNAILS: OUTSIDE THE BOX ── */
         .bd-thumb-strip {
-          display: flex; gap: 8px; padding: 12px;
-          overflow-x: auto;
+          display: flex; gap: 8px;
+          margin-top: 10px;
+          padding: 0 2px;
         }
         .bd-thumb {
-          width: 72px; height: 72px; border-radius: 8px;
+          width: 64px; height: 64px; border-radius: 8px;
           object-fit: cover; cursor: pointer; border: 2px solid transparent;
-          transition: border-color 0.15s, opacity 0.15s;
+          transition: border-color 0.15s, opacity 0.15s, transform 0.15s;
           flex-shrink: 0;
+          background: #e5e7eb;
         }
-        .bd-thumb:hover { opacity: 0.8; }
+        .bd-thumb:hover { opacity: 0.85; transform: translateY(-1px); }
         .bd-thumb.active { border-color: #e11d48; }
 
         /* ── RIGHT: DETAILS PANEL ── */
@@ -578,6 +586,7 @@ export default function BeautyDetailPage() {
         @media (max-width: 540px) {
           .bd-body { padding: 16px 14px 40px; }
           .bd-related-grid { grid-template-columns: 1fr; }
+          .bd-thumb { width: 56px; height: 56px; }
         }
       `}</style>
 
@@ -602,8 +611,9 @@ export default function BeautyDetailPage() {
 
           <div className="bd-grid">
 
-            {/* ── LEFT: IMAGE ── */}
+            {/* ── LEFT COLUMN ── */}
             <div>
+              {/* Main Image Card */}
               <div className="bd-img-section">
                 <div className="bd-main-img-wrap">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -636,22 +646,22 @@ export default function BeautyDetailPage() {
                     </span>
                   )}
                 </div>
-
-                {/* Thumbnail strip */}
-                {item.images.length > 1 && (
-                  <div className="bd-thumb-strip">
-                    {item.images.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt={`${item.name} ${idx + 1}`}
-                        className={`bd-thumb${activeImg === idx ? " active" : ""}`}
-                        onClick={() => setActiveImg(idx)}
-                      />
-                    ))}
-                  </div>
-                )}
               </div>
+
+              {/* Thumbnails — OUTSIDE the white card */}
+              {item.images.length > 1 && (
+                <div className="bd-thumb-strip">
+                  {item.images.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={`${item.name} ${idx + 1}`}
+                      className={`bd-thumb${activeImg === idx ? " active" : ""}`}
+                      onClick={() => setActiveImg(idx)}
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Safety Tips */}
               <div className="bd-tips" style={{ marginTop: 16 }}>

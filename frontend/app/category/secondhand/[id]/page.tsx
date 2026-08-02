@@ -17,6 +17,8 @@ import {
   FiShield,
   FiAward,
   FiLayers,
+  FiLoader,
+  FiShoppingBag,
 } from "react-icons/fi";
 import { FaHeart, FaHandshake } from "react-icons/fa";
 
@@ -53,7 +55,7 @@ export default function SecondhandDetailPage() {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4">⏳</div>
+          <div className="text-6xl mb-4 text-stone-400"><FiLoader className="animate-spin" /></div>
           <p className="text-stone-500">Loading listing…</p>
         </div>
       </div>
@@ -64,7 +66,7 @@ export default function SecondhandDetailPage() {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4">🛍️</div>
+          <div className="text-6xl mb-4 text-rose-500"><FiShoppingBag /></div>
           <h1 className="text-2xl font-bold text-stone-800 mb-2">Listing Not Found</h1>
           <p className="text-stone-500 mb-4">The item you are looking for does not exist.</p>
           <Link
@@ -93,6 +95,7 @@ export default function SecondhandDetailPage() {
   return (
     <>
       <style>{`
+        html, body { overflow-x: hidden; }
         .sh-page {
           background: #f8f9fa;
           min-height: 100vh;
@@ -120,8 +123,8 @@ export default function SecondhandDetailPage() {
           background: #fff; border-radius: 16px; overflow: hidden;
           box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #eaeaea;
         }
-        .sh-main-img-wrap { position: relative; width: 100%; aspect-ratio: 16/10; overflow: hidden; background: #f4f4f5; }
-        .sh-main-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+        .sh-main-img-wrap { position: relative; width: 100%; height: 390px; overflow: hidden; background: #f4f4f5; }
+        .sh-main-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s ease; }
         .sh-img-card:hover .sh-main-img { transform: scale(1.02); }
 
         .sh-info-card {

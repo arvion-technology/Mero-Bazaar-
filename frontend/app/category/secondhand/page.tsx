@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { api } from "@/lib/api";
@@ -14,6 +14,9 @@ import {
   FiCheckCircle,
   FiChevronLeft,
   FiChevronRight,
+  FiLoader,
+  FiAlertTriangle,
+  FiShoppingBag,
 } from "react-icons/fi";
 import {
   FaHeart,
@@ -66,7 +69,7 @@ const CONDITION_BADGE: Record<Condition, { bg: string; color: string; dot: strin
 
 const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal"];
 const PLACEHOLDER_IMG = "/placeholder-item.jpg";
-const IMG_BASE = process.env.NEXT_PUBLIC_API_URL;   
+const IMG_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 function daysAgo(dateStr: string) {
   const diffMs = Date.now() - new Date(dateStr).getTime();
@@ -80,12 +83,25 @@ export default function SecondhandPage() {
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
   const [activeCategory, setActiveCategory] = useState<SecondHandCategory | "">("");
   const [selectedConditions, setSelectedConditions] = useState<Condition[]>([]);
   const [selectedCity, setSelectedCity] = useState("");
   const [priceRange, setPriceRange] = useState<number>(10000);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
+
+ 
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setIsSortOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const loadListings = () => {
     setLoading(true);
@@ -159,6 +175,12 @@ export default function SecondhandPage() {
     if (sort === "price-high") return (b.secondhand.price ?? 0) - (a.secondhand.price ?? 0);
     return 0;
   });
+
+  const sortLabel: Record<string, string> = {
+    newest: "Newest",
+    "price-low": "Price: Low to High",
+    "price-high": "Price: High to Low",
+  };
 
   return (
     <>
@@ -364,14 +386,39 @@ export default function SecondhandPage() {
         }
         .sh-count { font-size: 13px; color: #6b7280; font-weight: 500; }
         .sh-count strong { color: #111; font-weight: 800; }
-        .sh-sort {
-          padding: 7px 28px 7px 12px; border: 1px solid #e0e4f0;
+
+        /* ── CUSTOM SORT DROPDOWN (No overflow issues) ── */
+        .sh-sort-dropdown { position: relative; }
+        .sh-sort-btn {
+          display: flex; align-items: center; gap: 8px;
+          padding: 7px 14px;
+          background: #fff; border: 1px solid #e0e4f0;
           border-radius: 8px; font-size: 12.5px; font-weight: 600;
-          color: #333; background: #fff; outline: none;
-          cursor: pointer; font-family: inherit;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-          appearance: none;
+          color: #333; cursor: pointer; font-family: inherit;
+          transition: border-color 0.2s;
         }
+        .sh-sort-btn:hover { border-color: #bbb; }
+        .sh-sort-menu {
+          position: absolute; top: calc(100% + 6px); right: 0;
+          min-width: 180px;
+          background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+          z-index: 200;
+          overflow: hidden;
+          animation: sortFade 0.15s ease;
+        }
+        @keyframes sortFade {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .sh-sort-option {
+          padding: 10px 16px; font-size: 13px; color: #444;
+          cursor: pointer; transition: all 0.15s;
+          border-bottom: 1px solid #f5f5f5;
+        }
+        .sh-sort-option:last-child { border-bottom: none; }
+        .sh-sort-option:hover { background: #fff1f2; color: #e11d48; }
+        .sh-sort-option.active { background: #e11d48; color: #fff; }
 
         /* ── CARD GRID ── */
         .sh-grid {
@@ -476,12 +523,15 @@ export default function SecondhandPage() {
         }
         .sh-load-more-btn:hover { background: #f3f4f6; color: #374151; }
 
-        /* ── EMPTY ── */
+        /* ── EMPTY / LOADING / ERROR ── */
         .sh-empty {
           text-align: center; padding: 60px 24px;
           background: #fff; border-radius: 10px;
           border: 1px solid #e5e7eb;
         }
+        .sh-empty-icon { margin-bottom: 12px; color: #bbb; }
+        .sh-empty p { font-weight: 700; font-size: 16px; color: #111; margin: 0 0 4px; }
+        .sh-empty span { font-size: 13px; color: #888; }
         .sh-empty-btn {
           margin-top: 12px; padding: 9px 22px;
           background: #e11d48; color: #fff; font-weight: 700;
@@ -496,11 +546,35 @@ export default function SecondhandPage() {
           .sh-cats-row { gap: 8px; }
           .sh-cat-card { min-width: 120px; padding: 8px 12px; }
         }
-        @media (max-width: 540px) {
+
+        /* ── MOBILE: Compact horizontal-scroll categories ── */
+        @media (max-width: 640px) {
           .sh-grid { grid-template-columns: 1fr; }
           .sh-body { padding: 14px 14px 40px; }
-          .sh-cats-row { gap: 6px; }
-          .sh-cat-card { min-width: 0; flex: 1; }
+          .sh-cats-strip { padding: 14px 0; }
+          .sh-cats-inner { padding: 0 12px; }
+          .sh-cats-label { font-size: 11px; margin-bottom: 10px; }
+          .sh-cats-row {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 8px;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+          }
+          .sh-cats-row::-webkit-scrollbar { display: none; }
+          .sh-cat-card {
+            min-width: auto;
+            padding: 8px 14px;
+            gap: 8px;
+            border-radius: 10px;
+            border-width: 1.5px;
+            flex-shrink: 0;
+          }
+          .sh-cat-icon { font-size: 18px; }
+          .sh-cat-icon svg { width: 18px; height: 18px; }
+          .sh-cat-name { font-size: 13px; white-space: nowrap; }
+          .sh-cat-count { font-size: 11px; white-space: nowrap; }
         }
       `}</style>
 
@@ -643,37 +717,53 @@ export default function SecondhandPage() {
               <span className="sh-count">
                 <strong>{loading ? "…" : sortedDisplayed.length}</strong> results found
               </span>
-              <div style={{ position: "relative" }}>
-                <select
-                  className="sh-sort"
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                >
-                  <option value="newest">Newest</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                </select>
-                <FiChevronDown
-                  size={12}
-                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#666" }}
-                />
+
+              {/* ── CUSTOM SORT DROPDOWN (fixes overflow) ── */}
+              <div className="sh-sort-dropdown" ref={sortRef}>
+                <button className="sh-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                  {sortLabel[sort]}
+                  <FiChevronDown
+                    size={14}
+                    style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                  />
+                </button>
+                {isSortOpen && (
+                  <div className="sh-sort-menu">
+                    {(["newest", "price-low", "price-high"] as const).map((key) => (
+                      <div
+                        key={key}
+                        className={`sh-sort-option${sort === key ? " active" : ""}`}
+                        onClick={() => {
+                          setSort(key);
+                          setIsSortOpen(false);
+                        }}
+                      >
+                        {sortLabel[key]}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Loading */}
             {loading && (
               <div className="sh-empty">
-                <div style={{ fontSize: 48, marginBottom: 12 }}>⏳</div>
-                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>Loading listings…</p>
+                <div className="sh-empty-icon">
+                  <FiLoader size={48} />
+                </div>
+                <p>Loading listings…</p>
               </div>
             )}
 
             {/* Error */}
             {!loading && loadError && (
               <div className="sh-empty">
-                <div style={{ fontSize: 48, marginBottom: 12 }}>⚠️</div>
-                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>Couldn&apos;t load listings</p>
-                <span style={{ fontSize: 13, color: "#888" }}>Something went wrong fetching data</span>
+                <div className="sh-empty-icon">
+                  <FiAlertTriangle size={48} />
+                </div>
+                <p>Couldn&apos;t load listings</p>
+                <span>Something went wrong fetching data</span>
                 <br />
                 <button className="sh-empty-btn" onClick={loadListings}>Retry</button>
               </div>
@@ -683,9 +773,11 @@ export default function SecondhandPage() {
             {!loading && !loadError && (
               sortedDisplayed.length === 0 ? (
                 <div className="sh-empty">
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>🛍️</div>
-                  <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No listings found</p>
-                  <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters or search term</span>
+                  <div className="sh-empty-icon">
+                    <FiShoppingBag size={48} />
+                  </div>
+                  <p>No listings found</p>
+                  <span>Try adjusting your filters or search term</span>
                   <br />
                   <button className="sh-empty-btn" onClick={reset}>Reset Filters</button>
                 </div>

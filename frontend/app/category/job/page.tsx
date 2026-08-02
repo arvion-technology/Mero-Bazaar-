@@ -1,18 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiPhone, FiMessageSquare, FiChevronDown, FiBookmark, FiTarget } from "react-icons/fi";
+import { FiSearch, FiMapPin, FiPhone, FiMessageSquare, FiChevronDown, FiBookmark, FiTarget, FiLoader, FiBriefcase } from "react-icons/fi";
 import { FaHeart, FaBriefcase } from "react-icons/fa";
 import { JOB_TYPES, CITIES, SKILLS, JobCard} from "../../types/jobs";
 import { toContractType, toJobCard } from "@/lib/adapter";
 import { api } from "@/lib/api";
 
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest" },
+  { value: "salary-high", label: "Salary: High to Low" },
+  { value: "salary-low", label: "Salary: Low to High" },
+];
+
 export default function JobsPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  // const [sort, setSort] = useState("newest");
+  const [sort, setSort] = useState("newest");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
   const [city, setCity] = useState("");
   const [skill, setSkill] = useState("");
   const [minSalary, setMinSalary] = useState("");
@@ -22,6 +30,17 @@ export default function JobsPage() {
   const [loading, setLoading] = useState(false);
 
   const EXTRA_SKILLS_THRESHOLD = 2;
+
+  // Close sort dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setIsSortOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -50,7 +69,6 @@ export default function JobsPage() {
         if (city) params.set("city", city);
         if (skill) params.set("skill", skill);
         if (minSalary) params.set("minSalary", minSalary);
-        // if (sort) params.set("sort", sort);
         selectedTypes.forEach((t) =>
           params.append("contractType", toContractType(t))
         );
@@ -69,6 +87,24 @@ export default function JobsPage() {
 
     fetchJobs();
   }, [debouncedSearch, city, skill, minSalary, selectedTypes]);
+
+  // Parse salary string like "NPR 30,000 - 50,000/month" or "NPR 20,000/month"
+  const parseSalaryNum = (salaryStr: string): number => {
+    const match = salaryStr.replace(/,/g, "").match(/\d+/);
+    return match ? parseInt(match[0], 10) : 0;
+  };
+
+  const sortedJobs = [...jobs].sort((a, b) => {
+    if (sort === "salary-high") return parseSalaryNum(b.salary) - parseSalaryNum(a.salary);
+    if (sort === "salary-low") return parseSalaryNum(a.salary) - parseSalaryNum(b.salary);
+    return 0; // newest (default from API)
+  });
+
+  const sortLabel: Record<string, string> = {
+    newest: "Newest",
+    "salary-high": "Salary: High to Low",
+    "salary-low": "Salary: Low to High",
+  };
 
   return (
     <>
@@ -113,10 +149,40 @@ export default function JobsPage() {
         .jp-results-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
         .jp-count { font-size: 14px; color: #555; font-weight: 500; }
         .jp-count strong { color: #111; font-weight: 800; }
-        .jp-sort-wrap { position: relative; }
-        .jp-sort { appearance: none; padding: 9px 32px 9px 12px; border: 1.5px solid #e0e0ec; border-radius: 10px; font-size: 13px; font-weight: 600; color: #333; background: #fff; outline: none; cursor: pointer; font-family: inherit; box-shadow: 0 1px 5px rgba(0,0,0,0.06); transition: border-color 0.2s; }
-        .jp-sort:focus { border-color: #e05c3a; }
-        .jp-sort-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #888; }
+
+        /* ── CUSTOM SORT DROPDOWN (No overflow issues) ── */
+        .jp-sort-dropdown { position: relative; }
+        .jp-sort-btn {
+          display: flex; align-items: center; gap: 8px;
+          padding: 9px 14px;
+          background: #fff; border: 1.5px solid #e0e0ec;
+          border-radius: 10px; font-size: 13px; font-weight: 600;
+          color: #333; cursor: pointer; font-family: inherit;
+          transition: border-color 0.2s;
+        }
+        .jp-sort-btn:hover { border-color: #bbb; }
+        .jp-sort-menu {
+          position: absolute; top: calc(100% + 6px); right: 0;
+          min-width: 190px;
+          background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+          z-index: 200;
+          overflow: hidden;
+          animation: sortFade 0.15s ease;
+        }
+        @keyframes sortFade {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .jp-sort-option {
+          padding: 10px 16px; font-size: 13px; color: #444;
+          cursor: pointer; transition: all 0.15s;
+          border-bottom: 1px solid #f5f5f5;
+        }
+        .jp-sort-option:last-child { border-bottom: none; }
+        .jp-sort-option:hover { background: #fff1f2; color: #e05c3a; }
+        .jp-sort-option.active { background: #e05c3a; color: #fff; }
+
         .jp-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
         .jp-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; gap: 16px; }
         .jp-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
@@ -145,9 +211,13 @@ export default function JobsPage() {
         .jp-btn-call:hover { background: #fff0f0; }
         .jp-btn-chat { background: #fff; color: #ff3b30; border: 1px solid #ff3b30; }
         .jp-btn-chat:hover { background: #fff0f0; }
+
+        /* ── EMPTY / LOADING ── */
         .jp-empty { text-align: center; padding: 60px 20px; color: #aaa; }
-        .jp-empty-icon { font-size: 52px; margin-bottom: 14px; }
+        .jp-empty-icon { margin-bottom: 14px; color: #bbb; }
         .jp-empty p { font-size: 16px; font-weight: 700; color: #555; margin: 0 0 6px; }
+        .jp-empty span { font-size: 13px; color: #888; }
+
         @media (max-width: 900px) { .jp-sidebar { display: none; } }
         @media (max-width: 768px) { .jp-list { grid-template-columns: 1fr; } }
         @media (max-width: 600px) { .jp-body { padding: 16px 14px 60px; } .jp-hero { height: 220px; } .jp-card-body-row { gap: 12px; } .jp-thumb { width: 64px; height: 64px; } .jp-card-title { font-size: 16px; } .jp-btn { padding: 9px 8px; font-size: 12.5px; } }
@@ -243,31 +313,55 @@ export default function JobsPage() {
             <div className="jp-right">
               <div className="jp-results-bar">
                 <span className="jp-count">
-                  <strong>{jobs.length}</strong> results found
+                  <strong>{loading ? "…" : sortedJobs.length}</strong> results found
                 </span>
-                {/* <div className="jp-sort-wrap">
-                  <select className="jp-sort" value={sort} onChange={(e) => setSort(e.target.value)}>
-                    <option value="newest">Newest</option>
-                    <option value="oldest">Oldest</option>
-                  </select>
-                  <FiChevronDown size={13} className="jp-sort-icon" />
-                </div> */}
+
+                {/* ── CUSTOM SORT DROPDOWN (fixes overflow) ── */}
+                <div className="jp-sort-dropdown" ref={sortRef}>
+                  <button className="jp-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                    {sortLabel[sort]}
+                    <FiChevronDown
+                      size={14}
+                      style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                    />
+                  </button>
+                  {isSortOpen && (
+                    <div className="jp-sort-menu">
+                      {SORT_OPTIONS.map((opt) => (
+                        <div
+                          key={opt.value}
+                          className={`jp-sort-option${sort === opt.value ? " active" : ""}`}
+                          onClick={() => {
+                            setSort(opt.value);
+                            setIsSortOpen(false);
+                          }}
+                        >
+                          {opt.label}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {loading ? (
                 <div className="jp-empty">
-                  <div className="jp-empty-icon">⏳</div>
+                  <div className="jp-empty-icon">
+                    <FiLoader size={52} />
+                  </div>
                   <p>Loading jobs...</p>
                 </div>
-              ) : jobs.length === 0 ? (
+              ) : sortedJobs.length === 0 ? (
                 <div className="jp-empty">
-                  <div className="jp-empty-icon">💼</div>
+                  <div className="jp-empty-icon">
+                    <FiBriefcase size={52} />
+                  </div>
                   <p>No jobs found</p>
-                  <span style={{ fontSize: 13 }}>Try adjusting your filters or search term</span>
+                  <span>Try adjusting your filters or search term</span>
                 </div>
               ) : (
                 <div className="jp-list">
-                  {jobs.map((j) => {
+                  {sortedJobs.map((j) => {
                     const isFav = !!favorites[j.id];
                     const typeClass =
                       j.type.toLowerCase().includes("part") ? "part"

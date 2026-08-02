@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
 import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
-import { FiShare2, FiHeart, FiMapPin, FiClock, FiBriefcase, FiEye, FiCheckCircle, FiMail, FiMessageSquare, FiChevronRight } from "react-icons/fi";
+import { FiShare2, FiHeart, FiMapPin, FiClock, FiBriefcase, FiEye, FiCheckCircle, FiMail, FiMessageSquare, FiChevronRight, FiAward, FiActivity, FiBookOpen, FiUsers, FiCalendar, FiStar } from "react-icons/fi";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -739,11 +739,22 @@ export default function MedicalDetailPage() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
         * { box-sizing: border-box; }
+        html, body { overflow-x: hidden; }
+        html, body { margin: 0; padding: 0; overflow-x: hidden; }
         .md2-page {
           background: #f5f6f8;
           min-height: 100vh;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-          padding-bottom: 60px;
+          display: flex;
+          flex-direction: column;
+        }
+        .md2-main {
+          flex: 1 0 auto;
+        }
+        .md2-footer-wrap {
+          flex-shrink: 0;
+          margin: 0;
+          padding: 0;
         }
 
         /* ── Topbar ── */
@@ -1112,6 +1123,7 @@ export default function MedicalDetailPage() {
       `}</style>
 
       <div className="md2-page">
+        <div className="md2-main">
 
         {/* ── Topbar ── */}
         <div className="md2-topbar">
@@ -1178,7 +1190,7 @@ export default function MedicalDetailPage() {
                   </span>
                 )}
                 {listing.isFeatured && (
-                  <span className="md2-badge-featured">⭐ Featured</span>
+                  <span className="md2-badge-featured"><FiStar size={10} color="#b07000" style={{ marginRight: 3 }} /> Featured</span>
                 )}
                 <div className="md2-badge-spacer" />
                 <button className="md2-share-btn" onClick={handleShare} id="share-btn">
@@ -1235,27 +1247,27 @@ export default function MedicalDetailPage() {
               {/* Stats Chips */}
               <div className="md2-chips-row">
                 <div className="md2-chip">
-                  <div className="md2-chip-icon">🏅</div>
+                  <div className="md2-chip-icon"><FiAward size={14} color="#0d9488" /></div>
                   <span className="md2-chip-val">{listing.experience}</span>
                   <span className="md2-chip-label">Experience</span>
                 </div>
                 <div className="md2-chip">
-                  <div className="md2-chip-icon">🩺</div>
+                  <div className="md2-chip-icon"><FiActivity size={14} color="#0d9488" /></div>
                   <span className="md2-chip-val">{listing.employmentType}</span>
                   <span className="md2-chip-label">Specialization</span>
                 </div>
                 <div className="md2-chip">
-                  <div className="md2-chip-icon">🎓</div>
+                  <div className="md2-chip-icon"><FiBookOpen size={14} color="#0d9488" /></div>
                   <span className="md2-chip-val">{listing.education}</span>
                   <span className="md2-chip-label">Credentials</span>
                 </div>
                 <div className="md2-chip">
-                  <div className="md2-chip-icon">👥</div>
+                  <div className="md2-chip-icon"><FiUsers size={14} color="#0d9488" /></div>
                   <span className="md2-chip-val">{listing.vacancies > 0 ? `${listing.vacancies} slots` : "Walk-in"}</span>
                   <span className="md2-chip-label">Availability</span>
                 </div>
                 <div className="md2-chip">
-                  <div className="md2-chip-icon">📅</div>
+                  <div className="md2-chip-icon"><FiCalendar size={14} color="#0d9488" /></div>
                   <span className="md2-chip-val" style={{ fontSize: 9 }}>{listing.postedDate}</span>
                   <span className="md2-chip-label">Listed On</span>
                 </div>
@@ -1445,7 +1457,10 @@ export default function MedicalDetailPage() {
           </div>
         </div>
 
-        <Footer />
+        </div>
+        <div className="md2-footer-wrap">
+          <Footer />
+        </div>
       </div>
     </>
   );

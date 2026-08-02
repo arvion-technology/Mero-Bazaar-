@@ -9,6 +9,7 @@ import {
   FiShare2, FiHeart, FiMapPin, FiClock, FiEye,
   FiCheckCircle, FiMail, FiMessageSquare, FiChevronRight,
   FiTool, FiUsers, FiPhone,
+  FiStar, FiAward, FiBookOpen,
 } from "react-icons/fi";
 import { MdEngineering, MdVerified } from "react-icons/md";
 import { BsShieldCheck } from "react-icons/bs";
@@ -337,11 +338,14 @@ export default function ConstructionDetailPage() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
 
+        html, body { margin: 0; padding: 0; overflow-x: hidden; }
         .cd-page {
           background: #f5f6f8; min-height: 100vh;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-          padding-bottom: 60px;
+          display: flex; flex-direction: column;
         }
+        .cd-main { flex: 1 0 auto; }
+        .cd-footer-wrap { flex-shrink: 0; margin: 0; padding: 0; }
 
         /* Topbar */
         .cd-topbar { background: #fff; border-bottom: 1px solid #ececec; padding: 10px 0; }
@@ -369,7 +373,7 @@ export default function ConstructionDetailPage() {
 
         /* Gallery */
         .cd-gallery { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.07); border: 1px solid #e8e8e8; }
-        .cd-hero-wrap { position: relative; width: 100%; height: 280px; overflow: hidden; background: #1a1209; cursor: zoom-in; }
+        .cd-hero-wrap { position: relative; width: 100%; height: 390px; overflow: hidden; background: #1a1209; cursor: zoom-in; }
         .cd-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
         .cd-hero-wrap:hover .cd-hero-img { transform: scale(1.04); }
 
@@ -611,6 +615,7 @@ export default function ConstructionDetailPage() {
           .cd-wrap { grid-template-columns: 1fr; }
           .cd-right { order: -1; }
           .cd-chips-row { grid-template-columns: repeat(2, 1fr); }
+          .cd-hero-wrap { height: 320px; }
         }
         @media (max-width: 640px) {
           .cd-wrap { padding: 0 12px; margin-top: 10px; gap: 10px; }
@@ -620,12 +625,28 @@ export default function ConstructionDetailPage() {
           .cd-price { font-size: 18px; }
           .cd-chips-row { grid-template-columns: repeat(2, 1fr); }
           .cd-req-grid { grid-template-columns: 1fr; }
-          .cd-hero-wrap { height: 200px; }
+          .cd-hero-wrap { height: 240px; }
           .cd-cta-row { flex-direction: column; }
+          .cd-thumbs-row { gap: 5px; padding: 8px; }
+          .cd-thumb { width: 64px; height: 44px; }
+          .cd-topbar-inner { padding: 0 12px; }
+          .cd-company-card { padding: 14px; }
+          .cd-location-card { margin: 0; }
+          .cd-posted-card { padding: 14px; }
+        }
+        @media (max-width: 420px) {
+          .cd-hero-wrap { height: 200px; }
+          .cd-thumb { width: 56px; height: 40px; }
+          .cd-cta-btns { gap: 6px; }
+          .cd-cta-full { padding: 10px; font-size: 12px; }
+          .cd-chip-icon { width: 26px; height: 26px; }
+          .cd-chip-val { font-size: 10px; }
+          .cd-chip-label { font-size: 9px; }
         }
       `}</style>
 
       <div className="cd-page">
+        <div className="cd-main">
 
         {/* Topbar */}
         <div className="cd-topbar">
@@ -692,7 +713,7 @@ export default function ConstructionDetailPage() {
                   </span>
                 )}
                 {listing.isFeatured && (
-                  <span className="cd-badge-featured">⭐ Featured</span>
+                  <span className="cd-badge-featured"><FiStar size={10} color="#b07000" style={{ marginRight: 3 }} /> Featured</span>
                 )}
                 <div className="cd-badge-spacer" />
                 <button className="cd-share-btn" onClick={handleShare} id="share-btn">
@@ -748,22 +769,22 @@ export default function ConstructionDetailPage() {
               {/* Stats Chips */}
               <div className="cd-chips-row">
                 <div className="cd-chip">
-                  <div className="cd-chip-icon">🏅</div>
+                  <div className="cd-chip-icon"><FiAward size={14} color="#d97706" /></div>
                   <span className="cd-chip-val">{listing.experience}</span>
                   <span className="cd-chip-label">Experience</span>
                 </div>
                 <div className="cd-chip">
-                  <div className="cd-chip-icon">💼</div>
+                  <div className="cd-chip-icon"><FiTool size={14} color="#d97706" /></div>
                   <span className="cd-chip-val">{listing.projectDuration}</span>
                   <span className="cd-chip-label">Employment Type</span>
                 </div>
                 <div className="cd-chip">
-                  <div className="cd-chip-icon">🎓</div>
+                  <div className="cd-chip-icon"><FiBookOpen size={14} color="#d97706" /></div>
                   <span className="cd-chip-val" style={{ fontSize: 9.5 }}>{listing.teamSize}</span>
                   <span className="cd-chip-label">Education</span>
                 </div>
                 <div className="cd-chip">
-                  <div className="cd-chip-icon">👥</div>
+                  <div className="cd-chip-icon"><FiUsers size={14} color="#d97706" /></div>
                   <span className="cd-chip-val">{listing.completedProjects} opening</span>
                   <span className="cd-chip-label">Vacancies</span>
                 </div>
@@ -861,7 +882,7 @@ export default function ConstructionDetailPage() {
                   <FiMail size={13} style={{ marginRight: 4 }} />Send Email
                 </button>
                 <button className="cd-cta-full cd-cta-outline" id="company-profile-btn">
-                  👁 Visit Company Profiles
+                  <FiEye size={13} style={{ marginRight: 4 }} /> Visit Company Profiles
                 </button>
               </div>
             </div>
@@ -958,7 +979,10 @@ export default function ConstructionDetailPage() {
           </div>
         </div>
 
-        <Footer />
+        </div>
+        <div className="cd-footer-wrap">
+          <Footer />
+        </div>
       </div>
     </>
   );

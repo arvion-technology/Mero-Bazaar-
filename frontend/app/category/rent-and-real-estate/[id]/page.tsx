@@ -30,6 +30,7 @@ export default function PropertyDetailPage() {
   return (
     <>
       <style>{`
+        html, body { overflow-x: hidden; }
         .pd-page {
           background: #f5f6f8;
           min-height: 100vh;
@@ -88,7 +89,7 @@ export default function PropertyDetailPage() {
         .pd-main-img-wrap {
           position: relative;
           width: 100%;
-          aspect-ratio: 16/9;
+          height: 390px;
           overflow: hidden;
           background: #1a1a2e;
         }
@@ -96,6 +97,7 @@ export default function PropertyDetailPage() {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          display: block;
           transition: transform 0.4s ease;
         }
         .pd-main-img-wrap:hover .pd-main-img { transform: scale(1.03); }
@@ -653,6 +655,7 @@ export default function PropertyDetailPage() {
           .pd-features { grid-template-columns: repeat(3, 1fr); }
           .pd-details-grid { grid-template-columns: 1fr; }
           .pd-details-divider { display: none; }
+          .pd-main-img-wrap { height: 320px; }
         }
         @media (max-width: 600px) {
           .pd-title { font-size: 18px; }
@@ -660,9 +663,28 @@ export default function PropertyDetailPage() {
           .pd-features { grid-template-columns: repeat(3, 1fr); }
           .pd-container { padding: 0 14px; margin-top: 18px; }
           .pd-related-section { padding: 20px 14px 0; }
+          .pd-main-img-wrap { height: 260px; }
+          .pd-thumbs { gap: 6px; padding: 10px; }
+          .pd-thumb-wrap { width: 72px; height: 52px; }
+          .pd-breadcrumb-inner { padding: 0 14px; font-size: 12px; }
+          .pd-info-card { padding: 16px 18px; }
+          .pd-desc-card { padding: 16px 18px; }
+          .pd-details-card { padding: 16px 18px; }
+          .pd-loc-row { gap: 10px; }
+          .pd-map-link { margin-left: 0; }
+          .pd-action-btns { gap: 8px; }
+          .pd-action-btn { width: 34px; height: 34px; }
         }
         @media (max-width: 420px) {
           .pd-features { grid-template-columns: repeat(2, 1fr); }
+          .pd-main-img-wrap { height: 220px; }
+          .pd-thumb-wrap { width: 60px; height: 44px; }
+          .pd-seller-card { padding: 16px 14px; }
+          .pd-seller-avatar { width: 52px; height: 52px; }
+          .pd-seller-name { font-size: 15px; }
+          .pd-cta-btns { gap: 8px; }
+          .pd-btn-call { padding: 11px; font-size: 14px; }
+          .pd-btn-chat { padding: 11px; font-size: 14px; }
         }
       `}</style>
 

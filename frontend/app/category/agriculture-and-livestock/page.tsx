@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import {
@@ -10,6 +10,7 @@ import {
   FiMessageSquare,
   FiHeart,
   FiCheckCircle,
+  FiInbox,
 } from "react-icons/fi";
 import {
   FaHeart,
@@ -43,7 +44,6 @@ type AgriListing = {
   breed?: string;
   age?: string;
   isVaccinated?: boolean;
-  // FIX 1: aligned with HEALTH_STATUS constant ("Not Vaccinated", not "Non-Vaccinated")
   healthStatus?: "Vaccinated" | "Not Vaccinated";
   seasonal?: string;
   description?: string;
@@ -161,7 +161,6 @@ const DISTRICTS = ["Chitwan", "Rupandehi", "Kathmandu", "Lalitpur", "Bhaktapur",
 const HEALTH_STATUS = ["Vaccinated", "Not Vaccinated"];
 
 /* ─────────── PRICE PARSER ─────────── */
-// FIX 2: robust helper used in both filter + sort
 const parsePrice = (priceStr: string): number => {
   const match = priceStr.replace(/,/g, "").match(/\d+/);
   return match ? parseInt(match[0], 10) : 0;
@@ -171,6 +170,8 @@ const parsePrice = (priceStr: string): number => {
 export default function AgriculturePage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedSeasons, setSelectedSeasons] = useState<string[]>([]);
   const [selectedDistrict, setSelectedDistrict] = useState("");
@@ -179,6 +180,17 @@ export default function AgriculturePage() {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [priceRange, setPriceRange] = useState<number>(500000);
   const [showMore, setShowMore] = useState(false);
+
+  // Close sort dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setIsSortOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -218,14 +230,9 @@ export default function AgriculturePage() {
     if (selectedSeasons.length && l.seasonal && !selectedSeasons.includes(l.seasonal)) return false;
     if (selectedDistrict && l.district !== selectedDistrict) return false;
     if (organicOnly && !l.isOrganic) return false;
-
-    // FIX 3: health filter now excludes Produce & other items that have no healthStatus
     if (selectedHealth.length && (!l.healthStatus || !selectedHealth.includes(l.healthStatus))) return false;
-
-    // FIX 4: price filter now uses the robust parsePrice helper
     const priceNum = parsePrice(l.price);
     if (priceNum > priceRange) return false;
-
     return true;
   });
 
@@ -239,6 +246,12 @@ export default function AgriculturePage() {
         return 0;
     }
   });
+
+  const sortLabel: Record<string, string> = {
+    newest: "Newest",
+    "price-low": "Price: Low to High",
+    "price-high": "Price: High to Low",
+  };
 
   const getCategoryBadgeStyle = (category: string) => {
     switch (category) {
@@ -392,14 +405,39 @@ export default function AgriculturePage() {
         }
         .al-count { font-size: 13px; color: #6b7280; font-weight: 500; }
         .al-count strong { color: #111; font-weight: 800; }
-        .al-sort {
-          padding: 7px 28px 7px 12px; border: 1px solid #e0e4f0;
+
+        /* ── CUSTOM SORT DROPDOWN (No overflow issues) ── */
+        .al-sort-dropdown { position: relative; }
+        .al-sort-btn {
+          display: flex; align-items: center; gap: 8px;
+          padding: 7px 14px;
+          background: #fff; border: 1px solid #e0e4f0;
           border-radius: 8px; font-size: 12.5px; font-weight: 600;
-          color: #333; background: #fff; outline: none;
-          cursor: pointer; font-family: inherit;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-          appearance: none;
+          color: #333; cursor: pointer; font-family: inherit;
+          transition: border-color 0.2s;
         }
+        .al-sort-btn:hover { border-color: #bbb; }
+        .al-sort-menu {
+          position: absolute; top: calc(100% + 6px); right: 0;
+          min-width: 180px;
+          background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+          z-index: 200;
+          overflow: hidden;
+          animation: sortFade 0.15s ease;
+        }
+        @keyframes sortFade {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .al-sort-option {
+          padding: 10px 16px; font-size: 13px; color: #444;
+          cursor: pointer; transition: all 0.15s;
+          border-bottom: 1px solid #f5f5f5;
+        }
+        .al-sort-option:last-child { border-bottom: none; }
+        .al-sort-option:hover { background: #f0fdf4; color: #15803d; }
+        .al-sort-option.active { background: #15803d; color: #fff; }
 
         /* ── CARD GRID ── */
         .al-grid {
@@ -519,6 +557,9 @@ export default function AgriculturePage() {
           background: #fff; border-radius: 10px;
           border: 1px solid #e5e7eb;
         }
+        .al-empty-icon { margin-bottom: 12px; color: #bbb; }
+        .al-empty p { font-weight: 700; font-size: 16px; color: #111; margin: 0 0 4px; }
+        .al-empty span { font-size: 13px; color: #888; }
         .al-empty-btn {
           margin-top: 12px; padding: 9px 22px;
           background: #4ade80; color: #166534; font-weight: 700;
@@ -580,11 +621,35 @@ export default function AgriculturePage() {
           .al-cats-row { gap: 8px; }
           .al-cat-card { min-width: 120px; padding: 8px 12px; }
         }
-        @media (max-width: 540px) {
+
+        /* ── MOBILE: Compact horizontal-scroll categories ── */
+        @media (max-width: 640px) {
           .al-grid { grid-template-columns: 1fr; }
           .al-body { padding: 14px 14px 40px; }
-          .al-cats-row { gap: 6px; }
-          .al-cat-card { min-width: 0; flex: 1; }
+          .al-cats-strip { padding: 14px 0; }
+          .al-cats-inner { padding: 0 12px; }
+          .al-cats-label { font-size: 11px; margin-bottom: 10px; }
+          .al-cats-row {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 8px;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+          }
+          .al-cats-row::-webkit-scrollbar { display: none; }
+          .al-cat-card {
+            min-width: auto;
+            padding: 8px 14px;
+            gap: 8px;
+            border-radius: 10px;
+            border-width: 1.5px;
+            flex-shrink: 0;
+          }
+          .al-cat-icon { font-size: 18px; }
+          .al-cat-icon svg { width: 18px; height: 18px; }
+          .al-cat-name { font-size: 13px; white-space: nowrap; }
+          .al-cat-count { font-size: 11px; white-space: nowrap; }
         }
       `}</style>
 
@@ -740,29 +805,43 @@ export default function AgriculturePage() {
               <span className="al-count">
                 <strong>{sortedDisplayed.length}</strong> results found
               </span>
-              <div style={{ position: "relative" }}>
-                <select
-                  className="al-sort"
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                >
-                  <option value="newest">Newest</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                </select>
-                <FiChevronDown
-                  size={12}
-                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#666" }}
-                />
+
+              {/* ── CUSTOM SORT DROPDOWN (fixes overflow) ── */}
+              <div className="al-sort-dropdown" ref={sortRef}>
+                <button className="al-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                  {sortLabel[sort]}
+                  <FiChevronDown
+                    size={14}
+                    style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                  />
+                </button>
+                {isSortOpen && (
+                  <div className="al-sort-menu">
+                    {(["newest", "price-low", "price-high"] as const).map((key) => (
+                      <div
+                        key={key}
+                        className={`al-sort-option${sort === key ? " active" : ""}`}
+                        onClick={() => {
+                          setSort(key);
+                          setIsSortOpen(false);
+                        }}
+                      >
+                        {sortLabel[key]}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Cards */}
             {sortedDisplayed.length === 0 ? (
               <div className="al-empty">
-                <div style={{ fontSize: 48, marginBottom: 12 }}>🌾</div>
-                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No listings found</p>
-                <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters</span>
+                <div className="al-empty-icon">
+                  <FiInbox size={48} />
+                </div>
+                <p>No listings found</p>
+                <span>Try adjusting your filters</span>
                 <br />
                 <button className="al-empty-btn" onClick={reset}>Reset Filters</button>
               </div>

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiStar } from "react-icons/fi";
+import { FiSearch, FiMapPin, FiStar, FiHome, FiChevronDown } from "react-icons/fi";
 import { FaHeart, FaStar, FaBuilding, FaHome, FaTree, FaStore, FaBriefcase } from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
 
@@ -163,6 +163,8 @@ const parsePrice = (priceStr: string): number => {
 export default function PropertyPage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [activeType, setActiveType] = useState("All");
 
@@ -177,6 +179,17 @@ export default function PropertyPage() {
   const [filterPrice, setFilterPrice] = useState("");
   const [filterFurnished, setFilterFurnished] = useState(false);
   const [filterUnfurnished, setFilterUnfurnished] = useState(false);
+
+  // Close sort dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setIsSortOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -217,7 +230,6 @@ export default function PropertyPage() {
       (filterFurnished && l.isFurnished) ||
       (filterUnfurnished && !l.isFurnished);
 
-    // ── FIXED: Added missing price filter logic ──
     let matchPrice = true;
     if (filterPrice) {
       const numericPrice = parsePrice(l.price);
@@ -232,6 +244,12 @@ export default function PropertyPage() {
     if (sort === "rating") return b.rating - a.rating;
     return 0;
   });
+
+  const sortLabel: Record<string, string> = {
+    newest: "Newest",
+    featured: "Featured",
+    rating: "Top Rated",
+  };
 
   const StarRating = ({ rating }: { rating: number }) => (
     <div className="flex items-center gap-1">
@@ -407,13 +425,39 @@ export default function PropertyPage() {
         }
         .pp-results-count { font-size: 14px; color: #888; font-weight: 500; }
         .pp-results-count strong { color: #333; font-weight: 700; }
-        .pp-sort-select {
-          padding: 8px 32px 8px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px;
+
+        /* ── CUSTOM SORT DROPDOWN (No overflow issues) ── */
+        .pp-sort-dropdown { position: relative; }
+        .pp-sort-btn {
+          display: flex; align-items: center; gap: 8px;
+          padding: 8px 14px;
+          background: #fff; border: 1.5px solid #e0e0e0; border-radius: 8px;
           font-size: 13px; font-weight: 600; color: #333;
-          background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
-          appearance: none; outline: none; cursor: pointer;
-          font-family: inherit;
+          cursor: pointer; font-family: inherit;
+          transition: border-color 0.2s;
         }
+        .pp-sort-btn:hover { border-color: #bbb; }
+        .pp-sort-menu {
+          position: absolute; top: calc(100% + 6px); right: 0;
+          min-width: 160px;
+          background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+          z-index: 200;
+          overflow: hidden;
+          animation: sortFade 0.15s ease;
+        }
+        @keyframes sortFade {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .pp-sort-option {
+          padding: 10px 16px; font-size: 13px; color: #444;
+          cursor: pointer; transition: all 0.15s;
+          border-bottom: 1px solid #f5f5f5;
+        }
+        .pp-sort-option:last-child { border-bottom: none; }
+        .pp-sort-option:hover { background: #f8f9ff; color: #3b5bdb; }
+        .pp-sort-option.active { background: #3b5bdb; color: #fff; }
 
         /* ── PROPERTY CARDS (2-2 GRID) ── */
         .pp-grid {
@@ -511,7 +555,7 @@ export default function PropertyPage() {
           background: #fff; border-radius: 16px;
           grid-column: 1 / -1;
         }
-        .pp-empty-icon { font-size: 52px; margin-bottom: 14px; }
+        .pp-empty-icon { font-size: 52px; margin-bottom: 14px; color: #bbb; }
         .pp-empty p { font-size: 15px; font-weight: 600; color: #555; margin: 0 0 4px; }
         .pp-empty span { font-size: 13px; color: #aaa; }
 
@@ -521,12 +565,39 @@ export default function PropertyPage() {
           .pp-sidebar { display: none; }
           .pp-cats-row { justify-content: center; }
         }
+
         @media (max-width: 640px) {
           .pp-hero { height: 260px; }
           .pp-body { padding: 20px 16px 40px; }
           .pp-grid { grid-template-columns: 1fr; }
           .pp-card-body { padding: 14px 16px 16px; }
-          .pp-cat-card { min-width: 140px; padding: 12px 16px; }
+
+          /* ── MOBILE: Compact horizontal-scroll categories ── */
+          .pp-cats-strip { padding: 14px 0; }
+          .pp-cats-inner { padding: 0 12px; }
+          .pp-cats-label { font-size: 11px; margin-bottom: 10px; }
+          .pp-cats-row {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 8px;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+          }
+          .pp-cats-row::-webkit-scrollbar { display: none; }
+          .pp-cat-card {
+            min-width: auto;
+            padding: 8px 14px;
+            gap: 8px;
+            border-radius: 10px;
+            border-width: 1.5px;
+            flex-shrink: 0;
+          }
+          .pp-cat-icon-wrap {
+            width: 28px; height: 28px; border-radius: 8px;
+          }
+          .pp-cat-name { font-size: 13px; }
+          .pp-cat-count { font-size: 11px; }
         }
       `}</style>
 
@@ -665,17 +736,38 @@ export default function PropertyPage() {
                 <span className="pp-results-count">
                   <strong>{displayed.length}</strong> results found
                 </span>
-                <select className="pp-sort-select" value={sort} onChange={(e) => setSort(e.target.value)}>
-                  <option value="newest">Newest</option>
-                  <option value="featured">Featured</option>
-                  <option value="rating">Top Rated</option>
-                </select>
+
+                {/* ── CUSTOM DROPDOWN (fixes overflow) ── */}
+                <div className="pp-sort-dropdown" ref={sortRef}>
+                  <button className="pp-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                    {sortLabel[sort]}
+                    <FiChevronDown size={14} style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                  </button>
+                  {isSortOpen && (
+                    <div className="pp-sort-menu">
+                      {(["newest", "featured", "rating"] as const).map((key) => (
+                        <div
+                          key={key}
+                          className={`pp-sort-option${sort === key ? " active" : ""}`}
+                          onClick={() => {
+                            setSort(key);
+                            setIsSortOpen(false);
+                          }}
+                        >
+                          {sortLabel[key]}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="pp-grid">
                 {displayed.length === 0 ? (
                   <div className="pp-empty">
-                    <div className="pp-empty-icon">🏠</div>
+                    <div className="pp-empty-icon">
+                      <FiHome size={52} />
+                    </div>
                     <p>No properties found</p>
                     <span>Try adjusting your filters or search</span>
                   </div>

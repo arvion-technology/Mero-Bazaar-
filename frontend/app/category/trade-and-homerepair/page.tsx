@@ -1,9 +1,9 @@
- "use client";
+"use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiHeart } from "react-icons/fi";
+import { FiSearch, FiMapPin, FiHeart, FiCheck, FiChevronDown, FiTool } from "react-icons/fi";
 import { FaHeart, FaStar, FaHammer } from "react-icons/fa";
 import { MdHandyman, MdConstruction, MdPlumbing, MdElectricalServices, MdFormatPaint, MdCleaningServices } from "react-icons/md";
 
@@ -140,6 +140,11 @@ const CATEGORY_COUNTS: Record<string, number> = {
     Cleaning: 680,
 };
 
+const SORT_OPTIONS = [
+    { value: "newest", label: "Newest" },
+    { value: "rating", label: "Top Rated" },
+];
+
 export default function TradeAndHomeRepairPage() {
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState("newest");
@@ -148,6 +153,18 @@ export default function TradeAndHomeRepairPage() {
     const [tradeType, setTradeType] = useState("All");
     const [availableOnly, setAvailableOnly] = useState(false);
     const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+    const [sortOpen, setSortOpen] = useState(false);
+    const sortRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClick = (e: MouseEvent) => {
+            if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+                setSortOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, []);
 
     const toggleFav = (id: string, e: React.MouseEvent) => {
         e.preventDefault();
@@ -173,6 +190,8 @@ export default function TradeAndHomeRepairPage() {
         const matchAvail = !availableOnly || l.isAvailable;
         return matchSearch && matchCat && matchCity && matchType && matchAvail;
     });
+
+    const currentSortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label || "Newest";
 
     return (
         <>
@@ -331,14 +350,36 @@ export default function TradeAndHomeRepairPage() {
           margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
         }
         .th-results-count { font-size: 14px; color: #666; font-weight: 500; }
-        .th-sort-select {
-          padding: 9px 36px 9px 14px; border: 1.5px solid #e0e4f0; border-radius: 10px;
+
+        /* ── CUSTOM DROPDOWN ── */
+        .th-sort-dropdown { position: relative; z-index: 50; }
+        .th-sort-trigger {
+          display: flex; align-items: center; gap: 8px;
+          padding: 9px 14px; border: 1.5px solid #e0e4f0; border-radius: 10px;
           font-size: 13px; font-weight: 600; color: #333;
-          background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
-          appearance: none; outline: none; cursor: pointer;
-          font-family: inherit; box-shadow: 0 1px 6px rgba(0,0,0,0.06); transition: border-color 0.2s;
+          background: #fff; cursor: pointer; font-family: inherit;
+          box-shadow: 0 1px 6px rgba(0,0,0,0.06); transition: border-color 0.2s;
+          min-width: 130px; justify-content: space-between;
         }
-        .th-sort-select:focus { border-color: #b45309; }
+        .th-sort-trigger:hover { border-color: #b45309; }
+        .th-sort-trigger.open { border-color: #b45309; }
+        .th-sort-menu {
+          position: absolute; top: calc(100% + 6px); right: 0;
+          background: #fff; border: 1.5px solid #e0e4f0; border-radius: 12px;
+          box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+          min-width: 160px; overflow: hidden;
+          animation: th-dropdown-in 0.18s ease;
+        }
+        @keyframes th-dropdown-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+        .th-sort-item {
+          display: flex; align-items: center; justify-content: space-between;
+          width: 100%; padding: 10px 14px;
+          font-size: 13px; font-weight: 600; color: #444;
+          background: none; border: none; cursor: pointer; font-family: inherit;
+          transition: background 0.15s; text-align: left;
+        }
+        .th-sort-item:hover { background: #fef3c7; color: #b45309; }
+        .th-sort-item.active { color: #b45309; font-weight: 700; }
 
         /* ── GRID ── */
         .th-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
@@ -372,12 +413,12 @@ export default function TradeAndHomeRepairPage() {
           display: flex; flex-direction: column; gap: 4px;
         }
         .th-badge-verified {
-          display: inline-flex; align-items: center; gap: 3px;
+          display: inline-flex; align-items: center; gap: 4px;
           background: #fef3c7; color: #b45309; border: 1px solid #fcd34d;
           font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
         }
         .th-badge-featured {
-          display: inline-flex; align-items: center; gap: 3px;
+          display: inline-flex; align-items: center; gap: 4px;
           background: #fff8e1; color: #b7950b; border: 1px solid #f9e79f;
           font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
         }
@@ -413,7 +454,7 @@ export default function TradeAndHomeRepairPage() {
 
         /* ── EMPTY ── */
         .th-empty { grid-column: 1/-1; padding: 64px 24px; text-align: center; color: #888; }
-        .th-empty-icon { font-size: 52px; margin-bottom: 14px; }
+        .th-empty-icon { margin-bottom: 14px; display: flex; justify-content: center; }
         .th-empty p { font-size: 15px; font-weight: 600; color: #555; margin: 0 0 4px; }
         .th-empty span { font-size: 13px; color: #aaa; }
 
@@ -526,16 +567,37 @@ export default function TradeAndHomeRepairPage() {
                                 <span className="th-results-count">
                                     <strong>{displayed.length}</strong> results found
                                 </span>
-                                <select className="th-sort-select" value={sort} onChange={(e) => setSort(e.target.value)}>
-                                    <option value="newest">Newest</option>
-                                    <option value="rating">Top Rated</option>
-                                </select>
+                                <div className="th-sort-dropdown" ref={sortRef}>
+                                    <button
+                                        className={`th-sort-trigger${sortOpen ? " open" : ""}`}
+                                        onClick={() => setSortOpen((p) => !p)}
+                                    >
+                                        <span>{currentSortLabel}</span>
+                                        <FiChevronDown size={14} color="#888" style={{ transform: sortOpen ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }} />
+                                    </button>
+                                    {sortOpen && (
+                                        <div className="th-sort-menu">
+                                            {SORT_OPTIONS.map((opt) => (
+                                                <button
+                                                    key={opt.value}
+                                                    className={`th-sort-item${sort === opt.value ? " active" : ""}`}
+                                                    onClick={() => { setSort(opt.value); setSortOpen(false); }}
+                                                >
+                                                    <span>{opt.label}</span>
+                                                    {sort === opt.value && <FiCheck size={14} color="#b45309" />}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="th-grid">
                                 {displayed.length === 0 ? (
                                     <div className="th-empty">
-                                        <div className="th-empty-icon">🛠️</div>
+                                        <div className="th-empty-icon">
+                                            <MdHandyman size={52} color="#ccc" />
+                                        </div>
                                         <p>No results found</p>
                                         <span>Try adjusting your filters or search query</span>
                                     </div>
@@ -548,8 +610,8 @@ export default function TradeAndHomeRepairPage() {
                                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                                     <img src={l.image} alt={l.name} className="th-img" />
                                                     <div className="th-badges">
-                                                        {l.isVerified && <span className="th-badge-verified">✓ Verified</span>}
-                                                        {l.isFeatured && <span className="th-badge-featured">⭐ Featured</span>}
+                                                        {l.isVerified && <span className="th-badge-verified"><FiCheck size={10} /> Verified</span>}
+                                                        {l.isFeatured && <span className="th-badge-featured"><FaStar size={10} /> Featured</span>}
                                                     </div>
                                                     <button className="th-heart" aria-label="Save" onClick={(e) => toggleFav(l.id, e)}>
                                                         {isFav ? <FaHeart size={15} color="#E74C3C" /> : <FiHeart size={15} color="#999" />}
@@ -574,7 +636,7 @@ export default function TradeAndHomeRepairPage() {
                                                                 Available Now
                                                             </span>
                                                         ) : l.experience ? (
-                                                            <span className="th-exp-tag">🔧 {l.experience} exp.</span>
+                                                            <span className="th-exp-tag"><MdHandyman size={12} /> {l.experience} exp.</span>
                                                         ) : (
                                                             <span style={{ fontSize: "11px", color: "#bbb" }}>Unavailable</span>
                                                         )}
