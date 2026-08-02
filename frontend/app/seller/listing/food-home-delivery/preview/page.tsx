@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiArrowLeft,
@@ -15,6 +15,9 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useDraft, defaultFoodDeliveryData } from "../layout";
+import { useSession } from "next-auth/react";
+import { formToCreateFoodsPayload } from "@/lib/adapters/foodsAdapter";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -33,78 +36,13 @@ const steps = [
   { label: "Preview", icon: FiInfo, status: "active" as const },
 ];
 
-interface ListingData {
-  title: string;
-  foodType: string;
-  description: string;
-  price: string;
-  priceUnit: string;
-  deliveryRadius: string;
-  hygieneRating: string;
-  minOrderAmount: string;
-  subscriptionAvailable: boolean;
-  deliveryDays: string[];
-  shortDescription: string;
-  location: string;
-}
-
-interface ListingImage {
-  preview: string;
-  isMain: boolean;
-}
-
-const defaultData: ListingData = {
-  title: "Healthy Home Tiffin Service",
-  foodType: "TIFFIN",
-  description:
-    "Nutritious and delicious homemade meals, freshly prepared daily with hygiene and love.",
-  price: "120",
-  priceUnit: "PER_MEAL",
-  deliveryRadius: "5",
-  hygieneRating: "4.7",
-  minOrderAmount: "150",
-  subscriptionAvailable: true,
-  deliveryDays: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
-  shortDescription: "Fresh, Homemade and Hygenic food delivery to your doorstep",
-  location: "Kathmandu, Nepal",
-};
-
-const fallbackImage = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=400&fit=crop";
+const formatFoodType = (type: string) => type.replace(/_/g, " ").toLowerCase();
 
 export default function PreviewFoodDeliveryPage() {
   const router = useRouter();
-  const [listingData, setListingData] = useState<ListingData>(defaultData);
-  const [listingImages, setListingImages] = useState<ListingImage[]>([]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("foodDeliveryListing");
-    if (saved) {
-      try {
-        setListingData({ ...defaultData, ...JSON.parse(saved) });
-      } catch {
-        // keep default
-      }
-    }
-    const savedImages = localStorage.getItem("foodDeliveryListingImages");
-    if (savedImages) {
-      try {
-        setListingImages(JSON.parse(savedImages));
-      } catch {
-        // keep empty
-      }
-    }
-  }, []);
-
-  const handlePublish = () => {
-    toast.success("Listing published successfully!");
-    localStorage.removeItem("foodDeliveryListing");
-    localStorage.removeItem("foodDeliveryListingImages");
-    router.push("/seller/products");
-  };
-
-  const handleEdit = () => {
-    router.push("/seller/listing/food-home-delivery");
-  };
+  const { foodData, images, setFoodData, setImages } = useDraft();
+  const [isPublishing, setIsPublishing] = useState(false);
+  const { data: session } = useSession();
 
   const formatPrice = (val: string) => {
     const num = Number(val.replace(/,/g, ""));
@@ -119,11 +57,71 @@ export default function PreviewFoodDeliveryPage() {
     return days.map((d) => d.charAt(0) + d.slice(1).toLowerCase()).join(", ");
   };
 
-  const formatUnit = (unit: string) => {
-    return unit.replace(/_/g, " ").toLowerCase();
+  const formatUnit = (unit: string) => unit.replace(/_/g, " ").toLowerCase();
+
+  const mainImage = images.find((img) => img.isMain)?.preview || images[0]?.preview || "";
+
+  const handlePublish = async () => {
+    if (isPublishing) return;
+
+    if (images.length === 0) {
+      toast.error("Please add at least one photo before publishing");
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      const payload = formToCreateFoodsPayload(foodData);
+
+      const listingRes = await fetch("/api/foods", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!listingRes.ok) {
+        const err = await listingRes.json().catch(() => null);
+        throw new Error(err?.message || "Failed to create listing");
+      }
+
+      const listing = await listingRes.json();
+
+      const photoFormData = new FormData();
+      images.forEach(({ file }) => photoFormData.append("images", file));
+      const mainIndex = images.findIndex((i) => i.isMain);
+      photoFormData.append("mainImageIndex", String(mainIndex >= 0 ? mainIndex : 0));
+
+      const photosRes = await fetch(`/api/foods/${listing.id}/photos`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session?.accessToken}` },
+        body: photoFormData,
+      });
+
+      if (!photosRes.ok) {
+        const err = await photosRes.json().catch(() => null);
+        throw new Error(err?.message || "Listing created but photo upload failed");
+      }
+
+      toast.success("Listing published successfully!");
+
+      images.forEach((img) => URL.revokeObjectURL(img.preview));
+      setImages([]);
+      setFoodData(defaultFoodDeliveryData);
+
+      router.push("/seller/products");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong publishing");
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
-  const mainImage = listingImages.find((img) => img.isMain)?.preview || fallbackImage;
+  const handleEdit = () => {
+    router.push("/seller/listing/food-home-delivery");
+  };
 
   return (
     <>
@@ -182,7 +180,6 @@ export default function PreviewFoodDeliveryPage() {
           color: ${SUCCESS};
         }
 
-        /* ── Stepper ── */
         .stepper {
           display: flex;
           align-items: center;
@@ -290,12 +287,20 @@ export default function PreviewFoodDeliveryPage() {
           overflow: hidden;
           border: 1.5px solid ${BORDER};
           background: #f1f5f9;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .listing-image-wrap img {
           width: 100%;
           height: 100%;
           object-fit: cover;
+        }
+
+        .no-image {
+          color: ${TEXT_MUTED};
+          font-size: 14px;
         }
 
         .listing-content {
@@ -315,6 +320,21 @@ export default function PreviewFoodDeliveryPage() {
           margin-bottom: 10px;
         }
 
+        .food-type-badge {
+          display: inline-flex;
+          align-items: center;
+          width: fit-content;
+          padding: 4px 12px;
+          background: #eff6ff;
+          border: 1px solid #bfdbfe;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          color: ${ACCENT};
+          text-transform: capitalize;
+          margin-bottom: 10px;
+        }
+
         .listing-price {
           font-size: 18px;
           font-weight: 700;
@@ -331,7 +351,24 @@ export default function PreviewFoodDeliveryPage() {
           gap: 6px;
           font-size: 14px;
           color: ${TEXT_SECONDARY};
-          margin-bottom: 28px;
+          margin-bottom: 20px;
+        }
+
+        .description-section {
+          margin-bottom: 20px;
+        }
+
+        .description-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: ${TEXT_PRIMARY};
+          margin-bottom: 6px;
+        }
+
+        .description-text {
+          font-size: 14px;
+          line-height: 1.6;
+          color: ${TEXT_SECONDARY};
         }
 
         .details-section {
@@ -419,7 +456,19 @@ export default function PreviewFoodDeliveryPage() {
           transform: none;
         }
 
-        /* ── Responsive ── */
+        .spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(255,255,255,0.3);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
         @media (max-width: 900px) {
           .preview-container { padding: 20px 20px 40px; }
           .listing-card { flex-direction: column; padding: 24px; gap: 24px; }
@@ -453,7 +502,6 @@ export default function PreviewFoodDeliveryPage() {
             </div>
           </div>
 
-          {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
               <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
@@ -477,49 +525,37 @@ export default function PreviewFoodDeliveryPage() {
 
           <div className="listing-card">
             <div className="listing-image-wrap">
-              <img
-                src={mainImage}
-                alt={listingData.title}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = fallbackImage;
-                }}
-              />
+              {mainImage ? (
+                <img src={mainImage} alt={foodData.title} />
+              ) : (
+                <span className="no-image">📷 No Image</span>
+              )}
             </div>
 
             <div className="listing-content">
-              <h2 className="listing-title">{listingData.title}</h2>
+              <h2 className="listing-title">{foodData.title || "Untitled Listing"}</h2>
+
+              <div className="food-type-badge">{formatFoodType(foodData.foodType)}</div>
+
               <div className="listing-price">
-                NPR {formatPrice(listingData.price)} / {formatUnit(listingData.priceUnit)}
+                NPR {formatPrice(foodData.price)} / {formatUnit(foodData.priceUnit)}
               </div>
 
               <div className="location-row">
                 <FiMapPin size={14} color={TEXT_MUTED} />
-                {listingData.location}
+                {foodData.location || "Location not specified"}
+              </div>
+
+              <div className="description-section">
+                <div className="description-title">Description</div>
+                <p className="description-text">{foodData.description || "No description provided."}</p>
               </div>
 
               <div className="details-section">
                 <div className="details-grid">
                   <div className="detail-item">
-                    <span className="detail-label">Delivery Radius</span>
-                    <span className="detail-value">{listingData.deliveryRadius}Km</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Min. Order Amount</span>
-                    <span className="detail-value">NPR {formatPrice(listingData.minOrderAmount)}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Hygiene Rating</span>
-                    <span className="detail-value">{listingData.hygieneRating} / 5</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Subscription</span>
-                    <span className="detail-value">
-                      {listingData.subscriptionAvailable ? "Available" : "Not Available"}
-                    </span>
-                  </div>
-                  <div className="detail-item">
                     <span className="detail-label">Delivery Days</span>
-                    <span className="detail-value">{formatDeliveryDays(listingData.deliveryDays)}</span>
+                    <span className="detail-value">{formatDeliveryDays(foodData.deliveryDays)}</span>
                   </div>
                 </div>
               </div>
@@ -531,9 +567,18 @@ export default function PreviewFoodDeliveryPage() {
               <FiEdit2 size={15} />
               Edit Listing
             </button>
-            <button className="btn btn-publish" onClick={handlePublish}>
-              Publish Listing
-              <FiSend size={15} />
+            <button className="btn btn-publish" onClick={handlePublish} disabled={isPublishing}>
+              {isPublishing ? (
+                <>
+                  <span className="spinner" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  Publish Listing
+                  <FiSend size={15} />
+                </>
+              )}
             </button>
           </div>
         </div>

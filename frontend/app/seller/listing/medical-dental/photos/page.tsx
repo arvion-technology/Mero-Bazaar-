@@ -11,10 +11,11 @@ import {
   FiBriefcase,
   FiPlus,
   FiInfo,
+  FiClock,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useDraft, FoodDeliveryImageItem } from "../layout";
+import { useDraft } from "../layout";
 
 const ACCENT = "#2563eb";
 const DANGER = "#dc2626";
@@ -32,11 +33,12 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"];
 const steps = [
   { label: "Category", icon: FiFileText, status: "done" as const },
   { label: "Details", icon: FiBriefcase, status: "done" as const },
+  { label: "Availability", icon: FiClock, status: "done" as const },
   { label: "Photos", icon: FiPlus, status: "active" as const },
   { label: "Preview", icon: FiInfo, status: "upcoming" as const },
 ];
 
-export default function AddFoodPhotosPage() {
+export default function AddMedicalPhotosPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { images, setImages } = useDraft();
@@ -56,7 +58,7 @@ export default function AddFoodPhotosPage() {
     if (newFiles.length > remainingSlots) {
       toast.warning(`Only ${remainingSlots} more image(s) can be added`);
     }
-    const newImages: FoodDeliveryImageItem[] = filesToAdd.map((file, index) => ({
+    const newImages = filesToAdd.map((file, index) => ({
       id: `${Date.now()}-${index}`,
       file,
       preview: URL.createObjectURL(file),
@@ -65,15 +67,24 @@ export default function AddFoodPhotosPage() {
     setImages([...images, ...newImages]);
   };
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(false);
-      handleFileSelect(e.dataTransfer.files);
-    },
-    [images]
-  );
+  const removeImage = (id: string) => {
+    const filtered = images.filter((img) => img.id !== id);
+    if (filtered.length > 0 && !filtered.some((img) => img.isMain)) {
+      filtered[0].isMain = true;
+    }
+    setImages(filtered);
+  };
+
+  const setMainImage = (id: string) => {
+    setImages(images.map((img) => ({ ...img, isMain: img.id === id })));
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    handleFileSelect(e.dataTransfer.files);
+  }, [images]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -87,20 +98,6 @@ export default function AddFoodPhotosPage() {
     setIsDragging(false);
   }, []);
 
-  const removeImage = (id: string) => {
-    const target = images.find((img) => img.id === id);
-    if (target) URL.revokeObjectURL(target.preview);
-    const filtered = images.filter((img) => img.id !== id);
-    if (filtered.length > 0 && !filtered.some((img) => img.isMain)) {
-      filtered[0].isMain = true;
-    }
-    setImages(filtered);
-  };
-
-  const setMainImage = (id: string) => {
-    setImages(images.map((img) => ({ ...img, isMain: img.id === id })));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (images.length === 0) {
@@ -108,11 +105,11 @@ export default function AddFoodPhotosPage() {
       return;
     }
     toast.success("Photos saved! Proceeding to preview...");
-    router.push("/seller/listing/food-home-delivery/preview");
+    router.push("/seller/listing/medical-dental/preview");
   };
 
   const canAddMore = images.length < MAX_IMAGES;
-
+  
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />
@@ -203,28 +200,19 @@ export default function AddFoodPhotosPage() {
           transition: all 0.25s ease;
         }
 
-        .step.done .step-icon-wrap {
-          background: ${SUCCESS};
-          color: #fff;
-        }
-
+        .step.done .step-icon-wrap { background: ${SUCCESS}; color: #fff; }
         .step.active .step-icon-wrap {
           background: linear-gradient(135deg, ${ACCENT}, #1d4ed8);
           color: #fff;
           box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
         }
-
-        .step.upcoming .step-icon-wrap {
-          background: #f1f5f9;
-          color: ${TEXT_MUTED};
-        }
+        .step.upcoming .step-icon-wrap { background: #f1f5f9; color: ${TEXT_MUTED}; }
 
         .step-label {
           font-size: 13.5px;
           font-weight: 600;
           white-space: nowrap;
         }
-
         .step.done .step-label { color: ${SUCCESS}; }
         .step.active .step-label { color: ${ACCENT}; }
         .step.upcoming .step-label { color: ${TEXT_MUTED}; }
@@ -238,13 +226,9 @@ export default function AddFoodPhotosPage() {
           position: relative;
         }
 
-        .step-connector.filled {
-          background: ${SUCCESS};
-        }
+        .step-connector.filled { background: ${SUCCESS}; }
 
-        .title-section {
-          margin-bottom: 28px;
-        }
+        .title-section { margin-bottom: 28px; }
 
         .page-title {
           font-size: 28px;
@@ -279,10 +263,7 @@ export default function AddFoodPhotosPage() {
           background: #f8fbff;
         }
 
-        .drop-zone-icon {
-          color: ${ACCENT};
-          opacity: 0.8;
-        }
+        .drop-zone-icon { color: ${ACCENT}; opacity: 0.8; }
 
         .drop-zone-text {
           font-size: 15px;
@@ -421,9 +402,7 @@ export default function AddFoodPhotosPage() {
           margin-bottom: 32px;
         }
 
-        .photo-count span {
-          color: ${ACCENT};
-        }
+        .photo-count span { color: ${ACCENT}; }
 
         .tips-section {
           margin-bottom: 40px;
@@ -498,9 +477,7 @@ export default function AddFoodPhotosPage() {
           transform: translateY(-2px);
         }
 
-        .submit-btn:active {
-          transform: translateY(0);
-        }
+        .submit-btn:active { transform: translateY(0); }
 
         .submit-btn:disabled {
           opacity: 0.5;
@@ -538,6 +515,7 @@ export default function AddFoodPhotosPage() {
             </div>
           </div>
 
+          {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
               <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
@@ -632,10 +610,10 @@ export default function AddFoodPhotosPage() {
               Photo Tips
             </h3>
             <ul className="tips-list">
-              <li>Use clear, well-lit photos of your food items</li>
-              <li>Show the food from multiple angles and close-ups</li>
-              <li>Avoid screenshots or stock images — use real photos</li>
-              <li>Include photos of packaging if offering delivery</li>
+              <li>Use a clear, professional headshot for your main profile photo</li>
+              <li>Include photos of your clinic or hospital environment</li>
+              <li>Upload certificates or credentials to build patient trust</li>
+              <li>Avoid blurry or dark images — use good lighting</li>
             </ul>
           </div>
 

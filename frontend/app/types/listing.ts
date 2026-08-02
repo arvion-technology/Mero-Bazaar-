@@ -340,3 +340,99 @@ export type AgricultureDetail = {
     createdAt: string;
   }[];
 };
+
+
+export type FoodDetail = {
+  id: string;
+  sellerId: string;
+  listingId: string;
+  title: string;
+  price: string;
+  status: "ACTIVE" | "RESERVED" | "SOLD" | "EXPIRED";
+  negotiable: boolean;
+  postedDaysAgo: number;
+  isVerified: boolean;
+  category: "FOODS";
+  breadcrumbs: string[];
+  images: string[];
+  description: string;
+  googleMapsUrl: string;
+  latitude: number | null;
+  longitude: number | null;
+  foodType: string;
+  priceUnit: string;
+  deliveryDays: string[];
+  seller: {
+    name: string;
+    avatar: string;
+    rating: number;
+    reviewCount: number;
+    isVerified: boolean;
+    isPro: boolean;
+    isTrusted: boolean;
+    memberSince: string;
+    totalListing: number;
+    responseRate: string;
+    avgResponseTime: string;
+    phone: string;
+  };
+  reviews: {
+    reviewerName: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+  }[];
+};
+
+export type MedicalDetail = {
+  id: string;
+  sellerId: string;
+  listingId: string;
+  title: string;
+  price: string; // appointment fee, formatted
+  status: "ACTIVE" | "RESERVED" | "SOLD" | "EXPIRED";
+  location: string;
+  distanceFrom: string;
+  postedDaysAgo: number;
+  isVerified: boolean;
+  category: "MEDICAL";
+  breadcrumbs: string[];
+  images: string[];
+  description: string;
+  googleMapsUrl: string;
+  latitude: number | null;
+  longitude: number | null;
+  serviceType: string;
+  servicesOffered: string[];
+  doctorName: string;
+  nmcLicenseNumber: string;
+  homeVisitAvailable: boolean;
+  onlineAppointments: boolean;
+  clinicAddress: string;
+  city: string;
+  shortBio: string;
+  languages: string[];
+  experience: string;
+  sameDayBooking: boolean;
+  slots: { id: string; day: string; startTime: string; endTime: string; isBooked: boolean }[];
+  seller: {
+    name: string;
+    avatar: string;
+    rating: number;
+    reviewCount: number;
+    isVerified: boolean;
+    isPro: boolean;
+    isTrusted: boolean;
+    memberSince: string;
+    totalListing: number;
+    responseRate: string;
+    avgResponseTime: string;
+    phone: string;
+  };
+  reviews: {
+    reviewerName: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+  }[];
+};
