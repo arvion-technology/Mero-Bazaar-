@@ -7,9 +7,7 @@ import { FiArrowLeft, FiCheck, FiEdit2, FiSend } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useDraft, ServiceCategory } from "../layout";
-import { formToCreateBeautyPayload } from "@/lib/adapters/beauty";
-import { formToCreateHairPayload } from "@/lib/adapters/hair";
-import { formToCreateWellnessPayload } from "@/lib/adapters/wellness";
+import { formToCreateBeautyPayload } from "@/lib/adapters/beautyAdapter";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -21,13 +19,10 @@ const TEXT_SECONDARY = "#64748b";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 
-const categoryConfig: Record<
-  ServiceCategory,
-  { endpoint: string; toPayload: (data: ReturnType<typeof useDraft>["data"]) => unknown }
-> = {
-  Beauty: { endpoint: "/api/beauty", toPayload: formToCreateBeautyPayload },
-  Hair: { endpoint: "/api/hair", toPayload: formToCreateHairPayload },
-  Wellness: { endpoint: "/api/wellness", toPayload: formToCreateWellnessPayload },
+const categoryConfig: Record<ServiceCategory, { endpoint: string }> = {
+  Beauty: { endpoint: "/api/beauty" },
+  Hair: { endpoint: "/api/hair" },
+  Wellness: { endpoint: "/api/wellness" },
 };
 
 export default function PreviewServicePage() {
@@ -44,8 +39,13 @@ export default function PreviewServicePage() {
 
     setIsPublishing(true);
     try {
-      const { endpoint, toPayload } = categoryConfig[category];
-      const payload = toPayload(data);
+      const { endpoint } = categoryConfig[category];
+
+      const payload = formToCreateBeautyPayload({
+        ...data,
+        beautyServiceType: data.serviceType,
+        homeVisit: data.mobileService,
+      });
 
       const listingRes = await fetch(endpoint, {
         method: "POST",
