@@ -396,6 +396,7 @@ export default function TradesHomeRepairDetailPage() {
             </div>
           </div>
 
+          {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
               <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>

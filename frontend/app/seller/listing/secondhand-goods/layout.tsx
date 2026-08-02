@@ -52,7 +52,7 @@ const defaultData: SecondHandData = {
   gender: "Unisex",
   availability: "In Stock",
   location: "Balkumari, Lalitpur",
-  color: "",
+  color: "", 
   material: "",
   weight: "",
   deliveryOption: "Buyer Pickup",
