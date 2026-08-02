@@ -15,6 +15,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useDraft } from "../layout";
 
 const ACCENT = "#2563eb";
 const DANGER = "#dc2626";
@@ -43,11 +44,8 @@ const weekDays = [
   { key: "SUN", label: "Sunday" },
 ];
 
-const bufferTimes = ["No buffer","5 minutes","10 minutes","15 minutes","30 minutes"];
+const bufferTimes = ["No buffer", "5 minutes", "10 minutes", "15 minutes", "30 minutes"];
 
-type TimeSlot = { id: string; start: string; end: string };
-
-/* ─── Custom Dropdown ─── */
 function Dropdown({
   value,
   options,
@@ -162,61 +160,56 @@ function Dropdown({
 
 export default function MedicalAvailabilityPage() {
   const router = useRouter();
-
-  const [selectedDays, setSelectedDays] = useState<string[]>(["MON","TUE","WED","THU","FRI"]);
-  const [slots, setSlots] = useState<Record<string, TimeSlot[]>>({
-    MON: [
-      { id: "1", start: "", end: "" },
-      { id: "2", start: "", end: "" },
-    ],
-    TUE: [{ id: "3", start: "", end: "" }],
-    WED: [{ id: "4", start: "", end: "" }],
-    THU: [{ id: "5", start: "", end: "" }],
-    FRI: [{ id: "6", start: "", end: "" }],
-  });
+  const { medicalData, setMedicalData } = useDraft();
+  const update = (patch: Partial<typeof medicalData>) => setMedicalData({ ...medicalData, ...patch });
 
   const [activeDay, setActiveDay] = useState("MON");
-  const [slotDuration, setSlotDuration] = useState("");
-  const [bufferTime, setBufferTime] = useState("10 minutes");
-  const [sameDayBooking, setSameDayBooking] = useState(false);
 
   const toggleDay = (day: string) => {
-    setSelectedDays((prev) => {
-      const exists = prev.includes(day);
-      if (exists) {
-        const next = prev.filter((d) => d !== day);
-        if (activeDay === day && next.length > 0) setActiveDay(next[0]);
-        return next;
-      } else {
-        if (!slots[day]) {
-          setSlots((s) => ({ ...s, [day]: [{ id: Date.now().toString(), start: "", end: "" }] }));
-        }
-        setActiveDay(day);
-        return [...prev, day];
-      }
-    });
+    const exists = medicalData.selectedDays.includes(day);
+    if (exists) {
+      const next = medicalData.selectedDays.filter((d) => d !== day);
+      if (activeDay === day && next.length > 0) setActiveDay(next[0]);
+      update({ selectedDays: next });
+    } else {
+      const nextSlots = medicalData.slots[day]
+        ? medicalData.slots
+        : { ...medicalData.slots, [day]: [{ id: Date.now().toString(), start: "", end: "" }] };
+      setActiveDay(day);
+      update({ selectedDays: [...medicalData.selectedDays, day], slots: nextSlots });
+    }
   };
 
   const addSlot = (day: string) => {
-    setSlots((prev) => ({
-      ...prev,
-      [day]: [...(prev[day] || []), { id: Date.now().toString() + Math.random().toString(36).slice(2), start: "", end: "" }],
-    }));
+    update({
+      slots: {
+        ...medicalData.slots,
+        [day]: [
+          ...(medicalData.slots[day] || []),
+          { id: Date.now().toString() + Math.random().toString(36).slice(2), start: "", end: "" },
+        ],
+      },
+    });
   };
 
   const removeSlot = (day: string, id: string) => {
-    setSlots((prev) => ({ ...prev, [day]: (prev[day] || []).filter((s) => s.id !== id) }));
+    update({
+      slots: { ...medicalData.slots, [day]: (medicalData.slots[day] || []).filter((s) => s.id !== id) },
+    });
   };
 
   const updateSlot = (day: string, id: string, field: "start" | "end", value: string) => {
-    setSlots((prev) => ({
-      ...prev,
-      [day]: (prev[day] || []).map((s) => (s.id === id ? { ...s, [field]: value } : s)),
-    }));
+    update({
+      slots: {
+        ...medicalData.slots,
+        [day]: (medicalData.slots[day] || []).map((s) => (s.id === id ? { ...s, [field]: value } : s)),
+      },
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const { selectedDays, slots } = medicalData;
     if (selectedDays.length === 0) {
       toast.error("Please select at least one day");
       return;
@@ -235,8 +228,7 @@ export default function MedicalAvailabilityPage() {
       }
     }
 
-    localStorage.setItem("medicalListingAvailability", JSON.stringify({ selectedDays, slots, slotDuration, bufferTime, sameDayBooking }));
-    toast.success("Availability saved! Proceeding to preview...");
+    toast.success("Availability saved! Proceeding to photos...");
     router.push("/seller/listing/medical-dental/photos");
   };
 
@@ -672,12 +664,12 @@ export default function MedicalAvailabilityPage() {
                   <div
                     key={day.key}
                     className={`day-item ${activeDay === day.key ? "active" : ""}`}
-                    onClick={() => { if (selectedDays.includes(day.key)) setActiveDay(day.key); else toggleDay(day.key); }}
+                    onClick={() => { if (medicalData.selectedDays.includes(day.key)) setActiveDay(day.key); else toggleDay(day.key); }}
                   >
                     <input
                       type="checkbox"
                       className="day-checkbox"
-                      checked={selectedDays.includes(day.key)}
+                      checked={medicalData.selectedDays.includes(day.key)}
                       onChange={() => toggleDay(day.key)}
                       onClick={(e) => e.stopPropagation()}
                     />
@@ -687,10 +679,10 @@ export default function MedicalAvailabilityPage() {
               </div>
 
               <div className="slots-panel">
-                {selectedDays.includes(activeDay) ? (
+                {medicalData.selectedDays.includes(activeDay) ? (
                   <>
                     <h3 className="panel-title">{weekDays.find((d) => d.key === activeDay)?.label}</h3>
-                    {(slots[activeDay] || []).map((slot) => (
+                    {(medicalData.slots[activeDay] || []).map((slot) => (
                       <div key={slot.id} className="slot-row">
                         <div className="slot-group">
                           <label className="slot-label">Start Time <span className="required">*</span></label>
@@ -733,26 +725,26 @@ export default function MedicalAvailabilityPage() {
                             type="text"
                             className="time-input"
                             placeholder="e.g. 30 minutes"
-                            value={slotDuration}
-                            onChange={(e) => setSlotDuration(e.target.value)}
+                            value={medicalData.slotDuration}
+                            onChange={(e) => update({ slotDuration: e.target.value })}
                           />
                         </div>
                         <div className="setting-group">
                           <label className="setting-label">Buffer Time</label>
                           <Dropdown
-                            value={bufferTime}
+                            value={medicalData.bufferTime}
                             options={bufferTimes}
-                            onChange={setBufferTime}
+                            onChange={(v) => update({ bufferTime: v })}
                           />
                         </div>
                       </div>
 
-                      <div className="same-day-box" onClick={() => setSameDayBooking(!sameDayBooking)}>
+                      <div className="same-day-box" onClick={() => update({ sameDayBooking: !medicalData.sameDayBooking })}>
                         <div className="same-day-left">
                           <span className="same-day-title">Allow same day booking</span>
                           <span className="same-day-desc">Patients can book on the same day</span>
                         </div>
-                        <div className={`toggle-switch ${sameDayBooking ? "on" : ""}`} />
+                        <div className={`toggle-switch ${medicalData.sameDayBooking ? "on" : ""}`} />
                       </div>
                     </div>
                   </>

@@ -440,6 +440,7 @@ model MedicalAndDental {
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   serviceType MedicalServiceType @default(GENERAL_MEDICINE)
+  serviceOffered   String?
 
   doctorName       String
   nmcLicenseNumber String
@@ -448,8 +449,17 @@ model MedicalAndDental {
 
   appointmentFee     Int
   homeVisitAvailable Boolean @default(false)
+  onlineAppointments Boolean @default(false)
   clinicAddress      String
   city               String
+
+  shortBio           String?
+  languages          String[]
+  experience         String?
+
+  slotDurationMinutes Int?
+  bufferMinutes       Int?
+  sameDayBooking      Boolean @default(false)
 
   latitude  Float?
   longitude Float?
@@ -514,11 +524,15 @@ model MedicalSlot {
 }
 
 enum MedicalServiceType {
-  DENTAL
   GENERAL_MEDICINE
-  GYNECOLOGY
-  ORTHOPEDIC
+  DENTAL
+  CARDIOLOGY
   DERMATOLOGY
+  PEDIATRICS
+  ORTHOPEDIC
+  GYNECOLOGY
+  NEUROLOGY
+  ENT
   OTHER
 }
 
