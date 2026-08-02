@@ -922,6 +922,16 @@ model HairBeautyAndWellness {
   rating            Float    @default(0)
   city              String?
 
+  shortDescription    String?
+  serviceLocationType String?
+  studioLocation      String?
+  duration            String?
+  whoIsThisFor        String?
+  genderPreference    String?
+  experienceLevel     String?
+  preparationTime     String?
+  tags                String[] @default([])
+
   beautySlots        BeautySlot[]
   beautyAppointments BeautyAppointment[]
   reviews            Review[]

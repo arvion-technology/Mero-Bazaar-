@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiArrowLeft,
   FiCheck,
   FiUploadCloud,
   FiX,
-  FiCheck as FiCheckIcon, 
-  FiFileText, 
+  FiFileText,
   FiBriefcase,
   FiImage,
   FiEye,
@@ -18,7 +17,7 @@ import { ToastContainer } from "react-toastify";
 import { useDraft } from "../layout";
 
 const ACCENT = "#2563eb";
-const ACCENT_HOVER = "#1d4ed8"; 
+const ACCENT_HOVER = "#1d4ed8";
 const ACCENT_LIGHT = "#eff6ff";
 const DANGER = "#dc2626";
 const SUCCESS = "#10b981";
@@ -35,7 +34,7 @@ const steps = [
   { label: "Details", icon: FiBriefcase, status: "done" as const },
   { label: "Photos", icon: FiImage, status: "active" as const },
   { label: "Preview", icon: FiEye, status: "upcoming" as const },
-]
+];
 
 const MAX_IMAGES = 10;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"];
@@ -44,7 +43,7 @@ export default function AddPhotosPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const { images, setImages } = useDraft();
+  const { category, images, setImages } = useDraft();
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
@@ -86,16 +85,6 @@ export default function AddPhotosPage() {
     setImages(images.map((img) => ({ ...img, isMain: img.id === id })));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (images.length === 0) {
-      toast.error("Please upload at least one photo");
-      return;
-    }
-    toast.success("Photos saved! Proceeding to preview...");
-        router.push("/seller/listing/hair-beauty-wellness/beauty/preview");
-  };
-
   const canAddMore = images.length < MAX_IMAGES;
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -113,14 +102,15 @@ export default function AddPhotosPage() {
     setIsDragging(false);
     handleFileSelect(e.dataTransfer.files);
   };
+
   const handleContinue = () => {
     if (images.length === 0) {
       toast.error("Please upload at least one photo");
       return;
     }
-    router.push("/seller/listing/hair-beauty-wellness/beauty/preview");
+    toast.success("Photos saved! Proceeding to preview...");
+    router.push(`/seller/listing/hair-beauty-wellness/preview?category=${category.toLowerCase()}`);
   };
-
 
   return (
     <>
@@ -142,7 +132,6 @@ export default function AddPhotosPage() {
           padding: 32px 24px 64px;
         }
 
-        /* ── Header ── */
         .photos-header {
           display: flex;
           align-items: center;
@@ -178,7 +167,7 @@ export default function AddPhotosPage() {
           font-weight: 600;
           color: ${SUCCESS};
         }
-          /* ── Stepper ── */
+
         .stepper {
           display: flex;
           align-items: center;
@@ -211,28 +200,15 @@ export default function AddPhotosPage() {
           transition: all 0.25s ease;
         }
 
-        .step.done .step-icon-wrap {
-          background: ${SUCCESS};
-          color: #fff;
-        }
-
+        .step.done .step-icon-wrap { background: ${SUCCESS}; color: #fff; }
         .step.active .step-icon-wrap {
           background: linear-gradient(135deg, ${SITE_PRIMARY}, #e0574a);
           color: #fff;
           box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.15);
         }
+        .step.upcoming .step-icon-wrap { background: #f1f5f9; color: ${TEXT_MUTED}; }
 
-        .step.upcoming .step-icon-wrap {
-          background: #f1f5f9;
-          color: ${TEXT_MUTED};
-        }
-
-        .step-label {
-          font-size: 13.5px;
-          font-weight: 600;
-          white-space: nowrap;
-        }
-
+        .step-label { font-size: 13.5px; font-weight: 600; white-space: nowrap; }
         .step.done .step-label { color: ${SUCCESS}; }
         .step.active .step-label { color: ${SITE_PRIMARY}; }
         .step.upcoming .step-label { color: ${TEXT_MUTED}; }
@@ -245,14 +221,9 @@ export default function AddPhotosPage() {
           min-width: 24px;
           position: relative;
         }
+        .step-connector.filled { background: ${SUCCESS}; }
 
-        .step-connector.filled {
-          background: ${SUCCESS};
-        }
-
-        /* ── Title Section ── */
         .title-section { margin-bottom: 24px; }
-
         .page-title {
           font-size: 28px;
           font-weight: 700;
@@ -261,13 +232,8 @@ export default function AddPhotosPage() {
           line-height: 1.2;
           margin-bottom: 8px;
         }
+        .page-subtitle { font-size: 15px; color: ${TEXT_SECONDARY}; }
 
-        .page-subtitle {
-          font-size: 15px;
-          color: ${TEXT_SECONDARY};
-        }
-
-        /* ── Image Grid ── */
         .image-grid {
           display: flex;
           flex-wrap: wrap;
@@ -287,20 +253,9 @@ export default function AddPhotosPage() {
           flex-shrink: 0;
         }
 
-        .image-card:hover {
-          border-color: ${ACCENT};
-          box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-        }
-
-        .image-card.main {
-          border-color: ${ACCENT};
-        }
-
-        .image-card img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
+        .image-card:hover { border-color: ${ACCENT}; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+        .image-card.main { border-color: ${ACCENT}; }
+        .image-card img { width: 100%; height: 100%; object-fit: cover; }
 
         .main-badge {
           position: absolute;
@@ -333,13 +288,8 @@ export default function AddPhotosPage() {
           box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
 
-        .remove-btn:hover {
-          background: #fff;
-          color: ${DANGER};
-          transform: scale(1.1);
-        }
+        .remove-btn:hover { background: #fff; color: ${DANGER}; transform: scale(1.1); }
 
-        /* ── Add More Button ── */
         .add-more-card {
           width: 160px;
           height: 160px;
@@ -356,22 +306,10 @@ export default function AddPhotosPage() {
           flex-shrink: 0;
         }
 
-        .add-more-card:hover {
-          border-color: ${ACCENT};
-          background: ${ACCENT_LIGHT};
-        }
+        .add-more-card:hover { border-color: ${ACCENT}; background: ${ACCENT_LIGHT}; }
+        .add-more-icon { color: ${TEXT_MUTED}; }
+        .add-more-text { font-size: 14px; font-weight: 500; color: ${TEXT_MUTED}; }
 
-        .add-more-icon {
-          color: ${TEXT_MUTED};
-        }
-
-        .add-more-text {
-          font-size: 14px;
-          font-weight: 500;
-          color: ${TEXT_MUTED};
-        }
-
-        /* ── Photo Count ── */
         .photo-count {
           text-align: right;
           font-size: 15px;
@@ -379,14 +317,9 @@ export default function AddPhotosPage() {
           color: ${TEXT_PRIMARY};
           margin-bottom: 32px;
         }
+        .photo-count span { color: ${ACCENT}; }
 
-        .photo-count span {
-          color: ${ACCENT};
-        }
-
-        /* ── Photo Tips ── */
         .tips-section { margin-bottom: 40px; }
-
         .tips-title {
           font-size: 18px;
           font-weight: 700;
@@ -394,14 +327,7 @@ export default function AddPhotosPage() {
           margin-bottom: 16px;
           letter-spacing: -0.2px;
         }
-
-        .tips-list {
-          list-style: none;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
+        .tips-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
         .tips-list li {
           display: flex;
           align-items: flex-start;
@@ -410,7 +336,6 @@ export default function AddPhotosPage() {
           color: ${TEXT_SECONDARY};
           line-height: 1.4;
         }
-
         .tips-list li::before {
           content: '';
           width: 6px;
@@ -421,51 +346,6 @@ export default function AddPhotosPage() {
           flex-shrink: 0;
         }
 
-        /* ── Submit Button ── */
-        .submit-wrap {
-          display: flex;
-          justify-content: center;
-          padding-top: 8px;
-        }
-
-        .submit-btn {
-          padding: 16px 48px;
-          background: linear-gradient(135deg, ${ACCENT}, #1d4ed8);
-          color: #fff;
-          font-size: 16px;
-          font-weight: 600;
-          border: none;
-          border-radius: 14px;
-          cursor: pointer;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-          font-family: inherit;
-          box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
-          letter-spacing: 0.2px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          min-width: 280px;
-          justify-content: center;
-        }
-
-        .submit-btn:hover {
-          box-shadow: 0 6px 28px rgba(37, 99, 235, 0.4);
-          transform: translateY(-2px);
-        }
-
-        .submit-btn:active {
-          transform: translateY(0);
-          box-shadow: 0 2px 10px rgba(37, 99, 235, 0.2);
-        }
-
-        .submit-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-
-        /* ── Drop Zone (shown when no images) ── */
         .drop-zone {
           border: 2px dashed ${isDragging ? ACCENT : "#c4b5fd"};
           border-radius: 16px;
@@ -481,21 +361,9 @@ export default function AddPhotosPage() {
           margin-bottom: 32px;
         }
 
-        .drop-zone:hover {
-          border-color: ${ACCENT};
-          background: ${ACCENT_LIGHT};
-        }
-
-        .upload-icon {
-          color: ${TEXT_PRIMARY};
-          margin-bottom: 4px;
-        }
-
-        .drop-text {
-          font-size: 15px;
-          font-weight: 500;
-          color: ${TEXT_PRIMARY};
-        }
+        .drop-zone:hover { border-color: ${ACCENT}; background: ${ACCENT_LIGHT}; }
+        .upload-icon { color: ${TEXT_PRIMARY}; margin-bottom: 4px; }
+        .drop-text { font-size: 15px; font-weight: 500; color: ${TEXT_PRIMARY}; }
 
         .upload-btn-inline {
           padding: 10px 24px;
@@ -517,16 +385,9 @@ export default function AddPhotosPage() {
           transform: translateY(-1px);
         }
 
-        .upload-hint {
-          font-size: 12.5px;
-          color: ${TEXT_MUTED};
-        }
-          .continue-wrap {
-          display: flex;
-          justify-content: center;
-          margin-top: 40px;
-          padding-top: 8px;
-        }
+        .upload-hint { font-size: 12.5px; color: ${TEXT_MUTED}; }
+
+        .continue-wrap { display: flex; justify-content: center; margin-top: 40px; padding-top: 8px; }
 
         .continue-btn {
           padding: 16px 64px;
@@ -559,38 +420,21 @@ export default function AddPhotosPage() {
           transition: left 0.6s ease;
         }
 
-        .continue-btn:hover::before {
-          left: 100%;
-        }
+        .continue-btn:hover::before { left: 100%; }
+        .continue-btn:hover { box-shadow: 0 8px 32px rgba(37, 99, 235, 0.4); transform: translateY(-3px) scale(1.02); }
+        .continue-btn:active { transform: translateY(-1px) scale(0.98); }
+        .continue-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
-        .continue-btn:hover {
-          box-shadow: 0 8px 32px rgba(37, 99, 235, 0.4);
-          transform: translateY(-3px) scale(1.02);
-        }
-
-        .continue-btn:active {
-          transform: translateY(-1px) scale(0.98);
-        }
-
-        .continue-btn:disabled {
-          opacity: 0.55;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        /* ── Responsive ── */
         @media (max-width: 640px) {
           .photos-container { padding: 20px 20px 48px; }
           .page-title { font-size: 24px; }
           .image-card, .add-more-card { width: 140px; height: 140px; }
-          .submit-btn { min-width: 100%; }
           .back-btn { width: 40px; height: 40px; }
         }
       `}</style>
 
       <div className="photos-page">
         <div className="photos-container">
-          {/* Header */}
           <div className="photos-header">
             <button type="button" className="back-btn" onClick={() => router.back()}>
               <FiArrowLeft size={18} />
@@ -599,24 +443,23 @@ export default function AddPhotosPage() {
               Draft Saved <FiCheck size={16} />
             </div>
           </div>
-          {/* Stepper */}
-                    <div className="stepper">
-                      {steps.map((step, idx) => (
-                        <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
-                          <div className={`step ${step.status}`}>
-                            <div className="step-icon-wrap">
-                              {step.status === "active" ? <FiCheck size={16} /> : <step.icon size={14} />}
-                            </div>
-                            <span className="step-label">{step.label}</span>
-                          </div>
-                          {idx < steps.length - 1 && (
-                            <div className={`step-connector ${step.status === "active" ? "filled" : ""}`} />
-                          )}
-                        </div>
-                      ))}
-                    </div>
 
-          {/* Title */}
+          <div className="stepper">
+            {steps.map((step, idx) => (
+              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+                <div className={`step ${step.status}`}>
+                  <div className="step-icon-wrap">
+                    {step.status === "active" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                  </div>
+                  <span className="step-label">{step.label}</span>
+                </div>
+                {idx < steps.length - 1 && (
+                  <div className={`step-connector ${step.status === "active" ? "filled" : ""}`} />
+                )}
+              </div>
+            ))}
+          </div>
+
           <div className="title-section">
             <h1 className="page-title">Add Photos</h1>
             <p className="page-subtitle">
@@ -624,7 +467,6 @@ export default function AddPhotosPage() {
             </p>
           </div>
 
-          {/* Images or Drop Zone */}
           {images.length === 0 ? (
             <div
               className="drop-zone"
@@ -700,7 +542,6 @@ export default function AddPhotosPage() {
             onChange={(e) => handleFileSelect(e.target.files)}
           />
 
-          {/* Photo Tips */}
           <div className="tips-section">
             <h3 className="tips-title">Photo Tips</h3>
             <ul className="tips-list">
@@ -710,8 +551,6 @@ export default function AddPhotosPage() {
             </ul>
           </div>
 
-          {/* Submit */}
-          {/* Continue */}
           <div className="continue-wrap">
             <button type="button" className="continue-btn" onClick={handleContinue}>
               <FiCheck size={18} />
