@@ -19,7 +19,7 @@ import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useDraft, defaultMedicalData } from "../layout";
 import { draftToCreateMedicalPayload } from "@/lib/adapters/medicalAdapter";
-import { api } from "@/lib/api";
+import { useSession } from "next-auth/react";
 
 const ACCENT = "#2563eb";
 const SUCCESS = "#10b981";
@@ -42,6 +42,7 @@ export default function MedicalPreviewPage() {
   const router = useRouter();
   const { medicalData, setMedicalData, images, setImages } = useDraft();
   const [submitting, setSubmitting] = useState(false);
+  const { data: session } = useSession();
 
   const mainPhoto = images.find((p) => p.isMain) || images[0];
 
@@ -50,22 +51,52 @@ export default function MedicalPreviewPage() {
     : [];
 
   const handlePublish = async () => {
+    if (images.length === 0) {
+      toast.error("Please add at least one photo before publishing");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const payload = draftToCreateMedicalPayload(medicalData, medicalData);
-      const listing = await api.createMedical(payload);
 
-      if (images.length > 0) {
-        await api.uploadMedicalPhotos(listing.id, images.map((img) => img.file));
+      const listingRes = await fetch("/api/medical", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!listingRes.ok) {
+        const err = await listingRes.json().catch(() => null);
+        throw new Error(err?.message || "Failed to create listing");
+      }
+
+      const listing = await listingRes.json();
+
+      const photoFormData = new FormData();
+      images.forEach(({ file }) => photoFormData.append("photos", file));
+
+      const photosRes = await fetch(`/api/medical/${listing.id}/photos`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session?.accessToken}` },
+        body: photoFormData,
+      });
+
+      if (!photosRes.ok) {
+        const err = await photosRes.json().catch(() => null);
+        throw new Error(err?.message || "Listing created but photo upload failed");
       }
 
       toast.success("Listing published successfully!");
       setMedicalData(defaultMedicalData);
       setImages([]);
       setTimeout(() => router.push("/seller/products"), 1200);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("publish error:", err);
-      toast.error(err.message || "Failed to publish listing. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Failed to publish listing. Please try again.");
     } finally {
       setSubmitting(false);
     }
