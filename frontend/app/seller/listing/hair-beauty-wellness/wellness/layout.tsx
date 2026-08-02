@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 
-export interface BeautyData {
+export interface WellnessData {
   servicetitle: string;
   shortDescription: string;
   detailedDescription: string;
@@ -12,7 +12,6 @@ export interface BeautyData {
   mobileService: string;
 
   whoisthisfor: string;
-  requiredgenderofProfessional: string;
   genderPreference: string;
   experienceLevel: string;
   preparationTime: string;
@@ -27,13 +26,13 @@ export interface ImageItem {
 }
 
 interface DraftContextType {
-  data: BeautyData;
-  setData: (d: BeautyData) => void;
+  data: WellnessData;
+  setData: (d: WellnessData) => void;
   images: ImageItem[];
   setImages: (i: ImageItem[]) => void;
 }
 
-const defaultData: BeautyData = {
+const defaultData: WellnessData = {
 servicetitle : "Relaxation Message Therapy",
 shortDescription : "",
 detailedDescription : "",
@@ -42,7 +41,6 @@ serviceType : "At Studio",
 duration : "120 minutes",
 mobileService: "",
 whoisthisfor : "Women",
-requiredgenderofProfessional:"Female(Preferred)",
 genderPreference :"Female",
 experienceLevel:"5+ Years",
 preparationTime :"60 minutes",
@@ -54,12 +52,12 @@ const DraftContext = createContext<DraftContextType | null>(null);
 
 export function useDraft() {
   const ctx = useContext(DraftContext);
-  if (!ctx) throw new Error("useDraft must be used within beauty listing layout");
+  if (!ctx) throw new Error("useDraft must be used within Wellness listing layout");
   return ctx;
 }
 
-export default function BeautyLayout({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<BeautyData>(defaultData);
+export default function WellnessLayout({ children }: { children: ReactNode }) {
+  const [data, setData] = useState<WellnessData>(defaultData);
   const [images, setImages] = useState<ImageItem[]>([]);
 
   return (

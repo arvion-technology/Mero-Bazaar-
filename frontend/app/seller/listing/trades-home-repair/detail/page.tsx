@@ -395,7 +395,12 @@ export default function TradesHomeRepairDetailPage() {
               Draft Saved <FiCheck size={16} />
             </div>
           </div>
+<<<<<<< HEAD
+ 
+          {/* Stepper */}
+=======
 
+>>>>>>> 77540fc665cf68ef0675e021f1c5ccb9e5d45bc5
           <div className="stepper">
             {steps.map((step, idx) => (
               <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>

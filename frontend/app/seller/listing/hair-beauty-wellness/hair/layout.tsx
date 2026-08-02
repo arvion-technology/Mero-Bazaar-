@@ -2,21 +2,19 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 
-export interface BeautyData {
+export interface HairData {
   servicetitle: string;
   shortDescription: string;
   detailedDescription: string;
   price: string;
-  serviceType: string; 
+  serviceType: string;
   duration: string;
   mobileService: string;
-
   whoisthisfor: string;
-  requiredgenderofProfessional: string;
   genderPreference: string;
   experienceLevel: string;
   preparationTime: string;
-  tags: string; 
+  tags: string;
 }
 
 export interface ImageItem {
@@ -27,25 +25,24 @@ export interface ImageItem {
 }
 
 interface DraftContextType {
-  data: BeautyData;
-  setData: (d: BeautyData) => void;
+  data: HairData;
+  setData: (d: HairData) => void;
   images: ImageItem[];
   setImages: (i: ImageItem[]) => void;
 }
 
-const defaultData: BeautyData = {
-servicetitle : "Relaxation Message Therapy",
+const defaultData: HairData = {
+servicetitle : "Haircut & Styling",
 shortDescription : "",
 detailedDescription : "",
-price:"Rs. 3,500",
-serviceType : "At Studio",
-duration : "120 minutes",
+price:"Rs.1800",
+serviceType : "At Salon",
+duration : "45 minutes",
 mobileService: "",
 whoisthisfor : "Women",
-requiredgenderofProfessional:"Female(Preferred)",
 genderPreference :"Female",
 experienceLevel:"5+ Years",
-preparationTime :"60 minutes",
+preparationTime :"15 minutes",
 tags:"", 
 
 };
@@ -54,12 +51,12 @@ const DraftContext = createContext<DraftContextType | null>(null);
 
 export function useDraft() {
   const ctx = useContext(DraftContext);
-  if (!ctx) throw new Error("useDraft must be used within beauty listing layout");
+  if (!ctx) throw new Error("useDraft must be used within hair listing layout");
   return ctx;
 }
 
-export default function BeautyLayout({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<BeautyData>(defaultData);
+export default function HairLayout({ children }: { children: ReactNode }) {
+  const [data, setData] = useState<HairData>(defaultData);
   const [images, setImages] = useState<ImageItem[]>([]);
 
   return (

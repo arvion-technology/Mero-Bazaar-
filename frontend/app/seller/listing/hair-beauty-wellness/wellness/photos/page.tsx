@@ -93,7 +93,7 @@ export default function AddPhotosPage() {
       return;
     }
     toast.success("Photos saved! Proceeding to preview...");
-        router.push("/seller/listing/hair-beauty-wellness/beauty/preview");
+        router.push("/seller/listing/hair-beauty-wellness/wellness/preview");
   };
 
   const canAddMore = images.length < MAX_IMAGES;
@@ -118,7 +118,7 @@ export default function AddPhotosPage() {
       toast.error("Please upload at least one photo");
       return;
     }
-    router.push("/seller/listing/hair-beauty-wellness/beauty/preview");
+    router.push("/seller/listing/hair-beauty-wellness/wellness/preview");
   };
 
 

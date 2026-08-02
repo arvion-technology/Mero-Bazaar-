@@ -1,8 +1,6 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -54,14 +52,17 @@ const steps = [
 const services = ["At studio", "At Salon", "At Home", "Online Consultation"];
 const studio = ["Balkumari", "Sanepa", "Balkhu"];
 
+
 const minutes = [
   "30 Minutes",
   "45 Minutes",
   "60 Minutes",
   "90 Minutes",
-  "120 Minutes",
+  "120 Minutes", 
 ];
-const beautyServices = ["Beauty", "Hair", "Wellness"];
+
+
+const wellnessServices = ["Beauty", "Hair", "Wellness"];
 
 interface CustomSelectProps {
   options: string[];
@@ -159,8 +160,9 @@ function CustomSelect({
             {options.map((option, index) => (
               <div
                 key={option}
-                className={`custom-select-option ${option === value ? "selected" : ""} ${index === highlightedIndex ? "highlighted" : ""
-                  }`}
+                className={`custom-select-option ${option === value ? "selected" : ""} ${
+                  index === highlightedIndex ? "highlighted" : ""
+                }`}
                 onClick={() => {
                   onChange(option);
                   setIsOpen(false);
@@ -175,20 +177,18 @@ function CustomSelect({
       )}
     </div>
   );
-
-
 }
 
-
-
-
-
-export default function NewBeautyListingPage() {
-
+export default function NewWellnessListingPage() {
   const router = useRouter();
-  const [selectedService, setSelectedService] = useState("Beauty");
+    const [selectedService, setSelectedService] = useState("Wellness");
 
-  const [showServiceMenu, setShowServiceMenu] = useState(false);
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
+  const handleCategoryChange = (path: string) => {
+    setShowCategoryMenu(false); // close menu first
+    router.push(path);
+  };
+
 
   // ── Basic Information ──
 
@@ -204,40 +204,28 @@ export default function NewBeautyListingPage() {
 
   const [duration, setDuration] = useState("");
 
-  const [errors, setErrors] = useState({
-    serviceTitle: "",
-    shortDescription: "",
-    detailedDescription: "",
-    price: "",
-    serviceType: "",
-    duration: "",
-  });
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors = {
-      serviceTitle: serviceTitle ? "" : "Service title is required.",
-      shortDescription: shortDescription ? "" : "Short description is required.",
-      detailedDescription: detailedDescription ? "" : "Detailed description is required.",
-      price: price ? "" : "Price is required.",
-      serviceType: serviceType ? "" : "Select a service type.",
-      duration: duration ? "" : "Duration is required.",
-    };
 
-    setErrors(newErrors);
-
-    if (Object.values(newErrors).some(Boolean)) {
+    if (
+      !serviceTitle ||
+      !shortDescription ||
+      !detailedDescription ||
+      !price ||
+      !serviceType ||
+      !duration
+    ) {
       toast.error("Please fill all required fields.");
       return;
     }
 
-    toast.success("Beauty service saved successfully!");
-    router.push("/seller/listing/hair-beauty-wellness/beauty/details");
+    toast.success("Wellness service saved successfully!");
+    router.push("/seller/listing/hair-beauty-wellness/wellness/details");
   };
-
   const descLength = detailedDescription.length;
-  const shortLength = shortDescription.length;
   const descMax = 1000;
-  const descMin = 500;
+  const descMim = 500;
+
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />
@@ -819,20 +807,18 @@ export default function NewBeautyListingPage() {
     }
 
     .switch{
-width:32px;
-height:18px;
-}
+        width:40px;
+        height:22px;
+    }
 
-.slider::before{
-width:12px;
-height:12px;
-left:3px;
-top:3px;
-}
+    .slider::before{
+        width:16px;
+        height:16px;
+    }
 
-.switch input:checked + .slider::before{
-transform:translateX(14px);
-}
+    .switch input:checked + .slider::before{
+        transform:translateX(18px);
+    }
 }
           
 /* ── Submit Button ── */
@@ -945,7 +931,6 @@ transform:translateX(14px);
         }
           
           `}</style>
-
       <div className="listing-page">
         <div className="listing-container">
           {/* Header */}
@@ -995,12 +980,10 @@ transform:translateX(14px);
             ))}
           </div>
 
-
           <form onSubmit={handleSubmit} className="form-card">
             {/* Category Pill */}
             <div className="two-col-layout">
               <div className="left-col">
-
                 <div className="category-wrap">
                   <label className="category-label">Category</label>
 
@@ -1011,16 +994,13 @@ transform:translateX(14px);
                     </div>
                   </div>
                 </div>
-
               </div>
-
-
 
               <div className="right-col">
                 <label className="category-label">Select Service</label>
 
                 <CustomSelect
-                  options={beautyServices}
+                  options={wellnessServices}
                   value={selectedService}
                   placeholder="Select Service"
                   onChange={(value) => {
@@ -1076,7 +1056,6 @@ transform:translateX(14px);
                   <label className="form-label">
                     Short Description <span className="required">*</span>
                   </label>
-
                   <input
                     type="text"
                     className="form-input"
@@ -1085,19 +1064,18 @@ transform:translateX(14px);
                     onChange={(e) => setShortDescription(e.target.value)}
                   />
                   <div
-                    className={`char-counter ${descLength > descMin * 0.5 ? "near-limit" : ""}`}
+                    className={`char-counter ${descLength > descMim * 0.5 ? "near-limit" : ""}`}
                   >
-                    {shortLength}/150
+                    {descLength}/{descMim}
                   </div>
                 </div>
                 <div className="form-group full-width">
                   <label className="form-label">
                     Detailed Description <span className="required">*</span>
                   </label>
-
                   <textarea
                     className="form-textarea"
-                    placeholder="Describe your beauty service"
+                    placeholder="Describe your Wellness service"
                     value={detailedDescription}
                     onChange={(e) => setDetailedDescription(e.target.value)}
                   />
@@ -1107,8 +1085,6 @@ transform:translateX(14px);
                     {descLength}/{descMax}
                   </div>
                 </div>
-
-
               </div>
 
               <div className="right-col">
@@ -1171,9 +1147,22 @@ transform:translateX(14px);
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
                   />
-
                 </div>
 
+                <div className="mobile-service">
+                  <label className="mobile-title">Mobile Service</label>
+
+                  <div className="mobile-option">
+                    <label className="switch">
+                      <input type="checkbox" />
+                      <span className="slider"></span>
+                    </label>
+
+                    <span className="mobile-text">
+                      I provide this service at customer's location
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </form>

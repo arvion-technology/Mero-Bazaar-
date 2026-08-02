@@ -35,7 +35,7 @@ const SITE_PRIMARY = "#C0392B";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 
-export default function PreviewBeautyPage() {
+export default function PreviewWellnessPage() {
   const router = useRouter();
 
   const [serviceLocationType, setServiceLocationType] = useState("");
@@ -48,16 +48,16 @@ export default function PreviewBeautyPage() {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     toast.success("Listing published successfully!");
     setIsPublishing(false);
-    localStorage.removeItem("beautyBasic");
-    localStorage.removeItem("beautyDetail");
+    localStorage.removeItem("wellnessBasic");
+    localStorage.removeItem("wellnessDetail");
     router.push("/seller/products");
   };
 
 
   const handleEdit = (step: string) => {
-    if (step === "basic") router.push("/seller/listing/hair-beauty-wellness/beauty");
-    if (step === "details") router.push("/seller/listing/hair-beauty-wellness/beauty/details");
-    if (step === "photos") router.push("/seller/listing/hair-beauty-wellness/beauty/photos");
+    if (step === "basic") router.push("/seller/listing/hair-beauty-wellness/wellness");
+    if (step === "details") router.push("/seller/listing/hair-beauty-wellness/wellness/details");
+    if (step === "photos") router.push("/seller/listing/hair-beauty-wellness/wellness/photos");
 
   };
 
@@ -746,15 +746,6 @@ width:px:
           .btn { width: 100%; justify-content: center; }
           .draft-saved { display: none; }
           .map-small { height: 140px; }
-          }
-          
-    @media (max-width: 480px) {
-          .listing-container { padding: 12px; }
-          .form-card { padding: 16px; border-radius: 14px; }
-          .listing-header { gap: 12px; margin-bottom: 16px; }
-          .back-btn { width: 36px; height: 36px; }
-          .listing-title { font-size: 18px; }
-        }
           .gallery-section{
     display:flex;
     gap:7px;
@@ -839,20 +830,20 @@ width:px:
               <div className="card-left">
                 <div className="gallery-section">
                   <div className="main-image">
-                    <img src="/bridal-main.png" alt="Bridal Makeup" />
+                    <img src="/wellness-main.png" alt="Bridal Makeup" />
                   </div>
 
                   <div className="side-images">
                     <div className="thumb">
-                      <img src="/bridal-1.png" alt="" />
+                      <img src="/wellness-1.png" alt="" />
                     </div>
 
                     <div className="thumb">
-                      <img src="/bridal-2.png" alt="" />
+                      <img src="/wellness-2.png" alt="" />
                     </div>
 
                     <div className="thumb">
-                      <img src="/bridal-3.png" alt="" />
+                      <img src="/wellness-3.png" alt="" />
                     </div>
                   </div>
                 </div>
@@ -864,7 +855,7 @@ width:px:
                 <div className="service-details">
                   <div className="service-header">
                     <div>
-                      <h2 className="service-title">Bridal Makeup</h2>
+                      <h2 className="service-title">Relaxation Message Therapy</h2>
                     </div>
 
                     <span className="verified-badge">Verified</span>
@@ -872,7 +863,7 @@ width:px:
 
                   <div className="top-cards">
                     <div className="info-card">
-                      <h3>NPR 3500</h3>
+                      <h3>NPR 2500</h3>
                       <span>Starting price</span>
                     </div>
 
@@ -885,27 +876,26 @@ width:px:
                   <div className="details-list">
                     <div className="detail-row">
                       <span>Duration</span>
-                      <strong>120 minutes</strong>
+                      <strong>60 minutes</strong>
                     </div>
 
                     <div className="detail-row">
                       <span>Professional Gender</span>
-                      <strong>Female</strong>
+                      <strong>No preference</strong>
                     </div>
 
                     <div className="detail-row">
                       <span>Experience</span>
                       <strong>5+ Years</strong>
                     </div>
-                    <div className="detail-row">
+                     <div className="detail-row">
                       <span>Service Location Type</span>
                       <strong>Studio</strong>
                     </div>
                     <div className="detail-row">
                       <span>Studio Location</span>
-                      <strong>Sanepa</strong>
+                      <strong>balkumari</strong>
                     </div>
-
 
                     {/* <div className="detail-row">
                       <span>Service Location Type</span>
@@ -923,12 +913,10 @@ width:px:
             </div>
             <div className="service-left">
               <div className="about-section">
-                <h2>About</h2>
+                <h2>About This Service</h2>
 
                 <p>
-                  Professional bridal makeup service using premium cosmetic brands to
-                  create a flawless and long-lasting look for your special day.
-                  Includes skin preparation, bridal makeup and finishing touch.
+                  Relax your body and mind with our proffesional message therapy to relieve strss and improve overall well-being
                 </p>
               </div>
 
@@ -936,32 +924,23 @@ width:px:
                 <h2>Tags</h2>
 
                 <div className="tags">
-                  <span>Bridal Makeup</span>
-                  <span>Wedding</span>
-                  <span>Professional</span>
-                  <span>Premium</span>
-                  <span>Beauty</span>
-                  <span>Salon</span>
+                  <span>Message</span>
+                  <span>Relaxation </span>
+                  <span>Wellness</span>
                 </div>
               </div>
 
             </div>
 
-
-
             <div className="service-extra">
               <div className="availability-section">
                 <div className="availability-right">
                   <div className="availability-card">
-
                     < div className="availability-info">
-
                       <div className="icon-box">
                         <FiCalendar size={22} />
                       </div>
-
                       <div className="availability-text">
-
                         <h3>Availability</h3>
                         <p>Mon – Sun</p>
                         <span>10:00 AM - 8:00 PM</span>
@@ -1001,13 +980,12 @@ width:px:
               </button>
             </div>
           </div>
-
-
           <div className="divider" />
-
         </div>
-
       </div>
+
+
+
 
     </>
   );
