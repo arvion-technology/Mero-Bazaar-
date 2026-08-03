@@ -240,6 +240,17 @@ export default function PropertyDetailPage() {
           .pd-price { font-size: 22px; }
           .pd-container { padding: 0 14px; margin-top: 18px; }
           .pd-related-section { padding: 20px 14px 0; }
+          .pd-main-img-wrap { height: 260px; }
+          .pd-thumbs { gap: 6px; padding: 10px; }
+          .pd-thumb-wrap { width: 72px; height: 52px; }
+          .pd-breadcrumb-inner { padding: 0 14px; font-size: 12px; }
+          .pd-info-card { padding: 16px 18px; }
+          .pd-desc-card { padding: 16px 18px; }
+          .pd-details-card { padding: 16px 18px; }
+          .pd-loc-row { gap: 10px; }
+          .pd-map-link { margin-left: 0; }
+          .pd-action-btns { gap: 8px; }
+          .pd-action-btn { width: 34px; height: 34px; }
         }
       `}</style>
 
@@ -433,14 +444,12 @@ export default function PropertyDetailPage() {
             </div>
           </div>
 
-          <div className="pd-seller-card">
             <SellerCard
               seller={detail.seller}
               reviews={detail.reviews}
               listingId={detail.id}
               sellerId={detail.sellerId}
             />
-        </div>
         </div>
 
         {related.length > 0 && (

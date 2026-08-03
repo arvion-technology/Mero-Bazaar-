@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import {
@@ -54,6 +54,12 @@ const PRICE_RANGES = [
   { label: "1M+", min: 1000000, max: 200000000 },
 ];
 
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest" },
+  { value: "price_asc", label: "Price: Low → High" },
+  { value: "price_desc", label: "Price: High → Low" },
+];
+
 export default function VehiclesPage() {
   const [brands, setBrands] = useState<string[]>([]);
   const [conditions, setConditions] = useState<string[]>([]);
@@ -68,40 +74,54 @@ export default function VehiclesPage() {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
   const [activeCat, setActiveCat] = useState("All Vehicles");
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [selectedFuels, setSelectedFuels] = useState<string[]>([]);
   const IMG_BASE = process.env.NEXT_PUBLIC_API_URL;
+
   const displayTitle = (v: Vehicle) => {
-  const { brand, model } = v.vehicle;
-  return brand.toLowerCase() === model.toLowerCase()
-    ? `${brand} ${v.vehicle.year}`
-    : v.title;
+    const { brand, model } = v.vehicle;
+    return brand.toLowerCase() === model.toLowerCase()
+      ? `${brand} ${v.vehicle.year}`
+      : v.title;
   };
 
+  /* close sort dropdown on outside click */
   useEffect(() => {
-  if (!session?.accessToken) return;
+    const handle = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, []);
 
-  (async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
-        headers: { Authorization: `Bearer ${session.accessToken}` },
-      });
-      if (!res.ok) return;
+  useEffect(() => {
+    if (!session?.accessToken) return;
 
-      const data = await res.json();
-      const favMap: Record<string, boolean> = {};
-      data.forEach((item: { listingId: string }) => {
-        favMap[item.listingId] = true;
-      });
-      setFavorites(favMap);
-    } catch {
-      // silently ignore
-    }
-  })();
-}, [session?.accessToken]);
+    (async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
+          headers: { Authorization: `Bearer ${session.accessToken}` },
+        });
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const favMap: Record<string, boolean> = {};
+        data.forEach((item: { listingId: string }) => {
+          favMap[item.listingId] = true;
+        });
+        setFavorites(favMap);
+      } catch {
+        // silently ignore
+      }
+    })();
+  }, [session?.accessToken]);
 
   useEffect(() => {
     (async () => {
@@ -127,12 +147,19 @@ export default function VehiclesPage() {
   }, []);
 
   const generateBadges = (v: Vehicle) => {
-  const vehicle = v.vehicle;
-  const badges: { label: string; type: "green" | "blue" | "orange" | "gray" }[] = [];
+    const vehicle = v.vehicle;
+    const badges: { label: string; type: "green" | "blue" | "orange" | "gray" }[] = [];
 
-  if (vehicle?.bluebook_status === "verified") {badges.push({ label: "Bluebook Verified", type: "green" });}
-  if (vehicle?.fuel_type) {badges.push({label: vehicle.fuel_type.toUpperCase(),type: vehicle.fuel_type === "electric" ? "green" : "blue",});}
-  return badges;
+    if (vehicle?.bluebook_status === "verified") {
+      badges.push({ label: "Bluebook Verified", type: "green" });
+    }
+    if (vehicle?.fuel_type) {
+      badges.push({
+        label: vehicle.fuel_type.toUpperCase(),
+        type: vehicle.fuel_type === "electric" ? "green" : "blue",
+      });
+    }
+    return badges;
   };
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
@@ -153,30 +180,46 @@ export default function VehiclesPage() {
     setSearch("");
   };
 
-const displayed = vehicles.filter((v) => {
-  const s = search.toLowerCase();
-  const vehicle = v.vehicle;
-  if (s && !v.title.toLowerCase().includes(s) && !vehicle.brand.toLowerCase().includes(s)) return false;
-  if (activeCat !== "All Vehicles" && vehicle.type !== activeCat.toLowerCase()) return false;
-  if (selectedBrands.length && !selectedBrands.includes(vehicle.brand)) return false;
-  if (selectedConditions.length && !selectedConditions.map((c) => c.toLowerCase()).includes(vehicle.condition.toLowerCase())) return false;
-  if (selectedFuels.length && !selectedFuels.map((f) => f.toLowerCase()).includes(vehicle.fuel_type.toLowerCase())) return false;
+  const displayed = vehicles
+    .filter((v) => {
+      const s = search.toLowerCase();
+      const vehicle = v.vehicle;
+      if (s && !v.title.toLowerCase().includes(s) && !vehicle.brand.toLowerCase().includes(s))
+        return false;
+      if (activeCat !== "All Vehicles" && vehicle.type !== activeCat.toLowerCase()) return false;
+      if (selectedBrands.length && !selectedBrands.includes(vehicle.brand)) return false;
+      if (
+        selectedConditions.length &&
+        !selectedConditions.map((c) => c.toLowerCase()).includes(vehicle.condition.toLowerCase())
+      )
+        return false;
+      if (
+        selectedFuels.length &&
+        !selectedFuels.map((f) => f.toLowerCase()).includes(vehicle.fuel_type.toLowerCase())
+      )
+        return false;
 
-  const price =typeof v.price === "number" ? v.price: parseInt(String(v.price).replace(/[^\d]/g, ""));
+      const price =
+        typeof v.price === "number" ? v.price : parseInt(String(v.price).replace(/[^\d]/g, ""));
 
-  if (selectedPriceRanges.length) {
-    const match = selectedPriceRanges.some((lbl) => {
-      const r = PRICE_RANGES.find((x) => x.label === lbl);
-      return r ? price >= r.min && price <= r.max : false;});
-    if (!match) return false;
-  }
-  return true;
+      if (selectedPriceRanges.length) {
+        const match = selectedPriceRanges.some((lbl) => {
+          const r = PRICE_RANGES.find((x) => x.label === lbl);
+          return r ? price >= r.min && price <= r.max : false;
+        });
+        if (!match) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const getPrice = (p: number | string) =>
+        typeof p === "number" ? p : parseInt(String(p).replace(/[^\d]/g, ""));
+      if (sort === "price_asc") return getPrice(a.price) - getPrice(b.price);
+      if (sort === "price_desc") return getPrice(b.price) - getPrice(a.price);
+      return 0;
+    });
 
-}).sort((a, b) => { const getPrice = (p: number | string ) =>typeof p === "number" ? p : parseInt(String(p).replace(/[^\d]/g, ""));
-  if (sort === "price_asc")return getPrice(a.price) - getPrice(b.price);
-  if (sort === "price_desc")return getPrice(b.price) - getPrice(a.price);
-  return 0;
-});
+  const activeSortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Newest";
 
   return (
     <>
@@ -324,15 +367,59 @@ const displayed = vehicles.filter((v) => {
         }
         .vp-count { font-size: 14px; color: #666; font-weight: 500; }
         .vp-count strong { color: #111; font-weight: 800; }
+
+        /* ── CUSTOM SORT DROPDOWN ── */
         .vp-sort-wrap { position: relative; }
-        .vp-sort {
-          padding: 9px 36px 9px 14px; border: 1.5px solid #e0e4f0; border-radius: 10px;
-          font-size: 13px; font-weight: 600; color: #333;
-          background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
-          appearance: none; outline: none; cursor: pointer;
-          font-family: inherit; box-shadow: 0 1px 6px rgba(0,0,0,0.06); transition: border-color 0.2s;
+        .vp-sort-btn {
+          padding: 9px 12px 9px 14px;
+          border: 1.5px solid #e0e4f0;
+          border-radius: 10px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #333;
+          background: #fff;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-family: inherit;
+          box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+          transition: border-color 0.2s;
+          white-space: nowrap;
         }
-        .vp-sort:focus { border-color: #b91c1c; }
+        .vp-sort-btn:hover { border-color: #b91c1c; }
+        .vp-sort-btn.open { border-color: #b91c1c; }
+        .vp-sort-dropdown {
+          position: absolute;
+          top: calc(100% + 6px);
+          right: 0;
+          background: #fff;
+          border: 1.5px solid #e0e4f0;
+          border-radius: 12px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+          z-index: 100;
+          min-width: 190px;
+          overflow: hidden;
+          animation: sortPop 0.18s ease;
+        }
+        @keyframes sortPop {
+          from { opacity: 0; transform: translateY(-4px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .vp-sort-option {
+          padding: 11px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #333;
+          cursor: pointer;
+          transition: background 0.12s;
+          white-space: nowrap;
+        }
+        .vp-sort-option:hover { background: #f8fafc; }
+        .vp-sort-option.active {
+          background: #e0f2fe;
+          color: #0369a1;
+        }
 
         /* ── CARD GRID ── */
         .vp-grid {
@@ -428,6 +515,14 @@ const displayed = vehicles.filter((v) => {
         .vp-ev-link:hover { color: #15803d; }
         .vp-ev-img-wrap { flex: 1; position: relative; overflow: hidden; min-height: 210px; }
         .vp-ev-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* empty state */
+        .vp-empty {
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          padding: 60px 20px; color: #888; gap: 8px;
+        }
+        .vp-empty-icon { font-size: 40px; }
+        .vp-empty p { margin: 0; font-size: 16px; font-weight: 700; color: #555; }
 
         /* responsive */
         @media (max-width: 960px) {
@@ -535,9 +630,7 @@ const displayed = vehicles.filter((v) => {
               <div className="vsb-section">
                 <p className="vsb-section-title">Year</p>
                 <div className="vsb-chips">
-                  <button className="vsb-chip active">
-                    2020–2026
-                  </button>
+                  <button className="vsb-chip active">2020–2026</button>
                 </div>
               </div>
 
@@ -583,16 +676,37 @@ const displayed = vehicles.filter((v) => {
                 <span className="vp-count">
                   <strong>{displayed.length}</strong> vehicles found
                 </span>
-                <div className="vp-sort-wrap">
-                  <select
-                    className="vp-sort"
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value)}
+                <div className="vp-sort-wrap" ref={sortRef}>
+                  <button
+                    className={`vp-sort-btn${sortOpen ? " open" : ""}`}
+                    onClick={() => setSortOpen((p) => !p)}
                   >
-                    <option value="newest">Newest</option>
-                    <option value="price_asc">Price: Low → High</option>
-                    <option value="price_desc">Price: High → Low</option>
-                  </select>
+                    {activeSortLabel}
+                    <FiChevronDown
+                      size={14}
+                      style={{
+                        transform: sortOpen ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform 0.2s",
+                      }}
+                    />
+                  </button>
+
+                  {sortOpen && (
+                    <div className="vp-sort-dropdown">
+                      {SORT_OPTIONS.map((opt) => (
+                        <div
+                          key={opt.value}
+                          className={`vp-sort-option${sort === opt.value ? " active" : ""}`}
+                          onClick={() => {
+                            setSort(opt.value);
+                            setSortOpen(false);
+                          }}
+                        >
+                          {opt.label}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -601,7 +715,9 @@ const displayed = vehicles.filter((v) => {
                 <div className="vp-empty">
                   <div className="vp-empty-icon">🔍</div>
                   <p>No vehicles found</p>
-                  <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters or search term</span>
+                  <span style={{ fontSize: 13, color: "#888" }}>
+                    Try adjusting your filters or search term
+                  </span>
                 </div>
               ) : (
                 <>
@@ -615,12 +731,22 @@ const displayed = vehicles.filter((v) => {
                           {/* Image */}
                           <div className="vp-card-img-wrap">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={v.images?.[0] ? `${IMG_BASE}${v.images[0]}` : "/placeholder.png"} alt={v.title} className="vp-card-img" />
+                            <img
+                              src={v.images?.[0] ? `${IMG_BASE}${v.images[0]}` : "/placeholder.png"}
+                              alt={v.title}
+                              className="vp-card-img"
+                            />
                             <span className="vp-card-cat">{vehicle.type}</span>
-                            <button className="vp-heart" aria-label="Save" onClick={(e) => toggleFav(v.id, e)}>
-                              {isFav
-                                ? <FaHeart size={13} color="#b91c1c" />
-                                : <FiHeart size={13} color="#999" />}
+                            <button
+                              className="vp-heart"
+                              aria-label="Save"
+                              onClick={(e) => toggleFav(v.id, e)}
+                            >
+                              {isFav ? (
+                                <FaHeart size={13} color="#b91c1c" />
+                              ) : (
+                                <FiHeart size={13} color="#999" />
+                              )}
                             </button>
                           </div>
 
@@ -631,39 +757,67 @@ const displayed = vehicles.filter((v) => {
 
                             {/* Meta */}
                             <div className="vp-card-meta">
-                              <span><IoSpeedometerOutline size={12} /> {vehicle.km_driven}</span>
+                              <span>
+                                <IoSpeedometerOutline size={12} /> {vehicle.km_driven}
+                              </span>
                               <span className="vp-card-meta-sep" />
-                              <span><BsCalendar3 size={11} /> {vehicle.year}</span>
+                              <span>
+                                <BsCalendar3 size={11} /> {vehicle.year}
+                              </span>
                               <span className="vp-card-meta-sep" />
-                            <span
-                              style={{ cursor: "pointer", color: "#2563eb" }}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                if (v.latitude == null || v.longitude == null) return;
+                              <span
+                                style={{ cursor: "pointer", color: "#2563eb" }}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  if (v.latitude == null || v.longitude == null) return;
 
-                                window.open(
-                                  `https://www.google.com/maps?q=${v.latitude},${v.longitude}`,
-                                  "_blank"
-                                );
-                              }}
-                            >
-                              <FiMapPin size={11} /> View on map
-                            </span>            
+                                  window.open(
+                                    `https://www.google.com/maps?q=${v.latitude},${v.longitude}`,
+                                    "_blank"
+                                  );
+                                }}
+                              >
+                                <FiMapPin size={11} /> View on map
+                              </span>
                             </div>
 
                             {/* Badges */}
                             <div className="vp-card-badges">
                               {generateBadges(v).map((b) => {
                                 const colorMap = {
-                                  green: {bg: "#d1fae5",color: "#065f46",border: "1px solid #a7f3d0"},                                    
-                                  blue: {bg: "#dbeafe",color: "#1e40af",border: "1px solid #bfdbfe"},
-                                  orange: {bg: "#fef3c7",color: "#92400e",border: "1px solid #fde68a"},
-                                 gray: {bg: "#f1f3f5",color: "#374151",border: "1px solid #e5e7eb"},
+                                  green: {
+                                    bg: "#d1fae5",
+                                    color: "#065f46",
+                                    border: "1px solid #a7f3d0",
+                                  },
+                                  blue: {
+                                    bg: "#dbeafe",
+                                    color: "#1e40af",
+                                    border: "1px solid #bfdbfe",
+                                  },
+                                  orange: {
+                                    bg: "#fef3c7",
+                                    color: "#92400e",
+                                    border: "1px solid #fde68a",
+                                  },
+                                  gray: {
+                                    bg: "#f1f3f5",
+                                    color: "#374151",
+                                    border: "1px solid #e5e7eb",
+                                  },
                                 };
                                 const style = colorMap[b.type || "gray"];
 
                                 return (
-                                  <span key={b.label} className="vp-badge" style={{ background: style.bg,color: style.color,border: style.border}}>
+                                  <span
+                                    key={b.label}
+                                    className="vp-badge"
+                                    style={{
+                                      background: style.bg,
+                                      color: style.color,
+                                      border: style.border,
+                                    }}
+                                  >
                                     <BsShieldCheck size={9} style={{ marginRight: "3px" }} />
                                     {b.label}
                                   </span>

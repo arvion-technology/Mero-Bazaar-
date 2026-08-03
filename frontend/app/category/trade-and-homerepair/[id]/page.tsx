@@ -5,10 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
 import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
-import {
-  FiShare2, FiHeart, FiMapPin, FiClock, FiCheckCircle,
-  FiChevronRight, FiTool, FiShield, FiZap,
-} from "react-icons/fi";
+import { FiShare2, FiHeart, FiMapPin, FiClock, FiCheckCircle, FiChevronRight, FiTool, FiShield, FiZap } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { toTradesDetail, toTradesCard } from "@/lib/adapters/tradesAdapter";
 import type { TradesDetail } from "@/app/types/listing";
@@ -132,11 +129,14 @@ export default function TradeDetailPage() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
 
+        html, body { margin: 0; padding: 0; overflow-x: hidden; }
         .cd-page {
           background: #f5f6f8; min-height: 100vh;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-          padding-bottom: 60px;
+          display: flex; flex-direction: column;
         }
+        .cd-main { flex: 1 0 auto; }
+        .cd-footer-wrap { flex-shrink: 0; margin: 0; padding: 0; }
 
         .cd-topbar { background: #fff; border-bottom: 1px solid #ececec; padding: 10px 0; }
         .cd-topbar-inner {
@@ -497,8 +497,10 @@ export default function TradeDetailPage() {
           </div>
         )}
 
-        <Footer />
-      </div>
+        </div>
+        <div className="cd-footer-wrap">
+          <Footer />
+        </div>
     </>
   );
 }

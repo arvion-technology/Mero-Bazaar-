@@ -126,7 +126,7 @@ export default function FoodDetailPage() {
           }
         `}</style>
         <div className="fd-404">
-          <div style={{ fontSize: 56 }}>🍽️</div>
+          <div style={{ fontSize: 56, color: "#16a34a" }}><FaUtensils /></div>
           <h1>Restaurant Not Found</h1>
           <p>The restaurant you are looking for does not exist.</p>
           <Link href="/category/food" className="fd-back-btn">
@@ -205,7 +205,7 @@ export default function FoodDetailPage() {
           cursor: pointer; border: 2px solid transparent;
           transition: border-color 0.15s, opacity 0.15s; flex-shrink: 0;
         }
-        .fd-thumb:hover { opacity: 0.8; }
+        .fd-thumb:hover { opacity: 0.85; transform: translateY(-1px); }
         .fd-thumb.active { border-color: #16a34a; }
 
         .fd-right { display: flex; flex-direction: column; gap: 16px; }

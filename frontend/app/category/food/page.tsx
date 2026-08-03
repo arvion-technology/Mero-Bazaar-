@@ -11,6 +11,7 @@ import {
   FiChevronDown,
   FiCheckCircle,
   FiHeart,
+  FiCoffee,
 } from "react-icons/fi";
 import {
   FaUtensils,
@@ -339,24 +340,39 @@ export default function FoodDeliveryPage() {
         }
         .fd-count { font-size: 15px; color: #6b7280; font-weight: 600; }
         .fd-count strong { color: #111; font-weight: 800; }
-        .fd-sort-wrap {
-          position: relative;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          background: #fff;
-          padding: 0;
-          min-width: 120px;
+
+        /* ── CUSTOM SORT DROPDOWN (No overflow issues) ── */
+        .fd-sort-dropdown { position: relative; }
+        .fd-sort-btn {
+          display: flex; align-items: center; gap: 8px;
+          padding: 8px 14px;
+          background: #fff; border: 1px solid #e0e4f0;
+          border-radius: 8px; font-size: 13px; font-weight: 600;
+          color: #333; cursor: pointer; font-family: inherit;
+          transition: border-color 0.2s;
         }
-        .fd-sort {
-          padding: 8px 28px 8px 12px;
-          border: none;
-          border-radius: 6px;
-          font-size: 13px; font-weight: 600;
-          color: #333; background: transparent; outline: none;
-          cursor: pointer; font-family: inherit;
-          appearance: none;
-          width: 100%;
+        .fd-sort-btn:hover { border-color: #bbb; }
+        .fd-sort-menu {
+          position: absolute; top: calc(100% + 6px); right: 0;
+          min-width: 180px;
+          background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+          z-index: 200;
+          overflow: hidden;
+          animation: sortFade 0.15s ease;
         }
+        @keyframes sortFade {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .fd-sort-option {
+          padding: 10px 16px; font-size: 13px; color: #444;
+          cursor: pointer; transition: all 0.15s;
+          border-bottom: 1px solid #f5f5f5;
+        }
+        .fd-sort-option:last-child { border-bottom: none; }
+        .fd-sort-option:hover { background: #fff1f2; color: #e11d48; }
+        .fd-sort-option.active { background: #e11d48; color: #fff; }
 
         /* CARD GRID */
         .fd-grid {
@@ -439,6 +455,9 @@ export default function FoodDeliveryPage() {
           background: #fff; border-radius: 10px;
           border: 1px solid #e5e7eb;
         }
+        .fd-empty-icon { margin-bottom: 12px; color: #bbb; }
+        .fd-empty p { font-weight: 700; font-size: 16px; color: #111; margin: 0 0 4px; }
+        .fd-empty span { font-size: 13px; color: #888; }
         .fd-empty-btn {
           margin-top: 12px; padding: 9px 22px;
           background: #e11d48; color: #fff; font-weight: 700;
@@ -453,11 +472,35 @@ export default function FoodDeliveryPage() {
           .fd-cats-row { gap: 8px; }
           .fd-cat-card { min-width: 120px; padding: 8px 12px; }
         }
-        @media (max-width: 540px) {
+
+        /* ── MOBILE: Compact horizontal-scroll categories ── */
+        @media (max-width: 640px) {
           .fd-grid { grid-template-columns: 1fr; }
           .fd-body { padding: 14px 14px 40px; }
-          .fd-cats-row { gap: 6px; }
-          .fd-cat-card { min-width: 0; flex: 1; }
+          .fd-cats-strip { padding: 14px 0; }
+          .fd-cats-inner { padding: 0 12px; }
+          .fd-cats-label { font-size: 11px; margin-bottom: 10px; }
+          .fd-cats-row {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 8px;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+          }
+          .fd-cats-row::-webkit-scrollbar { display: none; }
+          .fd-cat-card {
+            min-width: auto;
+            padding: 8px 14px;
+            gap: 8px;
+            border-radius: 10px;
+            border-width: 1.5px;
+            flex-shrink: 0;
+          }
+          .fd-cat-icon { font-size: 18px; }
+          .fd-cat-icon svg { width: 18px; height: 18px; }
+          .fd-cat-name { font-size: 13px; white-space: nowrap; }
+          .fd-cat-count { font-size: 11px; white-space: nowrap; }
         }
       `}</style>
 
@@ -515,7 +558,10 @@ export default function FoodDeliveryPage() {
 
           {/* SIDEBAR */}
           <aside className="fd-sidebar">
-            <div className="fd-sb-head">Filter</div>
+            <div className="fd-sb-head">
+              Filter
+              <FiChevronDown size={16} />
+            </div>
 
             {/* Food Type */}
             <div className="fd-sb-section">
@@ -627,9 +673,11 @@ export default function FoodDeliveryPage() {
             {/* Cards */}
             {!loading && !error && cards.length === 0 && (
               <div className="fd-empty">
-                <div style={{ fontSize: 48, marginBottom: 12 }}>🍽️</div>
-                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No restaurants found</p>
-                <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters or search term</span>
+                <div className="fd-empty-icon">
+                  <FiCoffee size={48} />
+                </div>
+                <p>No restaurants found</p>
+                <span>Try adjusting your filters or search term</span>
                 <br />
                 <button className="fd-empty-btn" onClick={reset}>Reset Filters</button>
               </div>

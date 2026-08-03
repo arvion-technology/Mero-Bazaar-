@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import {
@@ -46,17 +46,16 @@ type BeautyService = {
   tags: string[];
   isHomeVisit: boolean;
   postedDaysAgo: number;
-  // FIX: added gender field so filter has data to work with
   gender: Gender;
 };
 
 /* ─────────── CATEGORY ICONS ─────────── */
-const SERVICE_CATEGORIES: { name: ServiceCategory; icon: IconType; count: number }[] = [
-  { name: "All", icon: FiGrid, count: 117 },
-  { name: "Makeup", icon: FaPaintBrush, count: 45 },
-  { name: "Hair", icon: FiScissors, count: 32 },
-  { name: "Nails", icon: FaHandSparkles, count: 18 },
-  { name: "Skin", icon: FiDroplet, count: 22 },
+const SERVICE_CATEGORIES: { name: ServiceCategory; icon: IconType; count: number; color: string }[] = [
+  { name: "All", icon: FiGrid, count: 117, color: "#374151" },
+  { name: "Makeup", icon: FaPaintBrush, count: 45, color: "#e11d48" },
+  { name: "Hair", icon: FiScissors, count: 32, color: "#7c3aed" },
+  { name: "Nails", icon: FaHandSparkles, count: 18, color: "#0f766e" },
+  { name: "Skin", icon: FiDroplet, count: 22, color: "#1d4ed8" },
 ];
 
 /* ─────────── DATA ─────────── */
@@ -178,7 +177,6 @@ const SORT_OPTIONS = [
 ];
 
 /* ─────────── PRICE PARSER ─────────── */
-// FIX: helper to extract numeric value from price strings like "NPR 2,000"
 const parsePrice = (priceStr: string): number => {
   const match = priceStr.replace(/,/g, "").match(/\d+/);
   return match ? parseInt(match[0], 10) : 0;
@@ -188,6 +186,8 @@ const parsePrice = (priceStr: string): number => {
 export default function BeautyWellnessPage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
   const [activeCategory, setActiveCategory] = useState<ServiceCategory>("All");
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>([]);
   const [homeVisit, setHomeVisit] = useState(false);
@@ -196,6 +196,17 @@ export default function BeautyWellnessPage() {
   const [selectedGender, setSelectedGender] = useState<Gender>("Any");
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+
+  // Close sort dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setIsSortOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const togglePriceRange = (pr: PriceRange) =>
     setSelectedPriceRanges((prev) =>
@@ -242,7 +253,6 @@ export default function BeautyWellnessPage() {
     if (activeCategory !== "All" && s.category !== activeCategory) return false;
     if (selectedServiceTypes.length && !selectedServiceTypes.some(st => s.subServices.some(sub => sub.toLowerCase().includes(st.toLowerCase()) || s.category.toLowerCase() === st.toLowerCase()))) return false;
 
-    // FIX: Price Range filter
     if (selectedPriceRanges.length) {
       const price = parsePrice(s.price);
       const matches = selectedPriceRanges.some((range) => {
@@ -255,10 +265,7 @@ export default function BeautyWellnessPage() {
       if (!matches) return false;
     }
 
-    // FIX: Home Visit filter
     if (homeVisit && !s.isHomeVisit) return false;
-
-    // FIX: Gender filter
     if (selectedGender !== "Any" && s.gender !== selectedGender) return false;
 
     return true;
@@ -272,6 +279,14 @@ export default function BeautyWellnessPage() {
     if (sort === "popular") return b.reviewCount - a.reviewCount;
     return 0;
   });
+
+  const sortLabel: Record<string, string> = {
+    newest: "Newest",
+    "price-low": "Price Low to High",
+    "price-high": "Price High to Low",
+    rating: "Highest Rated",
+    popular: "Most Popular",
+  };
 
   const renderStars = (rating: number, reviewCount: number) => {
     const fullStars = Math.floor(rating);
@@ -346,6 +361,37 @@ export default function BeautyWellnessPage() {
           box-shadow: 0 4px 20px rgba(0,0,0,0.2);
           font-family: inherit;
         }
+
+        /* ── CATEGORY STRIP ── */
+        .bw-cats-strip {
+          background: #fff; border-bottom: 1.5px solid #eaeaea; padding: 18px 0;
+        }
+        .bw-cats-inner {
+          max-width: 1200px; margin: 0 auto; padding: 0 24px;
+        }
+        .bw-cats-label {
+          font-size: 13px; font-weight: 700; color: #888;
+          margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.6px;
+        }
+        .bw-cats-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .bw-cat-card {
+          display: flex; align-items: center; gap: 10px;
+          padding: 10px 18px; border-radius: 14px;
+          border: 1.5px solid #e4e8f0; background: #fafbff;
+          cursor: pointer; transition: all 0.18s;
+          min-width: 120px; font-family: inherit; text-align: left;
+        }
+        .bw-cat-card:hover {
+          border-color: #e11d48; background: #fff1f2;
+          transform: translateY(-2px); box-shadow: 0 4px 16px rgba(225,29,72,0.12);
+        }
+        .bw-cat-card.active {
+          border-color: #e11d48; background: #ffe4e6;
+          box-shadow: 0 4px 16px rgba(225,29,72,0.2);
+        }
+        .bw-cat-icon { font-size: 22px; display: flex; align-items: center; }
+        .bw-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; }
+        .bw-cat-count { font-size: 11px; color: #888; display: block; }
 
         /* ── BODY LAYOUT ── */
         .bw-body {
@@ -491,24 +537,39 @@ export default function BeautyWellnessPage() {
         }
         .bw-count { font-size: 15px; color: #6b7280; font-weight: 600; }
         .bw-count strong { color: #111; font-weight: 800; }
-        .bw-sort-wrap {
-          position: relative;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          background: #fff;
-          padding: 0;
-          min-width: 120px;
+
+        /* ── CUSTOM SORT DROPDOWN (No overflow issues) ── */
+        .bw-sort-dropdown { position: relative; }
+        .bw-sort-btn {
+          display: flex; align-items: center; gap: 8px;
+          padding: 8px 14px;
+          background: #fff; border: 1px solid #e0e4f0;
+          border-radius: 8px; font-size: 13px; font-weight: 600;
+          color: #333; cursor: pointer; font-family: inherit;
+          transition: border-color 0.2s;
         }
-        .bw-sort {
-          padding: 8px 28px 8px 12px;
-          border: none;
-          border-radius: 6px;
-          font-size: 13px; font-weight: 600;
-          color: #333; background: transparent; outline: none;
-          cursor: pointer; font-family: inherit;
-          appearance: none;
-          width: 100%;
+        .bw-sort-btn:hover { border-color: #bbb; }
+        .bw-sort-menu {
+          position: absolute; top: calc(100% + 6px); right: 0;
+          min-width: 180px;
+          background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+          z-index: 200;
+          overflow: hidden;
+          animation: sortFade 0.15s ease;
         }
+        @keyframes sortFade {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .bw-sort-option {
+          padding: 10px 16px; font-size: 13px; color: #444;
+          cursor: pointer; transition: all 0.15s;
+          border-bottom: 1px solid #f5f5f5;
+        }
+        .bw-sort-option:last-child { border-bottom: none; }
+        .bw-sort-option:hover { background: #fff1f2; color: #e11d48; }
+        .bw-sort-option.active { background: #e11d48; color: #fff; }
 
         /* ── CARD GRID ── */
         .bw-grid {
@@ -613,6 +674,9 @@ export default function BeautyWellnessPage() {
           background: #fff; border-radius: 10px;
           border: 1px solid #e5e7eb;
         }
+        .bw-empty-icon { margin-bottom: 12px; color: #bbb; }
+        .bw-empty p { font-weight: 700; font-size: 16px; color: #111; margin: 0 0 4px; }
+        .bw-empty span { font-size: 13px; color: #888; }
         .bw-empty-btn {
           margin-top: 12px; padding: 9px 22px;
           background: #e11d48; color: #fff; font-weight: 700;
@@ -624,10 +688,38 @@ export default function BeautyWellnessPage() {
         @media (max-width: 900px) {
           .bw-sidebar { display: none; }
           .bw-grid { grid-template-columns: repeat(2, 1fr); }
+          .bw-cats-row { gap: 8px; }
+          .bw-cat-card { min-width: 120px; padding: 8px 12px; }
         }
-        @media (max-width: 540px) {
+
+        /* ── MOBILE: Compact horizontal-scroll categories ── */
+        @media (max-width: 640px) {
           .bw-grid { grid-template-columns: 1fr; }
           .bw-body { padding: 14px 14px 40px; }
+          .bw-cats-strip { padding: 14px 0; }
+          .bw-cats-inner { padding: 0 12px; }
+          .bw-cats-label { font-size: 11px; margin-bottom: 10px; }
+          .bw-cats-row {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 8px;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+          }
+          .bw-cats-row::-webkit-scrollbar { display: none; }
+          .bw-cat-card {
+            min-width: auto;
+            padding: 8px 14px;
+            gap: 8px;
+            border-radius: 10px;
+            border-width: 1.5px;
+            flex-shrink: 0;
+          }
+          .bw-cat-icon { font-size: 18px; }
+          .bw-cat-icon svg { width: 18px; height: 18px; }
+          .bw-cat-name { font-size: 13px; white-space: nowrap; }
+          .bw-cat-count { font-size: 11px; white-space: nowrap; }
         }
       `}</style>
 
@@ -652,6 +744,30 @@ export default function BeautyWellnessPage() {
           </div>
         </section>
 
+        {/* ── CATEGORY STRIP ── */}
+        <section className="bw-cats-strip">
+          <div className="bw-cats-inner">
+            <p className="bw-cats-label">Browse Categories</p>
+            <div className="bw-cats-row">
+              {SERVICE_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.name}
+                  className={`bw-cat-card${activeCategory === cat.name ? " active" : ""}`}
+                  onClick={() => setActiveCategory(cat.name)}
+                >
+                  <span className="bw-cat-icon" style={{ color: cat.color }}>
+                    <cat.icon size={22} />
+                  </span>
+                  <span>
+                    <span className="bw-cat-name">{cat.name}</span>
+                    <span className="bw-cat-count">{cat.count} listings</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── BODY ── */}
         <div className="bw-body">
 
@@ -659,7 +775,7 @@ export default function BeautyWellnessPage() {
           <aside className="bw-sidebar">
             <div className="bw-sb-head">
               Filter
-              <FiChevronRight size={16} />
+              <FiChevronDown size={16} />
             </div>
 
             {/* Service Category */}
@@ -771,29 +887,43 @@ export default function BeautyWellnessPage() {
               <span className="bw-count">
                 <strong>{sortedDisplayed.length}</strong> Hair, Beauty & Wellness found
               </span>
-              <div className="bw-sort-wrap">
-                <select
-                  className="bw-sort"
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                >
-                  {SORT_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-                <FiChevronDown
-                  size={12}
-                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#666" }}
-                />
+
+              {/* ── CUSTOM SORT DROPDOWN (fixes overflow) ── */}
+              <div className="bw-sort-dropdown" ref={sortRef}>
+                <button className="bw-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                  {sortLabel[sort]}
+                  <FiChevronDown
+                    size={14}
+                    style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                  />
+                </button>
+                {isSortOpen && (
+                  <div className="bw-sort-menu">
+                    {SORT_OPTIONS.map((opt) => (
+                      <div
+                        key={opt.value}
+                        className={`bw-sort-option${sort === opt.value ? " active" : ""}`}
+                        onClick={() => {
+                          setSort(opt.value);
+                          setIsSortOpen(false);
+                        }}
+                      >
+                        {opt.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Cards */}
             {sortedDisplayed.length === 0 ? (
               <div className="bw-empty">
-                <div style={{ fontSize: 48, marginBottom: 12 }}>💅</div>
-                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No services found</p>
-                <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters or search term</span>
+                <div className="bw-empty-icon">
+                  <FiScissors size={48} />
+                </div>
+                <p>No services found</p>
+                <span>Try adjusting your filters or search term</span>
                 <br />
                 <button className="bw-empty-btn" onClick={reset}>Reset Filters</button>
               </div>
