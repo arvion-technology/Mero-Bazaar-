@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiArrowLeft,
@@ -13,9 +12,8 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import dynamic from "next/dynamic";
-
-const MapSection = dynamic(() => import("./MapSection"), { ssr: false });
+import CustomDropdown from "./CustomDropdown";
+import { useListingForm } from "./ListingFormContext";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -37,162 +35,21 @@ const steps = [
 
 const propertyTypes = ["Apartment", "House", "Room", "Flat", "Villa", "Office Space", "Shop"];
 const listingTypes = ["Rent", "Sale"];
-const cities = ["Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur", "Chitwan"];
-const areas: Record<string, string[]> = {
-  Kathmandu: ["Kalanki", "Thamel", "Baneshwor", "Koteshwor", "Boudha", "Patan"],
-  Pokhara: ["Lakeside", "Mahendrapool", "Chipledhunga", "Bagar"],
-  Lalitpur: ["Patan", "Kupondole", "Jhamsikhel", "Pulchowk"],
-  Bhaktapur: ["Suryabinayak", "Madhyapur Thimi", "Nagadesh"],
-  Chitwan: ["Bharatpur", "Ratnanagar", "Khairahani"],
-};
-const wards = Array.from({ length: 35 }, (_, i) => `Ward ${i + 1}`);
-
-const cityCoords: Record<string, [number, number]> = {
-  Kathmandu: [27.7172, 85.3240],
-  Pokhara: [28.2096, 83.9856],
-  Lalitpur: [27.6644, 85.3188],
-  Bhaktapur: [27.6710, 85.4298],
-  Chitwan: [27.5291, 84.3542],
-};
-
-const areaCoords: Record<string, [number, number]> = {
-  Kalanki: [27.6947, 85.2816],
-  Thamel: [27.7154, 85.3123],
-  Baneshwor: [27.6856, 85.3289],
-  Koteshwor: [27.6758, 85.3492],
-  Boudha: [27.7215, 85.3620],
-  Patan: [27.6644, 85.3188],
-  Lakeside: [28.2096, 83.9856],
-  Mahendrapool: [28.2200, 83.9900],
-  Chipledhunga: [28.2150, 83.9800],
-  Bagar: [28.2050, 83.9750],
-  Kupondole: [27.6740, 85.3120],
-  Jhamsikhel: [27.6700, 85.3100],
-  Pulchowk: [27.6820, 85.3150],
-  Suryabinayak: [27.6800, 85.4200],
-  "Madhyapur Thimi": [27.6750, 85.3850],
-  Nagadesh: [27.6650, 85.3950],
-  Bharatpur: [27.5291, 84.3542],
-  Ratnanagar: [27.5200, 84.3600],
-  Khairahani: [27.5150, 84.3400],
-};
-
-function CustomDropdown({
-  label,
-  value,
-  options,
-  onChange,
-  required,
-}: {
-  label: string;
-  value: string;
-  options: string[];
-  onChange: (val: string) => void;
-  required?: boolean;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  return (
-    <div className="form-group" ref={ref} style={{ position: "relative" }}>
-      <label className="form-label">
-        {label}
-        {required && <span className="required">*</span>}
-      </label>
-      <div
-        className="custom-dropdown-trigger"
-        onClick={() => setIsOpen(!isOpen)}
-        tabIndex={0}
-        role="button"
-        aria-expanded={isOpen}
-      >
-        <span>{value}</span>
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={TEXT_MUTED}
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{
-            transform: isOpen ? "rotate(180deg)" : "none",
-            transition: "transform 0.2s",
-          }}
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </div>
-      {isOpen && (
-        <div className="custom-dropdown-menu">
-          {options.map((opt) => (
-            <div
-              key={opt}
-              className={`custom-dropdown-item ${opt === value ? "selected" : ""}`}
-              onClick={() => {
-                onChange(opt);
-                setIsOpen(false);
-              }}
-            >
-              {opt}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Helper to safely parse coordinates
-function safeCoord(input: string, fallback: number): number {
-  if (!input || input.trim() === "") return fallback;
-  const parsed = parseFloat(input);
-  return isNaN(parsed) ? fallback : parsed;
-}
 
 export default function RealEstateDetailsPage() {
   const router = useRouter();
-
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [propertyType, setPropertyType] = useState("Apartment");
-  const [listingType, setListingType] = useState("Rent");
-  const [city, setCity] = useState("Kathmandu");
-  const [area, setArea] = useState("Kalanki");
-  const [ward, setWard] = useState("Ward 14");
-  const [address, setAddress] = useState("");
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
+  const { formData, updateForm } = useListingForm();
 
   const descMax = 500;
-  const descLength = description.length;
-
-  const fallbackLat = areaCoords[area]?.[0] ?? cityCoords[city][0];
-  const fallbackLng = areaCoords[area]?.[1] ?? cityCoords[city][1];
-
-  const currentLat = safeCoord(latitude, fallbackLat);
-  const currentLng = safeCoord(longitude, fallbackLng);
+  const descLength = formData.description.length;
 
   const handleCityChange = (val: string) => {
-    setCity(val);
-    const newArea = areas[val]?.[0] || "";
-    setArea(newArea);
+    updateForm({ city: val });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !description) {
+    if (!formData.title || !formData.description) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -256,59 +113,16 @@ export default function RealEstateDetailsPage() {
         .back-link:hover { border-color: ${ACCENT}; background: #eff6ff; }
         .submit-btn { padding: 14px 40px; background: linear-gradient(135deg, ${ACCENT}, ${ACCENT_HOVER}); color: #fff; font-size: 15px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); font-family: inherit; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3); letter-spacing: 0.2px; display: flex; align-items: center; gap: 8px; }
         .submit-btn:hover { box-shadow: 0 6px 28px rgba(37, 99, 235, 0.4); transform: translateY(-2px); }
-
-        /* ── Custom Dropdown ── */
-        .custom-dropdown-trigger {
-          padding: 12px 16px;
-          border: 1.5px solid ${BORDER};
-          border-radius: 12px;
-          font-size: 14px;
-          color: ${TEXT_PRIMARY};
-          background: ${CARD_BG};
-          font-family: inherit;
-          width: 100%;
-          outline: none;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .custom-dropdown-trigger { padding: 12px 16px; border: 1.5px solid ${BORDER}; border-radius: 12px; font-size: 14px; color: ${TEXT_PRIMARY}; background: ${CARD_BG}; font-family: inherit; width: 100%; outline: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         .custom-dropdown-trigger:hover { border-color: #cbd5e1; background: #fafafa; }
         .custom-dropdown-trigger:focus { border-color: ${ACCENT}; background: ${CARD_BG}; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08); }
-        .custom-dropdown-menu {
-          position: absolute;
-          top: calc(100% + 4px);
-          left: 0;
-          right: 0;
-          background: ${CARD_BG};
-          border: 1.5px solid ${BORDER};
-          border-radius: 12px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.12);
-          z-index: 9999;
-          max-height: 240px;
-          overflow-y: auto;
-          animation: dropdownSlide 0.18s ease-out;
-        }
-        @keyframes dropdownSlide {
-          from { opacity: 0; transform: translateY(-6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .custom-dropdown-item {
-          padding: 10px 16px;
-          font-size: 14px;
-          color: ${TEXT_PRIMARY};
-          cursor: pointer;
-          transition: background 0.15s ease;
-          border-bottom: 1px solid #f1f5f9;
-        }
+        .custom-dropdown-menu { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: ${CARD_BG}; border: 1.5px solid ${BORDER}; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); z-index: 9999; max-height: 240px; overflow-y: auto; animation: dropdownSlide 0.18s ease-out; }
+        @keyframes dropdownSlide { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        .custom-dropdown-item { padding: 10px 16px; font-size: 14px; color: ${TEXT_PRIMARY}; cursor: pointer; transition: background 0.15s ease; border-bottom: 1px solid #f1f5f9; }
         .custom-dropdown-item:last-child { border-bottom: none; }
         .custom-dropdown-item:hover { background: #f0f7ff; color: ${ACCENT}; }
         .custom-dropdown-item.selected { background: #eff6ff; color: ${ACCENT}; font-weight: 600; }
-
-        /* ── Leaflet Map ── */
         .leaflet-container { border-radius: 12px; border: 1.5px solid ${BORDER}; width: 100%; height: 200px; z-index: 1; }
-
         @media (max-width: 900px) {
           .form-layout { grid-template-columns: 1fr; }
           .listing-container { padding: 20px 20px 48px; }
@@ -375,13 +189,27 @@ export default function RealEstateDetailsPage() {
               <div className="form-row">
                 <div className="form-group full-width">
                   <label className="form-label">Property Title<span className="required">*</span></label>
-                  <input type="text" className="form-input" placeholder="e.g. 2 BHK Apartment for Rent in Kalanki" value={title} onChange={(e) => setTitle(e.target.value)} required />
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. 2 BHK Apartment for Rent in Kalanki"
+                    value={formData.title}
+                    onChange={(e) => updateForm({ title: e.target.value })}
+                    required
+                  />
                 </div>
               </div>
               <div className="form-row">
                 <div className="form-group full-width">
                   <label className="form-label">Description<span className="required">*</span></label>
-                  <textarea className="form-textarea" placeholder="Describe your property..." value={description} maxLength={descMax} onChange={(e) => setDescription(e.target.value)} required />
+                  <textarea
+                    className="form-textarea"
+                    placeholder="Describe your property..."
+                    value={formData.description}
+                    maxLength={descMax}
+                    onChange={(e) => updateForm({ description: e.target.value })}
+                    required
+                  />
                   <div className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}>{descLength}/{descMax}</div>
                 </div>
               </div>
@@ -400,16 +228,16 @@ export default function RealEstateDetailsPage() {
                 <div className="form-row">
                   <CustomDropdown
                     label="Property Type"
-                    value={propertyType}
+                    value={formData.propertyType}
                     options={propertyTypes}
-                    onChange={setPropertyType}
+                    onChange={(v) => updateForm({ propertyType: v })}
                     required
                   />
                   <CustomDropdown
                     label="Listing Type"
-                    value={listingType}
+                    value={formData.listingType}
                     options={listingTypes}
-                    onChange={setListingType}
+                    onChange={(v) => updateForm({ listingType: v })}
                     required
                   />
                 </div>
@@ -425,73 +253,50 @@ export default function RealEstateDetailsPage() {
                   </div>
                 </div>
                 <div className="form-row">
-                  <CustomDropdown
-                    label="City"
-                    value={city}
-                    options={cities}
-                    onChange={handleCityChange}
-                    required
-                  />
-                  <CustomDropdown
-                    label="Area"
-                    value={area}
-                    options={areas[city] || []}
-                    onChange={setArea}
-                    required
-                  />
+                  <div className="form-group">
+                    <label className="form-label">City<span className="required">*</span></label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. Kathmandu"
+                      value={formData.city}
+                      onChange={(e) => handleCityChange(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Area<span className="required">*</span></label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. Kalanki"
+                      value={formData.area}
+                      onChange={(e) => updateForm({ area: e.target.value })}
+                      required
+                    />
+                  </div>
                 </div>
                 <div className="form-row">
-                  <CustomDropdown
-                    label="Ward"
-                    value={ward}
-                    options={wards}
-                    onChange={setWard}
-                    required
-                  />
+                  <div className="form-group">
+                    <label className="form-label">Ward<span className="required">*</span></label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. Ward 5"
+                      value={formData.ward}
+                      onChange={(e) => updateForm({ ward: e.target.value })}
+                      required
+                    />
+                  </div>
                   <div className="form-group">
                     <label className="form-label">Address (Optional)</label>
-                    <input type="text" className="form-input" placeholder="Kalanki, Kathmandu, Nepal" value={address} onChange={(e) => setAddress(e.target.value)} />
-                  </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Latitude (Optional)</label>
                     <input
                       type="text"
-                      inputMode="decimal"
                       className="form-input"
-                      placeholder="27.7172"
-                      value={latitude}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        // Only allow digits, decimal point, and minus sign
-                        if (val === "" || /^-?\d*\.?\d*$/.test(val)) {
-                          setLatitude(val);
-                        }
-                      }}
+                      placeholder="Kalanki, Kathmandu, Nepal"
+                      value={formData.address}
+                      onChange={(e) => updateForm({ address: e.target.value })}
                     />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Longitude (Optional)</label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      className="form-input"
-                      placeholder="85.3240"
-                      value={longitude}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val === "" || /^-?\d*\.?\d*$/.test(val)) {
-                          setLongitude(val);
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-group full-width">
-                    <label className="form-label">Map Location</label>
-                    <MapSection center={[currentLat, currentLng]} area={area} city={city} />
                   </div>
                 </div>
               </div>

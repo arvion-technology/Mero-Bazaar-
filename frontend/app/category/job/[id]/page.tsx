@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
-import { FiHeart, FiShare2, FiMapPin, FiBriefcase, FiClock, FiEye, FiMessageSquare, FiUser, FiUsers, FiCalendar, FiCheckCircle, FiSend, FiPlusSquare, FiCheck } from "react-icons/fi";
-import { FaStar, FaRegStar, FaHeart, FaGraduationCap } from "react-icons/fa";
-import { api } from "@/lib/api";                          
-import { toJobDetail, toJobCard } from "@/lib/adapter";   
-import type { JobDetail } from "@/app/types/listing";      
+import { FiHeart, FiShare2, FiMapPin, FiBriefcase, FiClock, FiMessageSquare, FiCalendar, FiSend, FiPlusSquare, FiCheck, FiUser } from "react-icons/fi";
+import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
+import { api } from "@/lib/api";
+import { toJobDetail, toJobCard } from "@/lib/adapter";
+import type { JobDetail } from "@/app/types/listing";
 import type { JobCard, JobListing } from "../../../types/jobs";
 
 function StarRating({ rating }: { rating: number }) {
@@ -29,12 +29,39 @@ export default function JobDetailPage() {
   const [job, setJob] = useState<JobDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [similarJobs, setSimilarJobs] = useState<JobCard[]>([]);
-
-  const [activeImg, setActiveImg] = useState(0);
+  const [geoCoords, setGeoCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
   const [isFav, setIsFav] = useState(false);
   const [showFull, setShowFull] = useState(false);
   const [applied, setApplied] = useState(false);
   const [msgSent, setMsgSent] = useState(false);
+
+  useEffect(() => {
+    if (!job) return;
+    if (job.lat != null && job.lng != null) return;
+    if (!job.location) return;
+
+    let cancelled = false;
+    const geocode = async () => {
+      setGeoLoading(true);
+      try {
+        const query = encodeURIComponent(job.location);
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=np`
+        );
+        const data = await res.json();
+        if (!cancelled && data?.[0]) {
+          setGeoCoords({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+        }
+      } catch (err) {
+        console.error("Geocoding failed:", err);
+      } finally {
+        if (!cancelled) setGeoLoading(false);
+      }
+    };
+    geocode();
+    return () => { cancelled = true; };
+  }, [job]);
 
   useEffect(() => {
     if (!id) return;
@@ -67,8 +94,9 @@ export default function JobDetailPage() {
   if (loading) return <div style={{ padding: 40, textAlign: "center" }}>Loading...</div>;
   if (!job) return <div style={{ padding: 40, textAlign: "center" }}>Job not found</div>;
 
-  const visibleThumbs = job.images.slice(0, 5);
-  const extraCount = job.images.length - 5;
+const mapLat = job.lat ?? geoCoords?.lat ?? null;
+const mapLng = job.lng ?? geoCoords?.lng ?? null;
+const hasCoords = mapLat != null && mapLng != null;
 
   return (
     <>
@@ -108,57 +136,10 @@ export default function JobDetailPage() {
         }
         .jd-left { display: flex; flex-direction: column; gap: 16px; }
 
-        /* IMAGE CARD */
-        .jd-img-card {
-          background: #fff; border-radius: 16px;
-          overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,0.07);
-        }
-        .jd-main-img-wrap {
-          position: relative; width: 100%; aspect-ratio: 16/9;
-          overflow: hidden; background: #1a1a2e; cursor: zoom-in;
-        }
-        .jd-main-img {
-          width: 100%; height: 100%; object-fit: cover;
-          transition: transform 0.4s ease; display: block;
-        }
-        .jd-main-img-wrap:hover .jd-main-img { transform: scale(1.04); }
-
-        /* Thumbnails */
-        .jd-thumbs {
-          display: flex; gap: 8px; padding: 10px 12px;
-          overflow-x: auto; background: #fff; scrollbar-width: none;
-        }
-        .jd-thumbs::-webkit-scrollbar { display: none; }
-        .jd-thumb-wrap {
-          flex-shrink: 0; position: relative;
-          width: 80px; height: 56px;
-          border-radius: 8px; overflow: hidden; cursor: pointer;
-          border: 2.5px solid transparent; transition: border-color 0.2s, transform 0.18s;
-        }
-        .jd-thumb-wrap:hover { transform: translateY(-2px); }
-        .jd-thumb-wrap.active { border-color: #1a5fd4; }
-        .jd-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .jd-thumb-overlay {
-          position: absolute; inset: 0; background: rgba(0,0,0,0.54);
-          display: flex; align-items: center; justify-content: center;
-          color: #fff; font-size: 14px; font-weight: 800; font-family: 'Inter', sans-serif;
-        }
-
         /* INFO CARD */
         .jd-info-card {
           background: #fff; border-radius: 16px;
           padding: 20px 22px 22px; box-shadow: 0 2px 14px rgba(0,0,0,0.07);
-        }
-        .jd-badges-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-        .jd-badge-verified {
-          display: inline-flex; align-items: center; gap: 5px;
-          background: #eafaf1; color: #1e8449; font-size: 11px; font-weight: 700;
-          padding: 3px 10px; border-radius: 5px; letter-spacing: 0.3px; text-transform: uppercase;
-        }
-        .jd-badge-featured {
-          display: inline-flex; align-items: center; gap: 5px;
-          background: #fff8e1; color: #b7950b; font-size: 11px; font-weight: 700;
-          padding: 3px 10px; border-radius: 5px; letter-spacing: 0.3px; text-transform: uppercase;
         }
         .jd-title-row {
           display: flex; align-items: flex-start; justify-content: space-between;
@@ -213,7 +194,7 @@ export default function JobDetailPage() {
 
         /* JOB DETAILS CHIPS */
         .jd-specs-bar {
-          display: grid; grid-template-columns: repeat(5, 1fr);
+          display: grid; grid-template-columns: repeat(2, 1fr);
           gap: 8px; margin-bottom: 0;
         }
         .jd-spec-chip {
@@ -237,9 +218,9 @@ export default function JobDetailPage() {
           padding: 20px 22px; box-shadow: 0 2px 14px rgba(0,0,0,0.07);
         }
         .jd-section-title { font-size: 16px; font-weight: 800; color: #1a1a1a; margin: 0 0 12px; }
-        .jd-desc-text { font-size: 13.5px; color: #444; line-height: 1.8; margin: 0; }
+        .jd-desc-text { font-size: 13.5px; color: #444; line-height: 1.8; margin: 0; white-space: pre-line; }
         .jd-desc-text.clamped {
-          display: -webkit-box; -webkit-line-clamp: 3;
+          display: -webkit-box; -webkit-line-clamp: 6;
           -webkit-box-orient: vertical; overflow: hidden;
         }
         .jd-see-more {
@@ -249,22 +230,6 @@ export default function JobDetailPage() {
           padding: 0; font-family: inherit; transition: opacity 0.18s;
         }
         .jd-see-more:hover { opacity: 0.72; }
-
-        /* REQ & BENEFITS */
-        .jd-req-benefits-card {
-          background: #fff; border-radius: 16px;
-          padding: 20px 22px; box-shadow: 0 2px 14px rgba(0,0,0,0.07);
-        }
-        .jd-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .jd-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-        .jd-list li {
-          font-size: 13px; color: #444; display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
-        }
-        .jd-list li::before {
-          content: "•"; color: #1a5fd4; font-weight: 900;
-          font-size: 16px; line-height: 1.2; flex-shrink: 0;
-        }
-        .jd-list.benefits li::before { color: #27ae60; }
 
         /* SIMILAR JOBS */
         .jd-similar-card {
@@ -287,10 +252,9 @@ export default function JobDetailPage() {
           flex-shrink: 0; width: 160px; background: #f8f9fb;
           border-radius: 12px; overflow: hidden; text-decoration: none;
           border: 1.5px solid #eee; transition: transform 0.2s, box-shadow 0.2s;
+          padding: 10px;
         }
         .jd-sim-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        .jd-sim-img { width: 100%; height: 80px; object-fit: cover; display: block; }
-        .jd-sim-body { padding: 8px 10px 10px; }
         .jd-sim-company { font-size: 10px; font-weight: 700; color: #1a5fd4; text-transform: uppercase; margin: 0 0 2px; }
         .jd-sim-title { font-size: 12px; font-weight: 700; color: #1a1a1a; margin: 0 0 4px; line-height: 1.3; }
         .jd-sim-type { font-size: 10px; font-weight: 600; color: #3b5bdb; background: #eef2ff; padding: 2px 6px; border-radius: 10px; }
@@ -314,11 +278,16 @@ export default function JobDetailPage() {
           font-size: 14px; font-weight: 800; color: #1a1a1a;
           margin: 0 0 14px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;
         }
-        .jd-company-logo-wrap {
-          width: 56px; height: 56px; border-radius: 12px; overflow: hidden;
-          border: 1.5px solid #eee; flex-shrink: 0;
+        .jd-company-logo {
+          width: 56px; height: 56px; border-radius: 12px;
+          background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+          border: 1.5px solid #a5b4fc; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
         }
-        .jd-company-logo { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .jd-company-logo-text {
+          font-size: 11px; font-weight: 800; color: #4f46e5;
+          text-align: center; line-height: 1.2; letter-spacing: 0.5px;
+        }
         .jd-company-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
         .jd-company-name { font-size: 16px; font-weight: 800; color: #1a1a1a; margin: 0 0 4px; }
         .jd-rating-row { display: flex; align-items: center; gap: 5px; }
@@ -355,16 +324,6 @@ export default function JobDetailPage() {
           font-size: 14px; font-weight: 800; color: #1a1a1a;
           margin: 0; padding: 16px 18px 12px; border-bottom: 1px solid #f0f0f0;
         }
-        .jd-map-img-wrap { position: relative; height: 130px; overflow: hidden; }
-        .jd-map-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .jd-map-overlay {
-          position: absolute; inset: 0;
-          background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 100%);
-          display: flex; flex-direction: column; justify-content: flex-end;
-          padding: 10px 14px;
-        }
-        .jd-map-area { font-size: 13px; font-weight: 700; color: #fff; margin: 0; }
-        .jd-map-dist { font-size: 11.5px; color: rgba(255,255,255,0.8); }
         .jd-map-city { font-size: 12px; color: #555; padding: 10px 18px 4px; font-weight: 500; }
         .jd-map-link {
           display: inline-flex; align-items: center; gap: 4px;
@@ -373,6 +332,7 @@ export default function JobDetailPage() {
           transition: opacity 0.18s;
         }
         .jd-map-link:hover { opacity: 0.75; }
+        .jd-map-unavailable { padding: 16px 18px; font-size: 13px; color: #888; }
 
         /* POSTED BY CARD */
         .jd-postedby-card {
@@ -386,8 +346,10 @@ export default function JobDetailPage() {
         .jd-poster-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
         .jd-poster-avatar-wrap { position: relative; flex-shrink: 0; }
         .jd-poster-avatar {
-          width: 52px; height: 52px; border-radius: 50%; object-fit: cover;
-          border: 2.5px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.14); display: block;
+          width: 52px; height: 52px; border-radius: 50%;
+          background: #eef2ff; border: 2.5px solid #fff;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.14);
+          display: flex; align-items: center; justify-content: center;
         }
         .jd-poster-online {
           position: absolute; bottom: 2px; right: 2px;
@@ -414,12 +376,9 @@ export default function JobDetailPage() {
         @media (max-width: 900px) {
           .jd-container { grid-template-columns: 1fr; }
           .jd-right { position: static; }
-          .jd-two-col { grid-template-columns: 1fr; }
-          .jd-specs-bar { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 640px) {
           .jd-container { padding: 0 14px; margin-top: 14px; }
-          .jd-specs-bar { grid-template-columns: repeat(2, 1fr); }
           .jd-cta-row { flex-direction: column; }
         }
       `}</style>
@@ -453,41 +412,8 @@ export default function JobDetailPage() {
           <div className="jd-container">
           {/* LEFT */}
           <div className="jd-left">
-            {/* IMAGE GALLERY */}
-            <div className="jd-img-card">
-              <div className="jd-main-img-wrap">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={job.images[activeImg]} alt={job.title} className="jd-main-img" />
-              </div>
-              <div className="jd-thumbs">
-                {visibleThumbs.map((img, i) => (
-                  <div
-                    key={i}
-                    className={`jd-thumb-wrap${activeImg === i ? " active" : ""}`}
-                    onClick={() => setActiveImg(i)}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} alt={`Thumb ${i + 1}`} className="jd-thumb-img" />
-                    {i === 4 && extraCount > 0 && (
-                      <div className="jd-thumb-overlay">+{extraCount}</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* INFO */}
             <div className="jd-info-card">
-              <div className="jd-badges-row">
-                {job.isVerified && (
-                  <span className="jd-badge-verified">
-                    <FiCheckCircle size={10} color="#1e8449" />
-                    Verified Job
-                  </span>
-                )}
-                {job.isFeatured && <span className="jd-badge-featured">⭐ Featured</span>}
-              </div>
-
               <div className="jd-title-row">
                 <h1 className="jd-title">{job.title}</h1>
                 <div className="jd-action-btns">
@@ -510,35 +436,34 @@ export default function JobDetailPage() {
                 </div>
               </div>
 
-              <p className="jd-salary">{job.salary}</p>
+              <p className="jd-salary">{job.salary}</p>      
 
-              <div className="jd-meta-row">
-                <span className="jd-meta-item">
-                  <FiMapPin size={13} color="#bbb" />
-                  {job.location}
-                </span>
-                <span className="jd-meta-dot" />
-                <span className="jd-meta-item">
-                  <FiBriefcase size={13} color="#bbb" />
-                  {job.type}
-                </span>
-                <span className="jd-meta-dot" />
-                <span className="jd-meta-item">
-                  <FiClock size={13} color="#bbb" />
-                  Posted {job.postedDaysAgo} Day{job.postedDaysAgo > 1 ? "s" : ""} ago
-                </span>
-                <span className="jd-meta-dot" />
-                <span className="jd-meta-item" style={{ color: "#aaa" }}>
-                  <FiEye size={13} color="#bbb" />
-                  {job.views} views
-                </span>
-              </div>
+            {/* CTA + SPECS  */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "0",
+                }}
+              >
+                <div className="jd-specs-bar" style={{ flex: 1 }}>
+                  <div className="jd-spec-chip">
+                    <div className="jd-spec-icon"><FiBriefcase size={18} color="#1a5fd4" /></div>
+                    <span className="jd-spec-val">{job.type}</span>
+                    <span className="jd-spec-label">Employment Type</span>
+                  </div>
+                  <div className="jd-spec-chip">
+                    <div className="jd-spec-icon"><FiCalendar size={18} color="#1a5fd4" /></div>
+                    <span className="jd-spec-val">{job.postedDate}</span>
+                    <span className="jd-spec-label">Posted</span>
+                  </div>
+                </div>
 
-              {/* CTA BUTTONS */}
-              <div className="jd-cta-row" style={{ marginBottom: "18px" }}>
                 <button
                   className={`jd-btn-apply${applied ? " applied" : ""}`}
                   onClick={() => setApplied(!applied)}
+                  style={{ flex: "0 0 auto", minWidth: 160 }}
                 >
                   {applied ? (
                     <><FiCheck size={15} color="#fff" /> Applied!</>
@@ -546,39 +471,6 @@ export default function JobDetailPage() {
                     <><FiSend size={15} color="#fff" /> Apply Now</>
                   )}
                 </button>
-                <button className="jd-btn-chat">
-                  <FiMessageSquare size={15} color="#1a5fd4" />
-                  Chat with Employer
-                </button>
-              </div>
-
-              {/* SPECS */}
-              <div className="jd-specs-bar">
-                <div className="jd-spec-chip">
-                  <div className="jd-spec-icon"><FiUser size={18} color="#1a5fd4" /></div>
-                  <span className="jd-spec-val">{job.experience}</span>
-                  <span className="jd-spec-label">Experience</span>
-                </div>
-                <div className="jd-spec-chip">
-                  <div className="jd-spec-icon"><FiBriefcase size={18} color="#1a5fd4" /></div>
-                  <span className="jd-spec-val">{job.type}</span>
-                  <span className="jd-spec-label">Employment Type</span>
-                </div>
-                <div className="jd-spec-chip">
-                  <div className="jd-spec-icon"><FaGraduationCap size={18} color="#1a5fd4" /></div>
-                  <span className="jd-spec-val">{job.education}</span>
-                  <span className="jd-spec-label">Education</span>
-                </div>
-                <div className="jd-spec-chip">
-                  <div className="jd-spec-icon"><FiUsers size={18} color="#1a5fd4" /></div>
-                  <span className="jd-spec-val">{job.vacancies} openings</span>
-                  <span className="jd-spec-label">Vacancies</span>
-                </div>
-                <div className="jd-spec-chip">
-                  <div className="jd-spec-icon"><FiCalendar size={18} color="#1a5fd4" /></div>
-                  <span className="jd-spec-val">{job.postedDate}</span>
-                  <span className="jd-spec-label">Posted</span>
-                </div>
               </div>
             </div>
 
@@ -591,24 +483,6 @@ export default function JobDetailPage() {
               </button>
             </div>
 
-            {/* REQUIREMENTS & BENEFITS */}
-            <div className="jd-req-benefits-card">
-              <div className="jd-two-col">
-                <div>
-                  <h2 className="jd-section-title">Requirements</h2>
-                  <ul className="jd-list">
-                    {job.requirements.map((r, i) => <li key={i}>{r}</li>)}
-                  </ul>
-                </div>
-                <div>
-                  <h2 className="jd-section-title">Benefits</h2>
-                  <ul className="jd-list benefits">
-                    {job.benefits.map((b, i) => <li key={i}>{b}</li>)}
-                  </ul>
-                </div>
-              </div>
-            </div>
-
             {/* SIMILAR JOBS */}
             <div className="jd-similar-card">
               <div className="jd-similar-head">
@@ -618,13 +492,9 @@ export default function JobDetailPage() {
               <div className="jd-similar-scroll">
                 {similarJobs.map((s) => (
                   <Link key={s.id} href={`/category/job/${s.id}`} className="jd-sim-card">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={s.thumb} alt={s.title} className="jd-sim-img" />
-                    <div className="jd-sim-body">
-                      <p className="jd-sim-company">{s.company}</p>
-                      <p className="jd-sim-title">{s.title}</p>
-                      <span className="jd-sim-type">{s.type}</span>
-                    </div>
+                    <p className="jd-sim-company">{s.company}</p>
+                    <p className="jd-sim-title">{s.title}</p>
+                    <span className="jd-sim-type">{s.type}</span>
                   </Link>
                 ))}
               </div>
@@ -633,84 +503,50 @@ export default function JobDetailPage() {
 
           {/* RIGHT */}
           <div className="jd-right">
-            {/* COMPANY CARD */}
-            <div className="jd-company-card">
-              <p className="jd-company-card-title">Company information</p>
-              <div className="jd-company-top">
-                <div className="jd-company-logo-wrap">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={job.company.logo} alt={job.company.name} className="jd-company-logo" />
+          {/* MAP CARD */}
+          <div className="jd-map-card">
+            <p className="jd-map-card-title">Location</p>
+            {geoLoading ? (
+              <p className="jd-map-unavailable">Loading map...</p>
+            ) : hasCoords ? (
+              <>
+                <div style={{ height: 160, overflow: "hidden" }}>
+                  <iframe
+                    title="Job Location Map"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0, display: "block" }}
+                    loading="lazy"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapLng! - 0.015}%2C${mapLat! - 0.010}%2C${mapLng! + 0.015}%2C${mapLat! + 0.010}&layer=mapnik&marker=${mapLat}%2C${mapLng}`}
+                  />
                 </div>
-                <div>
-                  <p className="jd-company-name">{job.company.name}</p>
-                  <div className="jd-rating-row">
-                    <span className="jd-rating-num">{job.company.rating}</span>
-                    <StarRating rating={job.company.rating} />
-                    <span className="jd-reviews">({job.company.reviewCount} Reviews)</span>
-                  </div>
-                </div>
-              </div>
-              <div className="jd-company-info">
-                <div className="jd-ci-row">
-                  <span className="jd-ci-label">Industry</span>
-                  <span className="jd-ci-val">{job.company.industry}</span>
-                </div>
-                <div className="jd-ci-row">
-                  <span className="jd-ci-label">Company Size</span>
-                  <span className="jd-ci-val">{job.company.size}</span>
-                </div>
-                <div className="jd-ci-row">
-                  <span className="jd-ci-label">Website</span>
-                  <span className="jd-ci-val">
-                    <a href={job.company.website} target="_blank" rel="noopener noreferrer">
-                      {job.company.website.replace("https://", "")}
-                    </a>
-                  </span>
-                </div>
-                <div className="jd-ci-row">
-                  <span className="jd-ci-label">Location</span>
-                  <span className="jd-ci-val">{job.company.location}</span>
-                </div>
-              </div>
-              <button className="jd-btn-profile">
-                <FiPlusSquare size={14} color="#1a5fd4" />
-                View Company Profile
-              </button>
-            </div>
-
-            {/* MAP CARD */}
-            <div className="jd-map-card">
-              <p className="jd-map-card-title">Location</p>
-              {/* Real OpenStreetMap embed — no API key needed */}
-              <div style={{ height: 160, overflow: "hidden" }}>
-                <iframe
-                  title="Job Location Map"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0, display: "block" }}
-                  loading="lazy"
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${job.lng - 0.015}%2C${job.lat - 0.010}%2C${job.lng + 0.015}%2C${job.lat + 0.010}&layer=mapnik&marker=${job.lat}%2C${job.lng}`}
-                />
-              </div>
-              <p className="jd-map-city">{job.location}</p>
-              <a
-                href={`https://www.openstreetmap.org/?mlat=${job.lat}&mlon=${job.lng}#map=15/${job.lat}/${job.lng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="jd-map-link"
-              >
-                <FiMapPin size={12} color="#1a5fd4" />
-                View Full Map
-              </a>
-            </div>
+                <p className="jd-map-city">{job.location}</p>
+                <a
+                  href={`https://www.openstreetmap.org/?mlat=${mapLat}&mlon=${mapLng}#map=15/${mapLat}/${mapLng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="jd-map-link"
+                >
+                  <FiMapPin size={12} color="#1a5fd4" />
+                  View Full Map
+                </a>
+              </>
+            ) : (
+              <>
+                <p className="jd-map-unavailable">Location not available</p>
+                <p className="jd-map-city" style={{ paddingTop: 0 }}>{job.location}</p>
+              </>
+            )}
+          </div>
 
             {/* POSTED BY CARD */}
             <div className="jd-postedby-card">
               <p className="jd-postedby-title">Posted By</p>
               <div className="jd-poster-top">
                 <div className="jd-poster-avatar-wrap">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={job.postedBy.avatar} alt={job.postedBy.name} className="jd-poster-avatar" />
+                  <div className="jd-poster-avatar">
+                    <FiUser size={22} color="#1a5fd4" />
+                  </div>
                   <span className="jd-poster-online" />
                 </div>
                 <div>

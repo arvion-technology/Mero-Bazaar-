@@ -1,7 +1,12 @@
 import { JobListing } from "@/app/types/jobs";
-import type { DBListing, Vehicle } from "../app/types/listing";
-import type { RegisterPayload, LoginPayload, AuthResponse } from "@/app/types/auth";
-import type { SecondHandListing } from "@/app/types/secondhand";   
+import type { DBListing, Vehicle } from "../app/types/vehicle";
+import type { RegisterPayload, LoginPayload, AuthResponse } from "../app/types/auth";
+import type { SecondhandListing } from "../app/types/secondhand";
+import type { RentalListing } from "../app/types/realestate";
+import type { TradesListing, CreateTradesPayload } from "../app/types/trades";
+import type { AgricultureListing } from "../app/types/agriculture";
+import type { FoodsListing } from "../app/types/foods";
+import type { MedicalListing } from "@/app/types/medical";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -24,7 +29,7 @@ async function get<T>(path: string, params?: URLSearchParams): Promise<T> {
 
 async function post<T>(path: string, body: unknown): Promise<T> {
   const token = getToken();
-  const res = await fetch(`${BASE}${path}`, {  // ← no /api prefix
+  const res = await fetch(`${BASE}${path}`, {  
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -33,8 +38,36 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || `Api error ${res.status}`);  // ← fixed
+  if (!res.ok) throw new Error(data.message || `Api error ${res.status}`); 
   return data;
+}
+
+async function patch<T>(path: string, body: unknown): Promise<T> {
+  const token = getToken();
+  const res = await fetch(`${BASE}${path}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || `Api error ${res.status}`);
+  return data;
+}
+
+async function del<T>(path: string): Promise<T> {
+  const token = getToken();
+  const res = await fetch(`${BASE}${path}`, {
+    method: "DELETE",
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.message || `Api error ${res.status}`);
+  return data as T;
 }
 
 export const api = {
@@ -43,10 +76,51 @@ export const api = {
 
   getListings: () => get<DBListing[]>('/listings'),
   getVehicles: () => get<Vehicle[]>('/vehicles'),
+  
   getJobs:     (params?: URLSearchParams) => get<JobListing[]>('/api/jobs', params),
   getJob:      (id: string) => get<JobListing>(`/api/jobs/${id}`),
+
   getSecondhandListings: (params?: URLSearchParams) =>
-  get<SecondHandListing[]>('/api/secondhand-goods', params),
+    get<SecondhandListing[]>('/api/secondhand-goods', params),
   getSecondhandListing: (id: string) =>
-  get<SecondHandListing>(`/api/secondhand-goods/${id}`),
+    get<SecondhandListing>(`/api/secondhand-goods/${id}`),
+
+  getRentals: (params?: URLSearchParams) =>
+    get<RentalListing[]>('/api/rental', params),
+  getRental:  (id: string) =>
+    get<RentalListing>(`/api/rental/${id}`),
+
+  getTrades: (params?: URLSearchParams) =>
+    get<TradesListing[]>('/api/trades', params),
+  getTrade: (id: string) =>
+    get<TradesListing>(`/api/trades/${id}`),
+  getEmergencyTrades: (city?: string) =>
+    get<TradesListing[]>('/api/trades/emergency', city ? new URLSearchParams({ city }) : undefined),
+  getNearbyTrades: (latitude: number, longitude: number, km: number) =>
+    get<TradesListing[]>('/api/trades/nearby', new URLSearchParams({
+      latitude: String(latitude),
+      longitude: String(longitude),
+      km: String(km),
+    })),
+  createTrade: (payload: CreateTradesPayload) =>
+    post<TradesListing>('/api/trades', payload),
+  updateTrade: (id: string, payload: Partial<CreateTradesPayload>) =>
+    patch<TradesListing>(`/api/trades/${id}`, payload),
+  removeTrade: (id: string) =>
+    del<{ success: boolean }>(`/api/trades/${id}`),
+
+  getAgricultureListings: (params?: URLSearchParams) =>
+   get<AgricultureListing[]>('/api/agriculture', params),
+  getAgricultureListing: (id: string) =>
+    get<AgricultureListing>(`/api/agriculture/${id}`),
+
+  getFoods: (params?: URLSearchParams) =>
+    get<FoodsListing[]>('/api/foods', params),
+  getFood: (id: string) =>
+    get<FoodsListing>(`/api/foods/${id}`),
+
+  getMedicalListings: (params?: URLSearchParams) =>
+    get<MedicalListing[]>('/api/medical', params),
+  getMedicalListing: (id: string) =>
+    get<MedicalListing>(`/api/medical/${id}`),
 };

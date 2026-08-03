@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { api } from "@/lib/api";
-import type { SecondHandListing, SecondHandCategory, SecondHandCondition } from "@/app/types/secondhand";
+import type { SecondhandListing, SecondHandCategory, SecondhandCondition } from "@/app/types/secondhand";
 import {
   FiSearch,
   FiMapPin,
@@ -14,9 +14,6 @@ import {
   FiCheckCircle,
   FiChevronLeft,
   FiChevronRight,
-  FiLoader,
-  FiAlertTriangle,
-  FiShoppingBag,
 } from "react-icons/fi";
 import {
   FaHeart,
@@ -47,13 +44,13 @@ const CATEGORY_ICONS: {
 type Condition = "Like New" | "Good" | "Fair" | "For parts";
 const CONDITIONS: Condition[] = ["Like New", "Good", "Fair", "For parts"];
 
-const CONDITION_TO_DB: Record<Condition, SecondHandCondition> = {
+const CONDITION_TO_DB: Record<Condition, SecondhandCondition> = {
   "Like New": "LIKE_NEW",
   "Good": "GOOD",
   "Fair": "FAIR",
   "For parts": "FOR_PARTS",
 };
-const CONDITION_FROM_DB: Record<SecondHandCondition, Condition> = {
+const CONDITION_FROM_DB: Record<SecondhandCondition, Condition> = {
   LIKE_NEW: "Like New",
   GOOD: "Good",
   FAIR: "Fair",
@@ -69,39 +66,26 @@ const CONDITION_BADGE: Record<Condition, { bg: string; color: string; dot: strin
 
 const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal"];
 const PLACEHOLDER_IMG = "/placeholder-item.jpg";
-const IMG_BASE = process.env.NEXT_PUBLIC_API_URL;
+const IMG_BASE = process.env.NEXT_PUBLIC_API_URL;   
 
-function daysAgo(dateStr: string) {
+function daysAgo(dateStr: string | Date) {
   const diffMs = Date.now() - new Date(dateStr).getTime();
   return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 }
 
 export default function SecondhandPage() {
-  const [listings, setListings] = useState<SecondHandListing[]>([]);
+  const [listings, setListings] = useState<SecondhandListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const sortRef = useRef<HTMLDivElement>(null);
   const [activeCategory, setActiveCategory] = useState<SecondHandCategory | "">("");
   const [selectedConditions, setSelectedConditions] = useState<Condition[]>([]);
   const [selectedCity, setSelectedCity] = useState("");
   const [priceRange, setPriceRange] = useState<number>(10000);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
-
- 
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
-        setIsSortOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
 
   const loadListings = () => {
     setLoading(true);
@@ -112,9 +96,43 @@ export default function SecondhandPage() {
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   };
+  async function loadListings() {
+    setLoading(true);
+    setLoadError(false);
+    try {
+      const data = await api.getSecondhandListings();
+      setListings(data);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    loadListings();
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setLoadError(false);
+
+      try {
+        const data = await api.getSecondhandListings();
+        if (cancelled) return;
+        setListings(data);
+        setLoading(false);
+      } catch {
+        if (cancelled) return;
+        setLoadError(true);
+        setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
@@ -148,7 +166,15 @@ export default function SecondhandPage() {
     setSearch("");
   };
 
-  const displayed = listings.filter((l) => {
+  // Guard out listings with no `secondhand` relation before filtering on its fields ΓÇö
+  // a SECONDHAND-category listing missing this relation is a backend data issue,
+  // not something this page should try to render.
+  const withSecondhand = listings.filter(
+    (l): l is SecondhandListing & { secondhand: NonNullable<SecondhandListing["secondhand"]> } =>
+      l.secondhand != null
+  );
+
+  const displayed = withSecondhand.filter((l) => {
     const s = search.toLowerCase();
     if (
       s &&
@@ -163,7 +189,7 @@ export default function SecondhandPage() {
     )
       return false;
     if (selectedCity && l.secondhand.city !== selectedCity) return false;
-    const priceNum = l.secondhand.price ?? l.price ?? 0;
+    const priceNum = l.secondhand.price ?? 0;
     if (priceNum > priceRange) return false;
     return true;
   });
@@ -176,12 +202,6 @@ export default function SecondhandPage() {
     return 0;
   });
 
-  const sortLabel: Record<string, string> = {
-    newest: "Newest",
-    "price-low": "Price: Low to High",
-    "price-high": "Price: High to Low",
-  };
-
   return (
     <>
       <style>{`
@@ -193,7 +213,7 @@ export default function SecondhandPage() {
           font-family: 'Inter', -apple-system, sans-serif;
         }
 
-        /* ── HERO ── */
+        /* ΓöÇΓöÇ HERO ΓöÇΓöÇ */
         .sh-hero {
           position: relative;
           height: 220px;
@@ -240,7 +260,7 @@ export default function SecondhandPage() {
           font-family: inherit;
         }
 
-        /* ── HERO TAG ── */
+        /* ΓöÇΓöÇ HERO TAG ΓöÇΓöÇ */
         .sh-hero-tag {
           display: inline-flex; align-items: center; gap: 6px;
           background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.28);
@@ -255,7 +275,7 @@ export default function SecondhandPage() {
           pointer-events: none; user-select: none; line-height: 1; z-index: 1;
         }
 
-        /* ── CATEGORY STRIP ── */
+        /* ΓöÇΓöÇ CATEGORY STRIP ΓöÇΓöÇ */
         .sh-cats-strip {
           background: #fff; border-bottom: 1.5px solid #eaeaea; padding: 18px 0;
         }
@@ -286,13 +306,13 @@ export default function SecondhandPage() {
         .sh-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; }
         .sh-cat-count { font-size: 11px; color: #888; display: block; }
 
-        /* ── BODY LAYOUT ── */
+        /* ΓöÇΓöÇ BODY LAYOUT ΓöÇΓöÇ */
         .sh-body {
           max-width: 1200px; margin: 0 auto;
           padding: 20px 20px 60px; display: flex; gap: 18px;
         }
 
-        /* ── SIDEBAR ── */
+        /* ΓöÇΓöÇ SIDEBAR ΓöÇΓöÇ */
         .sh-sidebar {
           width: 200px; flex-shrink: 0;
           background: #fff; border-radius: 10px;
@@ -378,7 +398,7 @@ export default function SecondhandPage() {
         }
         .sh-apply-btn:hover { background: #be123c; }
 
-        /* ── MAIN ── */
+        /* ΓöÇΓöÇ MAIN ΓöÇΓöÇ */
         .sh-main { flex: 1; min-width: 0; }
         .sh-results-bar {
           display: flex; align-items: center; justify-content: space-between;
@@ -386,48 +406,23 @@ export default function SecondhandPage() {
         }
         .sh-count { font-size: 13px; color: #6b7280; font-weight: 500; }
         .sh-count strong { color: #111; font-weight: 800; }
-
-        /* ── CUSTOM SORT DROPDOWN (No overflow issues) ── */
-        .sh-sort-dropdown { position: relative; }
-        .sh-sort-btn {
-          display: flex; align-items: center; gap: 8px;
-          padding: 7px 14px;
-          background: #fff; border: 1px solid #e0e4f0;
+        .sh-sort {
+          padding: 7px 28px 7px 12px; border: 1px solid #e0e4f0;
           border-radius: 8px; font-size: 12.5px; font-weight: 600;
-          color: #333; cursor: pointer; font-family: inherit;
-          transition: border-color 0.2s;
+          color: #333; background: #fff; outline: none;
+          cursor: pointer; font-family: inherit;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+          appearance: none;
         }
-        .sh-sort-btn:hover { border-color: #bbb; }
-        .sh-sort-menu {
-          position: absolute; top: calc(100% + 6px); right: 0;
-          min-width: 180px;
-          background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-          z-index: 200;
-          overflow: hidden;
-          animation: sortFade 0.15s ease;
-        }
-        @keyframes sortFade {
-          from { opacity: 0; transform: translateY(-4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .sh-sort-option {
-          padding: 10px 16px; font-size: 13px; color: #444;
-          cursor: pointer; transition: all 0.15s;
-          border-bottom: 1px solid #f5f5f5;
-        }
-        .sh-sort-option:last-child { border-bottom: none; }
-        .sh-sort-option:hover { background: #fff1f2; color: #e11d48; }
-        .sh-sort-option.active { background: #e11d48; color: #fff; }
 
-        /* ── CARD GRID ── */
+        /* ΓöÇΓöÇ CARD GRID ΓöÇΓöÇ */
         .sh-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 14px;
         }
 
-        /* ── CARD ── */
+        /* ΓöÇΓöÇ CARD ΓöÇΓöÇ */
         .sh-card {
           background: #fff; border-radius: 10px;
           border: 1px solid #e5e7eb; overflow: hidden;
@@ -513,7 +508,7 @@ export default function SecondhandPage() {
         }
         .sh-chat-btn:hover { background: #22c55e; }
 
-        /* ── LOAD MORE ── */
+        /* ΓöÇΓöÇ LOAD MORE ΓöÇΓöÇ */
         .sh-load-more { text-align: center; margin-top: 24px; }
         .sh-load-more-btn {
           font-size: 13px; font-weight: 600; color: #6b7280;
@@ -523,15 +518,12 @@ export default function SecondhandPage() {
         }
         .sh-load-more-btn:hover { background: #f3f4f6; color: #374151; }
 
-        /* ── EMPTY / LOADING / ERROR ── */
+        /* ΓöÇΓöÇ EMPTY ΓöÇΓöÇ */
         .sh-empty {
           text-align: center; padding: 60px 24px;
           background: #fff; border-radius: 10px;
           border: 1px solid #e5e7eb;
         }
-        .sh-empty-icon { margin-bottom: 12px; color: #bbb; }
-        .sh-empty p { font-weight: 700; font-size: 16px; color: #111; margin: 0 0 4px; }
-        .sh-empty span { font-size: 13px; color: #888; }
         .sh-empty-btn {
           margin-top: 12px; padding: 9px 22px;
           background: #e11d48; color: #fff; font-weight: 700;
@@ -539,48 +531,24 @@ export default function SecondhandPage() {
           cursor: pointer; font-family: inherit;
         }
 
-        /* ── RESPONSIVE ── */
+        /* ΓöÇΓöÇ RESPONSIVE ΓöÇΓöÇ */
         @media (max-width: 900px) {
           .sh-sidebar { display: none; }
           .sh-grid { grid-template-columns: repeat(2, 1fr); }
           .sh-cats-row { gap: 8px; }
           .sh-cat-card { min-width: 120px; padding: 8px 12px; }
         }
-
-        /* ── MOBILE: Compact horizontal-scroll categories ── */
-        @media (max-width: 640px) {
+        @media (max-width: 540px) {
           .sh-grid { grid-template-columns: 1fr; }
           .sh-body { padding: 14px 14px 40px; }
-          .sh-cats-strip { padding: 14px 0; }
-          .sh-cats-inner { padding: 0 12px; }
-          .sh-cats-label { font-size: 11px; margin-bottom: 10px; }
-          .sh-cats-row {
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            gap: 8px;
-            padding-bottom: 4px;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-          }
-          .sh-cats-row::-webkit-scrollbar { display: none; }
-          .sh-cat-card {
-            min-width: auto;
-            padding: 8px 14px;
-            gap: 8px;
-            border-radius: 10px;
-            border-width: 1.5px;
-            flex-shrink: 0;
-          }
-          .sh-cat-icon { font-size: 18px; }
-          .sh-cat-icon svg { width: 18px; height: 18px; }
-          .sh-cat-name { font-size: 13px; white-space: nowrap; }
-          .sh-cat-count { font-size: 11px; white-space: nowrap; }
+          .sh-cats-row { gap: 6px; }
+          .sh-cat-card { min-width: 0; flex: 1; }
         }
       `}</style>
 
       <div className="sh-wrap">
 
-        {/* ── HERO ── */}
+        {/* ΓöÇΓöÇ HERO ΓöÇΓöÇ */}
         <section className="sh-hero">
           <div className="sh-hero-bg" />
           <div className="sh-hero-overlay" />
@@ -605,7 +573,7 @@ export default function SecondhandPage() {
           </div>
         </section>
 
-        {/* ── CATEGORY STRIP ── */}
+        {/* ΓöÇΓöÇ CATEGORY STRIP ΓöÇΓöÇ */}
         <section className="sh-cats-strip">
           <div className="sh-cats-inner">
             <p className="sh-cats-label">Browse Categories</p>
@@ -624,7 +592,7 @@ export default function SecondhandPage() {
                   <span>
                     <span className="sh-cat-name">{cat.name}</span>
                     <span className="sh-cat-count">
-                      {listings.filter((l) => l.secondhand.category === cat.value).length.toLocaleString()} listings
+                      {withSecondhand.filter((l) => l.secondhand.category === cat.value).length.toLocaleString()} listings
                     </span>
                   </span>
                 </button>
@@ -633,10 +601,10 @@ export default function SecondhandPage() {
           </div>
         </section>
 
-        {/* ── BODY ── */}
+        {/* ΓöÇΓöÇ BODY ΓöÇΓöÇ */}
         <div className="sh-body">
 
-          {/* ── SIDEBAR ── */}
+          {/* ΓöÇΓöÇ SIDEBAR ΓöÇΓöÇ */}
           <aside className="sh-sidebar">
             <div className="sh-sb-head">
               Filter
@@ -710,60 +678,44 @@ export default function SecondhandPage() {
             <button className="sh-apply-btn" onClick={reset}>Apply Filters</button>
           </aside>
 
-          {/* ── MAIN ── */}
+          {/* ΓöÇΓöÇ MAIN ΓöÇΓöÇ */}
           <div className="sh-main">
             {/* Results bar */}
             <div className="sh-results-bar">
               <span className="sh-count">
-                <strong>{loading ? "…" : sortedDisplayed.length}</strong> results found
+                <strong>{loading ? "ΓÇª" : sortedDisplayed.length}</strong> results found
               </span>
-
-              {/* ── CUSTOM SORT DROPDOWN (fixes overflow) ── */}
-              <div className="sh-sort-dropdown" ref={sortRef}>
-                <button className="sh-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
-                  {sortLabel[sort]}
-                  <FiChevronDown
-                    size={14}
-                    style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
-                  />
-                </button>
-                {isSortOpen && (
-                  <div className="sh-sort-menu">
-                    {(["newest", "price-low", "price-high"] as const).map((key) => (
-                      <div
-                        key={key}
-                        className={`sh-sort-option${sort === key ? " active" : ""}`}
-                        onClick={() => {
-                          setSort(key);
-                          setIsSortOpen(false);
-                        }}
-                      >
-                        {sortLabel[key]}
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div style={{ position: "relative" }}>
+                <select
+                  className="sh-sort"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                >
+                  <option value="newest">Newest</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                </select>
+                <FiChevronDown
+                  size={12}
+                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#666" }}
+                />
               </div>
             </div>
 
             {/* Loading */}
             {loading && (
               <div className="sh-empty">
-                <div className="sh-empty-icon">
-                  <FiLoader size={48} />
-                </div>
-                <p>Loading listings…</p>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>ΓÅ│</div>
+                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>Loading listingsΓÇª</p>
               </div>
             )}
 
             {/* Error */}
             {!loading && loadError && (
               <div className="sh-empty">
-                <div className="sh-empty-icon">
-                  <FiAlertTriangle size={48} />
-                </div>
-                <p>Couldn&apos;t load listings</p>
-                <span>Something went wrong fetching data</span>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>ΓÜá∩╕Å</div>
+                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>Couldn&apos;t load listings</p>
+                <span style={{ fontSize: 13, color: "#888" }}>Something went wrong fetching data</span>
                 <br />
                 <button className="sh-empty-btn" onClick={loadListings}>Retry</button>
               </div>
@@ -773,11 +725,9 @@ export default function SecondhandPage() {
             {!loading && !loadError && (
               sortedDisplayed.length === 0 ? (
                 <div className="sh-empty">
-                  <div className="sh-empty-icon">
-                    <FiShoppingBag size={48} />
-                  </div>
-                  <p>No listings found</p>
-                  <span>Try adjusting your filters or search term</span>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>≡ƒ¢ì∩╕Å</div>
+                  <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No listings found</p>
+                  <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters or search term</span>
                   <br />
                   <button className="sh-empty-btn" onClick={reset}>Reset Filters</button>
                 </div>
@@ -785,13 +735,13 @@ export default function SecondhandPage() {
                 <div className="sh-grid">
                   {sortedDisplayed.map((item) => {
                     const isFav = !!favorites[item.id];
-                    const images = item.images.length ? item.images : [PLACEHOLDER_IMG];
+                    const images = item.images?.length ? item.images : [PLACEHOLDER_IMG];
                     const currentImg = imageIndices[item.id] || 0;
                     const hasMultiple = images.length > 1;
                     const conditionLabel = CONDITION_FROM_DB[item.secondhand.condition];
                     const badge = CONDITION_BADGE[conditionLabel];
                     const posted = daysAgo(item.createdAt);
-                    const price = item.secondhand.price ?? item.price ?? 0;
+                    const price = item.secondhand.price ?? 0;
 
                     return (
                       <div key={item.id} className="sh-card">

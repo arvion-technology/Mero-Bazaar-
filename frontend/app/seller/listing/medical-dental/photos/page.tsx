@@ -15,6 +15,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useDraft } from "../layout";
 
 const ACCENT = "#2563eb";
 const DANGER = "#dc2626";
@@ -40,7 +41,7 @@ const steps = [
 export default function AddMedicalPhotosPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [images, setImages] = useState<{ id: string; file: File; preview: string; isMain: boolean }[]>([]);
+  const { images, setImages } = useDraft();
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileSelect = (files: FileList | null) => {
@@ -63,7 +64,19 @@ export default function AddMedicalPhotosPage() {
       preview: URL.createObjectURL(file),
       isMain: images.length === 0 && index === 0,
     }));
-    setImages((prev) => [...prev, ...newImages]);
+    setImages([...images, ...newImages]);
+  };
+
+  const removeImage = (id: string) => {
+    const filtered = images.filter((img) => img.id !== id);
+    if (filtered.length > 0 && !filtered.some((img) => img.isMain)) {
+      filtered[0].isMain = true;
+    }
+    setImages(filtered);
+  };
+
+  const setMainImage = (id: string) => {
+    setImages(images.map((img) => ({ ...img, isMain: img.id === id })));
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -71,7 +84,7 @@ export default function AddMedicalPhotosPage() {
     e.stopPropagation();
     setIsDragging(false);
     handleFileSelect(e.dataTransfer.files);
-  }, [images.length]);
+  }, [images]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -85,34 +98,18 @@ export default function AddMedicalPhotosPage() {
     setIsDragging(false);
   }, []);
 
-  const removeImage = (id: string) => {
-    setImages((prev) => {
-      const filtered = prev.filter((img) => img.id !== id);
-      if (filtered.length > 0 && !filtered.some((img) => img.isMain)) {
-        filtered[0].isMain = true;
-      }
-      return filtered;
-    });
-  };
-
-  const setMainImage = (id: string) => {
-    setImages((prev) => prev.map((img) => ({ ...img, isMain: img.id === id })));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (images.length === 0) {
       toast.error("Please upload at least one photo");
       return;
     }
-    const imagePreviews = images.map((img) => ({ preview: img.preview, isMain: img.isMain }));
-    localStorage.setItem("medicalListingPhotos", JSON.stringify(imagePreviews));
     toast.success("Photos saved! Proceeding to preview...");
     router.push("/seller/listing/medical-dental/preview");
   };
 
   const canAddMore = images.length < MAX_IMAGES;
-
+  
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />

@@ -4,6 +4,7 @@ export const SKILLS = ["Sales", "Accounting", "Design", "Marketing", "IT & Softw
 
 export interface JobListing {
   id: string;
+  category: "JOB";
   title: string;
   description?: string;
   createdAt: string;

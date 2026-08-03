@@ -2,26 +2,11 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  FiArrowLeft,
-  FiChevronRight,
-  FiChevronDown,
-  FiMapPin,
-  FiFileText,
-  FiBriefcase,
-  FiImage,
-  FiEye,
-  FiCheck,
-  FiX,
-  FiPlus,
-  FiBox,
-  FiTool,
-  FiDollarSign,
-  FiHash,
-  FiList,
-} from "react-icons/fi";
+import { FiArrowLeft, FiChevronRight, FiChevronDown, FiFileText, FiBriefcase, FiEye, FiCheck, FiX, FiTool, FiList } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useTradesDraft } from "./layout";
+import { SERVICES } from "@/app/types/trades";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -43,34 +28,9 @@ const steps = [
   { label: "Preview", icon: FiEye, status: "upcoming" as const },
 ];
 
-const services = [
-  "Plumbing",
-  "Electrical",
-  "Carpentry",
-  "Painting",
-  "Masonry",
-  "HVAC",
-  "Roofing",
-  "Tiling",
-];
-
-const cities = ["Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur", "Bharatpur"];
 const wards = [
-  "Ward 1",
-  "Ward 2",
-  "Ward 3",
-  "Ward 4",
-  "Ward 5",
-  "Ward 6",
-  "Ward 7",
-  "Ward 8",
-  "Ward 9",
-  "Ward 10",
-  "Ward 11",
-  "Ward 12",
-  "Ward 13",
-  "Ward 14",
-  "Ward 15",
+  "Ward 1", "Ward 2", "Ward 3", "Ward 4", "Ward 5", "Ward 6", "Ward 7",
+  "Ward 8", "Ward 9", "Ward 10", "Ward 11", "Ward 12", "Ward 13", "Ward 14", "Ward 15",
 ];
 
 interface CustomSelectProps {
@@ -134,23 +94,12 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="custom-select-container"
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
-    >
-      <div
-        className={`custom-select-trigger ${isOpen ? "open" : ""}`}
-        onClick={() => setIsOpen(!isOpen)}
-      >
+    <div ref={containerRef} className="custom-select-container" onKeyDown={handleKeyDown} tabIndex={0}>
+      <div className={`custom-select-trigger ${isOpen ? "open" : ""}`} onClick={() => setIsOpen(!isOpen)}>
         <span className={value ? "custom-select-value" : "custom-select-placeholder"}>
           {value || placeholder || "Select..."}
         </span>
-        <FiChevronDown
-          size={16}
-          className={`custom-select-chevron ${isOpen ? "rotated" : ""}`}
-        />
+        <FiChevronDown size={16} className={`custom-select-chevron ${isOpen ? "rotated" : ""}`} />
       </div>
       {isOpen && (
         <div className="custom-select-dropdown">
@@ -179,21 +128,17 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
 
 export default function NewTradesHomeRepairListingPage() {
   const router = useRouter();
+  const { data, setData } = useTradesDraft();
+  const { serviceTitle, startingPrice, description, selectedService, city, ward, skills } = data;
 
-  // ── Basic Information ──
-  const [serviceTitle, setServiceTitle] = useState("Professional Plumbing Service");
-  const [startingPrice, setStartingPrice] = useState("800");
-  const [description, setDescription] = useState("");
+  const setServiceTitle = (v: string) => setData({ ...data, serviceTitle: v });
+  const setStartingPrice = (v: string) => setData({ ...data, startingPrice: v });
+  const setDescription = (v: string) => setData({ ...data, description: v });
+  const setSelectedService = (v: string) => setData({ ...data, selectedService: v });
+  const setCity = (v: string) => setData({ ...data, city: v });
+  const setWard = (v: string) => setData({ ...data, ward: v });
+  const setSkills = (tags: string[]) => setData({ ...data, skills: tags });
 
-  // ── Service Details ──
-  const [selectedService, setSelectedService] = useState("Plumbing");
-  const [city, setCity] = useState("Kathmandu");
-  const [ward, setWard] = useState("Ward 14");
-  const [skills, setSkills] = useState<string[]>([
-    "Plumbing",
-    "Leak Repair",
-    "Bathroom Fitting",
-  ]);
   const [skillInput, setSkillInput] = useState("");
 
   const formattedPrice = useMemo(() => {
@@ -204,8 +149,7 @@ export default function NewTradesHomeRepairListingPage() {
   }, [startingPrice]);
 
   const handlePriceChange = (val: string) => {
-    const cleaned = val.replace(/[^0-9]/g, "");
-    setStartingPrice(cleaned);
+    setStartingPrice(val.replace(/[^0-9]/g, ""));
   };
 
   const addSkill = () => {
@@ -227,7 +171,7 @@ export default function NewTradesHomeRepairListingPage() {
     if (e.key === "Enter") {
       e.preventDefault();
       addSkill();
-    }
+    } 
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -263,7 +207,6 @@ export default function NewTradesHomeRepairListingPage() {
           padding: 32px 24px 64px;
         }
 
-        /* ── Header ── */
         .listing-header {
           display: flex;
           align-items: center;
@@ -276,7 +219,7 @@ export default function NewTradesHomeRepairListingPage() {
           height: 40px;
           border-radius: 12px;
           border: 1.5px solid ${BORDER};
-          background: ${CARD_BG};
+          background: ${CARD_BG};t
           display: flex;
           align-items: center;
           justify-content: center;
@@ -312,7 +255,6 @@ export default function NewTradesHomeRepairListingPage() {
           margin-top: 3px;
         }
 
-        /* ── Draft Saved ── */
         .draft-badge {
           display: flex;
           align-items: center;
@@ -323,7 +265,6 @@ export default function NewTradesHomeRepairListingPage() {
           flex-shrink: 0;
         }
 
-        /* ── Stepper ── */
         .stepper {
           display: flex;
           align-items: center;
@@ -356,21 +297,13 @@ export default function NewTradesHomeRepairListingPage() {
           transition: all 0.25s ease;
         }
 
-        .step.done .step-icon-wrap {
-          background: ${SUCCESS};
-          color: #fff;
-        }
-
+        .step.done .step-icon-wrap { background: ${SUCCESS}; color: #fff; }
         .step.active .step-icon-wrap {
           background: linear-gradient(135deg, ${SITE_PRIMARY}, #e0574a);
           color: #fff;
           box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.15);
         }
-
-        .step.upcoming .step-icon-wrap {
-          background: #f1f5f9;
-          color: ${TEXT_MUTED};
-        }
+        .step.upcoming .step-icon-wrap { background: #f1f5f9; color: ${TEXT_MUTED}; }
 
         .step-label {
           font-size: 13.5px;
@@ -391,11 +324,8 @@ export default function NewTradesHomeRepairListingPage() {
           position: relative;
         }
 
-        .step-connector.filled {
-          background: ${SUCCESS};
-        }
+        .step-connector.filled { background: ${SUCCESS}; }
 
-        /* ── Form Card ── */
         .form-card {
           background: ${CARD_BG};
           border-radius: 20px;
@@ -415,7 +345,6 @@ export default function NewTradesHomeRepairListingPage() {
             0 0 0 1px rgba(0,0,0,0.02);
         }
 
-        /* ── Category ── */
         .category-wrap { margin-bottom: 24px; }
 
         .category-label {
@@ -462,21 +391,18 @@ export default function NewTradesHomeRepairListingPage() {
           border-radius: 6px;
         }
 
-        /* ── Divider ── */
         .divider {
           height: 1px;
           background: linear-gradient(90deg, transparent, ${BORDER}, transparent);
           margin: 28px 0;
         }
 
-        /* ── Two Column Layout ── */
         .two-col-layout {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 40px;
         }
 
-        /* ── Section Header ── */
         .section-header {
           display: flex;
           align-items: center;
@@ -511,7 +437,6 @@ export default function NewTradesHomeRepairListingPage() {
           margin-top: 2px;
         }
 
-        /* ── Form Grid ── */
         .form-row {
           display: grid;
           gap: 20px;
@@ -524,9 +449,7 @@ export default function NewTradesHomeRepairListingPage() {
           gap: 8px;
         }
 
-        .form-group.full-width {
-          margin-bottom: 20px;
-        }
+        .form-group.full-width { margin-bottom: 20px; }
 
         .form-label {
           font-size: 13px;
@@ -584,14 +507,12 @@ export default function NewTradesHomeRepairListingPage() {
 
         .char-counter.near-limit { color: ${DANGER}; font-weight: 600; }
 
-        /* ── Price Hint ── */
         .price-hint {
           font-size: 11.5px;
           color: ${TEXT_MUTED};
           margin-top: 4px;
         }
 
-        /* ── Skills Tags ── */
         .skills-wrap {
           display: flex;
           flex-wrap: wrap;
@@ -629,13 +550,9 @@ export default function NewTradesHomeRepairListingPage() {
           transition: all 0.2s;
         }
 
-        .skill-tag .remove-skill:hover {
-          background: rgba(109, 40, 217, 0.1);
-        }
+        .skill-tag .remove-skill:hover { background: rgba(109, 40, 217, 0.1); }
 
-        .skill-input-wrap {
-          position: relative;
-        }
+        .skill-input-wrap { position: relative; }
 
         .skill-input-hint {
           font-size: 11.5px;
@@ -643,7 +560,6 @@ export default function NewTradesHomeRepairListingPage() {
           margin-top: 4px;
         }
 
-        /* ── Custom Select ── */
         .custom-select-container {
           position: relative;
           width: 100%;
@@ -687,9 +603,7 @@ export default function NewTradesHomeRepairListingPage() {
           flex-shrink: 0;
         }
 
-        .custom-select-chevron.rotated {
-          transform: rotate(180deg);
-        }
+        .custom-select-chevron.rotated { transform: rotate(180deg); }
 
         .custom-select-dropdown {
           position: absolute;
@@ -733,7 +647,6 @@ export default function NewTradesHomeRepairListingPage() {
           font-weight: 600;
         }
 
-        /* ── Submit Button ── */
         .submit-wrap {
           display: flex;
           justify-content: space-between;
@@ -800,39 +713,22 @@ export default function NewTradesHomeRepairListingPage() {
           box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
         }
 
-        /* ── Responsive ── */
         @media (max-width: 768px) {
           .listing-container { padding: 16px; }
-          .form-card { 
-            padding: 20px; 
-            border-radius: 16px; 
-          }
-          .two-col-layout { 
-            grid-template-columns: 1fr; 
-            gap: 24px; 
-          }
+          .form-card { padding: 20px; border-radius: 16px; }
+          .two-col-layout { grid-template-columns: 1fr; gap: 24px; }
           .listing-title { font-size: 20px; }
           .listing-subtitle { font-size: 12px; }
           .stepper { padding: 14px 16px; }
           .step-label { display: none; }
           .step-connector { margin: 0 6px; min-width: 16px; }
-          .submit-wrap { 
-            flex-direction: column-reverse; 
-            gap: 12px;
-            margin-top: 24px;
-          }
-          .back-link, .submit-btn { 
-            width: 100%; 
-            justify-content: center; 
-            padding: 14px 28px;
-          }
+          .submit-wrap { flex-direction: column-reverse; gap: 12px; margin-top: 24px; }
+          .back-link, .submit-btn { width: 100%; justify-content: center; padding: 14px 28px; }
           .section-header { margin-bottom: 16px; }
           .form-group.full-width { margin-bottom: 16px; }
           .divider { margin: 20px 0; }
           .category-wrap { margin-bottom: 16px; }
-          .custom-select-dropdown {
-            max-height: 200px;
-          }
+          .custom-select-dropdown { max-height: 200px; }
         }
 
         @media (max-width: 480px) {
@@ -846,7 +742,6 @@ export default function NewTradesHomeRepairListingPage() {
 
       <div className="listing-page">
         <div className="listing-container">
-          {/* Header */}
           <div className="listing-header">
             <button type="button" className="back-btn" onClick={() => router.back()}>
               <FiArrowLeft size={18} />
@@ -860,7 +755,6 @@ export default function NewTradesHomeRepairListingPage() {
             </div>
           </div>
 
-          {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
               <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
@@ -878,7 +772,6 @@ export default function NewTradesHomeRepairListingPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="form-card">
-            {/* Category Pill */}
             <div className="category-wrap">
               <label className="category-label">Category</label>
               <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
@@ -890,9 +783,7 @@ export default function NewTradesHomeRepairListingPage() {
 
             <div className="divider" />
 
-            {/* Two Column Layout */}
             <div className="two-col-layout">
-              {/* Left: Basic Information */}
               <div className="left-col">
                 <div className="section-header">
                   <div className="section-icon blue">
@@ -948,7 +839,6 @@ export default function NewTradesHomeRepairListingPage() {
                 </div>
               </div>
 
-              {/* Right: Service Details */}
               <div className="right-col">
                 <div className="section-header">
                   <div className="section-icon red">
@@ -964,7 +854,7 @@ export default function NewTradesHomeRepairListingPage() {
                     Select Service <span className="required">*</span>
                   </label>
                   <CustomSelect
-                    options={services}
+                    options={SERVICES}
                     value={selectedService}
                     onChange={setSelectedService}
                     placeholder="Select service"
@@ -972,15 +862,17 @@ export default function NewTradesHomeRepairListingPage() {
                 </div>
 
                 <div className="form-group full-width">
-                  <label className="form-label">
-                    City <span className="required">*</span>
-                  </label>
-                  <CustomSelect
-                    options={cities}
-                    value={city}
-                    onChange={setCity}
-                    placeholder="Select city"
-                  />
+                <label className="form-label">
+                  City <span className="required">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Enter city"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  required
+                />
                 </div>
 
                 <div className="form-group full-width">
@@ -1024,7 +916,6 @@ export default function NewTradesHomeRepairListingPage() {
 
             <div className="divider" />
 
-            {/* Submit Row */}
             <div className="submit-wrap">
               <button type="button" className="back-link" onClick={() => router.back()}>
                 <FiArrowLeft size={16} />

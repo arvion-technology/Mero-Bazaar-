@@ -375,14 +375,20 @@ model Job {
 }
 
 enum PayPeriod {
+  HOURLY
   DAILY
   WEEKLY
+  BIWEEKLY
   MONTHLY
+  YEARLY
 }
 
 enum ContractType {
   FULL_TIME
   PART_TIME
+  CONTRACT
+  FREELANCE
+  INTERNSHIP
   GIG
   LABOUR
   DOMESTIC
@@ -434,6 +440,7 @@ model MedicalAndDental {
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   serviceType MedicalServiceType @default(GENERAL_MEDICINE)
+  serviceOffered   String?
 
   doctorName       String
   nmcLicenseNumber String
@@ -442,8 +449,17 @@ model MedicalAndDental {
 
   appointmentFee     Int
   homeVisitAvailable Boolean @default(false)
+  onlineAppointments Boolean @default(false)
   clinicAddress      String
   city               String
+
+  shortBio           String?
+  languages          String[]
+  experience         String?
+
+  slotDurationMinutes Int?
+  bufferMinutes       Int?
+  sameDayBooking      Boolean @default(false)
 
   latitude  Float?
   longitude Float?
@@ -508,11 +524,15 @@ model MedicalSlot {
 }
 
 enum MedicalServiceType {
-  DENTAL
   GENERAL_MEDICINE
-  GYNECOLOGY
-  ORTHOPEDIC
+  DENTAL
+  CARDIOLOGY
   DERMATOLOGY
+  PEDIATRICS
+  ORTHOPEDIC
+  GYNECOLOGY
+  NEUROLOGY
+  ENT
   OTHER
 }
 
@@ -665,6 +685,15 @@ model AgricultureAndLivestock {
   breed                String?
   age                  Int?
   healthVaccineStatus  HealthVaccineStatus?
+
+  vetServiceType       VetServiceType?
+  experienceYears      Int?
+  mobileService        Boolean  @default(false)
+  vaccinationAvailable Boolean  @default(false)
+  serviceRadiusKm      Int?
+  healthCertificate    Boolean  @default(false)
+  availabilityDays     WeekDay[]
+
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
@@ -672,6 +701,7 @@ model AgricultureAndLivestock {
   @@index([listingType])
   @@index([organicCertified])
   @@index([healthVaccineStatus])
+  @@index([vetServiceType])
 }
 
 enum AgricultureListingType {
@@ -696,6 +726,16 @@ enum HealthVaccineStatus {
   VACCINATED
   NOT_VACCINATED
   UNKNOWN
+}
+
+enum VetServiceType {
+  GENERAL_CHECKUP
+  VACCINATION
+  SURGERY
+  DEWORMING
+  BREEDING_CONSULTATION
+  EMERGENCY
+  OTHER
 }
 
 model SecondHandGoods {
@@ -755,18 +795,12 @@ model FoodsAndHomeDelivery {
   foodType  FoodType
   price     Int
   priceUnit PriceUnit
-
-  deliveryRadiusKm      Int
-  hygieneRating         Float     @default(0)
-  subscriptionAvailable Boolean   @default(false)
   deliveryDays          WeekDay[]
-  minOrderAmount        Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([foodType])
-  @@index([deliveryRadiusKm])
 }
 
 model Review {

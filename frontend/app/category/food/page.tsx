@@ -1,35 +1,30 @@
-"use client";
+﻿"use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import { api } from "@/lib/api";
+import { toFoodsCard, FOOD_TYPE_LABEL } from "@/lib/adapters/foodsAdapter";
+import type { FoodsListing, FoodsCard, FoodType, WeekDay } from "@/app/types/foods";
 import {
   FiSearch,
-  FiMapPin,
   FiChevronDown,
-  FiChevronLeft,
-  FiChevronRight,
-  FiStar,
   FiCheckCircle,
   FiHeart,
-  FiCoffee,
 } from "react-icons/fi";
 import {
-  FaLeaf,
+  FaUtensils,
+  FaBreadSlice,
+  FaEgg,
   FaDrumstickBite,
   FaSeedling,
-  FaEgg,
   FaHeart,
-  FaHamburger,
-  FaPizzaSlice,
-  FaMugHot,
-  FaBreadSlice,
-  FaIceCream,
-  FaCarrot,
+  FaWarehouse,
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 
-/* ─────────── TYPES ─────────── */
+
 type FoodType = "Veg" | "Non veg" | "Vegan" | "Egg Items";
 
 type PriceRange = "Under Rs.100" | "Rs.100 - Rs.200" | "Rs.200 - Rs.500" | "Above Rs.100";
@@ -54,12 +49,13 @@ type Restaurant = {
   tags: string[];
   isFreshAndHygienic: boolean;
   postedDaysAgo: number;
+  // FIX: added missing fields so filters have data to work with
   deliveryFee?: string;
   subscriptions?: Subscription[];
   deliveryDays?: DayOfWeek[];
 };
 
-/* ─────────── CATEGORY ICONS ─────────── */
+/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ CATEGORY ICONS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 const CATEGORY_ICONS = [
   { name: "Fast Food", icon: FaHamburger, count: 1245, color: "#e11d48", bg: "#fff1f2" },
   { name: "Pizza", icon: FaPizzaSlice, count: 890, color: "#f97316", bg: "#fff7ed" },
@@ -69,7 +65,7 @@ const CATEGORY_ICONS = [
   { name: "Healthy", icon: FaCarrot, count: 245, color: "#16a34a", bg: "#f0fdf4" },
 ];
 
-/* ─────────── DATA ─────────── */
+/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ DATA ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 const RESTAURANTS: Restaurant[] = [
   {
     id: "healthy-home-kitchen",
@@ -187,59 +183,68 @@ const FOOD_TYPES: { name: FoodType; icon: IconType; color: string }[] = [
   { name: "Vegan", icon: FaSeedling, color: "#16a34a" },
   { name: "Egg Items", icon: FaEgg, color: "#f59e0b" },
 ];
+type PriceRange = "Under Rs.100" | "Rs.100 - Rs.200" | "Rs.200 - Rs.500" | "Above Rs.500";
 
 const PRICE_RANGES: PriceRange[] = [
   "Under Rs.100",
   "Rs.100 - Rs.200",
   "Rs.200 - Rs.500",
-  "Above Rs.100",
+  "Above Rs.500",
 ];
 
-const DELIVERY_RANGES: DeliveryRange[] = [
-  "Under Rs.100",
-  "Rs.100 - Rs.200",
-  "Rs.200 - Rs.500",
-  "Above Rs.1000",
-];
+const FOOD_TYPE_ICON: Record<FoodType, { icon: IconType; color: string }> = {
+  TIFFIN: { icon: FaUtensils, color: "#e11d48" },
+  BAKERY: { icon: FaBreadSlice, color: "#b45309" },
+  DAIRY: { icon: FaEgg, color: "#f59e0b" },
+  MEAT: { icon: FaDrumstickBite, color: "#dc2626" },
+  ORGANIC: { icon: FaSeedling, color: "#16a34a" },
+  HOME_COOK: { icon: FaHeart, color: "#be185d" },
+  WHOLESALE: { icon: FaWarehouse, color: "#1d4ed8" },
+};
 
-const SUBSCRIPTIONS: Subscription[] = [
-  "Daily Tiffin Available",
-  "Weekly Plan",
-  "Monthly Plan",
-];
+const FOOD_TYPE_ORDER: FoodType[] = ["TIFFIN", "BAKERY", "DAIRY", "MEAT", "ORGANIC", "HOME_COOK", "WHOLESALE"];
 
-const DAYS_OF_WEEK: DayOfWeek[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAY_LABEL: Record<WeekDay, string> = {
+  MON: "Mon", TUE: "Tue", WED: "Wed", THU: "Thu", FRI: "Fri", SAT: "Sat", SUN: "Sun",
+};
+const DAYS_OF_WEEK: WeekDay[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
-/* ─────────── PRICE PARSER ─────────── */
+/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ PRICE PARSER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+// FIX: helper to extract numeric value from price strings like "NPR 250/meal"
 const parsePrice = (priceStr: string): number => {
   const match = priceStr.replace(/,/g, "").match(/\d+/);
   return match ? parseInt(match[0], 10) : 0;
 };
 
-/* ─────────── COMPONENT ─────────── */
 export default function FoodDeliveryPage() {
+  const [rawListings, setRawListings] = useState<FoodsListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const sortRef = useRef<HTMLDivElement>(null);
   const [activeCategory, setActiveCategory] = useState<string>("");
+  const [sort, setSort] = useState<"newest" | "price-low">("newest");
   const [selectedFoodTypes, setSelectedFoodTypes] = useState<FoodType[]>([]);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>([]);
-  const [selectedDeliveryRanges, setSelectedDeliveryRanges] = useState<DeliveryRange[]>([]);
-  const [selectedSubscriptions, setSelectedSubscriptions] = useState<Subscription[]>([]);
-  const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>([]);
-  const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
+  const [selectedDays, setSelectedDays] = useState<WeekDay[]>([]);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
 
-  // Close sort dropdown on outside click
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
-        setIsSortOpen(false);
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await api.getFoods();
+        if (!cancelled) setRawListings(data);
+      } catch (err) {
+        console.error("Failed to load food listings:", err);
+        if (!cancelled) setError("Couldn't load restaurants right now. Please try again.");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const toggleFoodType = (ft: FoodType) =>
@@ -252,17 +257,7 @@ export default function FoodDeliveryPage() {
       prev.includes(pr) ? prev.filter((x) => x !== pr) : [...prev, pr]
     );
 
-  const toggleDeliveryRange = (dr: DeliveryRange) =>
-    setSelectedDeliveryRanges((prev) =>
-      prev.includes(dr) ? prev.filter((x) => x !== dr) : [...prev, dr]
-    );
-
-  const toggleSubscription = (sub: Subscription) =>
-    setSelectedSubscriptions((prev) =>
-      prev.includes(sub) ? prev.filter((x) => x !== sub) : [...prev, sub]
-    );
-
-  const toggleDay = (day: DayOfWeek) =>
+  const toggleDay = (day: WeekDay) =>
     setSelectedDays((prev) =>
       prev.includes(day) ? prev.filter((x) => x !== day) : [...prev, day]
     );
@@ -273,36 +268,27 @@ export default function FoodDeliveryPage() {
     setFavorites((p) => ({ ...p, [id]: !p[id] }));
   };
 
-  const nextImage = (id: string, total: number, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setImageIndices((p) => ({ ...p, [id]: ((p[id] || 0) + 1) % total }));
-  };
-
-  const prevImage = (id: string, total: number, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setImageIndices((p) => ({ ...p, [id]: ((p[id] || 0) - 1 + total) % total }));
-  };
-
   const reset = () => {
     setSelectedFoodTypes([]);
     setSelectedPriceRanges([]);
-    setSelectedDeliveryRanges([]);
-    setSelectedSubscriptions([]);
     setSelectedDays([]);
-    setActiveCategory("");
     setSearch("");
   };
 
-  const displayed = RESTAURANTS.filter((r) => {
-    const s = search.toLowerCase();
-    if (s && !r.name.toLowerCase().includes(s) && !r.cuisine.toLowerCase().includes(s)) return false;
-    if (activeCategory && !r.cuisine.toLowerCase().includes(activeCategory.toLowerCase())) return false;
-    if (selectedFoodTypes.length && !selectedFoodTypes.includes(r.foodType)) return false;
+  const categoryCounts: Record<FoodType, number> = FOOD_TYPE_ORDER.reduce((acc, ft) => {
+    acc[ft] = rawListings.filter((l) => l.foods?.foodType === ft).length;
+    return acc;
+  }, {} as Record<FoodType, number>);
 
+  const filteredRaw = rawListings.filter((l) => {
+    if (!l.foods) return false;
+    const s = search.toLowerCase();
+    if (s && !l.title.toLowerCase().includes(s)) return false;
+    if (selectedFoodTypes.length && !selectedFoodTypes.includes(l.foods.foodType)) return false;
+
+    // FIX: Price Range filter
     if (selectedPriceRanges.length) {
-      const price = parsePrice(r.pricePerMeal);
+      const price = l.foods.price;
       const matches = selectedPriceRanges.some((range) => {
         if (range === "Under Rs.100") return price < 100;
         if (range === "Rs.100 - Rs.200") return price >= 100 && price <= 200;
@@ -313,6 +299,7 @@ export default function FoodDeliveryPage() {
       if (!matches) return false;
     }
 
+    // FIX: Delivery fee filter
     if (selectedDeliveryRanges.length) {
       const fee = r.deliveryFee ? parsePrice(r.deliveryFee) : 0;
       const matches = selectedDeliveryRanges.some((range) => {
@@ -320,21 +307,22 @@ export default function FoodDeliveryPage() {
         if (range === "Rs.100 - Rs.200") return fee >= 100 && fee <= 200;
         if (range === "Rs.200 - Rs.500") return fee >= 200 && fee <= 500;
         if (range === "Above Rs.1000") return fee > 1000;
+        if (range === "Above Rs.500") return price > 500;
         return false;
       });
       if (!matches) return false;
     }
 
+    // FIX: Subscription filter
     if (selectedSubscriptions.length) {
       if (!r.subscriptions || !r.subscriptions.some((sub) => selectedSubscriptions.includes(sub))) {
         return false;
       }
     }
 
+    // FIX: Delivery Days filter
     if (selectedDays.length) {
-      if (!r.deliveryDays || !r.deliveryDays.some((day) => selectedDays.includes(day))) {
-        return false;
-      }
+      if (!l.foods.deliveryDays?.some((d) => selectedDays.includes(d))) return false;
     }
 
     return true;
@@ -343,15 +331,10 @@ export default function FoodDeliveryPage() {
   const sortedDisplayed = [...displayed].sort((a, b) => {
     if (sort === "newest") return a.postedDaysAgo - b.postedDaysAgo;
     if (sort === "rating") return b.rating - a.rating;
+    // FIX: added missing price-low sort handler
     if (sort === "price-low") return parsePrice(a.pricePerMeal) - parsePrice(b.pricePerMeal);
     return 0;
   });
-
-  const sortLabel: Record<string, string> = {
-    newest: "Newest",
-    rating: "Highest Rated",
-    "price-low": "Price: Low to High",
-  };
 
   const renderStars = (rating: number, reviewCount: number) => {
     const fullStars = Math.floor(rating);
@@ -371,6 +354,12 @@ export default function FoodDeliveryPage() {
       </div>
     );
   };
+  const sortedRaw = [...filteredRaw].sort((a, b) => {
+    if (sort === "price-low") return (a.foods?.price ?? 0) - (b.foods?.price ?? 0);
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  const cards: FoodsCard[] = sortedRaw.map(toFoodsCard);
 
   return (
     <>
@@ -383,7 +372,7 @@ export default function FoodDeliveryPage() {
           font-family: 'Inter', -apple-system, sans-serif;
         }
 
-        /* ── HERO ── */
+        /* HERO */
         .fd-hero {
           position: relative;
           height: 260px;
@@ -427,7 +416,7 @@ export default function FoodDeliveryPage() {
           font-family: inherit;
         }
 
-        /* ── CATEGORY STRIP ── */
+        /* CATEGORY STRIP */
         .fd-cats-strip {
           background: #fff; border-bottom: 1.5px solid #eaeaea; padding: 18px 0;
         }
@@ -458,13 +447,13 @@ export default function FoodDeliveryPage() {
         .fd-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; }
         .fd-cat-count { font-size: 11px; color: #888; display: block; }
 
-        /* ── BODY LAYOUT ── */
+        /* BODY LAYOUT */
         .fd-body {
           max-width: 1200px; margin: 0 auto;
           padding: 20px 20px 60px; display: flex; gap: 18px;
         }
 
-        /* ── SIDEBAR ── */
+        /* SIDEBAR */
         .fd-sidebar {
           width: 220px; flex-shrink: 0;
           background: #fff; border-radius: 10px;
@@ -478,9 +467,7 @@ export default function FoodDeliveryPage() {
           padding: 14px 16px 10px;
           font-size: 15px; font-weight: 800; color: #1a1a1a;
           border-bottom: 1px solid #f0f0f0;
-          display: flex; align-items: center; justify-content: space-between;
         }
-        .fd-sb-head svg { color: #9ca3af; }
         .fd-sb-section {
           padding: 12px 16px;
           border-bottom: 1px solid #f0f0f0;
@@ -557,7 +544,7 @@ export default function FoodDeliveryPage() {
         }
         .fd-more-btn:hover { background: #e5e7eb; }
 
-        /* ── MAIN ── */
+        /* MAIN */
         .fd-main { flex: 1; min-width: 0; }
         .fd-results-bar {
           display: flex; align-items: center; justify-content: space-between;
@@ -565,48 +552,33 @@ export default function FoodDeliveryPage() {
         }
         .fd-count { font-size: 15px; color: #6b7280; font-weight: 600; }
         .fd-count strong { color: #111; font-weight: 800; }
+        .fd-sort-wrap {
+          position: relative;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          background: #fff;
+          padding: 0;
+          min-width: 120px;
+        }
+        .fd-sort {
+          padding: 8px 28px 8px 12px;
+          border: none;
+          border-radius: 6px;
+          font-size: 13px; font-weight: 600;
+          color: #333; background: transparent; outline: none;
+          cursor: pointer; font-family: inherit;
+          appearance: none;
+          width: 100%;
+        }
 
-        /* ── CUSTOM SORT DROPDOWN (No overflow issues) ── */
-        .fd-sort-dropdown { position: relative; }
-        .fd-sort-btn {
-          display: flex; align-items: center; gap: 8px;
-          padding: 8px 14px;
-          background: #fff; border: 1px solid #e0e4f0;
-          border-radius: 8px; font-size: 13px; font-weight: 600;
-          color: #333; cursor: pointer; font-family: inherit;
-          transition: border-color 0.2s;
-        }
-        .fd-sort-btn:hover { border-color: #bbb; }
-        .fd-sort-menu {
-          position: absolute; top: calc(100% + 6px); right: 0;
-          min-width: 180px;
-          background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-          z-index: 200;
-          overflow: hidden;
-          animation: sortFade 0.15s ease;
-        }
-        @keyframes sortFade {
-          from { opacity: 0; transform: translateY(-4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .fd-sort-option {
-          padding: 10px 16px; font-size: 13px; color: #444;
-          cursor: pointer; transition: all 0.15s;
-          border-bottom: 1px solid #f5f5f5;
-        }
-        .fd-sort-option:last-child { border-bottom: none; }
-        .fd-sort-option:hover { background: #fff1f2; color: #e11d48; }
-        .fd-sort-option.active { background: #e11d48; color: #fff; }
-
-        /* ── CARD GRID ── */
+        /* CARD GRID */
         .fd-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 16px;
         }
 
-        /* ── CARD ── */
+        /* CARD */
         .fd-card {
           background: #fff; border-radius: 10px;
           border: 1px solid #e5e7eb; overflow: hidden;
@@ -637,16 +609,16 @@ export default function FoodDeliveryPage() {
         }
         .fd-card-fav:hover { transform: scale(1.15); }
 
-        .fd-carousel-btn {
-          position: absolute; top: 50%; transform: translateY(-50%);
-          width: 28px; height: 28px; border-radius: 50%;
-          background: rgba(0,0,0,0.35); border: none;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; color: #fff; transition: background 0.15s; padding: 0;
+        .fd-card-badges {
+          position: absolute; top: 8px; left: 8px;
+          display: flex; flex-direction: column; gap: 4px; z-index: 2;
         }
-        .fd-carousel-btn:hover { background: rgba(0,0,0,0.55); }
-        .fd-carousel-btn.prev { left: 8px; }
-        .fd-carousel-btn.next { right: 8px; }
+        .fd-card-badge {
+          font-size: 10px; font-weight: 800; padding: 3px 8px;
+          border-radius: 5px; text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .fd-badge-verified { background: rgba(21,128,61,0.9); color: #fff; }
+        .fd-badge-featured { background: rgba(217,119,6,0.9); color: #fff; }
 
         .fd-card-body { padding: 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
         .fd-card-name { font-size: 16px; font-weight: 800; color: #111; margin: 0; }
@@ -654,20 +626,9 @@ export default function FoodDeliveryPage() {
           display: flex; align-items: center; justify-content: space-between;
           font-size: 12px; color: #6b7280;
         }
-        .fd-card-meta-left {
-          display: flex; align-items: center; gap: 4px;
-        }
-        .fd-card-price { font-size: 12px; font-weight: 700; color: #111; }
-        .fd-card-cuisine {
-          font-size: 12px; color: #6b7280; font-weight: 500;
-        }
-        .fd-card-hygienic {
-          display: flex; align-items: center; gap: 4px;
-          font-size: 12px; color: #16a34a; font-weight: 600;
-        }
-        .fd-card-stars {
-          margin-top: 2px;
-        }
+        .fd-card-price { font-size: 13px; font-weight: 700; color: #16a34a; }
+        .fd-card-type { font-size: 12px; color: #6b7280; font-weight: 500; }
+        .fd-card-posted { font-size: 11px; color: #9ca3af; }
         .fd-card-actions {
           display: flex; gap: 8px; margin-top: 10px;
         }
@@ -684,39 +645,13 @@ export default function FoodDeliveryPage() {
         .fd-btn-order:hover {
           background: #16a34a; color: #fff;
         }
-        .fd-btn-subscribe {
-          flex: 1; padding: 8px 12px;
-          background: #16a34a; color: #fff;
-          font-size: 12px; font-weight: 700;
-          border: 1.5px solid #16a34a;
-          border-radius: 6px; cursor: pointer;
-          font-family: inherit; text-align: center;
-          text-decoration: none;
-          transition: all 0.15s;
-        }
-        .fd-btn-subscribe:hover {
-          background: #15803d;
-        }
 
-        /* ── LOAD MORE ── */
-        .fd-load-more { text-align: center; margin-top: 28px; }
-        .fd-load-more-btn {
-          font-size: 14px; font-weight: 600; color: #6b7280;
-          background: none; border: none; cursor: pointer;
-          padding: 8px 20px; border-radius: 6px;
-          font-family: inherit; transition: background 0.15s, color 0.15s;
-        }
-        .fd-load-more-btn:hover { background: #f3f4f6; color: #374151; }
-
-        /* ── EMPTY ── */
+        /* EMPTY / LOADING */
         .fd-empty {
           text-align: center; padding: 60px 24px;
           background: #fff; border-radius: 10px;
           border: 1px solid #e5e7eb;
         }
-        .fd-empty-icon { margin-bottom: 12px; color: #bbb; }
-        .fd-empty p { font-weight: 700; font-size: 16px; color: #111; margin: 0 0 4px; }
-        .fd-empty span { font-size: 13px; color: #888; }
         .fd-empty-btn {
           margin-top: 12px; padding: 9px 22px;
           background: #e11d48; color: #fff; font-weight: 700;
@@ -724,48 +659,24 @@ export default function FoodDeliveryPage() {
           cursor: pointer; font-family: inherit;
         }
 
-        /* ── RESPONSIVE ── */
+        /* ΓöÇΓöÇ RESPONSIVE ΓöÇΓöÇ */
         @media (max-width: 900px) {
           .fd-sidebar { display: none; }
           .fd-grid { grid-template-columns: repeat(2, 1fr); }
           .fd-cats-row { gap: 8px; }
           .fd-cat-card { min-width: 120px; padding: 8px 12px; }
         }
-
-        /* ── MOBILE: Compact horizontal-scroll categories ── */
-        @media (max-width: 640px) {
+        @media (max-width: 540px) {
           .fd-grid { grid-template-columns: 1fr; }
           .fd-body { padding: 14px 14px 40px; }
-          .fd-cats-strip { padding: 14px 0; }
-          .fd-cats-inner { padding: 0 12px; }
-          .fd-cats-label { font-size: 11px; margin-bottom: 10px; }
-          .fd-cats-row {
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            gap: 8px;
-            padding-bottom: 4px;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-          }
-          .fd-cats-row::-webkit-scrollbar { display: none; }
-          .fd-cat-card {
-            min-width: auto;
-            padding: 8px 14px;
-            gap: 8px;
-            border-radius: 10px;
-            border-width: 1.5px;
-            flex-shrink: 0;
-          }
-          .fd-cat-icon { font-size: 18px; }
-          .fd-cat-icon svg { width: 18px; height: 18px; }
-          .fd-cat-name { font-size: 13px; white-space: nowrap; }
-          .fd-cat-count { font-size: 11px; white-space: nowrap; }
+          .fd-cats-row { gap: 6px; }
+          .fd-cat-card { min-width: 0; flex: 1; }
         }
       `}</style>
 
       <div className="fd-wrap">
 
-        {/* ── HERO ── */}
+        {/* HERO */}
         <section className="fd-hero">
           <div className="fd-hero-bg" />
           <div className="fd-hero-overlay" />
@@ -776,7 +687,7 @@ export default function FoodDeliveryPage() {
               <FiSearch className="fd-search-icon" size={16} />
               <input
                 className="fd-search"
-                placeholder="Search for restrunts, cuisines..........."
+                placeholder="Search for restaurants, tiffin, bakery..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -784,54 +695,62 @@ export default function FoodDeliveryPage() {
           </div>
         </section>
 
-        {/* ── CATEGORY STRIP ── */}
+        {/* CATEGORY STRIP */}
         <section className="fd-cats-strip">
           <div className="fd-cats-inner">
             <p className="fd-cats-label">Browse Categories</p>
             <div className="fd-cats-row">
-              {CATEGORY_ICONS.map((cat) => (
-                <button
-                  key={cat.name}
-                  className={`fd-cat-card${activeCategory === cat.name ? " active" : ""}`}
-                  onClick={() => setActiveCategory(activeCategory === cat.name ? "" : cat.name)}
-                >
-                  <span className="fd-cat-icon" style={{ color: cat.color }}>
-                    <cat.icon size={22} />
-                  </span>
-                  <span>
-                    <span className="fd-cat-name">{cat.name}</span>
-                    <span className="fd-cat-count">{cat.count.toLocaleString()} listings</span>
-                  </span>
-                </button>
-              ))}
+              {FOOD_TYPE_ORDER.map((ft) => {
+                const meta = FOOD_TYPE_ICON[ft];
+                const active = selectedFoodTypes.length === 1 && selectedFoodTypes[0] === ft;
+                return (
+                  <button
+                    key={ft}
+                    className={`fd-cat-card${active ? " active" : ""}`}
+                    onClick={() => setSelectedFoodTypes(active ? [] : [ft])}
+                  >
+                    <span className="fd-cat-icon" style={{ color: meta.color }}>
+                      <meta.icon size={22} />
+                    </span>
+                    <span>
+                      <span className="fd-cat-name">{FOOD_TYPE_LABEL[ft]}</span>
+                      <span className="fd-cat-count">{categoryCounts[ft]} listings</span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        {/* ── BODY ── */}
+        {/* BODY */}
         <div className="fd-body">
 
-          {/* ── SIDEBAR ── */}
+          {/* SIDEBAR */}
           <aside className="fd-sidebar">
             <div className="fd-sb-head">
               Filter
-              <FiChevronDown size={16} />
+              <FiChevronRight size={16} />
             </div>
+            <div className="fd-sb-head">Filter</div>
 
             {/* Food Type */}
             <div className="fd-sb-section">
               <p className="fd-sb-title">Food Type</p>
-              {FOOD_TYPES.map((ft) => (
-                <div key={ft.name} className="fd-check-row" onClick={() => toggleFoodType(ft.name)}>
-                  <div className={`fd-radio${selectedFoodTypes.includes(ft.name) ? " checked" : ""}`} />
-                  <span className={`fd-check-label${selectedFoodTypes.includes(ft.name) ? " checked" : ""}`}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                      <ft.icon size={13} color={ft.color} />
-                      {ft.name}
+              {FOOD_TYPE_ORDER.map((ft) => {
+                const meta = FOOD_TYPE_ICON[ft];
+                return (
+                  <div key={ft} className="fd-check-row" onClick={() => toggleFoodType(ft)}>
+                    <div className={`fd-radio${selectedFoodTypes.includes(ft) ? " checked" : ""}`} />
+                    <span className={`fd-check-label${selectedFoodTypes.includes(ft) ? " checked" : ""}`}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <meta.icon size={13} color={meta.color} />
+                        {FOOD_TYPE_LABEL[ft]}
+                      </span>
                     </span>
-                  </span>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Price Range */}
@@ -847,30 +766,6 @@ export default function FoodDeliveryPage() {
               </div>
             </div>
 
-            {/* Delivery */}
-            <div className="fd-sb-section">
-              <p className="fd-sb-title">Delivery</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 4px" }}>
-                {DELIVERY_RANGES.map((dr) => (
-                  <div key={dr} className="fd-check-row" onClick={() => toggleDeliveryRange(dr)}>
-                    <div className={`fd-radio${selectedDeliveryRanges.includes(dr) ? " checked" : ""}`} />
-                    <span className={`fd-check-label${selectedDeliveryRanges.includes(dr) ? " checked" : ""}`} style={{ fontSize: 11 }}>{dr}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Subscription */}
-            <div className="fd-sb-section">
-              <p className="fd-sb-title">Subscription</p>
-              {SUBSCRIPTIONS.map((sub) => (
-                <div key={sub} className="fd-check-row" onClick={() => toggleSubscription(sub)}>
-                  <div className={`fd-radio${selectedSubscriptions.includes(sub) ? " checked" : ""}`} />
-                  <span className={`fd-check-label${selectedSubscriptions.includes(sub) ? " checked" : ""}`}>{sub}</span>
-                </div>
-              ))}
-            </div>
-
             {/* Delivery Days */}
             <div className="fd-sb-section">
               <p className="fd-sb-title">Delivery days</p>
@@ -881,7 +776,7 @@ export default function FoodDeliveryPage() {
                     className={`fd-day-btn${selectedDays.includes(day) ? " active" : ""}`}
                     onClick={() => toggleDay(day)}
                   >
-                    {day}
+                    {DAY_LABEL[day]}
                   </button>
                 ))}
               </div>
@@ -894,10 +789,9 @@ export default function FoodDeliveryPage() {
                 <select
                   className="fd-sort-select"
                   value={sort}
-                  onChange={(e) => setSort(e.target.value)}
+                  onChange={(e) => setSort(e.target.value as "newest" | "price-low")}
                 >
-                  <option value="newest">Most Popular</option>
-                  <option value="rating">Highest Rated</option>
+                  <option value="newest">Newest</option>
                   <option value="price-low">Price: Low to High</option>
                 </select>
                 <FiChevronDown
@@ -907,103 +801,89 @@ export default function FoodDeliveryPage() {
               </div>
             </div>
 
-            <button className="fd-more-btn" onClick={reset}>More</button>
+            <button className="fd-more-btn" onClick={reset}>Reset Filters</button>
           </aside>
 
-          {/* ── MAIN ── */}
+          {/* MAIN */}
           <div className="fd-main">
             {/* Results bar */}
             <div className="fd-results-bar">
               <span className="fd-count">
-                <strong>{sortedDisplayed.length}</strong> Resturants found
+                <strong>{cards.length}</strong> Restaurants found
               </span>
-
-              {/* ── CUSTOM SORT DROPDOWN (fixes overflow) ── */}
-              <div className="fd-sort-dropdown" ref={sortRef}>
-                <button className="fd-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
-                  {sortLabel[sort]}
-                  <FiChevronDown
-                    size={14}
-                    style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
-                  />
-                </button>
-                {isSortOpen && (
-                  <div className="fd-sort-menu">
-                    {(["newest", "rating", "price-low"] as const).map((key) => (
-                      <div
-                        key={key}
-                        className={`fd-sort-option${sort === key ? " active" : ""}`}
-                        onClick={() => {
-                          setSort(key);
-                          setIsSortOpen(false);
-                        }}
-                      >
-                        {sortLabel[key]}
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="fd-sort-wrap">
+                <select
+                  className="fd-sort"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                >
+                  <option value="newest">Newest</option>
+                  <option value="rating">Highest Rated</option>
+                  onChange={(e) => setSort(e.target.value as "newest" | "price-low")}
+                >
+                  <option value="newest">Newest</option>
+                  <option value="price-low">Price: Low to High</option>
+                </select>
+                <FiChevronDown
+                  size={12}
+                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#666" }}
+                />
               </div>
             </div>
 
-            {/* Cards */}
-            {sortedDisplayed.length === 0 ? (
+            {/* Loading */}
+            {loading && (
               <div className="fd-empty">
-                <div className="fd-empty-icon">
-                  <FiCoffee size={48} />
-                </div>
-                <p>No restaurants found</p>
-                <span>Try adjusting your filters or search term</span>
+                <p style={{ fontWeight: 700, fontSize: 15, color: "#111", margin: 0 }}>Loading restaurantsΓÇª</p>
+              </div>
+            )}
+
+            {/* Error */}
+            {!loading && error && (
+              <div className="fd-empty">
+                <p style={{ fontWeight: 700, fontSize: 15, color: "#dc2626", margin: "0 0 4px" }}>{error}</p>
+              </div>
+            )}
+
+            {/* Cards */}
+            {!loading && !error && cards.length === 0 && (
+              <div className="fd-empty">
+                <div style={{ fontSize: 48, marginBottom: 12 }}>≡ƒì╜∩╕Å</div>
+                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No restaurants found</p>
+                <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters or search term</span>
                 <br />
                 <button className="fd-empty-btn" onClick={reset}>Reset Filters</button>
               </div>
-            ) : (
-              <div className="fd-grid">
-                {sortedDisplayed.map((item) => {
-                  const isFav = !!favorites[item.id];
-                  const currentImg = imageIndices[item.id] || 0;
-                  const hasMultiple = item.images.length > 1;
+            )}
 
+            {!loading && !error && cards.length > 0 && (
+              <div className="fd-grid">
+                {cards.map((item) => {
+                  const isFav = !!favorites[item.id];
                   return (
                     <div key={item.id} className="fd-card">
-                      {/* Image */}
                       <Link
                         href={`/category/food/${item.id}`}
                         className="fd-card-img-wrap"
                         style={{ display: "block", textDecoration: "none" }}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={item.images[currentImg]} alt={item.name} className="fd-card-img" />
+                        <img src={item.thumb} alt={item.title} className="fd-card-img" />
 
-                        {/* Fav */}
+                        <div className="fd-card-badges">
+                          {item.isVerified && <span className="fd-card-badge fd-badge-verified"><FiCheckCircle size={9} style={{ marginRight: 3 }} />Verified</span>}
+                          {item.isFeatured && <span className="fd-card-badge fd-badge-featured">Featured</span>}
+                        </div>
+
                         <button className="fd-card-fav" onClick={(e) => toggleFav(item.id, e)}>
                           {isFav
                             ? <FaHeart size={12} color="#ef4444" />
                             : <FiHeart size={12} color="#9ca3af" />}
                         </button>
-
-                        {/* Carousel */}
-                        {hasMultiple && (
-                          <>
-                            <button
-                              className="fd-carousel-btn prev"
-                              onClick={(e) => prevImage(item.id, item.images.length, e)}
-                            >
-                              <FiChevronLeft size={14} />
-                            </button>
-                            <button
-                              className="fd-carousel-btn next"
-                              onClick={(e) => nextImage(item.id, item.images.length, e)}
-                            >
-                              <FiChevronRight size={14} />
-                            </button>
-                          </>
-                        )}
                       </Link>
 
-                      {/* Body */}
                       <div className="fd-card-body">
-                        <p className="fd-card-name">{item.name}</p>
+                        <p className="fd-card-name">{item.title}</p>
                         <div className="fd-card-meta">
                           <div className="fd-card-meta-left">
                             <FiMapPin size={11} />
@@ -1013,39 +893,34 @@ export default function FoodDeliveryPage() {
                         </div>
                         <p className="fd-card-cuisine">
                           <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                            <FiCoffee size={10} />
+                            <span style={{ fontSize: 10 }}>≡ƒì╜∩╕Å</span>
                             {item.cuisine}
                           </span>
                         </p>
                         {item.isFreshAndHygienic && (
                           <div className="fd-card-hygienic">
-                            <FaLeaf size={12} />
+                            <span style={{ fontSize: 12 }}>≡ƒî┐</span>
                             Fresh and Hygenic
                           </div>
                         )}
                         <div className="fd-card-stars">
                           {renderStars(item.rating, item.reviewCount)}
+                          <span className="fd-card-type">{item.foodType}</span>
+                          <span className="fd-card-price">{item.price}</span>
                         </div>
+                        <span className="fd-card-posted">
+                          {item.postedDaysAgo === 0 ? "Posted today" : `Posted ${item.postedDaysAgo}d ago`}
+                        </span>
 
                         <div className="fd-card-actions">
                           <Link href={`/category/food/${item.id}`} className="fd-btn-order">
-                            Order Now
+                            View Details
                           </Link>
-                          <button className="fd-btn-subscribe">
-                            Subscribe
-                          </button>
                         </div>
                       </div>
                     </div>
                   );
                 })}
-              </div>
-            )}
-
-            {/* Load More */}
-            {sortedDisplayed.length > 0 && (
-              <div className="fd-load-more">
-                <button className="fd-load-more-btn">Views More</button>
               </div>
             )}
           </div>

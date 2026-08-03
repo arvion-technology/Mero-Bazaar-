@@ -6,23 +6,20 @@ import {
   FiArrowLeft,
   FiChevronRight,
   FiFileText,
-  FiMapPin,
   FiBriefcase,
   FiCheck,
   FiChevronDown,
   FiInfo,
-  FiTruck,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useDraft } from "./layout";
 
 const ACCENT = "#2563eb";
-const ACCENT_HOVER = "#1d4ed8";
 const ACCENT_LIGHT = "#eff6ff";
 const DANGER = "#dc2626";
 const SUCCESS = "#10b981";
 const BORDER = "#e2e8f0";
-const BORDER_FOCUS = "#bfdbfe";
 const TEXT_PRIMARY = "#0f172a";
 const TEXT_SECONDARY = "#64748b";
 const TEXT_MUTED = "#94a3b8";
@@ -37,12 +34,10 @@ const steps = [
   { label: "Preview", icon: FiInfo, status: "upcoming" as const },
 ];
 
-const foodTypes = ["TIFFIN", "FAST FOOD", "BAKERY", "GROCERY", "HOMEMADE", "BEVERAGE", "OTHER"];
-const priceUnits = ["PER MEAL", "PER PERSON", "PER ITEM", "PER KG", "PER PLATE", "PER DAY"];
-
+const foodTypes = ["TIFFIN", "FAST_FOOD", "BAKERY", "GROCERY", "HOMEMADE", "BEVERAGE", "OTHER"];
+const priceUnits = ["PER_MEAL", "PER_PERSON", "PER_ITEM", "PER_KG", "PER_PLATE", "PER_DAY"];
 const weekDays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
-/* ── Portal-based Custom Select ── */
 function CustomSelect({
   value,
   options,
@@ -56,6 +51,7 @@ function CustomSelect({
 }) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
   const updatePosition = useCallback(() => {
@@ -90,7 +86,10 @@ function CustomSelect({
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const clickedTrigger = triggerRef.current?.contains(target);
+      const clickedMenu = menuRef.current?.contains(target);
+      if (!clickedTrigger && !clickedMenu) {
         setOpen(false);
       }
     }
@@ -153,6 +152,7 @@ function CustomSelect({
 
       {open && (
         <div
+          ref={menuRef}
           style={{
             ...menuStyle,
             background: CARD_BG,
@@ -196,7 +196,7 @@ function CustomSelect({
                 if (value !== opt) (e.currentTarget as HTMLButtonElement).style.background = "transparent";
               }}
             >
-              {opt}
+              {opt.replace(/_/g, " ")}
             </button>
           ))}
         </div>
@@ -207,62 +207,45 @@ function CustomSelect({
 
 export default function NewFoodDeliveryListingPage() {
   const router = useRouter();
+  const { foodData, setFoodData } = useDraft();
 
-  // ── Basic Info ──
-  const [title, setTitle] = useState("");
-  const [foodType, setFoodType] = useState("TIFFIN");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [priceUnit, setPriceUnit] = useState("PER MEAL");
-
-  // ── Service & Delivery ──
-  const [deliveryRadius, setDeliveryRadius] = useState("");
-  const [hygieneRating, setHygieneRating] = useState("");
-  const [minOrderAmount, setMinOrderAmount] = useState("");
-  const [subscriptionAvailable, setSubscriptionAvailable] = useState(false);
-  const [deliveryDays, setDeliveryDays] = useState<string[]>(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]);
-
-  // ── Additional Info ──
-  const [shortDescription, setShortDescription] = useState("");
+  const update = <K extends keyof typeof foodData>(key: K, value: (typeof foodData)[K]) => {
+    setFoodData({ ...foodData, [key]: value });
+  };
 
   const formattedPrice = useMemo(() => {
-    if (!price) return "";
-    const num = Number(price.replace(/,/g, ""));
-    if (isNaN(num)) return price;
-    return num.toLocaleString("en-IN");
-  }, [price]);
+    if (!foodData.price) return "";
+    const num = Number(foodData.price.replace(/,/g, ""));
+    return isNaN(num) ? foodData.price : num.toLocaleString("en-IN");
+  }, [foodData.price]);
 
-  const formattedMinOrder = useMemo(() => {
-    if (!minOrderAmount) return "";
-    const num = Number(minOrderAmount.replace(/,/g, ""));
-    if (isNaN(num)) return minOrderAmount;
-    return num.toLocaleString("en-IN");
-  }, [minOrderAmount]);
-
-  const handlePriceChange = (val: string) => {
-    const cleaned = val.replace(/[^0-9]/g, "");
-    setPrice(cleaned);
-  };
-
-  const handleMinOrderChange = (val: string) => {
-    const cleaned = val.replace(/[^0-9]/g, "");
-    setMinOrderAmount(cleaned);
-  };
+  const handlePriceChange = (val: string) => update("price", val.replace(/[^0-9]/g, ""));
 
   const toggleDeliveryDay = (day: string) => {
-    setDeliveryDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-    );
+    const days = foodData.deliveryDays.includes(day)
+      ? foodData.deliveryDays.filter((d) => d !== day)
+      : [...foodData.deliveryDays, day];
+    update("deliveryDays", days);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const {
+      title,
+      description,
+      price,
+      foodType,
+      priceUnit,
+      deliveryDays,
+      location,
+    } = foodData;
+
     if (!title || !description || !price || !foodType || !priceUnit) {
       toast.error("Please fill all required fields");
       return;
     }
-    if (!deliveryRadius || !hygieneRating || !minOrderAmount) {
-      toast.error("Please fill all service & delivery fields");
+    if (!location.trim()) {
+      toast.error("Please enter a location");
       return;
     }
     if (deliveryDays.length === 0) {
@@ -270,30 +253,12 @@ export default function NewFoodDeliveryListingPage() {
       return;
     }
 
-    const listingData = {
-      title,
-      foodType,
-      description,
-      price,
-      priceUnit,
-      deliveryRadius,
-      hygieneRating,
-      minOrderAmount,
-      subscriptionAvailable,
-      deliveryDays,
-      shortDescription,
-      location: "Kathmandu, Nepal",
-    };
-    localStorage.setItem("foodDeliveryListing", JSON.stringify(listingData));
-
     toast.success("Details saved! Now add photos.");
     router.push("/seller/listing/food-home-delivery/photos");
   };
 
-  const descLength = description.length;
+  const descLength = foodData.description.length;
   const descMax = 500;
-  const shortDescLength = shortDescription.length;
-  const shortDescMax = 200;
 
   return (
     <>
@@ -315,7 +280,6 @@ export default function NewFoodDeliveryListingPage() {
           padding: 32px 24px 64px;
         }
 
-        /* ── Header ── */
         .listing-header {
           display: flex;
           align-items: center;
@@ -374,7 +338,6 @@ export default function NewFoodDeliveryListingPage() {
           flex-shrink: 0;
         }
 
-        /* ── Stepper ── */
         .stepper {
           display: flex;
           align-items: center;
@@ -446,7 +409,6 @@ export default function NewFoodDeliveryListingPage() {
           background: ${SUCCESS};
         }
 
-        /* ── Form Card ── */
         .form-card {
           background: ${CARD_BG};
           border-radius: 20px;
@@ -466,7 +428,6 @@ export default function NewFoodDeliveryListingPage() {
             0 0 0 1px rgba(0,0,0,0.02);
         }
 
-        /* ── Section Header ── */
         .section-header {
           display: flex;
           align-items: center;
@@ -485,7 +446,6 @@ export default function NewFoodDeliveryListingPage() {
         }
 
         .section-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-        .section-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
         .section-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
 
         .section-title-wrap h2 {
@@ -495,13 +455,6 @@ export default function NewFoodDeliveryListingPage() {
           letter-spacing: -0.3px;
         }
 
-        .section-title-wrap p {
-          font-size: 13px;
-          color: ${TEXT_MUTED};
-          margin-top: 2px;
-        }
-
-        /* ── Form Grid ── */
         .form-row {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -592,7 +545,6 @@ export default function NewFoodDeliveryListingPage() {
 
         .char-counter.near-limit { color: ${DANGER}; font-weight: 600; }
 
-        /* ── Category ── */
         .category-wrap { margin-bottom: 32px; }
 
         .category-label {
@@ -630,14 +582,12 @@ export default function NewFoodDeliveryListingPage() {
         .category-pill svg { transition: transform 0.2s; }
         .category-pill:hover svg { transform: rotate(180deg); }
 
-        /* ── Divider ── */
         .divider {
           height: 1px;
           background: linear-gradient(90deg, transparent, ${BORDER}, transparent);
           margin: 32px 0;
         }
 
-        /* ── Delivery Days ── */
         .days-row {
           display: flex;
           flex-wrap: wrap;
@@ -672,29 +622,6 @@ export default function NewFoodDeliveryListingPage() {
           box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
         }
 
-        /* ── Checkbox ── */
-        .checkbox-label {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 13.5px;
-          color: #334155;
-          cursor: pointer;
-          font-weight: 500;
-          padding: 4px 0;
-          line-height: 1.4;
-        }
-
-        .checkbox-input {
-          width: 18px;
-          height: 18px;
-          accent-color: ${SITE_PRIMARY};
-          cursor: pointer;
-          flex-shrink: 0;
-          margin-top: 1px;
-        }
-
-        /* ── Submit Button ── */
         .submit-wrap {
           display: flex;
           justify-content: space-between;
@@ -754,14 +681,6 @@ export default function NewFoodDeliveryListingPage() {
           box-shadow: 0 2px 10px rgba(37, 99, 235, 0.2);
         }
 
-        .submit-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none;
-          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
-        }
-
-        /* ── Responsive ── */
         @media (max-width: 768px) {
           .listing-container { padding: 20px 20px 48px; }
           .form-card { padding: 28px; border-radius: 16px; }
@@ -782,7 +701,6 @@ export default function NewFoodDeliveryListingPage() {
 
       <div className="listing-page">
         <div className="listing-container">
-          {/* Header */}
           <div className="listing-header">
             <button type="button" className="back-btn" onClick={() => router.back()}>
               <FiArrowLeft size={18} />
@@ -796,7 +714,6 @@ export default function NewFoodDeliveryListingPage() {
             </div>
           </div>
 
-          {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
               <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
@@ -814,7 +731,6 @@ export default function NewFoodDeliveryListingPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="form-card">
-            {/* Category */}
             <div className="category-wrap">
               <label className="category-label">Category</label>
               <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
@@ -826,7 +742,6 @@ export default function NewFoodDeliveryListingPage() {
 
             <div className="divider" />
 
-            {/* Section: Basic Information */}
             <div className="section-header">
               <div className="section-icon blue">
                 <FiFileText size={18} color="#fff" />
@@ -843,18 +758,14 @@ export default function NewFoodDeliveryListingPage() {
                   type="text"
                   className="form-input"
                   placeholder="Enter Food Title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  value={foodData.title}
+                  onChange={(e) => update("title", e.target.value)}
                   required
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">Food type<span className="required">*</span></label>
-                <CustomSelect
-                  value={foodType}
-                  options={foodTypes}
-                  onChange={setFoodType}
-                />
+                <CustomSelect value={foodData.foodType} options={foodTypes} onChange={(v) => update("foodType", v)} />
               </div>
             </div>
 
@@ -864,9 +775,9 @@ export default function NewFoodDeliveryListingPage() {
                 <textarea
                   className="form-textarea"
                   placeholder="Enter Description"
-                  value={description}
+                  value={foodData.description}
                   maxLength={descMax}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) => update("description", e.target.value)}
                   required
                 />
                 <div className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}>
@@ -893,81 +804,7 @@ export default function NewFoodDeliveryListingPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Price Unit<span className="required">*</span></label>
-                <CustomSelect
-                  value={priceUnit}
-                  options={priceUnits}
-                  onChange={setPriceUnit}
-                />
-              </div>
-            </div>
-
-            <div className="divider" />
-
-            {/* Section: Service & Delivery Information */}
-            <div className="section-header">
-              <div className="section-icon green">
-                <FiTruck size={18} color="#fff" />
-              </div>
-              <div className="section-title-wrap">
-                <h2>Service & Delivery Information</h2>
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Delivery Radius<span className="required">*</span></label>
-                <input
-                  type="number"
-                  className="form-input"
-                  placeholder="e.g. 5"
-                  value={deliveryRadius}
-                  onChange={(e) => setDeliveryRadius(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Hygiene Rating(0-5)<span className="required">*</span></label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  className="form-input"
-                  placeholder="e.g. 4.7"
-                  value={hygieneRating}
-                  onChange={(e) => setHygieneRating(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Minimum Order Amount(NPR)<span className="required">*</span></label>
-                <div className="price-input-wrap">
-                  <span className="price-prefix">Rs.</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    className="form-input"
-                    placeholder="Enter amount"
-                    value={formattedMinOrder}
-                    onChange={(e) => handleMinOrderChange(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Subscription Available<span className="required">*</span></label>
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    className="checkbox-input"
-                    checked={subscriptionAvailable}
-                    onChange={(e) => setSubscriptionAvailable(e.target.checked)}
-                  />
-                  Yes, Subscription Available
-                </label>
+                <CustomSelect value={foodData.priceUnit} options={priceUnits} onChange={(v) => update("priceUnit", v)} />
               </div>
             </div>
 
@@ -979,10 +816,10 @@ export default function NewFoodDeliveryListingPage() {
                     <button
                       key={day}
                       type="button"
-                      className={`day-chip ${deliveryDays.includes(day) ? "active" : ""}`}
+                      className={`day-chip ${foodData.deliveryDays.includes(day) ? "active" : ""}`}
                       onClick={() => toggleDeliveryDay(day)}
                     >
-                      {deliveryDays.includes(day) && <FiCheck size={12} />}
+                      {foodData.deliveryDays.includes(day) && <FiCheck size={12} />}
                       {day}
                     </button>
                   ))}
@@ -992,29 +829,26 @@ export default function NewFoodDeliveryListingPage() {
 
             <div className="divider" />
 
-            {/* Section: Additional Information */}
             <div className="section-header">
               <div className="section-icon purple">
                 <FiInfo size={18} color="#fff" />
               </div>
               <div className="section-title-wrap">
-                <h2>Additional Information</h2>
+                <h2>Location</h2>
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group full-width">
-                <label className="form-label">Short Description(Optional)<span className="required">*</span></label>
-                <textarea
-                  className="form-textarea"
-                  placeholder="e.g. Fresh, Homemade and Hygenic food delivery to your doorstep"
-                  value={shortDescription}
-                  maxLength={shortDescMax}
-                  onChange={(e) => setShortDescription(e.target.value)}
+                <label className="form-label">Location<span className="required">*</span></label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. Lalitpur, Nepal"
+                  value={foodData.location}
+                  onChange={(e) => update("location", e.target.value)}
+                  required
                 />
-                <div className={`char-counter ${shortDescLength > shortDescMax * 0.9 ? "near-limit" : ""}`}>
-                  {shortDescLength}/{shortDescMax}
-                </div>
               </div>
             </div>
 

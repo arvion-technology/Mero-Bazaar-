@@ -1,15 +1,16 @@
 import { adaptListing } from "./adapter";
-import { adaptSecondhandListing } from "./adapters/secondhandAdapters";
-import type { DBListing, ListingDetail, RelatedListing } from "../app/types/listing";
+import { toSecondhandDetail } from "./adapters/secondhandAdapters";
+import type { ListingDetail, SecondhandDetail, RelatedListing } from "../app/types/listing";
+import type { DBListing } from "../app/types/vehicle";
+import type { SecondhandListing } from "../app/types/secondhand";
 
-// Fetch single listing
-export async function fetchListing(id: string): Promise<ListingDetail | null> {
+type RawListing = DBListing | SecondhandListing;
+
+export async function fetchListing(id: string): Promise<ListingDetail | SecondhandDetail | null> {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/listings/${id}`,
-      {
-        next: { revalidate: 0 },
-      }
+      { next: { revalidate: 0 } }
     );
 
     if (!res.ok) {
@@ -17,17 +18,23 @@ export async function fetchListing(id: string): Promise<ListingDetail | null> {
       return null;
     }
 
-    const db = (await res.json()) as DBListing;
+    const raw = (await res.json()) as RawListing;
 
-    if (!db) {
-      console.error("[fetchListing] empty db response");
+    if (!raw) {
+      console.error("[fetchListing] empty response");
       return null;
     }
-    switch (db.category) {
+
+    switch (raw.category) {
       case "SECONDHAND":
-        return adaptSecondhandListing(db);
-      default:
-        return adaptListing(db);
+        return toSecondhandDetail(raw);
+      case "VEHICLE":
+        return adaptListing(raw);
+      default: {
+        const _exhaustive: never = raw;
+        console.error("[fetchListing] unhandled category:", (raw as RawListing).category);
+        return null;
+      }
     }
   } catch (err) {
     console.error("[fetchListing] failed:", err);
