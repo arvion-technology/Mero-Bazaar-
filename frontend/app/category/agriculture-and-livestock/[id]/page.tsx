@@ -344,19 +344,19 @@ export default function AgriDetailPage() {
                   </button>
 
                   {/* Posted time */}
-                  {item.postedDaysAgo !== undefined && (
+                  {detail.postedDaysAgo !== undefined && (
                     <span className="ald-posted-tag">
-                      {item.postedDaysAgo === 0 ? "Today" : `${item.postedDaysAgo}d ago`}
+                      {detail.postedDaysAgo === 0 ? "Today" : `${detail.postedDaysAgo}d ago`}
                     </span>
                   )}
-
-                  {/* Organic ribbon */}
-                  {item.isOrganic && (
+            {/* 
+                  {/* Organic ribbon 
+                  {detail.isOrganic && (
                     <span className="ald-organic-tag"><FaLeaf size={10} /> Organic</span>
-                  )}
+                  )} */}
                 </div>
               </div>
-{/* 
+
               <div className="ald-tips" style={{ marginTop: 16 }}>
                 <p className="ald-tips-title"><FiAlertTriangle size={12} style={{ marginRight: 6 }} /> Safety Tips</p>
                 <div className="ald-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Meet in a safe, public location</div>
@@ -372,8 +372,7 @@ export default function AgriDetailPage() {
                 <p className="ald-price">{detail.price}</p>
                 <div className="ald-price-divider" />
                 <div className="ald-location"><FiMapPin size={14} /> {detail.location}</div>
-                <p className="ald-desc">{detail.description}</p> 
-               {/* currently not visible in the UI */}
+                <p className="ald-desc">{detail.description}</p>
 
                 <div className="ald-details-grid">
                   {detail.breed !== "N/A" && (
@@ -397,12 +396,12 @@ export default function AgriDetailPage() {
                 </div>
               </div>
 
-                <SellerCard
-                  seller={detail.seller}
-                  reviews={detail.reviews}
-                  listingId={detail.id}
-                  sellerId={detail.sellerId}
-                />
+              <SellerCard
+                seller={detail.seller}
+                reviews={detail.reviews}
+                listingId={detail.id}
+                sellerId={detail.sellerId}
+              />
             </div>
           </div>
         </div>
