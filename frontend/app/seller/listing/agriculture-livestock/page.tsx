@@ -6,21 +6,13 @@ import {
   FiArrowLeft,
   FiChevronRight,
   FiChevronDown,
-  FiMapPin,
   FiFileText,
   FiBox,
   FiCheck,
-  FiCalendar,
-  FiDollarSign,
-  FiAward,
-  FiTruck,
-  FiHeart,
-  FiShield,
-  FiClock,
-  FiGlobe,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useDraft } from "./layout";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -51,22 +43,6 @@ const listingTypes = [
   "Farm Labour",
 ];
 
-const districts = ["Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur", "Bharatpur"];
-
-const districtVillages: Record<string, string[]> = {
-  Kathmandu: ["Budhanilkantha", "Thamel", "Koteshwor", "Maharajgunj"],
-  Pokhara: ["Lakeside", "Bagar", "Mahendrapool"],
-  Lalitpur: ["Patan", "Pulchowk", "Jawalakhel"],
-  Bhaktapur: ["Suryabinayak", "Madhyapur Thimi", "Changunarayan"],
-  Bharatpur: ["Narayangarh", "Tandi", "Parsa"],
-};
-const locations = [
-  "Budhanilkantha, Kathmandu",
-  "Patan, Lalitpur",
-  "Thamel, Kathmandu",
-  "Lakeside, Pokhara",
-  "Maharajgunj, Kathmandu",
-];
 const units = ["KG", "HEAD", "Piece", "Litre", "Gram", "Bundle"];
 const seasons = ["March - June", "July - October", "November - February", "All Year"];
 const animalTypes = ["Cow", "Dog", "Goat", "Buffalo", "Chicken", "Sheep"];
@@ -74,7 +50,6 @@ const breeds = ["Jersey", "Holstein", "Local", "Hybrid", "Sahiwal"];
 const ages = ["1 Year", "2 Years", "3 Years", "4 Years", "5+ Years"];
 const healthStatuses = ["VACCINATED", "NOT VACCINATED", "PARTIALLY VACCINATED"];
 const serviceTypes = ["General Health Checkup", "Vaccination", "Surgery", "Deworming", "Consultation"];
-const experiences = ["1+ Years", "3+ Years", "5+ Years", "10+ Years"];
 const priceUnits = ["Per Visit", "Per Hour", "Per Day", "Per Service"];
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -185,117 +160,47 @@ function CustomSelect({
 
 export default function AgricultureListingPage() {
   const router = useRouter();
+  const { agricultureData, setAgricultureData } = useDraft();
+  const d = agricultureData;
 
-  // ── Listing Type ──
-  const [listingType, setListingType] = useState("Produce");
-
-  // ── Location (Common) ──
-  const [district, setDistrict] = useState("");
-  const [village, setVillage] = useState("");
-  const [location, setLocation] = useState("");
-
-  // ── Pricing (Common) ──
-  const [price, setPrice] = useState("");
-  const [unit, setUnit] = useState("KG");
-
-  // ── Produce-specific ──
-  const [organicCertified, setOrganicCertified] = useState(false);
-  const [organicVerified, setOrganicVerified] = useState(false);
-  const [seasonalAvailability, setSeasonalAvailability] = useState("March - June");
-
-  // ── LiveStock-specific ──
-  const [animalType, setAnimalType] = useState("");
-  const [age, setAge] = useState("3 Years");
-  const [breed, setBreed] = useState("Jersey");
-  const [healthVaccineStatus, setHealthVaccineStatus] = useState("VACCINATED");
-
-  // ── Vet Service-specific ──
-  const [serviceType, setServiceType] = useState("General Health Checkup");
-  const [experience, setExperience] = useState("");
-  const [mobileService, setMobileService] = useState(true);
-  const [servicePrice, setServicePrice] = useState("");
-  const [priceUnit, setPriceUnit] = useState("Per Visit");
-  const [serviceArea, setServiceArea] = useState("");
-  const [serviceRadius, setServiceRadius] = useState("10");
-  const [healthCertificate, setHealthCertificate] = useState(true);
-  const [vaccinationAvailable, setVaccinationAvailable] = useState(true);
-  const [availabilityDays, setAvailabilityDays] = useState<string[]>(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
-
-  // ── Common ──
-  const [itemName, setItemName] = useState("");
-  const [description, setDescription] = useState("");
-
-  const isProduce = listingType === "Produce";
-  const isLiveStock = listingType === "LiveStock";
-  const isVetService = listingType === "Vet Service";
+  const isProduce = d.listingType === "Produce";
+  const isLiveStock = d.listingType === "LiveStock";
+  const isVetService = d.listingType === "Vet Service";
 
   const formattedPrice = useMemo(() => {
-    if (!price && !servicePrice) return "";
-    const val = isVetService ? servicePrice : price;
+    const val = isVetService ? d.servicePrice : d.price;
+    if (!val) return "";
     const num = Number(val.replace(/,/g, ""));
     if (isNaN(num)) return val;
     return num.toLocaleString("en-IN");
-  }, [price, servicePrice, isVetService]);
+  }, [d.price, d.servicePrice, isVetService]);
 
   const handlePriceChange = (val: string) => {
     const cleaned = val.replace(/[^0-9]/g, "");
-    if (isVetService) setServicePrice(cleaned);
-    else setPrice(cleaned);
+    if (isVetService) setAgricultureData({ ...d, servicePrice: cleaned });
+    else setAgricultureData({ ...d, price: cleaned });
   };
 
   const toggleDay = (day: string) => {
-    setAvailabilityDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-    );
+    const next = d.availabilityDays.includes(day)
+      ? d.availabilityDays.filter((x) => x !== day)
+      : [...d.availabilityDays, day];
+    setAgricultureData({ ...d, availabilityDays: next });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const baseData = {
-      listingType,
-      itemName: itemName || (isVetService ? serviceType : "Fresh Organic Vegetable"),
+    const finalData = {
+      ...d,
+      itemName: d.itemName || (isVetService ? d.serviceType : "Fresh Organic Vegetable"),
       price: formattedPrice || (isProduce ? "120" : isLiveStock ? "55,000" : "1,500"),
-      unit: isVetService ? priceUnit : unit,
-      location,
-      district,
-      village,
-      description: description || (isVetService 
+      description: d.description || (isVetService
         ? "Professional veterinary services at your doorstep. We provide general health checkup, vaccination, consultation and basic treatment for your pets."
         : "Toyota Fortuner 2021 model in excellent condition. Well maintained, all documents are valid."),
     };
 
-    let typeData: Record<string, any> = {};
-
-    if (isProduce) {
-      typeData = {
-        organicCertified,
-        organicVerified,
-        seasonalAvailability,
-      };
-    } else if (isLiveStock) {
-      typeData = {
-        animalType,
-        age,
-        breed,
-        healthVaccineStatus,
-      };
-    } else if (isVetService) {
-      typeData = {
-        serviceType,
-        animalType,
-        experience,
-        mobileService,
-        serviceArea,
-        serviceRadius,
-        healthCertificate,
-        vaccinationAvailable,
-        availabilityDays,
-      };
-    }
-
-    const fullData = { ...baseData, ...typeData };
-    localStorage.setItem("agricultureListingData", JSON.stringify(fullData));
+    setAgricultureData(finalData);
     toast.success("Details saved! Now add photos.");
     router.push("/seller/listing/agriculture-livestock/photos");
   };
@@ -411,10 +316,6 @@ export default function AgricultureListingPage() {
 
         .section-header h2 {
           font-size: 16px; font-weight: 700; color: ${SITE_PRIMARY};
-        }
-
-        .section-header p {
-          font-size: 12px; color: ${TEXT_MUTED};
         }
 
         .radio-group {
@@ -637,7 +538,6 @@ export default function AgricultureListingPage() {
 
       <div className="listing-page">
         <div className="listing-container">
-          {/* Header */}
           <div className="listing-header">
             <button type="button" className="back-btn" onClick={() => router.back()}>
               <FiArrowLeft size={18} />
@@ -651,7 +551,6 @@ export default function AgricultureListingPage() {
             </div>
           </div>
 
-          {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
               <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
@@ -669,7 +568,6 @@ export default function AgricultureListingPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="form-card">
-            {/* Category */}
             <div className="category-wrap">
               <label className="category-label">Category</label>
               <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
@@ -680,7 +578,6 @@ export default function AgricultureListingPage() {
             </div>
 
             <div className="form-layout">
-              {/* Left: Listing Type */}
               <div className="left-col">
                 <div className="section-header">
                   <h2>Listing Type</h2>
@@ -690,15 +587,15 @@ export default function AgricultureListingPage() {
                   {listingTypes.map((type) => (
                     <label
                       key={type}
-                      className={`radio-item ${listingType === type ? "active" : ""}`}
-                      onClick={() => setListingType(type)}
+                      className={`radio-item ${d.listingType === type ? "active" : ""}`}
+                      onClick={() => setAgricultureData({ ...d, listingType: type })}
                     >
                       <input
                         type="radio"
                         name="listingType"
                         value={type}
-                        checked={listingType === type}
-                        onChange={() => setListingType(type)}
+                        checked={d.listingType === type}
+                        onChange={() => setAgricultureData({ ...d, listingType: type })}
                       />
                       <span className="radio-circle"></span>
                       <span className="radio-label">{type}</span>
@@ -707,9 +604,7 @@ export default function AgricultureListingPage() {
                 </div>
               </div>
 
-              {/* Right: Dynamic Forms */}
               <div className="right-section">
-                {/* Location Information */}
                 <div className="form-section">
                   <div className="section-title">Location Information</div>
                   <div className="form-row two-col">
@@ -719,8 +614,8 @@ export default function AgricultureListingPage() {
                         type="text"
                         className="form-input"
                         placeholder="Enter district"
-                        value={district}
-                        onChange={(e) => setDistrict(e.target.value)}
+                        value={d.district}
+                        onChange={(e) => setAgricultureData({ ...d, district: e.target.value })}
                         required
                       />
                     </div>
@@ -730,8 +625,8 @@ export default function AgricultureListingPage() {
                         type="text"
                         className="form-input"
                         placeholder="Enter village"
-                        value={village}
-                        onChange={(e) => setVillage(e.target.value)}
+                        value={d.village}
+                        onChange={(e) => setAgricultureData({ ...d, village: e.target.value })}
                         required
                       />
                     </div>
@@ -742,14 +637,13 @@ export default function AgricultureListingPage() {
                       type="text"
                       className="form-input"
                       placeholder="Enter location/area"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
+                      value={d.location}
+                      onChange={(e) => setAgricultureData({ ...d, location: e.target.value })}
                       required
                     />
                   </div>
                 </div>
 
-                {/* Pricing Information */}
                 <div className="form-section">
                   <div className="section-title">Pricing Information</div>
                   <div className="form-row two-col">
@@ -762,7 +656,7 @@ export default function AgricultureListingPage() {
                         inputMode="numeric"
                         className="form-input"
                         placeholder={isVetService ? "1,500" : "120"}
-                        value={isVetService ? (servicePrice ? Number(servicePrice).toLocaleString("en-IN") : "") : formattedPrice}
+                        value={isVetService ? (d.servicePrice ? Number(d.servicePrice).toLocaleString("en-IN") : "") : formattedPrice}
                         onChange={(e) => handlePriceChange(e.target.value.replace(/,/g, ""))}
                         required
                       />
@@ -771,26 +665,25 @@ export default function AgricultureListingPage() {
                       <label className="form-label">Unit <span className="required">*</span></label>
                       <CustomSelect
                         options={isVetService ? priceUnits : units}
-                        value={isVetService ? priceUnit : unit}
-                        onChange={(val) => isVetService ? setPriceUnit(val) : setUnit(val)}
+                        value={isVetService ? d.priceUnit : d.unit}
+                        onChange={(val) => setAgricultureData(isVetService ? { ...d, priceUnit: val } : { ...d, unit: val })}
                         required
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Produce-specific: Product Details */}
                 {isProduce && (
                   <div className="form-section">
                     <div className="section-title">Product /Animal Details</div>
                     <div className="checkbox-group" style={{ marginBottom: "16px" }}>
                       <label className="checkbox-inline">
-                        <input type="checkbox" checked={organicCertified} onChange={(e) => setOrganicCertified(e.target.checked)} />
+                        <input type="checkbox" checked={d.organicCertified} onChange={(e) => setAgricultureData({ ...d, organicCertified: e.target.checked })} />
                         <span className="check-box"></span>
                         <span>Organic Certified</span>
                       </label>
                       <label className="checkbox-inline">
-                        <input type="checkbox" checked={organicVerified} onChange={(e) => setOrganicVerified(e.target.checked)} />
+                        <input type="checkbox" checked={d.organicVerified} onChange={(e) => setAgricultureData({ ...d, organicVerified: e.target.checked })} />
                         <span className="check-box"></span>
                         <span>Organic Verified</span>
                       </label>
@@ -799,25 +692,24 @@ export default function AgricultureListingPage() {
                       <label className="form-label">Seasonal Availability <span className="optional">(Optional)</span></label>
                       <CustomSelect
                         options={seasons}
-                        value={seasonalAvailability}
-                        onChange={(val) => setSeasonalAvailability(val)}
+                        value={d.seasonalAvailability}
+                        onChange={(val) => setAgricultureData({ ...d, seasonalAvailability: val })}
                       />
                     </div>
                   </div>
                 )}
 
-                {/* LiveStock-specific: Animal Details */}
                 {isLiveStock && (
                   <div className="form-section">
                     <div className="section-title">Product /Animal Details</div>
                     <div className="checkbox-group" style={{ marginBottom: "16px" }}>
                       <label className="checkbox-inline">
-                        <input type="checkbox" checked={organicCertified} onChange={(e) => setOrganicCertified(e.target.checked)} />
+                        <input type="checkbox" checked={d.organicCertified} onChange={(e) => setAgricultureData({ ...d, organicCertified: e.target.checked })} />
                         <span className="check-box"></span>
                         <span>Organic Certified</span>
                       </label>
                       <label className="checkbox-inline">
-                        <input type="checkbox" checked={organicVerified} onChange={(e) => setOrganicVerified(e.target.checked)} />
+                        <input type="checkbox" checked={d.organicVerified} onChange={(e) => setAgricultureData({ ...d, organicVerified: e.target.checked })} />
                         <span className="check-box"></span>
                         <span>Organic Verified</span>
                       </label>
@@ -827,8 +719,8 @@ export default function AgricultureListingPage() {
                         <label className="form-label">Animal Type <span className="required">*</span></label>
                         <CustomSelect
                           options={animalTypes}
-                          value={animalType}
-                          onChange={(val) => setAnimalType(val)}
+                          value={d.animalType}
+                          onChange={(val) => setAgricultureData({ ...d, animalType: val })}
                           required
                         />
                       </div>
@@ -836,16 +728,16 @@ export default function AgricultureListingPage() {
                         <label className="form-label">Age <span className="optional">(Optional)</span></label>
                         <CustomSelect
                           options={ages}
-                          value={age}
-                          onChange={(val) => setAge(val)}
+                          value={d.age}
+                          onChange={(val) => setAgricultureData({ ...d, age: val })}
                         />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Breed <span className="optional">(Optional)</span></label>
                         <CustomSelect
                           options={breeds}
-                          value={breed}
-                          onChange={(val) => setBreed(val)}
+                          value={d.breed}
+                          onChange={(val) => setAgricultureData({ ...d, breed: val })}
                         />
                       </div>
                     </div>
@@ -853,14 +745,13 @@ export default function AgricultureListingPage() {
                       <label className="form-label">Health / Vaccine Status <span className="optional">(Optional)</span></label>
                       <CustomSelect
                         options={healthStatuses}
-                        value={healthVaccineStatus}
-                        onChange={(val) => setHealthVaccineStatus(val)}
+                        value={d.healthVaccineStatus}
+                        onChange={(val) => setAgricultureData({ ...d, healthVaccineStatus: val })}
                       />
                     </div>
                   </div>
                 )}
 
-                {/* Vet Service-specific: Details Information */}
                 {isVetService && (
                   <div className="form-section">
                     <div className="section-title">Details Information</div>
@@ -869,8 +760,8 @@ export default function AgricultureListingPage() {
                         <label className="form-label">Service Type <span className="required">*</span></label>
                         <CustomSelect
                           options={serviceTypes}
-                          value={serviceType}
-                          onChange={(val) => setServiceType(val)}
+                          value={d.serviceType}
+                          onChange={(val) => setAgricultureData({ ...d, serviceType: val })}
                           required
                         />
                       </div>
@@ -880,8 +771,8 @@ export default function AgricultureListingPage() {
                           type="text"
                           className="form-input"
                           placeholder="e.g. Cow, Dog, Goat"
-                          value={animalType}
-                          onChange={(e) => setAnimalType(e.target.value)}
+                          value={d.animalType}
+                          onChange={(e) => setAgricultureData({ ...d, animalType: e.target.value })}
                           required
                         />
                       </div>
@@ -893,15 +784,15 @@ export default function AgricultureListingPage() {
                           type="text"
                           className="form-input"
                           placeholder="e.g. 5+ Years"
-                          value={experience}
-                          onChange={(e) => setExperience(e.target.value)}
+                          value={d.experience}
+                          onChange={(e) => setAgricultureData({ ...d, experience: e.target.value })}
                           required
                         />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Service Type <span className="required">*</span></label>
                         <label className="checkbox-inline" style={{ padding: "8px 0" }}>
-                          <input type="checkbox" checked={mobileService} onChange={(e) => setMobileService(e.target.checked)} />
+                          <input type="checkbox" checked={d.mobileService} onChange={(e) => setAgricultureData({ ...d, mobileService: e.target.checked })} />
                           <span className="check-box"></span>
                           <span>Yes, I provide mobile service</span>
                         </label>
@@ -914,21 +805,21 @@ export default function AgricultureListingPage() {
                           type="text"
                           className="form-input"
                           placeholder="Enter service area/location"
-                          value={serviceArea}
-                          onChange={(e) => setServiceArea(e.target.value)}
+                          value={d.serviceArea}
+                          onChange={(e) => setAgricultureData({ ...d, serviceArea: e.target.value })}
                           required
                         />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Service Radius(KM) <span className="required">*</span></label>
-                        <input type="text" className="form-input" placeholder="10" value={serviceRadius} onChange={(e) => setServiceRadius(e.target.value)} required />
+                        <input type="text" className="form-input" placeholder="10" value={d.serviceRadius} onChange={(e) => setAgricultureData({ ...d, serviceRadius: e.target.value })} required />
                       </div>
                     </div>
                     <div className="form-row two-col">
                       <div className="form-group">
                         <label className="form-label">Health Certificate Available</label>
                         <label className="checkbox-inline" style={{ padding: "8px 0" }}>
-                          <input type="checkbox" checked={healthCertificate} onChange={(e) => setHealthCertificate(e.target.checked)} />
+                          <input type="checkbox" checked={d.healthCertificate} onChange={(e) => setAgricultureData({ ...d, healthCertificate: e.target.checked })} />
                           <span className="check-box"></span>
                           <span>Yes</span>
                         </label>
@@ -936,7 +827,7 @@ export default function AgricultureListingPage() {
                       <div className="form-group">
                         <label className="form-label">Vaccination Available <span className="required">*</span></label>
                         <label className="checkbox-inline" style={{ padding: "8px 0" }}>
-                          <input type="checkbox" checked={vaccinationAvailable} onChange={(e) => setVaccinationAvailable(e.target.checked)} />
+                          <input type="checkbox" checked={d.vaccinationAvailable} onChange={(e) => setAgricultureData({ ...d, vaccinationAvailable: e.target.checked })} />
                           <span className="check-box"></span>
                           <span>Yes</span>
                         </label>
@@ -949,7 +840,7 @@ export default function AgricultureListingPage() {
                           <button
                             key={day}
                             type="button"
-                            className={`day-pill ${availabilityDays.includes(day) ? "active" : ""}`}
+                            className={`day-pill ${d.availabilityDays.includes(day) ? "active" : ""}`}
                             onClick={() => toggleDay(day)}
                           >
                             {day}
@@ -960,15 +851,14 @@ export default function AgricultureListingPage() {
                   </div>
                 )}
 
-                {/* Description */}
                 <div className="form-section">
                   <div className="section-title">Description</div>
                   <div className="form-group">
                     <textarea
                       className="form-textarea"
                       placeholder="Describe your item..."
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
+                      value={d.description}
+                      onChange={(e) => setAgricultureData({ ...d, description: e.target.value })}
                       rows={4}
                     />
                   </div>
@@ -976,7 +866,6 @@ export default function AgricultureListingPage() {
               </div>
             </div>
 
-            {/* Submit */}
             <div className="submit-wrap">
               <button type="button" className="back-link" onClick={() => router.back()}>
                 <FiArrowLeft size={16} />

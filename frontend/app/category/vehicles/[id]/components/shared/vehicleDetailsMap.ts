@@ -1,4 +1,4 @@
-import type { VehicleType } from "@/app/types/listing";
+import type { VehicleType } from "@/app/types/vehicle";
 
 export const VEHICLE_DETAILS_LABELS: Record<
 VehicleType,

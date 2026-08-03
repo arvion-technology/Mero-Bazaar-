@@ -17,6 +17,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useJobDraft } from "./layout";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -38,78 +39,29 @@ const steps = [
   { label: "Preview", icon: FiEye, status: "upcoming" as const },
 ];
 
-const roles = [
-  "Frontend Developer",
-  "Backend Developer",
-  "Full Stack Developer",
-  "UI/UX Designer",
-  "DevOps Engineer",
-  "Data Analyst",
-  "Product Manager",
-  "QA Engineer",
-  "Mobile Developer",
-  "Other",
-];
-
-const companies = [
-  "Hamro Tech Pvt. Ltd",
-  "Google",
-  "Microsoft",
-  "Amazon",
-  "Meta",
-  "Apple",
-  "Netflix",
-  "Other",
-];
-
-const locations = [
-  "Kathmandu, Nepal",
-  "Pokhara, Nepal",
-  "Lalitpur, Nepal",
-  "Bhaktapur, Nepal",
-  "Remote",
-  "Hybrid",
-];
-
 const payPeriods = ["Hourly", "Daily", "Weekly", "Bi-weekly", "Monthly", "Yearly"];
 const contractTypes = ["Full Time", "Part Time", "Contract", "Freelance", "Internship"];
 
 export default function NewJobListingPage() {
   const router = useRouter();
-
-  // ── Basic Info ──
+ 
   const [title, setTitle] = useState("");
-  const [salary, setSalary] = useState("");
-  const [description, setDescription] = useState("");
+  const { data, setData } = useJobDraft();
+  const { role, company, salaryMin, salaryMax, payPeriod, location, contractType, skillTags, urgentHiring, phoneVerified, description } = data;
 
-  // ── Job Details ──
-  const [role, setRole] = useState("Frontend Developer");
-  const [company, setCompany] = useState("Hamro Tech Pvt. Ltd");
-  const [salaryMin, setSalaryMin] = useState("35,000");
-  const [salaryMax, setSalaryMax] = useState("55,000");
-  const [payPeriod, setPayPeriod] = useState("Monthly");
-  const [location, setLocation] = useState("Kathmandu, Nepal");
-  const [contractType, setContractType] = useState("Full Time");
+  const setRole = (v: string) => setData({ ...data, role: v });
+  const setCompany = (v: string) => setData({ ...data, company: v });
+  const setSalaryMin = (v: string) => setData({ ...data, salaryMin: v });
+  const setSalaryMax = (v: string) => setData({ ...data, salaryMax: v });
+  const setPayPeriod = (v: string) => setData({ ...data, payPeriod: v });
+  const setLocation = (v: string) => setData({ ...data, location: v });
+  const setContractType = (v: string) => setData({ ...data, contractType: v });
+  const setSkillTags = (tags: string[]) => setData({ ...data, skillTags: tags });
+  const setUrgentHiring = (v: boolean) => setData({ ...data, urgentHiring: v });
+  const setPhoneVerified = (v: boolean) => setData({ ...data, phoneVerified: v });
+  const setDescription = (v: string) => setData({ ...data, description: v });
 
-  // ── Skill Tags ──
   const [skillInput, setSkillInput] = useState("");
-  const [skillTags, setSkillTags] = useState<string[]>(["React", "Next.js", "TypeScript", "Tailwind CSS"]);
-
-  // ── Additional Options ──
-  const [urgentHiring, setUrgentHiring] = useState(true);
-  const [phoneVerified, setPhoneVerified] = useState(true);
-
-  const formattedSalary = useMemo(() => {
-    if (!salary) return "";
-    const num = Number(salary.replace(/,/g, ""));
-    if (isNaN(num)) return salary;
-    return num.toLocaleString("en-IN");
-  }, [salary]);
-
-  const handleSalaryChange = (val: string) => {
-    const cleaned = val.replace(/[^0-9]/g, "");
-    setSalary(cleaned);
-  };
 
   const handleSalaryMinChange = (val: string) => {
     const cleaned = val.replace(/[^0-9]/g, "");
@@ -145,7 +97,7 @@ export default function NewJobListingPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !salary || !description) {
+    if (!title || !description) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -775,37 +727,22 @@ export default function NewJobListingPage() {
             </div>
 
             <div className="form-row">
-              <div className="form-group">
+              <div className="form-group" style={{ gridColumn: "1 / -1" }}>
                 <label className="form-label">Title<span className="required">*</span></label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Enter Listing Title"
+                  placeholder="Enter listing title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
                 />
               </div>
-              <div className="form-group">
-                <label className="form-label">Salary(NPR)<span className="required">*</span></label>
-                <div className="price-input-wrap">
-                  <span className="price-prefix">Rs.</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    className="form-input"
-                    placeholder="Enter price"
-                    value={formattedSalary}
-                    onChange={(e) => handleSalaryChange(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
               <div className="form-group" style={{ gridColumn: "1 / -1" }}>
                 <label className="form-label">Description<span className="required">*</span></label>
                 <textarea
                   className="form-textarea"
-                  placeholder="Enter Description"
+                  placeholder="Enter description"
                   value={description}
                   maxLength={descMax}
                   onChange={(e) => setDescription(e.target.value)}
@@ -840,70 +777,27 @@ export default function NewJobListingPage() {
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Select Role<span className="required">*</span></label>
-                <select className="form-select" value={role} onChange={(e) => setRole(e.target.value)}>
-                  {roles.map((r) => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Company Name<span className="required">*</span></label>
-                <select className="form-select" value={company} onChange={(e) => setCompany(e.target.value)}>
-                  {companies.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">SalaryMin<span className="required">*</span></label>
-                <input
+              <label className="form-label">Role<span className="required">*</span></label>
+                 <input
                   type="text"
-                  inputMode="numeric"
                   className="form-input"
-                  placeholder="35,000"
-                  value={formattedSalaryMin}
-                  onChange={(e) => handleSalaryMinChange(e.target.value)}
+                   placeholder="Enter role"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
                   required
-                />
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">SalaryMax<span className="required">*</span></label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  className="form-input"
-                  placeholder="55,000"
-                  value={formattedSalaryMax}
-                  onChange={(e) => handleSalaryMaxChange(e.target.value)}
-                  required
-                />
+                 />
               </div>
               <div className="form-group">
-                <label className="form-label">PayPeriod<span className="required">*</span></label>
-                <select className="form-select" value={payPeriod} onChange={(e) => setPayPeriod(e.target.value)}>
-                  {payPeriods.map((p) => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
+              <label className="form-label">Company Name<span className="required">*</span></label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Enter company name"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                required
+              />
               </div>
-              <div className="form-group">
-                <label className="form-label">Address / Location<span className="required">*</span></label>
-                <div className="address-wrap">
-                  <select className="form-select" value={location} onChange={(e) => setLocation(e.target.value)}>
-                    {locations.map((l) => (
-                      <option key={l} value={l}>{l}</option>
-                    ))}
-                  </select>
-                  <FiMapPin size={16} className="address-icon" />
-                </div>
-              </div>
-            </div>
-
-            <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Contract Type<span className="required">*</span></label>
                 <select className="form-select" value={contractType} onChange={(e) => setContractType(e.target.value)}>
@@ -912,8 +806,69 @@ export default function NewJobListingPage() {
                   ))}
                 </select>
               </div>
-              <div className="form-group" style={{ gridColumn: "2 / -1" }}>
-                <label className="form-label">SkillTags</label>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Salary Min<span className="required">*</span></label>
+                <div className="price-input-wrap">
+                  <span className="price-prefix">Rs.</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className="form-input"
+                    placeholder="Enter minimum salary"
+                    value={formattedSalaryMin}
+                    onChange={(e) => handleSalaryMinChange(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Salary Max<span className="required">*</span></label>
+                <div className="price-input-wrap">
+                  <span className="price-prefix">Rs.</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className="form-input"
+                    placeholder="Enter maximum salary"
+                    value={formattedSalaryMax}
+                    onChange={(e) => handleSalaryMaxChange(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Pay Period<span className="required">*</span></label>
+                <select className="form-select" value={payPeriod} onChange={(e) => setPayPeriod(e.target.value)}>
+                  {payPeriods.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                <label className="form-label">Address / Location<span className="required">*</span></label>
+                <div className="address-wrap">
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Enter location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    required
+                  />
+                  <FiMapPin size={16} className="address-icon" />
+                </div>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                <label className="form-label">Skill Tags</label>
                 <div className="skill-tags-wrap">
                   {skillTags.map((skill) => (
                     <span key={skill} className="skill-tag">

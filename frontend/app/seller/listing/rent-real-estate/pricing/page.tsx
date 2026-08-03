@@ -8,6 +8,8 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import CustomDropdown from "../CustomDropdown";
+import { useListingForm, AMENITIES_LIST } from "../ListingFormContext";
 
 const ACCENT = "#2563eb"; const ACCENT_HOVER = "#1d4ed8"; const SUCCESS = "#10b981";
 const BORDER = "#e2e8f0"; const TEXT_PRIMARY = "#0f172a"; const TEXT_SECONDARY = "#64748b";
@@ -23,92 +25,6 @@ const steps = [
 
 const bedroomsOptions = ["1", "2", "3", "4", "5", "6+"];
 const bathroomsOptions = ["1", "2", "3", "4", "5+"];
-
-const amenitiesList = [
-  { id: "furnished", label: "Furnished" },
-  { id: "parking", label: "Parking Available" },
-  { id: "wifi", label: "Wifi Available" },
-  { id: "water", label: "Water Included" },
-  { id: "electricity", label: "Electricity Included" },
-  { id: "pet", label: "Pet friendly" },
-];
-
-function CustomDropdown({
-  label,
-  value,
-  options,
-  onChange,
-  required,
-}: {
-  label: string;
-  value: string;
-  options: string[];
-  onChange: (val: string) => void;
-  required?: boolean;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  return (
-    <div className="form-group" ref={ref} style={{ position: "relative" }}>
-      <label className="form-label">
-        {label}
-        {required && <span className="required">*</span>}
-      </label>
-      <div
-        className="custom-dropdown-trigger"
-        onClick={() => setIsOpen(!isOpen)}
-        tabIndex={0}
-        role="button"
-        aria-expanded={isOpen}
-      >
-        <span>{value}</span>
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={TEXT_MUTED}
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{
-            transform: isOpen ? "rotate(180deg)" : "none",
-            transition: "transform 0.2s",
-          }}
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </div>
-      {isOpen && (
-        <div className="custom-dropdown-menu">
-          {options.map((opt) => (
-            <div
-              key={opt}
-              className={`custom-dropdown-item ${opt === value ? "selected" : ""}`}
-              onClick={() => {
-                onChange(opt);
-                setIsOpen(false);
-              }}
-            >
-              {opt}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function DatePicker({
   label,
@@ -249,32 +165,57 @@ function DatePicker({
 
 export default function RealEstatePricingPage() {
   const router = useRouter();
-  const [monthlyRentMin, setMonthlyRentMin] = useState("");
-  const [monthlyRentMax, setMonthlyRentMax] = useState("");
-  const [bedrooms, setBedrooms] = useState("2");
-  const [bathrooms, setBathrooms] = useState("2");
-  const [sqft, setSqft] = useState("");
-  const [availableFrom, setAvailableFrom] = useState("");
-  const [amenities, setAmenities] = useState<Record<string, boolean>>({
-    furnished: true, parking: true, wifi: true, water: true, electricity: true, pet: true,
-  });
-  const [ownerType, setOwnerType] = useState<"owner" | "agent">("owner");
-  const [noBroker, setNoBroker] = useState(true);
-  const [landmarkInput, setLandmarkInput] = useState("");
-  const [landmarks, setLandmarks] = useState<string[]>(["Bus Park", "Hospital", "School", "Kalanki Chowk", "Ring Road"]);
-  const [ruleInput, setRuleInput] = useState("");
-  const [houseRules, setHouseRules] = useState<string[]>(["No Smoking", "No Pets", "Family Only", "Students Allowed", "Keep Clean"]);
+  const { formData, updateForm } = useListingForm();
 
-  const toggleAmenity = (id: string) => { setAmenities((prev) => ({ ...prev, [id]: !prev[id] })); };
-  const addLandmark = () => { const t = landmarkInput.trim(); if (!t) return; if (landmarks.includes(t)) { toast.error("Landmark already added"); return; } setLandmarks([...landmarks, t]); setLandmarkInput(""); };
-  const removeLandmark = (item: string) => { setLandmarks(landmarks.filter((l) => l !== item)); };
-  const addRule = () => { const t = ruleInput.trim(); if (!t) return; if (houseRules.includes(t)) { toast.error("Rule already added"); return; } setHouseRules([...houseRules, t]); setRuleInput(""); };
-  const removeRule = (item: string) => { setHouseRules(houseRules.filter((r) => r !== item)); };
-  const handleKeyDown = (e: React.KeyboardEvent, type: "landmark" | "rule") => { if (e.key === "Enter") { e.preventDefault(); if (type === "landmark") addLandmark(); else addRule(); } };
+  const [landmarkInput, setLandmarkInput] = useState("");
+  const [ruleInput, setRuleInput] = useState("");
+
+  const toggleAmenity = (id: string) => {
+    updateForm({ amenities: { ...formData.amenities, [id]: !formData.amenities[id] } });
+  };
+
+  const addLandmark = () => {
+    const t = landmarkInput.trim();
+    if (!t) return;
+    if (formData.landmarks.includes(t)) {
+      toast.error("Landmark already added");
+      return;
+    }
+    updateForm({ landmarks: [...formData.landmarks, t] });
+    setLandmarkInput("");
+  };
+  const removeLandmark = (item: string) => {
+    updateForm({ landmarks: formData.landmarks.filter((l) => l !== item) });
+  };
+
+  const addRule = () => {
+    const t = ruleInput.trim();
+    if (!t) return;
+    if (formData.houseRules.includes(t)) {
+      toast.error("Rule already added");
+      return;
+    }
+    updateForm({ houseRules: [...formData.houseRules, t] });
+    setRuleInput("");
+  };
+  const removeRule = (item: string) => {
+    updateForm({ houseRules: formData.houseRules.filter((r) => r !== item) });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, type: "landmark" | "rule") => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (type === "landmark") addLandmark();
+      else addRule();
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!monthlyRentMin || !monthlyRentMax) { toast.error("Please fill rent range"); return; }
+    if (!formData.monthlyRentMin || !formData.monthlyRentMax) {
+      toast.error("Please fill rent range");
+      return;
+    }
     toast.success("Pricing saved! Now add photos.");
     router.push("/seller/listing/rent-real-estate/photos");
   };
@@ -340,161 +281,36 @@ export default function RealEstatePricingPage() {
         .back-link:hover { border-color: ${ACCENT}; background: #eff6ff; }
         .submit-btn { padding: 14px 40px; background: linear-gradient(135deg, ${ACCENT}, ${ACCENT_HOVER}); color: #fff; font-size: 15px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); font-family: inherit; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3); letter-spacing: 0.2px; display: flex; align-items: center; gap: 8px; }
         .submit-btn:hover { box-shadow: 0 6px 28px rgba(37, 99, 235, 0.4); transform: translateY(-2px); }
-
-        /* ── Custom Dropdown ── */
-        .custom-dropdown-trigger {
-          padding: 12px 16px;
-          border: 1.5px solid ${BORDER};
-          border-radius: 12px;
-          font-size: 14px;
-          color: ${TEXT_PRIMARY};
-          background: ${CARD_BG};
-          font-family: inherit;
-          width: 100%;
-          outline: none;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .custom-dropdown-trigger { padding: 12px 16px; border: 1.5px solid ${BORDER}; border-radius: 12px; font-size: 14px; color: ${TEXT_PRIMARY}; background: ${CARD_BG}; font-family: inherit; width: 100%; outline: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         .custom-dropdown-trigger:hover { border-color: #cbd5e1; background: #fafafa; }
         .custom-dropdown-trigger:focus { border-color: ${ACCENT}; background: ${CARD_BG}; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08); }
-        .custom-dropdown-menu {
-          position: absolute;
-          top: calc(100% + 4px);
-          left: 0;
-          right: 0;
-          background: ${CARD_BG};
-          border: 1.5px solid ${BORDER};
-          border-radius: 12px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.12);
-          z-index: 9999;
-          max-height: 240px;
-          overflow-y: auto;
-          animation: dropdownSlide 0.18s ease-out;
-        }
-        @keyframes dropdownSlide {
-          from { opacity: 0; transform: translateY(-6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .custom-dropdown-item {
-          padding: 10px 16px;
-          font-size: 14px;
-          color: ${TEXT_PRIMARY};
-          cursor: pointer;
-          transition: background 0.15s ease;
-          border-bottom: 1px solid #f1f5f9;
-        }
+        .custom-dropdown-menu { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: ${CARD_BG}; border: 1.5px solid ${BORDER}; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); z-index: 9999; max-height: 240px; overflow-y: auto; animation: dropdownSlide 0.18s ease-out; }
+        @keyframes dropdownSlide { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        .custom-dropdown-item { padding: 10px 16px; font-size: 14px; color: ${TEXT_PRIMARY}; cursor: pointer; transition: background 0.15s ease; border-bottom: 1px solid #f1f5f9; }
         .custom-dropdown-item:last-child { border-bottom: none; }
         .custom-dropdown-item:hover { background: #f0f7ff; color: ${ACCENT}; }
         .custom-dropdown-item.selected { background: #eff6ff; color: ${ACCENT}; font-weight: 600; }
-
-        /* ── Date Picker ── */
         .date-trigger { padding-right: 14px; }
-        .date-picker-popup {
-          position: absolute;
-          top: calc(100% + 4px);
-          left: 0;
-          background: ${CARD_BG};
-          border: 1.5px solid ${BORDER};
-          border-radius: 14px;
-          box-shadow: 0 16px 48px rgba(0,0,0,0.14);
-          z-index: 9999;
-          width: 280px;
-          padding: 16px;
-          animation: dropdownSlide 0.18s ease-out;
-        }
-        .dp-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 12px;
-        }
-        .dp-month-year {
-          font-size: 15px;
-          font-weight: 700;
-          color: ${TEXT_PRIMARY};
-        }
-        .dp-nav {
-          display: flex;
-          gap: 4px;
-        }
-        .dp-nav button {
-          width: 28px;
-          height: 28px;
-          border-radius: 8px;
-          border: none;
-          background: transparent;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.15s;
-        }
+        .date-picker-popup { position: absolute; top: calc(100% + 4px); left: 0; background: ${CARD_BG}; border: 1.5px solid ${BORDER}; border-radius: 14px; box-shadow: 0 16px 48px rgba(0,0,0,0.14); z-index: 9999; width: 280px; padding: 16px; animation: dropdownSlide 0.18s ease-out; }
+        .dp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .dp-month-year { font-size: 15px; font-weight: 700; color: ${TEXT_PRIMARY}; }
+        .dp-nav { display: flex; gap: 4px; }
+        .dp-nav button { width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
         .dp-nav button:hover { background: #f1f5f9; }
-        .dp-weekdays {
-          display: grid;
-          grid-template-columns: repeat(7, 1fr);
-          gap: 2px;
-          margin-bottom: 6px;
-        }
-        .dp-weekday {
-          text-align: center;
-          font-size: 11px;
-          font-weight: 600;
-          color: ${TEXT_MUTED};
-          padding: 4px 0;
-        }
-        .dp-days {
-          display: grid;
-          grid-template-columns: repeat(7, 1fr);
-          gap: 2px;
-        }
-        .dp-day {
-          width: 32px;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 13px;
-          color: ${TEXT_PRIMARY};
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.15s ease;
-          margin: 0 auto;
-        }
+        .dp-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 6px; }
+        .dp-weekday { text-align: center; font-size: 11px; font-weight: 600; color: ${TEXT_MUTED}; padding: 4px 0; }
+        .dp-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+        .dp-day { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 13px; color: ${TEXT_PRIMARY}; border-radius: 8px; cursor: pointer; transition: all 0.15s ease; margin: 0 auto; }
         .dp-day:hover:not(.empty) { background: #f0f7ff; color: ${ACCENT}; }
         .dp-day.empty { cursor: default; }
         .dp-day.today { border: 1.5px solid ${ACCENT}; color: ${ACCENT}; font-weight: 600; }
-        .dp-day.selected {
-          background: ${ACCENT};
-          color: #fff;
-          font-weight: 600;
-          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-        }
-        .dp-footer {
-          display: flex;
-          justify-content: space-between;
-          margin-top: 12px;
-          padding-top: 10px;
-          border-top: 1px solid ${BORDER};
-        }
-        .dp-btn-clear, .dp-btn-today {
-          font-size: 13px;
-          font-weight: 600;
-          padding: 6px 14px;
-          border-radius: 8px;
-          border: none;
-          cursor: pointer;
-          transition: all 0.15s;
-          font-family: inherit;
-        }
+        .dp-day.selected { background: ${ACCENT}; color: #fff; font-weight: 600; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3); }
+        .dp-footer { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 10px; border-top: 1px solid ${BORDER}; }
+        .dp-btn-clear, .dp-btn-today { font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.15s; font-family: inherit; }
         .dp-btn-clear { color: ${TEXT_MUTED}; background: transparent; }
         .dp-btn-clear:hover { color: #dc2626; background: #fef2f2; }
         .dp-btn-today { color: ${ACCENT}; background: #eff6ff; }
         .dp-btn-today:hover { background: #dbeafe; }
-
         @media (max-width: 900px) {
           .form-layout { grid-template-columns: 1fr; }
           .listing-container { padding: 20px 20px 48px; }
@@ -551,36 +367,36 @@ export default function RealEstatePricingPage() {
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">Monthly Rent Min (NPR)<span className="required">*</span></label>
-                    <input type="text" inputMode="numeric" className="form-input" placeholder="25000" value={monthlyRentMin} onChange={(e) => setMonthlyRentMin(e.target.value.replace(/[^0-9]/g, ""))} required />
+                    <input type="text" inputMode="numeric" className="form-input" placeholder="25000" value={formData.monthlyRentMin} onChange={(e) => updateForm({ monthlyRentMin: e.target.value.replace(/[^0-9]/g, "") })} required />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Monthly Rent Max (NPR)<span className="required">*</span></label>
-                    <input type="text" inputMode="numeric" className="form-input" placeholder="50000" value={monthlyRentMax} onChange={(e) => setMonthlyRentMax(e.target.value.replace(/[^0-9]/g, ""))} required />
+                    <input type="text" inputMode="numeric" className="form-input" placeholder="50000" value={formData.monthlyRentMax} onChange={(e) => updateForm({ monthlyRentMax: e.target.value.replace(/[^0-9]/g, "") })} required />
                   </div>
                 </div>
                 <div className="form-row">
                   <CustomDropdown
                     label="Bedrooms"
-                    value={bedrooms}
+                    value={formData.bedrooms}
                     options={bedroomsOptions}
-                    onChange={setBedrooms}
+                    onChange={(v) => updateForm({ bedrooms: v })}
                   />
                   <CustomDropdown
                     label="Bathrooms"
-                    value={bathrooms}
+                    value={formData.bathrooms}
                     options={bathroomsOptions}
-                    onChange={setBathrooms}
+                    onChange={(v) => updateForm({ bathrooms: v })}
                   />
                 </div>
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">Square Feet</label>
-                    <input type="text" inputMode="numeric" className="form-input" placeholder="900" value={sqft} onChange={(e) => setSqft(e.target.value.replace(/[^0-9]/g, ""))} />
+                    <input type="text" inputMode="numeric" className="form-input" placeholder="900" value={formData.sqft} onChange={(e) => updateForm({ sqft: e.target.value.replace(/[^0-9]/g, "") })} />
                   </div>
                   <DatePicker
                     label="Available From (Optional)"
-                    value={availableFrom}
-                    onChange={setAvailableFrom}
+                    value={formData.availableFrom}
+                    onChange={(v) => updateForm({ availableFrom: v })}
                   />
                 </div>
               </div>
@@ -591,9 +407,9 @@ export default function RealEstatePricingPage() {
                   <div className="section-title-wrap"><h2>Amenities</h2></div>
                 </div>
                 <div className="amenities-grid">
-                  {amenitiesList.map((item) => (
+                  {AMENITIES_LIST.map((item) => (
                     <label key={item.id} className="checkbox-label">
-                      <input type="checkbox" className="checkbox-input" checked={amenities[item.id]} onChange={() => toggleAmenity(item.id)} />
+                      <input type="checkbox" className="checkbox-input" checked={!!formData.amenities[item.id]} onChange={() => toggleAmenity(item.id)} />
                       {item.label}
                     </label>
                   ))}
@@ -611,23 +427,23 @@ export default function RealEstatePricingPage() {
                   <label className="form-label">Is Owner or Agent?<span className="required">*</span></label>
                   <div className="radio-group">
                     <label className="radio-label">
-                      <input type="radio" className="radio-input" name="ownerType" value="owner" checked={ownerType === "owner"} onChange={() => setOwnerType("owner")} />
+                      <input type="radio" className="radio-input" name="ownerType" value="owner" checked={formData.ownerType === "owner"} onChange={() => updateForm({ ownerType: "owner" })} />
                       OWNER
                     </label>
                     <label className="radio-label">
-                      <input type="radio" className="radio-input" name="ownerType" value="agent" checked={ownerType === "agent"} onChange={() => setOwnerType("agent")} />
+                      <input type="radio" className="radio-input" name="ownerType" value="agent" checked={formData.ownerType === "agent"} onChange={() => updateForm({ ownerType: "agent" })} />
                       AGENT
                     </label>
                   </div>
                 </div>
                 <label className="checkbox-label" style={{ marginBottom: "24px" }}>
-                  <input type="checkbox" className="checkbox-input" checked={noBroker} onChange={(e) => setNoBroker(e.target.checked)} />
+                  <input type="checkbox" className="checkbox-input" checked={formData.noBroker} onChange={(e) => updateForm({ noBroker: e.target.checked })} />
                   No Broker
                 </label>
                 <div className="form-group" style={{ marginBottom: "16px" }}>
                   <label className="form-label">Nearby Landmarks</label>
                   <div className="tags-wrap">
-                    {landmarks.map((item) => (
+                    {formData.landmarks.map((item) => (
                       <span key={item} className="tag-pill">
                         {item}
                         <span className="tag-remove" onClick={() => removeLandmark(item)}><FiX size={10} /></span>
@@ -642,7 +458,7 @@ export default function RealEstatePricingPage() {
                 <div className="form-group">
                   <label className="form-label">House Rules</label>
                   <div className="tags-wrap">
-                    {houseRules.map((item) => (
+                    {formData.houseRules.map((item) => (
                       <span key={item} className="tag-pill">
                         {item}
                         <span className="tag-remove" onClick={() => removeRule(item)}><FiX size={10} /></span>

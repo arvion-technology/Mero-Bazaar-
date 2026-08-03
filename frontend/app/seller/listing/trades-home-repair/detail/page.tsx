@@ -3,23 +3,12 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  FiArrowLeft,
-  FiChevronRight,
-  FiChevronDown,
-  FiFileText,
-  FiEye,
-  FiCheck,
-  FiMapPin,
-  FiClock,
-  FiTool,
-  FiList,
-  FiDollarSign,
-  FiShield,
-  FiAlertCircle,
+  FiArrowLeft, FiChevronRight, FiChevronDown, FiFileText, FiEye, FiCheck, FiList,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import dynamic from "next/dynamic";
+import { useTradesDraft } from "../layout";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -43,27 +32,16 @@ const steps = [
 const serviceAreas = ["5KM", "10KM", "15KM", "20KM", "25KM", "30KM", "50KM"];
 const responseTimes = ["30 Minutes", "1 Hour", "2 Hours", "3 Hours", "4 Hours", "Same Day", "Next Day"];
 
-// Kathmandu default coordinates
 const DEFAULT_LAT = 27.7172;
 const DEFAULT_LNG = 85.3240;
 
-// Dynamic import for Leaflet map (no SSR)
-const MapWithNoSSR = dynamic(
-  () => import("./MapComponent"),
-  { ssr: false, loading: () => <MapSkeleton /> }
-);
+const MapWithNoSSR = dynamic(() => import("./MapComponent"), { ssr: false, loading: () => <MapSkeleton /> });
 
 function MapSkeleton() {
   return (
     <div style={{
-      width: "100%",
-      height: "200px",
-      background: "#e5e7eb",
-      borderRadius: "12px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      border: `1.5px solid ${BORDER}`,
+      width: "100%", height: "200px", background: "#e5e7eb", borderRadius: "12px",
+      display: "flex", alignItems: "center", justifyContent: "center", border: `1.5px solid ${BORDER}`,
     }}>
       <span style={{ color: TEXT_MUTED, fontSize: "14px" }}>Loading map...</span>
     </div>
@@ -107,7 +85,6 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
       }
       return;
     }
-
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
@@ -131,23 +108,12 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="custom-select-container"
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
-    >
-      <div
-        className={`custom-select-trigger ${isOpen ? "open" : ""}`}
-        onClick={() => setIsOpen(!isOpen)}
-      >
+    <div ref={containerRef} className="custom-select-container" tabIndex={0} onKeyDown={handleKeyDown}>
+      <div className={`custom-select-trigger ${isOpen ? "open" : ""}`} onClick={() => setIsOpen(!isOpen)}>
         <span className={value ? "custom-select-value" : "custom-select-placeholder"}>
           {value || placeholder || "Select..."}
         </span>
-        <FiChevronDown
-          size={16}
-          className={`custom-select-chevron ${isOpen ? "rotated" : ""}`}
-        />
+        <FiChevronDown size={16} className={`custom-select-chevron ${isOpen ? "rotated" : ""}`} />
       </div>
       {isOpen && (
         <div className="custom-select-dropdown">
@@ -176,17 +142,16 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
 
 export default function TradesHomeRepairDetailPage() {
   const router = useRouter();
+  const { data, setData } = useTradesDraft();
+  const { serviceArea, calloutCharge, warrantyGiven, emergencyService, avgResponseTime, address, mapPosition } = data;
 
-  // ── Service Area & Charges ──
-  const [serviceArea, setServiceArea] = useState("10KM");
-  const [calloutCharge, setCalloutCharge] = useState("");
-  const [warrantyGiven, setWarrantyGiven] = useState(true);
-  const [emergencyService, setEmergencyService] = useState(true);
-  const [avgResponseTime, setAvgResponseTime] = useState("1 Hour");
-
-  // ── Location ──
-  const [address, setAddress] = useState("Kalanki, kathmandu, Nepal");
-  const [mapPosition, setMapPosition] = useState<[number, number]>([DEFAULT_LAT, DEFAULT_LNG]);
+  const setServiceArea = (v: string) => setData({ ...data, serviceArea: v });
+  const setCalloutCharge = (v: string) => setData({ ...data, calloutCharge: v });
+  const setWarrantyGiven = (v: boolean) => setData({ ...data, warrantyGiven: v });
+  const setEmergencyService = (v: boolean) => setData({ ...data, emergencyService: v });
+  const setAvgResponseTime = (v: string) => setData({ ...data, avgResponseTime: v });
+  const setAddress = (v: string) => setData({ ...data, address: v });
+  const setMapPosition = (v: [number, number]) => setData({ ...data, mapPosition: v });
 
   const formattedCallout = useMemo(() => {
     if (!calloutCharge) return "";
@@ -196,14 +161,15 @@ export default function TradesHomeRepairDetailPage() {
   }, [calloutCharge]);
 
   const handleCalloutChange = (val: string) => {
-    const cleaned = val.replace(/[^0-9]/g, "");
-    setCalloutCharge(cleaned);
+    setCalloutCharge(val.replace(/[^0-9]/g, ""));
   };
 
-  const handleMapClick = useCallback((lat: number, lng: number) => {
-    setMapPosition([lat, lng]);
-    // Reverse geocoding could be added here to update address
-  }, []);
+  const handleMapClick = useCallback(
+    (lat: number, lng: number) => {
+      setMapPosition([lat, lng]);
+    },
+    [data]
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,11 +177,6 @@ export default function TradesHomeRepairDetailPage() {
       toast.error("Please fill all required fields");
       return;
     }
-    // Save to localStorage or context before navigating
-    localStorage.setItem("tradesDetail", JSON.stringify({
-      serviceArea, calloutCharge, warrantyGiven, emergencyService,
-      avgResponseTime, address, mapPosition
-    }));
     toast.success("Details saved! Preview your listing.");
     router.push("/seller/listing/trades-home-repair/preview");
   };
@@ -234,480 +195,180 @@ export default function TradesHomeRepairDetailPage() {
           -moz-osx-font-smoothing: grayscale;
         }
 
-        .listing-container {
-          max-width: 1000px;
-          margin: 0 auto;
-          padding: 32px 24px 64px;
-        }
+        .listing-container { max-width: 1000px; margin: 0 auto; padding: 32px 24px 64px; }
 
-        /* ── Header ── */
-        .listing-header {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          margin-bottom: 24px;
-        }
+        .listing-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
 
         .back-btn {
-          width: 40px;
-          height: 40px;
-          border-radius: 12px;
-          border: 1.5px solid ${BORDER};
-          background: ${CARD_BG};
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: ${TEXT_PRIMARY};
+          width: 40px; height: 40px; border-radius: 12px; border: 1.5px solid ${BORDER};
+          background: ${CARD_BG}; display: flex; align-items: center; justify-content: center;
+          cursor: pointer; color: ${TEXT_PRIMARY};
           transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-          flex-shrink: 0;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.04); flex-shrink: 0;
         }
 
-        .back-btn:hover {
-          border-color: #cbd5e1;
-          background: #f1f5f9;
-          transform: translateX(-2px);
-        }
-
+        .back-btn:hover { border-color: #cbd5e1; background: #f1f5f9; transform: translateX(-2px); }
         .back-btn:active { transform: translateX(0) scale(0.96); }
 
         .listing-header-text { flex: 1; min-width: 0; }
+        .listing-title { font-size: 26px; font-weight: 800; color: ${TEXT_PRIMARY}; letter-spacing: -0.5px; line-height: 1.2; }
+        .listing-subtitle { font-size: 13.5px; color: ${TEXT_SECONDARY}; margin-top: 3px; }
 
-        .listing-title {
-          font-size: 26px;
-          font-weight: 800;
-          color: ${TEXT_PRIMARY};
-          letter-spacing: -0.5px;
-          line-height: 1.2;
-        }
+        .draft-badge { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: ${SUCCESS}; flex-shrink: 0; }
 
-        .listing-subtitle {
-          font-size: 13.5px;
-          color: ${TEXT_SECONDARY};
-          margin-top: 3px;
-        }
-
-        /* ── Draft Saved ── */
-        .draft-badge {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 14px;
-          font-weight: 600;
-          color: ${SUCCESS};
-          flex-shrink: 0;
-        }
-
-        /* ── Stepper ── */
         .stepper {
-          display: flex;
-          align-items: center;
-          background: ${CARD_BG};
-          border: 1px solid ${BORDER};
-          border-radius: 16px;
-          padding: 18px 22px;
-          margin-bottom: 24px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-          overflow-x: auto;
+          display: flex; align-items: center; background: ${CARD_BG}; border: 1px solid ${BORDER};
+          border-radius: 16px; padding: 18px 22px; margin-bottom: 24px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow-x: auto;
         }
 
-        .step {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          flex-shrink: 0;
-        }
+        .step { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 
         .step-icon-wrap {
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 13px;
-          font-weight: 700;
-          flex-shrink: 0;
-          transition: all 0.25s ease;
+          width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+          justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; transition: all 0.25s ease;
         }
 
-        .step.done .step-icon-wrap {
-          background: ${SUCCESS};
-          color: #fff;
-        }
-
+        .step.done .step-icon-wrap { background: ${SUCCESS}; color: #fff; }
         .step.active .step-icon-wrap {
-          background: linear-gradient(135deg, ${SITE_PRIMARY}, #e0574a);
-          color: #fff;
+          background: linear-gradient(135deg, ${SITE_PRIMARY}, #e0574a); color: #fff;
           box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.15);
         }
+        .step.upcoming .step-icon-wrap { background: #f1f5f9; color: ${TEXT_MUTED}; }
 
-        .step.upcoming .step-icon-wrap {
-          background: #f1f5f9;
-          color: ${TEXT_MUTED};
-        }
-
-        .step-label {
-          font-size: 13.5px;
-          font-weight: 600;
-          white-space: nowrap;
-        }
-
+        .step-label { font-size: 13.5px; font-weight: 600; white-space: nowrap; }
         .step.done .step-label { color: ${SUCCESS}; }
         .step.active .step-label { color: ${SITE_PRIMARY}; }
         .step.upcoming .step-label { color: ${TEXT_MUTED}; }
 
-        .step-connector {
-          flex: 1;
-          height: 2px;
-          background: #e2e8f0;
-          margin: 0 14px;
-          min-width: 24px;
-          position: relative;
-        }
+        .step-connector { flex: 1; height: 2px; background: #e2e8f0; margin: 0 14px; min-width: 24px; position: relative; }
+        .step-connector.filled { background: ${SUCCESS}; }
 
-        .step-connector.filled {
-          background: ${SUCCESS};
-        }
-
-        /* ── Form Card ── */
         .form-card {
-          background: ${CARD_BG};
-          border-radius: 20px;
-          padding: 40px;
-          border: 1px solid ${BORDER};
-          box-shadow:
-            0 1px 3px rgba(0,0,0,0.04),
-            0 8px 24px rgba(0,0,0,0.03),
-            0 0 0 1px rgba(0,0,0,0.02);
+          background: ${CARD_BG}; border-radius: 20px; padding: 40px; border: 1px solid ${BORDER};
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.03), 0 0 0 1px rgba(0,0,0,0.02);
           transition: box-shadow 0.3s ease;
         }
 
         .form-card:hover {
-          box-shadow:
-            0 1px 3px rgba(0,0,0,0.04),
-            0 12px 32px rgba(0,0,0,0.05),
-            0 0 0 1px rgba(0,0,0,0.02);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.02);
         }
+          
+        .two-col-layout { display: flex; justify-content: center; }
+        .left-col { width: 100%; max-width: 480px; }
 
-        /* ── Two Column Layout ── */
-        .two-col-layout {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 40px;
-        }
+        .section-title { font-size: 18px; font-weight: 700; color: ${ACCENT}; letter-spacing: -0.3px; margin-bottom: 20px; }
 
-        .left-col { padding-right: 20px; border-right: 1px solid ${BORDER}; }
-        .right-col { padding-left: 20px; }
-
-        /* ── Section Title ── */
-        .section-title {
-          font-size: 18px;
-          font-weight: 700;
-          color: ${ACCENT};
-          letter-spacing: -0.3px;
-          margin-bottom: 20px;
-        }
-
-        /* ── Form Group ── */
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          margin-bottom: 20px;
-        }
-
-        .form-label {
-          font-size: 13px;
-          font-weight: 600;
-          color: ${TEXT_PRIMARY};
-          display: flex;
-          align-items: center;
-          gap: 3px;
-        }
-
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .form-label { font-size: 13px; font-weight: 600; color: ${TEXT_PRIMARY}; display: flex; align-items: center; gap: 3px; }
         .form-label .required { color: ${DANGER}; font-weight: 700; }
 
         .form-input {
-          padding: 12px 16px;
-          border: 1.5px solid ${BORDER};
-          border-radius: 12px;
-          font-size: 14px;
-          color: ${TEXT_PRIMARY};
-          background: ${CARD_BG};
-          font-family: inherit;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-          width: 100%;
-          outline: none;
+          padding: 12px 16px; border: 1.5px solid ${BORDER}; border-radius: 12px; font-size: 14px;
+          color: ${TEXT_PRIMARY}; background: ${CARD_BG}; font-family: inherit;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; outline: none;
         }
 
-        .form-input:hover {
-          border-color: #cbd5e1;
-          background: #fafafa;
-        }
+        .form-input:hover { border-color: #cbd5e1; background: #fafafa; }
+        .form-input:focus { border-color: ${ACCENT}; background: ${CARD_BG}; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08); }
+        .form-input::placeholder { color: #a1a8b5; font-weight: 400; }
 
-        .form-input:focus {
-          border-color: ${ACCENT};
-          background: ${CARD_BG};
-          box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
-        }
+        .hint-text { font-size: 11.5px; color: ${TEXT_MUTED}; margin-top: 4px; }
 
-        .form-input::placeholder {
-          color: #a1a8b5;
-          font-weight: 400;
-        }
-
-        .hint-text {
-          font-size: 11.5px;
-          color: ${TEXT_MUTED};
-          margin-top: 4px;
-        }
-
-        /* ── Checkbox ── */
-        .checkbox-group {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          margin-bottom: 20px;
-        }
-
+        .checkbox-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
         .checkbox-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 14px;
-          color: ${TEXT_PRIMARY};
-          cursor: pointer;
-          font-weight: 500;
+          display: flex; align-items: center; gap: 10px; font-size: 14px; color: ${TEXT_PRIMARY};
+          cursor: pointer; font-weight: 500;
         }
-
-        .checkbox-item input[type="checkbox"] {
-          display: none;
-        }
+        .checkbox-item input[type="checkbox"] { display: none; }
 
         .check-box {
-          width: 18px;
-          height: 18px;
-          border-radius: 4px;
-          border: 2px solid ${ACCENT};
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          transition: all 0.2s ease;
+          width: 18px; height: 18px; border-radius: 4px; border: 2px solid ${ACCENT};
+          display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s ease;
         }
 
-        .checkbox-item input[type="checkbox"]:checked + .check-box {
-          background: ${ACCENT};
-        }
-
+        .checkbox-item input[type="checkbox"]:checked + .check-box { background: ${ACCENT}; }
         .checkbox-item input[type="checkbox"]:checked + .check-box::after {
-          content: '';
-          width: 5px;
-          height: 9px;
-          border: solid #fff;
-          border-width: 0 2px 2px 0;
-          transform: rotate(45deg);
-          margin-top: -2px;
+          content: ''; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0;
+          transform: rotate(45deg); margin-top: -2px;
         }
 
-        /* ── Custom Select ── */
-        .custom-select-container {
-          position: relative;
-          width: 100%;
-          outline: none;
-        }
+        .custom-select-container { position: relative; width: 100%; outline: none; }
 
         .custom-select-trigger {
-          padding: 12px 16px;
-          border: 1.5px solid ${BORDER};
-          border-radius: 12px;
-          font-size: 14px;
-          color: ${TEXT_PRIMARY};
-          background: ${CARD_BG};
-          font-family: inherit;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-          user-select: none;
+          padding: 12px 16px; border: 1.5px solid ${BORDER}; border-radius: 12px; font-size: 14px;
+          color: ${TEXT_PRIMARY}; background: ${CARD_BG}; font-family: inherit; cursor: pointer;
+          display: flex; align-items: center; justify-content: space-between;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); user-select: none;
         }
 
-        .custom-select-trigger:hover {
-          border-color: #cbd5e1;
-          background: #fafafa;
-        }
-
-        .custom-select-trigger.open,
-        .custom-select-trigger:focus {
-          border-color: ${ACCENT};
-          background: ${CARD_BG};
-          box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+        .custom-select-trigger:hover { border-color: #cbd5e1; background: #fafafa; }
+        .custom-select-trigger.open, .custom-select-trigger:focus {
+          border-color: ${ACCENT}; background: ${CARD_BG}; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
         }
 
         .custom-select-value { color: ${TEXT_PRIMARY}; }
         .custom-select-placeholder { color: #a1a8b5; }
-
-        .custom-select-chevron {
-          color: ${TEXT_MUTED};
-          transition: transform 0.2s ease;
-          flex-shrink: 0;
-        }
-
-        .custom-select-chevron.rotated {
-          transform: rotate(180deg);
-        }
+        .custom-select-chevron { color: ${TEXT_MUTED}; transition: transform 0.2s ease; flex-shrink: 0; }
+        .custom-select-chevron.rotated { transform: rotate(180deg); }
 
         .custom-select-dropdown {
-          position: absolute;
-          top: calc(100% + 6px);
-          left: 0;
-          right: 0;
-          background: ${CARD_BG};
-          border: 1.5px solid ${BORDER};
-          border-radius: 12px;
+          position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: ${CARD_BG};
+          border: 1.5px solid ${BORDER}; border-radius: 12px;
           box-shadow: 0 10px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
-          z-index: 9999;
-          max-height: 240px;
-          overflow-y: auto;
-          padding: 6px;
+          z-index: 9999; max-height: 240px; overflow-y: auto; padding: 6px;
         }
 
-        .custom-select-options {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
+        .custom-select-options { display: flex; flex-direction: column; gap: 2px; }
 
         .custom-select-option {
-          padding: 10px 14px;
-          border-radius: 8px;
-          font-size: 14px;
-          color: ${TEXT_PRIMARY};
-          cursor: pointer;
-          transition: all 0.15s ease;
+          padding: 10px 14px; border-radius: 8px; font-size: 14px; color: ${TEXT_PRIMARY};
+          cursor: pointer; transition: all 0.15s ease;
         }
 
-        .custom-select-option:hover,
-        .custom-select-option.highlighted {
-          background: ${ACCENT_LIGHT};
-          color: ${ACCENT};
-        }
-
+        .custom-select-option:hover, .custom-select-option.highlighted { background: ${ACCENT_LIGHT}; color: ${ACCENT}; }
         .custom-select-option.selected {
-          background: linear-gradient(135deg, #eff6ff, #dbeafe);
-          color: ${ACCENT};
-          font-weight: 600;
+          background: linear-gradient(135deg, #eff6ff, #dbeafe); color: ${ACCENT}; font-weight: 600;
         }
 
-        /* ── Map Container ── */
-        .map-wrapper {
-          width: 100%;
-          height: 200px;
-          border-radius: 12px;
-          overflow: hidden;
-          border: 1.5px solid ${BORDER};
-        }
+        .map-wrapper { width: 100%; height: 200px; border-radius: 12px; overflow: hidden; border: 1.5px solid ${BORDER}; }
+        .map-wrapper .leaflet-container { width: 100%; height: 100%; border-radius: 12px; }
 
-        .map-wrapper .leaflet-container {
-          width: 100%;
-          height: 100%;
-          border-radius: 12px;
-        }
-
-        /* ── Submit Button ── */
-        .submit-wrap {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-top: 36px;
-          padding-top: 8px;
-          gap: 16px;
-        }
+        .submit-wrap { display: flex; justify-content: space-between; align-items: center; margin-top: 36px; padding-top: 8px; gap: 16px; }
 
         .back-link {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 14px;
-          font-weight: 600;
-          color: ${ACCENT};
-          background: none;
-          border: 1.5px solid ${BORDER};
-          border-radius: 12px;
-          padding: 12px 28px;
-          cursor: pointer;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-          font-family: inherit;
+          display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: ${ACCENT};
+          background: none; border: 1.5px solid ${BORDER}; border-radius: 12px; padding: 12px 28px;
+          cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); font-family: inherit;
         }
 
-        .back-link:hover {
-          border-color: ${ACCENT};
-          background: ${ACCENT_LIGHT};
-          transform: translateX(-2px);
-        }
+        .back-link:hover { border-color: ${ACCENT}; background: ${ACCENT_LIGHT}; transform: translateX(-2px); }
 
         .submit-btn {
-          padding: 14px 40px;
-          background: linear-gradient(135deg, ${ACCENT}, #1d4ed8);
-          color: #fff;
-          font-size: 15px;
-          font-weight: 600;
-          border: none;
-          border-radius: 12px;
-          cursor: pointer;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-          font-family: inherit;
-          box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
-          letter-spacing: 0.2px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
+          padding: 14px 40px; background: linear-gradient(135deg, ${ACCENT}, #1d4ed8); color: #fff;
+          font-size: 15px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); font-family: inherit;
+          box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3); letter-spacing: 0.2px;
+          display: flex; align-items: center; gap: 8px;
         }
 
-        .submit-btn:hover {
-          box-shadow: 0 6px 28px rgba(37, 99, 235, 0.4);
-          transform: translateY(-2px);
-        }
+        .submit-btn:hover { box-shadow: 0 6px 28px rgba(37, 99, 235, 0.4); transform: translateY(-2px); }
+        .submit-btn:active { transform: translateY(0); box-shadow: 0 2px 10px rgba(37, 99, 235, 0.2); }
 
-        .submit-btn:active {
-          transform: translateY(0);
-          box-shadow: 0 2px 10px rgba(37, 99, 235, 0.2);
-        }
+        .divider { height: 1px; background: linear-gradient(90deg, transparent, ${BORDER}, transparent); margin: 28px 0; }
 
-        /* ── Divider ── */
-        .divider {
-          height: 1px;
-          background: linear-gradient(90deg, transparent, ${BORDER}, transparent);
-          margin: 28px 0;
-        }
-
-        /* ── Responsive ── */
         @media (max-width: 768px) {
           .listing-container { padding: 16px; }
           .form-card { padding: 20px; border-radius: 16px; }
-          .two-col-layout { 
-            grid-template-columns: 1fr; 
-            gap: 32px; 
-          }
-          .left-col { padding-right: 0; border-right: none; border-bottom: 1px solid ${BORDER}; padding-bottom: 24px; }
+          .two-col-layout { display: flex; justify-content: center; }
+          .left-col { padding-right: 0; }
           .right-col { padding-left: 0; }
           .listing-title { font-size: 20px; }
           .stepper { padding: 14px 16px; }
           .step-label { display: none; }
           .step-connector { margin: 0 6px; min-width: 16px; }
-          .submit-wrap { 
-            flex-direction: column-reverse; 
-            gap: 12px;
-            margin-top: 24px;
-          }
-          .back-link, .submit-btn { 
-            width: 100%; 
-            justify-content: center; 
-            padding: 14px 28px;
-          }
+          .submit-wrap { flex-direction: column-reverse; gap: 12px; margin-top: 24px; }
+          .back-link, .submit-btn { width: 100%; justify-content: center; padding: 14px 28px; }
           .map-wrapper { height: 160px; }
         }
 
@@ -722,7 +383,6 @@ export default function TradesHomeRepairDetailPage() {
 
       <div className="listing-page">
         <div className="listing-container">
-          {/* Header */}
           <div className="listing-header">
             <button type="button" className="back-btn" onClick={() => router.back()}>
               <FiArrowLeft size={18} />
@@ -754,9 +414,7 @@ export default function TradesHomeRepairDetailPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="form-card">
-            {/* Two Column Layout */}
             <div className="two-col-layout">
-              {/* Left: Service Area & Charges + Availability */}
               <div className="left-col">
                 <h2 className="section-title">Service Area & charges</h2>
 
@@ -823,10 +481,6 @@ export default function TradesHomeRepairDetailPage() {
                   />
                   <p className="hint-text">Average time to respond after contact</p>
                 </div>
-              </div>
-
-              {/* Right: Location */}
-              <div className="right-col">
                 <h2 className="section-title">Location</h2>
 
                 <div className="form-group">
@@ -838,24 +492,12 @@ export default function TradesHomeRepairDetailPage() {
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                   />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Map location</label>
-                  <div className="map-wrapper">
-                    <MapWithNoSSR
-                      position={mapPosition}
-                      onMapClick={handleMapClick}
-                    />
-                  </div>
-                  <p className="hint-text">Click on map to set exact location</p>
-                </div>
+              </div>
               </div>
             </div>
 
             <div className="divider" />
 
-            {/* Submit Row */}
             <div className="submit-wrap">
               <button type="button" className="back-link" onClick={() => router.back()}>
                 <FiArrowLeft size={16} />

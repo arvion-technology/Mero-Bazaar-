@@ -14,6 +14,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
+import { useDraft, FoodDeliveryImageItem } from "../layout";
 
 const ACCENT = "#2563eb";
 const DANGER = "#dc2626";
@@ -38,7 +39,7 @@ const steps = [
 export default function AddFoodPhotosPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [images, setImages] = useState<{ id: string; file: File; preview: string; isMain: boolean }[]>([]);
+  const { images, setImages } = useDraft();
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileSelect = (files: FileList | null) => {
@@ -55,21 +56,24 @@ export default function AddFoodPhotosPage() {
     if (newFiles.length > remainingSlots) {
       toast.warning(`Only ${remainingSlots} more image(s) can be added`);
     }
-    const newImages = filesToAdd.map((file, index) => ({
+    const newImages: FoodDeliveryImageItem[] = filesToAdd.map((file, index) => ({
       id: `${Date.now()}-${index}`,
       file,
       preview: URL.createObjectURL(file),
       isMain: images.length === 0 && index === 0,
     }));
-    setImages((prev) => [...prev, ...newImages]);
+    setImages([...images, ...newImages]);
   };
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    handleFileSelect(e.dataTransfer.files);
-  }, [images.length]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      handleFileSelect(e.dataTransfer.files);
+    },
+    [images]
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -84,17 +88,17 @@ export default function AddFoodPhotosPage() {
   }, []);
 
   const removeImage = (id: string) => {
-    setImages((prev) => {
-      const filtered = prev.filter((img) => img.id !== id);
-      if (filtered.length > 0 && !filtered.some((img) => img.isMain)) {
-        filtered[0].isMain = true;
-      }
-      return filtered;
-    });
+    const target = images.find((img) => img.id === id);
+    if (target) URL.revokeObjectURL(target.preview);
+    const filtered = images.filter((img) => img.id !== id);
+    if (filtered.length > 0 && !filtered.some((img) => img.isMain)) {
+      filtered[0].isMain = true;
+    }
+    setImages(filtered);
   };
 
   const setMainImage = (id: string) => {
-    setImages((prev) => prev.map((img) => ({ ...img, isMain: img.id === id })));
+    setImages(images.map((img) => ({ ...img, isMain: img.id === id })));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -103,8 +107,6 @@ export default function AddFoodPhotosPage() {
       toast.error("Please upload at least one photo");
       return;
     }
-    const imagePreviews = images.map((img) => ({ preview: img.preview, isMain: img.isMain }));
-    localStorage.setItem("foodDeliveryListingImages", JSON.stringify(imagePreviews));
     toast.success("Photos saved! Proceeding to preview...");
     router.push("/seller/listing/food-home-delivery/preview");
   };
@@ -130,7 +132,6 @@ export default function AddFoodPhotosPage() {
           padding: 32px 24px 64px;
         }
 
-        /* ── Header ── */
         .photos-header {
           display: flex;
           align-items: center;
@@ -170,7 +171,6 @@ export default function AddFoodPhotosPage() {
           color: ${SUCCESS};
         }
 
-        /* ── Stepper ── */
         .stepper {
           display: flex;
           align-items: center;
@@ -242,7 +242,6 @@ export default function AddFoodPhotosPage() {
           background: ${SUCCESS};
         }
 
-        /* ── Title ── */
         .title-section {
           margin-bottom: 28px;
         }
@@ -260,7 +259,6 @@ export default function AddFoodPhotosPage() {
           color: ${TEXT_SECONDARY};
         }
 
-        /* ── Drop Zone ── */
         .drop-zone {
           border: 2px dashed ${isDragging ? ACCENT : "#c4b5fd"};
           border-radius: 20px;
@@ -315,7 +313,6 @@ export default function AddFoodPhotosPage() {
           color: ${TEXT_MUTED};
         }
 
-        /* ── Image Grid ── */
         .image-grid {
           display: flex;
           flex-wrap: wrap;
@@ -428,7 +425,6 @@ export default function AddFoodPhotosPage() {
           color: ${ACCENT};
         }
 
-        /* ── Tips ── */
         .tips-section {
           margin-bottom: 40px;
           background: ${CARD_BG};
@@ -473,7 +469,6 @@ export default function AddFoodPhotosPage() {
           flex-shrink: 0;
         }
 
-        /* ── Submit ── */
         .submit-wrap {
           display: flex;
           justify-content: center;
@@ -514,7 +509,6 @@ export default function AddFoodPhotosPage() {
           box-shadow: none;
         }
 
-        /* ── Responsive ── */
         @media (max-width: 768px) {
           .photos-container { padding: 20px 20px 48px; }
           .image-card, .add-more-card { width: 140px; height: 140px; }
@@ -544,7 +538,6 @@ export default function AddFoodPhotosPage() {
             </div>
           </div>
 
-          {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
               <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>

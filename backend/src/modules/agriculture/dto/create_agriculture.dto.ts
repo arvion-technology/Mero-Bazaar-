@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUUID } from 'class-validator';
-import { AgricultureListingType, UnitType, HealthVaccineStatus } from '@prisma/client';
+import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUUID, IsArray } from 'class-validator';
+import { AgricultureListingType, UnitType, HealthVaccineStatus, VetServiceType, WeekDay } from '@prisma/client';
 
 export class CreateAgricultureDto {
   @IsEnum(AgricultureListingType)
@@ -53,4 +53,38 @@ export class CreateAgricultureDto {
   @IsOptional()
   @IsEnum(HealthVaccineStatus)
   healthVaccineStatus?: HealthVaccineStatus;
+
+  @IsOptional()
+  @IsEnum(VetServiceType)
+  vetServiceType?: VetServiceType;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  experienceYears?: number;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  mobileService?: boolean;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  vaccinationAvailable?: boolean;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  serviceRadiusKm?: number;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  healthCertificate?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsEnum(WeekDay, { each: true })
+  availabilityDays?: WeekDay[];
 }
