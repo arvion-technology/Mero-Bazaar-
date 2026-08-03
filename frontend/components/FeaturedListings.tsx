@@ -66,6 +66,7 @@ const listings = [
     image: "/ac.webp",
     category: "trade-and-homerepair",
   },
+  
 ];
 
 
@@ -80,11 +81,11 @@ const categoryGradients: Record<string, string> = {
 const CategoryIcon = ({ category }: { category: string }) => {
   const style = { opacity: 0.85 };
   switch (category) {
-    case "vehicles":   return <FiTruck   size={52} color="#E74C3C" style={style} />;
-    case "property":   return <FiHome    size={52} color="#4B6BFB" style={style} />;
-    case "jobs":       return <FiBriefcase size={52} color="#27AE60" style={style} />;
-    case "medical":    return <FiActivity  size={52} color="#2980B9" style={style} />;
-    case "electronics":return <FiMonitor  size={52} color="#2471A3" style={style} />;
+    case "vehicles": return <FiTruck size={52} color="#E74C3C" style={style} />;
+    case "property": return <FiHome size={52} color="#4B6BFB" style={style} />;
+    case "jobs": return <FiBriefcase size={52} color="#27AE60" style={style} />;
+    case "medical": return <FiActivity size={52} color="#2980B9" style={style} />;
+    case "electronics": return <FiMonitor size={52} color="#2471A3" style={style} />;
     default: return null;
   }
 };
@@ -332,7 +333,7 @@ export default function FeaturedListings() {
 
           {/* Grid */}
           <div className="fl-grid">
-            {listings.map((item) => (
+            {listings.slice(0, 5).map((item) => (
               <Link key={item.id} href={item.href} className="fl-card">
                 {/* Image */}
                 <div className="fl-img-wrap">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiArrowLeft,
@@ -10,12 +10,14 @@ import {
   FiCheck,
   FiChevronDown,
   FiInfo,
+  FiMapPin,
+  FiX,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useDraft } from "./layout";
 
 const ACCENT = "#2563eb";
+const ACCENT_HOVER = "#1d4ed8";
 const ACCENT_LIGHT = "#eff6ff";
 const DANGER = "#dc2626";
 const SUCCESS = "#10b981";
@@ -30,13 +32,25 @@ const SITE_PRIMARY = "#2563eb";
 const steps = [
   { label: "Category", icon: FiFileText, status: "done" as const },
   { label: "Details", icon: FiBriefcase, status: "active" as const },
-  { label: "Photos", icon: FiBriefcase, status: "upcoming" as const },
+  { label: "Availability", icon: FiInfo, status: "upcoming" as const },
   { label: "Preview", icon: FiInfo, status: "upcoming" as const },
 ];
 
-const foodTypes = ["TIFFIN", "FAST_FOOD", "BAKERY", "GROCERY", "HOMEMADE", "BEVERAGE", "OTHER"];
-const priceUnits = ["PER_MEAL", "PER_PERSON", "PER_ITEM", "PER_KG", "PER_PLATE", "PER_DAY"];
-const weekDays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+const serviceTitles = [
+  "General Medicine",
+  "Dental Care",
+  "Cardiology",
+  "Dermatology",
+  "Pediatrics",
+  "Orthopedics",
+  "Gynecology",
+  "Neurology",
+  "ENT",
+  "Other",
+];
+
+const languagesList = ["English", "Nepali", "Hindi", "Newari", "Maithili", "Bhojpuri"];
+const experienceOptions = ["1-2 Years", "3-5 Years", "5-7 Years", "7+ Years", "10+ Years", "15+ Years"];
 
 function CustomSelect({
   value,
@@ -51,7 +65,6 @@ function CustomSelect({
 }) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
   const updatePosition = useCallback(() => {
@@ -86,10 +99,7 @@ function CustomSelect({
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      const target = e.target as Node;
-      const clickedTrigger = triggerRef.current?.contains(target);
-      const clickedMenu = menuRef.current?.contains(target);
-      if (!clickedTrigger && !clickedMenu) {
+      if (triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
@@ -152,7 +162,6 @@ function CustomSelect({
 
       {open && (
         <div
-          ref={menuRef}
           style={{
             ...menuStyle,
             background: CARD_BG,
@@ -196,7 +205,7 @@ function CustomSelect({
                 if (value !== opt) (e.currentTarget as HTMLButtonElement).style.background = "transparent";
               }}
             >
-              {opt.replace(/_/g, " ")}
+              {opt}
             </button>
           ))}
         </div>
@@ -205,60 +214,208 @@ function CustomSelect({
   );
 }
 
-export default function NewFoodDeliveryListingPage() {
+/* ── Multi-select Language Tags ── */
+function LanguageSelector({
+  selected,
+  options,
+  onChange,
+}: {
+  selected: string[];
+  options: string[];
+  onChange: (langs: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLDivElement>(null);
+
+  const toggleLang = (lang: string) => {
+    if (selected.includes(lang)) {
+      onChange(selected.filter((l) => l !== lang));
+    } else {
+      onChange([...selected, lang]);
+    }
+  };
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [open]);
+
+  return (
+    <div ref={triggerRef} style={{ position: "relative" }}>
+      <div
+        onClick={() => setOpen(!open)}
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: "8px",
+          padding: "8px 12px",
+          border: `1.5px solid ${open ? ACCENT : BORDER}`,
+          borderRadius: "12px",
+          background: CARD_BG,
+          cursor: "pointer",
+          minHeight: "46px",
+          transition: "all 0.25s ease",
+          boxShadow: open ? `0 0 0 4px rgba(37, 99, 235, 0.08)` : "none",
+        }}
+      >
+        {selected.length === 0 && (
+          <span style={{ color: "#a1a8b5", fontSize: "14px" }}>Select languages...</span>
+        )}
+        {selected.map((lang) => (
+          <span
+            key={lang}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              padding: "4px 10px",
+              background: "#e2e8f0",
+              borderRadius: "8px",
+              fontSize: "13px",
+              fontWeight: 500,
+              color: TEXT_PRIMARY,
+            }}
+          >
+            {lang}
+            <FiX
+              size={12}
+              style={{ cursor: "pointer" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleLang(lang);
+              }}
+            />
+          </span>
+        ))}
+        <FiChevronDown
+          size={16}
+          color={TEXT_MUTED}
+          style={{ marginLeft: "auto", flexShrink: 0, transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+        />
+      </div>
+
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 6px)",
+            left: 0,
+            right: 0,
+            background: CARD_BG,
+            border: `1.5px solid ${BORDER}`,
+            borderRadius: "12px",
+            boxShadow: "0 12px 40px rgba(0,0,0,0.15)",
+            zIndex: 9999,
+            padding: "6px",
+            maxHeight: 220,
+            overflowY: "auto",
+          }}
+        >
+          {options.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => toggleLang(opt)}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: "8px",
+                border: "none",
+                background: selected.includes(opt) ? "#eff6ff" : "transparent",
+                color: selected.includes(opt) ? ACCENT : TEXT_PRIMARY,
+                fontSize: "14px",
+                fontWeight: selected.includes(opt) ? 600 : 400,
+                fontFamily: "inherit",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "all 0.15s ease",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+              onMouseEnter={(e) => {
+                if (!selected.includes(opt)) (e.currentTarget as HTMLButtonElement).style.background = "#f8fafc";
+              }}
+              onMouseLeave={(e) => {
+                if (!selected.includes(opt)) (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              }}
+            >
+              {opt}
+              {selected.includes(opt) && <FiCheck size={14} color={ACCENT} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function MedicalListingDetailsPage() {
   const router = useRouter();
-  const { foodData, setFoodData } = useDraft();
 
-  const update = <K extends keyof typeof foodData>(key: K, value: (typeof foodData)[K]) => {
-    setFoodData({ ...foodData, [key]: value });
-  };
+  // ── Service Information ──
+  const [serviceTitle, setServiceTitle] = useState("General Medicine");
+  const [servicesOffered, setServicesOffered] = useState("");
+  const [doctorName, setDoctorName] = useState("");
+  const [licenseNumber, setLicenseNumber] = useState("");
+  const [appointmentFee, setAppointmentFee] = useState("");
+  const [homeVisit, setHomeVisit] = useState(true);
+  const [onlineAppointments, setOnlineAppointments] = useState(false);
 
-  const formattedPrice = useMemo(() => {
-    if (!foodData.price) return "";
-    const num = Number(foodData.price.replace(/,/g, ""));
-    return isNaN(num) ? foodData.price : num.toLocaleString("en-IN");
-  }, [foodData.price]);
+  // ── Clinic Information ──
+  const [clinicAddress, setClinicAddress] = useState("");
+  const [city, setCity] = useState("Kathmandu");
 
-  const handlePriceChange = (val: string) => update("price", val.replace(/[^0-9]/g, ""));
+  // ── Additional Information ──
+  const [shortBio, setShortBio] = useState("");
+  const [languages, setLanguages] = useState<string[]>(["English", "Nepali", "Hindi"]);
+  const [experience, setExperience] = useState("7+ Years");
 
-  const toggleDeliveryDay = (day: string) => {
-    const days = foodData.deliveryDays.includes(day)
-      ? foodData.deliveryDays.filter((d) => d !== day)
-      : [...foodData.deliveryDays, day];
-    update("deliveryDays", days);
-  };
+  const bioLength = shortBio.length;
+  const bioMax = 300;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const {
-      title,
-      description,
-      price,
-      foodType,
-      priceUnit,
-      deliveryDays,
-      location,
-    } = foodData;
-
-    if (!title || !description || !price || !foodType || !priceUnit) {
-      toast.error("Please fill all required fields");
+    if (!serviceTitle || !servicesOffered || !doctorName || !licenseNumber || !appointmentFee) {
+      toast.error("Please fill all required fields in Service Information");
       return;
     }
-    if (!location.trim()) {
-      toast.error("Please enter a location");
+    if (!clinicAddress || !city) {
+      toast.error("Please fill all required fields in Clinic Information");
       return;
     }
-    if (deliveryDays.length === 0) {
-      toast.error("Please select at least one delivery day");
+    if (languages.length === 0) {
+      toast.error("Please select at least one language");
       return;
     }
 
-    toast.success("Details saved! Now add photos.");
-    router.push("/seller/listing/food-home-delivery/photos");
+    const listingData = {
+      serviceTitle,
+      servicesOffered,
+      doctorName,
+      licenseNumber,
+      appointmentFee,
+      homeVisit,
+      onlineAppointments,
+      clinicAddress,
+      city,
+      shortBio,
+      languages,
+      experience,
+    };
+    localStorage.setItem("medicalListingDetails", JSON.stringify(listingData));
+
+    toast.success("Details saved! Now set your availability.");
+    router.push("/seller/listing/medical-dental/availability");
   };
-
-  const descLength = foodData.description.length;
-  const descMax = 500;
 
   return (
     <>
@@ -428,6 +585,47 @@ export default function NewFoodDeliveryListingPage() {
             0 0 0 1px rgba(0,0,0,0.02);
         }
 
+        .category-wrap { margin-bottom: 32px; }
+
+        .category-label {
+          font-size: 13px;
+          font-weight: 600;
+          color: #334155;
+          margin-bottom: 10px;
+          display: block;
+        }
+
+        .category-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 18px;
+          background: linear-gradient(135deg, #eff6ff, #dbeafe);
+          border: 1.5px solid #bfdbfe;
+          border-radius: 12px;
+          font-size: 14px;
+          font-weight: 600;
+          color: ${SITE_PRIMARY};
+          font-family: inherit;
+          cursor: pointer;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+
+        .category-pill:hover {
+          border-color: #93c5fd;
+          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+          transform: translateY(-1px);
+        }
+
+        .category-pill:active { transform: translateY(0); }
+
+        .divider {
+          height: 1px;
+          background: linear-gradient(90deg, transparent, ${BORDER}, transparent);
+          margin: 32px 0;
+        }
+
         .section-header {
           display: flex;
           align-items: center;
@@ -446,6 +644,7 @@ export default function NewFoodDeliveryListingPage() {
         }
 
         .section-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .section-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
         .section-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
 
         .section-title-wrap h2 {
@@ -453,6 +652,12 @@ export default function NewFoodDeliveryListingPage() {
           font-weight: 700;
           color: ${TEXT_PRIMARY};
           letter-spacing: -0.3px;
+        }
+
+        .section-title-wrap p {
+          font-size: 13px;
+          color: ${TEXT_MUTED};
+          margin-top: 2px;
         }
 
         .form-row {
@@ -488,7 +693,7 @@ export default function NewFoodDeliveryListingPage() {
         .form-textarea {
           padding: 12px 16px;
           border: 1.5px solid ${BORDER};
-          border-radius: 12px;
+          borderRadius: 12px;
           font-size: 14px;
           color: ${TEXT_PRIMARY};
           background: ${CARD_BG};
@@ -515,21 +720,6 @@ export default function NewFoodDeliveryListingPage() {
           font-weight: 400;
         }
 
-        .price-input-wrap { position: relative; }
-
-        .price-prefix {
-          position: absolute;
-          left: 16px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 14px;
-          font-weight: 700;
-          color: ${SITE_PRIMARY};
-          pointer-events: none;
-        }
-
-        .price-input-wrap .form-input { padding-left: 46px; }
-
         .form-textarea {
           min-height: 90px;
           resize: vertical;
@@ -545,81 +735,25 @@ export default function NewFoodDeliveryListingPage() {
 
         .char-counter.near-limit { color: ${DANGER}; font-weight: 600; }
 
-        .category-wrap { margin-bottom: 32px; }
-
-        .category-label {
-          font-size: 13px;
-          font-weight: 600;
-          color: #334155;
-          margin-bottom: 10px;
-          display: block;
-        }
-
-        .category-pill {
-          display: inline-flex;
+        .checkbox-label {
+          display: flex;
           align-items: center;
           gap: 10px;
-          padding: 10px 18px;
-          background: linear-gradient(135deg, #eff6ff, #dbeafe);
-          border: 1.5px solid #bfdbfe;
-          border-radius: 12px;
-          font-size: 14px;
-          font-weight: 600;
-          color: ${SITE_PRIMARY};
-          font-family: inherit;
+          font-size: 13.5px;
+          color: #334155;
           cursor: pointer;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+          font-weight: 500;
+          padding: 4px 0;
+          line-height: 1.4;
         }
 
-        .category-pill:hover {
-          border-color: #93c5fd;
-          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
-          transform: translateY(-1px);
-        }
-
-        .category-pill:active { transform: translateY(0); }
-        .category-pill svg { transition: transform 0.2s; }
-        .category-pill:hover svg { transform: rotate(180deg); }
-
-        .divider {
-          height: 1px;
-          background: linear-gradient(90deg, transparent, ${BORDER}, transparent);
-          margin: 32px 0;
-        }
-
-        .days-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        .day-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 14px;
-          border-radius: 10px;
-          font-size: 12.5px;
-          font-weight: 600;
+        .checkbox-input {
+          width: 18px;
+          height: 18px;
+          accent-color: ${SITE_PRIMARY};
           cursor: pointer;
-          transition: all 0.2s ease;
-          border: 1.5px solid ${BORDER};
-          background: ${CARD_BG};
-          color: ${TEXT_SECONDARY};
-          user-select: none;
-        }
-
-        .day-chip:hover {
-          border-color: #93c5fd;
-          background: #eff6ff;
-        }
-
-        .day-chip.active {
-          background: linear-gradient(135deg, ${SITE_PRIMARY}, #1d4ed8);
-          color: #fff;
-          border-color: ${SITE_PRIMARY};
-          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+          flex-shrink: 0;
+          margin-top: 1px;
         }
 
         .submit-wrap {
@@ -681,6 +815,19 @@ export default function NewFoodDeliveryListingPage() {
           box-shadow: 0 2px 10px rgba(37, 99, 235, 0.2);
         }
 
+        .submit-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+        }
+
+        .two-col-section {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 40px;
+        }
+
         @media (max-width: 768px) {
           .listing-container { padding: 20px 20px 48px; }
           .form-card { padding: 28px; border-radius: 16px; }
@@ -691,6 +838,7 @@ export default function NewFoodDeliveryListingPage() {
           .step-connector { margin: 0 6px; min-width: 16px; }
           .submit-wrap { flex-direction: column-reverse; }
           .back-link, .submit-btn { width: 100%; justify-content: center; }
+          .two-col-section { grid-template-columns: 1fr; gap: 24px; }
         }
 
         @media (max-width: 480px) {
@@ -701,6 +849,7 @@ export default function NewFoodDeliveryListingPage() {
 
       <div className="listing-page">
         <div className="listing-container">
+          {/* Header */}
           <div className="listing-header">
             <button type="button" className="back-btn" onClick={() => router.back()}>
               <FiArrowLeft size={18} />
@@ -714,6 +863,7 @@ export default function NewFoodDeliveryListingPage() {
             </div>
           </div>
 
+          {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
               <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
@@ -731,124 +881,229 @@ export default function NewFoodDeliveryListingPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="form-card">
+            {/* Category */}
             <div className="category-wrap">
               <label className="category-label">Category</label>
               <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
                 <FiBriefcase size={16} />
-                Food & Home Delivery
+                Medical & Dental
                 <span style={{ fontSize: "12px", fontWeight: 500, color: "#2563eb", background: "#dbeafe", padding: "2px 8px", borderRadius: "6px" }}>Change</span>
               </button>
             </div>
 
             <div className="divider" />
 
-            <div className="section-header">
-              <div className="section-icon blue">
-                <FiFileText size={18} color="#fff" />
-              </div>
-              <div className="section-title-wrap">
-                <h2>Basic Information</h2>
-              </div>
-            </div>
+            <div className="two-col-section">
+              {/* Left Column: Service Information */}
+              <div>
+                <div className="section-header">
+                  <div className="section-icon blue">
+                    <FiFileText size={18} color="#fff" />
+                  </div>
+                  <div className="section-title-wrap">
+                    <h2>Service Information</h2>
+                  </div>
+                </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Food Title<span className="required">*</span></label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Enter Food Title"
-                  value={foodData.title}
-                  onChange={(e) => update("title", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Food type<span className="required">*</span></label>
-                <CustomSelect value={foodData.foodType} options={foodTypes} onChange={(v) => update("foodType", v)} />
-              </div>
-            </div>
+                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                  <div className="form-group">
+                    <label className="form-label">Service Title <span className="required">*</span></label>
+                    <CustomSelect
+                      value={serviceTitle}
+                      options={serviceTitles}
+                      onChange={setServiceTitle}
+                    />
+                  </div>
+                </div>
 
-            <div className="form-row">
-              <div className="form-group full-width">
-                <label className="form-label">Description<span className="required">*</span></label>
-                <textarea
-                  className="form-textarea"
-                  placeholder="Enter Description"
-                  value={foodData.description}
-                  maxLength={descMax}
-                  onChange={(e) => update("description", e.target.value)}
-                  required
-                />
-                <div className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}>
-                  {descLength}/{descMax}
+                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                  <div className="form-group">
+                    <label className="form-label">Services Offered <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. General Checkup, Blood Test, Vaccination, Minor Surgery"
+                      value={servicesOffered}
+                      onChange={(e) => setServicesOffered(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                  <div className="form-group">
+                    <label className="form-label">Doctor Name <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Dr. Sandhya Yadav"
+                      value={doctorName}
+                      onChange={(e) => setDoctorName(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                  <div className="form-group">
+                    <label className="form-label">NMN License Number <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="NMC-123456"
+                      value={licenseNumber}
+                      onChange={(e) => setLicenseNumber(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                  <div className="form-group">
+                    <label className="form-label">Appointment Fee <span className="required">*</span></label>
+                    <div style={{ position: "relative" }}>
+                      <span style={{
+                        position: "absolute",
+                        left: "16px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        color: SITE_PRIMARY,
+                        pointerEvents: "none",
+                      }}>Rs.</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className="form-input"
+                        style={{ paddingLeft: "46px" }}
+                        placeholder="800"
+                        value={appointmentFee}
+                        onChange={(e) => setAppointmentFee(e.target.value.replace(/[^0-9]/g, ""))}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-row" style={{ gridTemplateColumns: "1fr", marginBottom: 0 }}>
+                  <div className="form-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        className="checkbox-input"
+                        checked={homeVisit}
+                        onChange={(e) => setHomeVisit(e.target.checked)}
+                      />
+                      Home Visit Available
+                    </label>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        className="checkbox-input"
+                        checked={onlineAppointments}
+                        onChange={(e) => setOnlineAppointments(e.target.checked)}
+                      />
+                      Accept Online Appointments
+                    </label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Price(NPR)<span className="required">*</span></label>
-                <div className="price-input-wrap">
-                  <span className="price-prefix">Rs.</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    className="form-input"
-                    placeholder="Enter price"
-                    value={formattedPrice}
-                    onChange={(e) => handlePriceChange(e.target.value)}
-                    required
-                  />
+              {/* Right Column: Clinic Information */}
+              <div>
+                <div className="section-header">
+                  <div className="section-icon green">
+                    <FiMapPin size={18} color="#fff" />
+                  </div>
+                  <div className="section-title-wrap">
+                    <h2>Clinic Information</h2>
+                  </div>
                 </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Price Unit<span className="required">*</span></label>
-                <CustomSelect value={foodData.priceUnit} options={priceUnits} onChange={(v) => update("priceUnit", v)} />
-              </div>
-            </div>
 
-            <div className="form-row">
-              <div className="form-group full-width">
-                <label className="form-label">Delivery Days<span className="required">*</span></label>
-                <div className="days-row">
-                  {weekDays.map((day) => (
-                    <button
-                      key={day}
-                      type="button"
-                      className={`day-chip ${foodData.deliveryDays.includes(day) ? "active" : ""}`}
-                      onClick={() => toggleDeliveryDay(day)}
-                    >
-                      {foodData.deliveryDays.includes(day) && <FiCheck size={12} />}
-                      {day}
-                    </button>
-                  ))}
+                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                  <div className="form-group">
+                    <label className="form-label">Clinic address <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Shankhamul Marg, Opp, Civil Hospital"
+                      value={clinicAddress}
+                      onChange={(e) => setClinicAddress(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                  <div className="form-group">
+                    <label className="form-label">City <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Kathmandu"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="divider" />
 
+            
             <div className="section-header">
               <div className="section-icon purple">
                 <FiInfo size={18} color="#fff" />
               </div>
               <div className="section-title-wrap">
-                <h2>Location</h2>
+                <h2>Additional Information</h2>
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group full-width">
-                <label className="form-label">Location<span className="required">*</span></label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="e.g. Lalitpur, Nepal"
-                  value={foodData.location}
-                  onChange={(e) => update("location", e.target.value)}
-                  required
-                />
+            <div className="two-col-section">
+              <div>
+                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                  <div className="form-group">
+                    <label className="form-label">Short Bio / About <span style={{ color: TEXT_MUTED, fontWeight: 400 }}>(optional)</span></label>
+                    <textarea
+                      className="form-textarea"
+                      placeholder="I am a General Physician with 7+ Years of experience in treating acute and chronic medical conditions. Patient care and satisfaction is my priority."
+                      value={shortBio}
+                      maxLength={bioMax}
+                      onChange={(e) => setShortBio(e.target.value)}
+                    />
+                    <div className={`char-counter ${bioLength > bioMax * 0.9 ? "near-limit" : ""}`}>
+                      {bioLength}/{bioMax}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                  <div className="form-group">
+                    <label className="form-label">Language Known</label>
+                    <LanguageSelector
+                      selected={languages}
+                      options={languagesList}
+                      onChange={setLanguages}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                  <div className="form-group">
+                    <label className="form-label">Experience <span className="required">*</span></label>
+                    <CustomSelect
+                      value={experience}
+                      options={experienceOptions}
+                      onChange={setExperience}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

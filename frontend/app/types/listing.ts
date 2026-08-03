@@ -340,3 +340,46 @@ export type AgricultureDetail = {
     createdAt: string;
   }[];
 };
+
+
+export type FoodDetail = {
+  id: string;
+  sellerId: string;
+  listingId: string;
+  title: string;
+  price: string;
+  status: "ACTIVE" | "RESERVED" | "SOLD" | "EXPIRED";
+  negotiable: boolean;
+  postedDaysAgo: number;
+  isVerified: boolean;
+  category: "FOODS";
+  breadcrumbs: string[];
+  images: string[];
+  description: string;
+  googleMapsUrl: string;
+  latitude: number | null;
+  longitude: number | null;
+  foodType: string;
+  priceUnit: string;
+  deliveryDays: string[];
+  seller: {
+    name: string;
+    avatar: string;
+    rating: number;
+    reviewCount: number;
+    isVerified: boolean;
+    isPro: boolean;
+    isTrusted: boolean;
+    memberSince: string;
+    totalListing: number;
+    responseRate: string;
+    avgResponseTime: string;
+    phone: string;
+  };
+  reviews: {
+    reviewerName: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+  }[];
+};

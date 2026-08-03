@@ -21,7 +21,18 @@ const categories = [
 
 const navLinks = [
   { label: "Buy", href: "/buy" },
-  { label: "Services", href: "/services" },
+  {
+    label: "Services",
+    href: "/services",
+    dropdown: [
+      { label: "Trade & Home Repair", href: "/category/trade-and-homerepair" },
+      { label: "Beauty & Salon", href: "/category/beauty" },
+      { label: "Food Delivery", href: "/category/foods" },
+      { label: "Agriculture & Livestock", href: "/category/agriculture-and-livestock" },
+      { label: "Medical & Dental", href: "/category/medical" },
+    ],
+  },
+  
   { label: "Jobs", href: "/category/job" },
   { label: "Medical", href: "/category/medical" },
   { label: "Property", href: "/category/rent-and-real-estate" },
@@ -80,10 +91,10 @@ export default function Navbar() {
   //notification
   const notifications = session
     ? ([
-        !session.user?.phone && "Add your phone number",
-        !session.user?.address && "Add your address",
-        ...securityNotifs.filter((n) => !n.read).map((n) => activityLabel(n.type)),
-      ].filter(Boolean) as string[])
+      !session.user?.phone && "Add your phone number",
+      !session.user?.address && "Add your address",
+      ...securityNotifs.filter((n) => !n.read).map((n) => activityLabel(n.type)),
+    ].filter(Boolean) as string[])
     : [];
 
   const notificationCount = notifications.length;
@@ -119,7 +130,7 @@ export default function Navbar() {
     })
       .then((res) => (res.ok ? res.json() : []))
       .then(setSecurityNotifs)
-      .catch(() => {});
+      .catch(() => { });
   }, [token]);
 
   return (
@@ -590,18 +601,44 @@ export default function Navbar() {
               )}
             </div>
 
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="hnb-btn"
-                onMouseEnter={() => setHoveredLink(link.href)}
-                onMouseLeave={() => setHoveredLink(null)}
-                style={{ color: hoveredLink === link.href ? PRIMARY : undefined }}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) =>
+              "dropdown" in link ? (
+                <div
+                  key={link.label}
+                  className="hnb-service-menu"
+                  onMouseEnter={() => setHoveredLink(link.label)}
+                  onMouseLeave={() => setHoveredLink(null)}
+                >
+                  <button className="hnb-btn">
+                    {link.label}
+                    <FiChevronDown size={13} />
+                  </button>
+
+                  <div className="hnb-service-dropdown">
+                    {link.dropdown.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="hnb-service-item"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="hnb-btn"
+                  style={{ color: hoveredLink === link.label ? PRIMARY : undefined }}
+                  onMouseEnter={() => setHoveredLink(link.label)}
+                  onMouseLeave={() => setHoveredLink(null)}
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
 
             <div style={{ position: "relative" }} ref={moreRef}>
               <button
@@ -651,10 +688,10 @@ export default function Navbar() {
                       method: "POST",
                       headers: { Authorization: `Bearer ${token}` },
                     }).then(() => {
-                     setSecurityNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
-                  });
-                }
-              }}
+                      setSecurityNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+                    });
+                  }
+                }}
               >
                 <FiBell size={20} />
                 {session && showNotificationBadge && !notifSeen && (
@@ -678,8 +715,8 @@ export default function Navbar() {
 
             {status === "loading" ? null : session ? (
               <div className="hnb-profile-container" ref={profileRef}>
-                <button 
-                  className="hnb-avatar-btn" 
+                <button
+                  className="hnb-avatar-btn"
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   aria-label="User profile menu"
                   aria-haspopup="true"
@@ -702,7 +739,7 @@ export default function Navbar() {
                       <FiUser size={15} />
                       My Account
                     </button>
-                    <button 
+                    <button
                       onClick={() => { setShowProfileMenu(false); signOut({ callbackUrl: "/" }); }}
                       className="hnb-profile-item logout"
                     >
@@ -728,11 +765,25 @@ export default function Navbar() {
 
         {showMobileMenu && (
           <div className="hnb-mobile-menu">
-            {navLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="hnb-mobile-link">
-                {link.label}
-              </Link>
-            ))}
+           {navLinks.map((link) =>
+  "dropdown" in link ? (
+    <Link
+      key={link.label}
+      href="/services"
+      className="hnb-mobile-link"
+    >
+      {link.label}
+    </Link>
+  ) : (
+    <Link
+      key={link.href}
+      href={link.href}
+      className="hnb-mobile-link"
+    >
+      {link.label}
+    </Link>
+  )
+)}
 
             <button className="hnb-mobile-cats-btn" onClick={() => setShowMobileCats(!showMobileCats)}>
               All Categories
@@ -758,7 +809,7 @@ export default function Navbar() {
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, paddingLeft: 4 }}>
                   <div className="hnb-avatar-btn" style={{ cursor: "default", transform: "none", boxShadow: "none" }}>
                     {session.user?.image ? (
-                      <img src={getImageUrl(session.user.image)} alt={session.user.name || "User"} />                    ) : (
+                      <img src={getImageUrl(session.user.image)} alt={session.user.name || "User"} />) : (
                       <span>
                         {(session.user?.name?.[0] || "U").toUpperCase()}
                       </span>

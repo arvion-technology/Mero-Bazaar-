@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateFoodsAndHomeDeliveryDto } from './dto/create_foods.dto';
-import { FoodType, ListingCategory, PriceUnit } from '@prisma/client';
+import { ListingCategory } from '@prisma/client';
 import { QueryFoodsAndHomeDeliveryDto } from './dto/query_foods.dto';
 import { UpdateFoodsAndHomeDeliveryDto } from './dto/update_foods.dto';
 
@@ -12,31 +12,24 @@ export class FoodsService {
   async create(dto: CreateFoodsAndHomeDeliveryDto, userId: string) {
     return this.prisma.listing.create({
       data: {
-        title: `${dto.foodType || 'Food'} Delivery`,
+        title: dto.title,
         category: ListingCategory.FOODS,
-        description: `Food delivery service`,
+        description: dto.description,
         price: dto.price,
         images: [],
         user: {
-          connect: {
-            id: userId,
-          },
+          connect: { id: userId },
         },
-      foods: {
+        foods: {
           create: {
             foodType: dto.foodType,
             priceUnit: dto.priceUnit,
             price: dto.price,
-            deliveryRadiusKm: dto.deliveryRadiusKm,
-            subscriptionAvailable: dto.subscriptionAvailable,
             deliveryDays: dto.deliveryDays,
-            minOrderAmount: dto.minOrderAmount,
           },
         },
       },
-      include: {
-      foods: true,
-      },
+      include: { foods: true },
     });
   }
 
@@ -44,71 +37,119 @@ export class FoodsService {
     return this.prisma.listing.findMany({
       where: {
         category: ListingCategory.FOODS,
-
-      foods: {
+        foods: {
           is: {
-            ...(query.foodType && {
-              foodType: query.foodType,
-            }),
-            ...(query.priceUnit && {
-              priceUnit: query.priceUnit,
-            }),
-            ...(query.subscriptionAvailable !== undefined && {
-                subscriptionAvailable: query.subscriptionAvailable,
-            }),
+            ...(query.foodType && { foodType: query.foodType }),
+            ...(query.priceUnit && { priceUnit: query.priceUnit }),
           },
         },
       },
-      include: {
-      foods: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      include: { foods: true },
+      orderBy: { createdAt: 'desc' },
     });
   }
+
   async findOne(id: string) {
     const listing = await this.prisma.listing.findUnique({
       where: { id },
       include: {
-      foods: true,
+        foods: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            isVerified: true,
+            phone: true,
+            createdAt: true,
+            vendorProfile: {
+              select: { businessName: true, rating: true },
+            },
+          },
+        },
+        reviews: {
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
+
     if (!listing || listing.category !== ListingCategory.FOODS) {
       throw new NotFoundException('Foods and home delivery listing not found');
     }
-    return listing;
+
+    const [totalListing, reviewAgg] = await Promise.all([
+      this.prisma.listing.count({ where: { userId: listing.userId } }),
+      this.prisma.review.aggregate({
+        where: { listing: { userId: listing.userId } },
+        _avg: { rating: true },
+        _count: { rating: true },
+      }),
+    ]);
+
+    return {
+      ...listing,
+      sellerTotalListing: totalListing,
+      sellerRating: reviewAgg._avg.rating ?? 0,
+      sellerReviewCount: reviewAgg._count.rating,
+    };
   }
+
   async update(id: string, dto: UpdateFoodsAndHomeDeliveryDto, userId: string) {
-    await this.findOne(id);
+    const listing = await this.findOne(id);
+
+    if (listing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
 
     return this.prisma.listing.update({
-      where: { id, userId },
+      where: { id },
       data: {
+        title: dto.title,
+        description: dto.description,
         price: dto.price,
-      foods: {
+        foods: {
           update: {
             foodType: dto.foodType,
             price: dto.price,
             priceUnit: dto.priceUnit,
-            deliveryRadiusKm: dto.deliveryRadiusKm,
-            subscriptionAvailable: dto.subscriptionAvailable,
             deliveryDays: dto.deliveryDays,
-            minOrderAmount: dto.minOrderAmount,
           },
         },
       },
-      include: {
-      foods: true,
-      },
+      include: { foods: true },
     });
   }
-  async remove(id: string, userId: string) {
-    await this.findOne(id);
 
-    return this.prisma.listing.delete({
-      where: { id, userId },
+  async remove(id: string, userId: string) {
+    const listing = await this.findOne(id);
+
+    if (listing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
+    return this.prisma.listing.delete({ where: { id } });
+  }
+
+  async addPhotos(id: string, files: Express.Multer.File[], userId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      include: { foods: true },
+    });
+
+    if (!listing || listing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
+    if (!listing.foods) {
+      throw new NotFoundException('Foods listing not found');
+    }
+
+    const newPhotoUrls = files.map((file) => `/uploads/foods/${file.filename}`);
+    const updatedImages = [...listing.images, ...newPhotoUrls];
+
+    return this.prisma.listing.update({
+      where: { id },
+      data: { images: updatedImages },
+      include: { foods: true },
     });
   }
 }
-
