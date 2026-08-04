@@ -30,6 +30,12 @@ const SEASONS = ["Spring", "Summer", "Autumn", "Winter"];
 const DISTRICTS = ["Chitwan", "Rupandehi", "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara"];
 const HEALTH_STATUS = ["VACCINATED", "NOT_VACCINATED"];
 const HEALTH_LABEL: Record<string, string> = { VACCINATED: "Vaccinated", NOT_VACCINATED: "Not Vaccinated" };
+const sortLabel: Record<string, string> = {
+  "newest": "Newest",
+  "price-low": "Price: Low to High",
+  "price-high": "Price: High to Low",
+};
+
 
 const parsePrice = (priceStr: string): number => {
   const match = priceStr.replace(/,/g, "").match(/\d+/);
