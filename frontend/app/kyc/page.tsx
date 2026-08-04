@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import SellerKYCPage from "./SellerKYCPage";
 
 export default function KYCPage() {
-  return <SellerKYCPage />;
+  return (
+    <Suspense fallback={null}>
+      <SellerKYCPage />
+    </Suspense>
+  );
 }
