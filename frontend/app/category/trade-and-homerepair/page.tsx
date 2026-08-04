@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiHeart, FiCheck, FiChevronDown, FiTool } from "react-icons/fi";
+import { FiSearch, FiMapPin, FiHeart, FiCheck, FiChevronDown, FiTool, FiLoader, FiAlertTriangle } from "react-icons/fi";
 import { FaHeart, FaStar, FaHammer } from "react-icons/fa";
 import { MdHandyman, MdConstruction, MdPlumbing, MdElectricalServices, MdFormatPaint, MdCleaningServices } from "react-icons/md";
 import { api } from "@/lib/api";
