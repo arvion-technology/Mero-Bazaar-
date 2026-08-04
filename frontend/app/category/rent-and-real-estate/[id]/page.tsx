@@ -124,22 +124,18 @@ export default function PropertyDetailPage() {
   return (
     <>
       <style>{`
-
         .pd-page { background: #f5f6f8; min-height: 100vh; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; padding-bottom: 60px; }
         .pd-breadcrumb { background: #fff; border-bottom: 1px solid #ececec; padding: 12px 0; }
         .pd-breadcrumb-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; color: #888; }
         .pd-bc-link { color: #555; text-decoration: none; font-weight: 500; transition: color 0.18s; }
-
         .pd-bc-link:hover { color: #C0392B; }
         .pd-bc-sep { color: #bbb; font-size: 12px; }
         .pd-bc-current { color: #1a1a1a; font-weight: 600; }
         .pd-container { max-width: 1200px; margin: 28px auto 0; padding: 0 24px; display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
         .pd-left { display: flex; flex-direction: column; gap: 18px; }
-
         .pd-img-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
         .pd-main-img-wrap { position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; background: #1a1a2e; }
         .pd-main-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
-
         .pd-main-img-wrap:hover .pd-main-img { transform: scale(1.03); }
         .pd-thumbs { display: flex; gap: 8px; padding: 12px; background: #fff; overflow-x: auto; }
         .pd-thumb-wrap { position: relative; flex-shrink: 0; width: 90px; height: 62px; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2.5px solid transparent; transition: border-color 0.2s, transform 0.2s; }
@@ -236,10 +232,8 @@ export default function PropertyDetailPage() {
           .pd-seller-card { position: static; }
           .pd-features { grid-template-columns: repeat(2, 1fr); }
           .pd-details-grid { grid-template-columns: 1fr; }
-
           .pd-details-col-left { border-right: none; padding-right: 0; }
           .pd-details-col-right { padding-left: 0; }
-
         }
         @media (max-width: 600px) {
           .pd-title { font-size: 18px; }
@@ -258,8 +252,6 @@ export default function PropertyDetailPage() {
           .pd-action-btns { gap: 8px; }
           .pd-action-btn { width: 34px; height: 34px; }
         }
-
-
       `}</style>
 
       <div className="pd-page">
@@ -452,14 +444,12 @@ export default function PropertyDetailPage() {
             </div>
           </div>
 
-          <div className="pd-seller-card">
             <SellerCard
               seller={detail.seller}
               reviews={detail.reviews}
               listingId={detail.id}
               sellerId={detail.sellerId}
             />
-        </div>
         </div>
 
         {related.length > 0 && (

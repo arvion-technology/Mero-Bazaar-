@@ -49,7 +49,7 @@ const categories = [
   { name: "Medical & Dental", slug: "medical-dental", icon: FiHeart },
   { name: "Rent & Real Estate", slug: "rent-real-estate", icon: FiHome },
   { name: "Secondhand Goods", slug: "secondhand-goods", icon: FiShoppingBag },
-  { name: "Hair, Beauty & Wellness", slug: "hair-beauty-wellness", icon: FiScissors },
+  { name: "Hair, Beauty & Wellness", slug: "hair-beauty-wellness/beauty", icon: FiScissors },
   { name: "Jobs & Labour Hire", slug: "job", icon: FiBriefcase },
   { name: "Trades & Home Repair", slug: "trades-home-repair", icon: FiTool },
   { name: "Agriculture & Livestock", slug: "agriculture-livestock", icon: FiSun },

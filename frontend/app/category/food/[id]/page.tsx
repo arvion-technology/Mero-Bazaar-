@@ -10,9 +10,8 @@ import type { FoodsListing, FoodsCard } from "@/app/types/foods";
 import type { FoodDetail } from "@/app/types/listing";
 import {
   FiMapPin, FiMessageSquare, FiArrowLeft,
-  FiPhone, FiShare2, FiHeart, FiCheckCircle,
-  FiCalendar, FiUser, FiStar, FiClock, FiTruck,
-  FiAlertTriangle,
+  FiPhone, FiShare2, FiCheckCircle,
+  FiStar, FiClock,
 } from "react-icons/fi";
 import { FaHeart, FaUtensils } from "react-icons/fa";
 import SellerCard from "@/components/SellerCard";
@@ -174,24 +173,11 @@ export default function FoodDetailPage() {
         .fd-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; align-items: start; }
 
         .fd-img-section {
-          background: #fff; border-radius: 12px;
-          border: 1px solid #e5e7eb;
-          overflow: hidden;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+          background: #fff; border-radius: 12px; border: 1px solid #e5e7eb;
+          overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
-        .fd-main-img-wrap {
-          position: relative;
-          width: 100%;
-          height: 390px;
-          overflow: hidden;
-          background: #e5e7eb;
-        }
-        .fd-main-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
-        }
+        .fd-main-img-wrap { position: relative; aspect-ratio: 4/3; overflow: hidden; background: #e5e7eb; }
+        .fd-main-img { width: 100%; height: 100%; object-fit: cover; }
         .fd-img-cat-badge {
           position: absolute; top: 12px; right: 12px;
           font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 5px;
@@ -213,23 +199,14 @@ export default function FoodDetailPage() {
           padding: 3px 9px; backdrop-filter: blur(4px);
         }
 
-        .fd-thumb-strip {
-          display: flex; gap: 8px;
-          margin-top: 10px;
-          padding: 0 2px;
-        }
+        .fd-thumb-strip { display: flex; gap: 8px; padding: 12px; overflow-x: auto; }
         .fd-thumb {
-          width: 64px; height: 64px; border-radius: 8px;
-          object-fit: cover; cursor: pointer; border: 2px solid transparent;
-          transition: border-color 0.15s, opacity 0.15s, transform 0.15s;
-          flex-shrink: 0;
-          background: #e5e7eb;
+          width: 72px; height: 72px; border-radius: 8px; object-fit: cover;
+          cursor: pointer; border: 2px solid transparent;
+          transition: border-color 0.15s, opacity 0.15s; flex-shrink: 0;
         }
         .fd-thumb:hover { opacity: 0.85; transform: translateY(-1px); }
         .fd-thumb.active { border-color: #16a34a; }
-        .fd-tips { margin-top: 16px; padding: 14px; border-radius: 10px; background: #fefce8; border: 1px solid #fde68a; }
-        .fd-tips-title { display: flex; alignItems: center; gap: 6px; margin: 0 0 8px; font-size: 12px; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.04em; }
-        .fd-tip-item { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: #78350f; padding: 4px 0; }
 
         .fd-right { display: flex; flex-direction: column; gap: 16px; }
         .fd-panel {
@@ -391,30 +368,20 @@ export default function FoodDetailPage() {
                   </span>
                 </div>
 
+                {item.images.length > 1 && (
+                  <div className="fd-thumb-strip">
+                    {item.images.map((img, idx) => (
+                      <img
+                        key={idx}
+                        src={img}
+                        alt={`${item.title} ${idx + 1}`}
+                        className={`fd-thumb${activeImg === idx ? " active" : ""}`}
+                        onClick={() => setActiveImg(idx)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-
-              {item.images.length > 1 && (
-                <div className="fd-thumb-strip">
-                  {item.images.map((img, idx) => (
-                    <img
-                      key={idx}
-                      src={img}
-                      alt={`${item.title} ${idx + 1}`}
-                      className={`fd-thumb${activeImg === idx ? " active" : ""}`}
-                      onClick={() => setActiveImg(idx)}
-                    />
-                  ))}
-                </div>
-              )}
-
-              <div className="fd-tips">
-                <p className="fd-tips-title"><FiAlertTriangle size={12} style={{ marginRight: 6 }} /> Food Safety Tips</p>
-                <div className="fd-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Check food hygiene rating before ordering</div>
-                <div className="fd-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Verify seller has proper food handling license</div>
-                <div className="fd-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Report any food quality issues immediately</div>
-                <div className="fd-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Prefer restaurants with Fresh & Hygienic badge</div>
-              </div>
-            </div>
             </div>
 
             {/* ── RIGHT: DETAILS ── */}

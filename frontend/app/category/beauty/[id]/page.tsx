@@ -7,6 +7,7 @@ import { useState } from "react";
 import {
   FiMapPin, FiArrowLeft, FiPhone, FiShare2,
   FiCalendar, FiStar, FiClock, FiScissors, FiHome,
+  FiFrown, FiZap, FiCheck,
 } from "react-icons/fi";
 import { FaHeart, FaSpa } from "react-icons/fa";
 
@@ -257,7 +258,7 @@ export default function BeautyDetailPage() {
           }
         `}</style>
         <div className="bd-404">
-          <div style={{ fontSize: 56 }}>💅</div>
+          <FiFrown size={56} color="#e11d48" />
           <h1>Service Not Found</h1>
           <p>The beauty service you are looking for does not exist.</p>
           <Link href="/category/beauty" className="bd-back-btn">
@@ -544,7 +545,7 @@ export default function BeautyDetailPage() {
           background: #fdf2f8; border: 1px solid #fbcfe8; border-radius: 10px;
           padding: 14px 16px;
         }
-        .bd-tips-title { font-size: 12px; font-weight: 800; color: #be185d; margin-bottom: 8px; }
+        .bd-tips-title { font-size: 12px; font-weight: 800; color: #be185d; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
         .bd-tip-item {
           display: flex; align-items: flex-start; gap: 6px;
           font-size: 11.5px; color: #831843; margin-bottom: 5px; line-height: 1.5;
@@ -665,11 +666,25 @@ export default function BeautyDetailPage() {
 
               {/* Safety Tips */}
               <div className="bd-tips" style={{ marginTop: 16 }}>
-                <p className="bd-tips-title">💡 Beauty Service Tips</p>
-                <div className="bd-tip-item">✓ Check provider reviews and portfolio before booking</div>
-                <div className="bd-tip-item">✓ Confirm product brands if you have allergies or preferences</div>
-                <div className="bd-tip-item">✓ For home visits, ensure a clean and well-lit space</div>
-                <div className="bd-tip-item">✓ Always patch test new products 24 hours before events</div>
+                <p className="bd-tips-title">
+                  <FiZap size={14} /> Beauty Service Tips
+                </p>
+                <div className="bd-tip-item">
+                  <FiCheck size={12} style={{ marginTop: 2, flexShrink: 0 }} />
+                  Check provider reviews and portfolio before booking
+                </div>
+                <div className="bd-tip-item">
+                  <FiCheck size={12} style={{ marginTop: 2, flexShrink: 0 }} />
+                  Confirm product brands if you have allergies or preferences
+                </div>
+                <div className="bd-tip-item">
+                  <FiCheck size={12} style={{ marginTop: 2, flexShrink: 0 }} />
+                  For home visits, ensure a clean and well-lit space
+                </div>
+                <div className="bd-tip-item">
+                  <FiCheck size={12} style={{ marginTop: 2, flexShrink: 0 }} />
+                  Always patch test new products 24 hours before events
+                </div>
               </div>
             </div>
 

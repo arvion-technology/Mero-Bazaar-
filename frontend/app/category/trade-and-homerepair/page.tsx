@@ -1,17 +1,27 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiHeart, FiCheck, FiChevronDown, FiTool } from "react-icons/fi";
+import {
+  FiSearch,
+  FiMapPin,
+  FiHeart,
+  FiCheck,
+  FiChevronDown,
+  FiTool,
+  FiLoader,
+  FiAlertTriangle,
+} from "react-icons/fi";
 import { FaHeart, FaStar, FaHammer } from "react-icons/fa";
-import { MdHandyman, MdConstruction, MdPlumbing, MdElectricalServices, MdFormatPaint, MdCleaningServices } from "react-icons/md";
-import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
-import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiHeart, FiTool } from "react-icons/fi";
-import { FaHeart, FaStar } from "react-icons/fa";
-import { MdHandyman, MdPlumbing, MdElectricalServices, MdFormatPaint, MdCleaningServices } from "react-icons/md";
+import {
+  MdHandyman,
+  MdConstruction,
+  MdPlumbing,
+  MdElectricalServices,
+  MdFormatPaint,
+  MdCleaningServices,
+} from "react-icons/md";
 import { api } from "@/lib/api";
 import { toTradesCard } from "@/lib/adapters/tradesAdapter";
 import type { TradesCard, TradesListing } from "@/app/types/trades";
@@ -30,30 +40,11 @@ function iconForTag(tag: string): React.ReactNode {
 }
 
 const SORT_OPTIONS = [
-    { value: "newest", label: "Newest" },
-    { value: "rating", label: "Top Rated" },
+  { value: "newest", label: "Newest" },
+  { value: "rating", label: "Top Rated" },
 ];
 
 export default function TradeAndHomeRepairPage() {
-    const [search, setSearch] = useState("");
-    const [sort, setSort] = useState("newest");
-    const [activeCategory, setActiveCategory] = useState("All");
-    const [city, setCity] = useState("");
-    const [tradeType, setTradeType] = useState("All");
-    const [availableOnly, setAvailableOnly] = useState(false);
-    const [favorites, setFavorites] = useState<Record<string, boolean>>({});
-    const [sortOpen, setSortOpen] = useState(false);
-    const sortRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const handleClick = (e: MouseEvent) => {
-            if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
-                setSortOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClick);
-        return () => document.removeEventListener("mousedown", handleClick);
-    }, []);
   const [listings, setListings] = useState<TradesCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +55,21 @@ export default function TradeAndHomeRepairPage() {
   const [city, setCity] = useState("");
   const [emergencyOnly, setEmergencyOnly] = useState(false);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+
+  /* ---------- sort dropdown ---------- */
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (
+        sortRef.current &&
+        !sortRef.current.contains(e.target as Node)
+      )
+        setSortOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,14 +85,17 @@ export default function TradeAndHomeRepairPage() {
             try {
               return toTradesCard(l);
             } catch {
-              return null; 
+              return null;
             }
           })
           .filter((c): c is TradesCard => c !== null);
         setListings(cards);
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load listings");
+        if (!cancelled)
+          setError(
+            err instanceof Error ? err.message : "Failed to load listings"
+          );
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -109,7 +118,7 @@ export default function TradeAndHomeRepairPage() {
     setEmergencyOnly(false);
   };
 
-  // category chips + city list 
+  // category chips + city list
   const { tagCounts, cities } = useMemo(() => {
     const tagCounts: Record<string, number> = {};
     const citySet = new Set<string>();
@@ -123,7 +132,11 @@ export default function TradeAndHomeRepairPage() {
   }, [listings]);
 
   const topTags = useMemo(
-    () => Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 7).map(([tag]) => tag),
+    () =>
+      Object.entries(tagCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 7)
+        .map(([tag]) => tag),
     [tagCounts]
   );
 
@@ -141,11 +154,6 @@ export default function TradeAndHomeRepairPage() {
       return matchSearch && matchTag && matchCity && matchEmergency;
     });
 
-    const currentSortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label || "Newest";
-
-    return (
-        <>
-            <style>{`
     const sorted = [...filtered];
     if (sort === "rating") {
       sorted.sort((a, b) => b.rating - a.rating);
@@ -420,199 +428,6 @@ export default function TradeAndHomeRepairPage() {
         @media (max-width: 640px) { .th-hero { height: 220px; } .th-body { padding: 20px 16px 40px; } .th-grid { grid-template-columns: 1fr; gap: 12px; } .th-cats-row { gap: 8px; } .th-cat-card { min-width: 110px; padding: 8px 12px; } }
       `}</style>
 
-            <div className="th">
-                {/* ── HERO ── */}
-                <section className="th-hero">
-                    <div className="th-hero-bg" />
-                    <div className="th-hero-overlay" />
-                    <div className="th-hero-watermark">Trades</div>
-                    <div className="th-hero-inner">
-                        <div className="th-hero-tag">
-                            <MdHandyman size={14} color="#fff" />
-                            Nepal&apos;s Trusted Trade Directory
-                        </div>
-                        <h1 className="th-hero-title">
-                            Find Skilled<br />
-                            <span>Trades &amp; Home Repair</span> Experts
-                        </h1>
-                        <p className="th-hero-sub">Builders, Plumbers, Electricians, Painters &amp; more near you</p>
-                        <div className="th-search-wrap">
-                            <FiSearch className="th-search-icon" size={18} color="#bbb" />
-                            <input
-                                className="th-search"
-                                placeholder="Search tradespeople, services, location…"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                </section>
-
-                {/* ── CATEGORY STRIP ── */}
-                <section className="th-cats-strip">
-                    <div className="th-cats-inner">
-                        <p className="th-cats-label">Browse by Trade</p>
-                        <div className="th-cats-row">
-                            {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => (
-                                <button
-                                    key={cat}
-                                    className={`th-cat-card${activeCategory === cat ? " active" : ""}`}
-                                    onClick={() => setActiveCategory(cat)}
-                                    style={{ border: "none" }}
-                                >
-                                    <span className="th-cat-icon">{icon}</span>
-                                    <span>
-                                        <span className="th-cat-name">{cat}</span>
-                                        <span className="th-cat-count">{CATEGORY_COUNTS[cat].toLocaleString()} listings</span>
-                                    </span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* ── MAIN BODY ── */}
-                <div className="th-body">
-                    <div className="th-layout">
-                        {/* ── SIDEBAR ── */}
-                        <aside className="th-sidebar">
-                            <div className="thf-head">
-                                <p className="thf-head-title">Filters</p>
-                                <button className="thf-reset" onClick={reset}>Reset</button>
-                            </div>
-
-                            <div className="thf-section">
-                                <p className="thf-label">Location / City</p>
-                                <select className="thf-select" value={city} onChange={(e) => setCity(e.target.value)}>
-                                    <option value="">Select City</option>
-                                    {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                            </div>
-
-                            <div className="thf-section">
-                                <p className="thf-label">Trade Type</p>
-                                <div className="thf-chips">
-                                    {TRADE_TYPES.map((t) => (
-                                        <button
-                                            key={t}
-                                            className={`thf-chip${tradeType === t ? " active" : ""}`}
-                                            onClick={() => setTradeType(t)}
-                                        >
-                                            {t}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="thf-section">
-                                <div className="thf-toggle-row">
-                                    <span className="thf-toggle-label">Available Now</span>
-                                    <label className="thf-toggle">
-                                        <input type="checkbox" checked={availableOnly} onChange={(e) => setAvailableOnly(e.target.checked)} />
-                                        <span className="thf-toggle-track" />
-                                        <span className="thf-toggle-thumb" />
-                                    </label>
-                                </div>
-                            </div>
-
-                            <button className="thf-apply">Apply Filters</button>
-                        </aside>
-
-                        {/* ── RIGHT COLUMN ── */}
-                        <div>
-                            <div className="th-results-bar">
-                                <span className="th-results-count">
-                                    <strong>{displayed.length}</strong> results found
-                                </span>
-                                <div className="th-sort-dropdown" ref={sortRef}>
-                                    <button
-                                        className={`th-sort-trigger${sortOpen ? " open" : ""}`}
-                                        onClick={() => setSortOpen((p) => !p)}
-                                    >
-                                        <span>{currentSortLabel}</span>
-                                        <FiChevronDown size={14} color="#888" style={{ transform: sortOpen ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }} />
-                                    </button>
-                                    {sortOpen && (
-                                        <div className="th-sort-menu">
-                                            {SORT_OPTIONS.map((opt) => (
-                                                <button
-                                                    key={opt.value}
-                                                    className={`th-sort-item${sort === opt.value ? " active" : ""}`}
-                                                    onClick={() => { setSort(opt.value); setSortOpen(false); }}
-                                                >
-                                                    <span>{opt.label}</span>
-                                                    {sort === opt.value && <FiCheck size={14} color="#b45309" />}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="th-grid">
-                                {displayed.length === 0 ? (
-                                    <div className="th-empty">
-                                        <div className="th-empty-icon">
-                                            <MdHandyman size={52} color="#ccc" />
-                                        </div>
-                                        <p>No results found</p>
-                                        <span>Try adjusting your filters or search query</span>
-                                    </div>
-                                ) : (
-                                    displayed.map((l) => {
-                                        const isFav = !!favorites[l.id];
-                                        return (
-                                            <Link key={l.id} href={`/category/trade-and-homerepair/${l.id}`} className="th-card">
-                                                <div className="th-img-wrap">
-                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    <img src={l.image} alt={l.name} className="th-img" />
-                                                    <div className="th-badges">
-                                                        {l.isVerified && <span className="th-badge-verified"><FiCheck size={10} /> Verified</span>}
-                                                        {l.isFeatured && <span className="th-badge-featured"><FaStar size={10} /> Featured</span>}
-                                                    </div>
-                                                    <button className="th-heart" aria-label="Save" onClick={(e) => toggleFav(l.id, e)}>
-                                                        {isFav ? <FaHeart size={15} color="#E74C3C" /> : <FiHeart size={15} color="#999" />}
-                                                    </button>
-                                                </div>
-                                                <div className="th-card-body">
-                                                    <p className="th-card-name">{l.name}</p>
-                                                    <p className="th-card-cat">{l.category}</p>
-                                                    <div className="th-card-rating">
-                                                        <FaStar size={12} color="#f5a623" />
-                                                        <span className="th-card-rating-num">{l.rating}</span>
-                                                        <span className="th-card-reviews">({l.reviews})</span>
-                                                    </div>
-                                                    <div className="th-card-location">
-                                                        <FiMapPin size={11} color="#bbb" />
-                                                        {l.location}
-                                                    </div>
-                                                    <div className="th-card-footer">
-                                                        {l.isAvailable ? (
-                                                            <span className="th-avail-tag">
-                                                                <span className="th-avail-dot" />
-                                                                Available Now
-                                                            </span>
-                                                        ) : l.experience ? (
-                                                            <span className="th-exp-tag"><MdHandyman size={12} /> {l.experience} exp.</span>
-                                                        ) : (
-                                                            <span style={{ fontSize: "11px", color: "#bbb" }}>Unavailable</span>
-                                                        )}
-                                                        <span className="th-card-view">View Details →</span>
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        );
-                                    })
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <Footer />
-            </div>
-        </>
-    );
       <div className="th">
         {/* ── HERO ── */}
         <section className="th-hero">
@@ -625,10 +440,13 @@ export default function TradeAndHomeRepairPage() {
               Nepal&apos;s Trusted Trade Directory
             </div>
             <h1 className="th-hero-title">
-              Find Skilled<br />
+              Find Skilled
+              <br />
               <span>Trades &amp; Home Repair</span> Experts
             </h1>
-            <p className="th-hero-sub">Builders, Plumbers, Electricians, Painters &amp; more near you</p>
+            <p className="th-hero-sub">
+              Builders, Plumbers, Electricians, Painters &amp; more near you
+            </p>
             <div className="th-search-wrap">
               <FiSearch className="th-search-icon" size={18} color="#bbb" />
               <input
@@ -650,14 +468,21 @@ export default function TradeAndHomeRepairPage() {
                 {topTags.map((tag) => (
                   <button
                     key={tag}
-                    className={`th-cat-card${activeTag === tag ? " active" : ""}`}
-                    onClick={() => setActiveTag(activeTag === tag ? "All" : tag)}
+                    className={`th-cat-card${
+                      activeTag === tag ? " active" : ""
+                    }`}
+                    onClick={() =>
+                      setActiveTag(activeTag === tag ? "All" : tag)
+                    }
                     style={{ border: "none" }}
                   >
                     <span className="th-cat-icon">{iconForTag(tag)}</span>
                     <span>
                       <span className="th-cat-name">{tag}</span>
-                      <span className="th-cat-count">{tagCounts[tag]} listing{tagCounts[tag] !== 1 ? "s" : ""}</span>
+                      <span className="th-cat-count">
+                        {tagCounts[tag]} listing
+                        {tagCounts[tag] !== 1 ? "s" : ""}
+                      </span>
                     </span>
                   </button>
                 ))}
@@ -673,14 +498,24 @@ export default function TradeAndHomeRepairPage() {
             <aside className="th-sidebar">
               <div className="thf-head">
                 <p className="thf-head-title">Filters</p>
-                <button className="thf-reset" onClick={reset}>Reset</button>
+                <button className="thf-reset" onClick={reset}>
+                  Reset
+                </button>
               </div>
 
               <div className="thf-section">
                 <p className="thf-label">Location / City</p>
-                <select className="thf-select" value={city} onChange={(e) => setCity(e.target.value)}>
+                <select
+                  className="thf-select"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                >
                   <option value="">Select City</option>
-                  {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {cities.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -689,7 +524,9 @@ export default function TradeAndHomeRepairPage() {
                   <p className="thf-label">Skill</p>
                   <div className="thf-chips">
                     <button
-                      className={`thf-chip${activeTag === "All" ? " active" : ""}`}
+                      className={`thf-chip${
+                        activeTag === "All" ? " active" : ""
+                      }`}
                       onClick={() => setActiveTag("All")}
                     >
                       All
@@ -697,7 +534,9 @@ export default function TradeAndHomeRepairPage() {
                     {topTags.map((tag) => (
                       <button
                         key={tag}
-                        className={`thf-chip${activeTag === tag ? " active" : ""}`}
+                        className={`thf-chip${
+                          activeTag === tag ? " active" : ""
+                        }`}
                         onClick={() => setActiveTag(tag)}
                       >
                         {tag}
@@ -711,7 +550,11 @@ export default function TradeAndHomeRepairPage() {
                 <div className="thf-toggle-row">
                   <span className="thf-toggle-label">Emergency Available</span>
                   <label className="thf-toggle">
-                    <input type="checkbox" checked={emergencyOnly} onChange={(e) => setEmergencyOnly(e.target.checked)} />
+                    <input
+                      type="checkbox"
+                      checked={emergencyOnly}
+                      onChange={(e) => setEmergencyOnly(e.target.checked)}
+                    />
                     <span className="thf-toggle-track" />
                     <span className="thf-toggle-thumb" />
                   </label>
@@ -725,73 +568,122 @@ export default function TradeAndHomeRepairPage() {
                 <span className="th-results-count">
                   <strong>{displayed.length}</strong> results found
                 </span>
-                <select className="th-sort-select" value={sort} onChange={(e) => setSort(e.target.value as "newest" | "rating")}>
-                  <option value="newest">Newest</option>
-                  <option value="rating">Top Rated</option>
-                </select>
+
+                {/* ---------- custom sort dropdown ---------- */}
+                <div className="th-sort-dropdown" ref={sortRef}>
+                  <button
+                    className={`th-sort-trigger${
+                      sortOpen ? " open" : ""
+                    }`}
+                    onClick={() => setSortOpen(!sortOpen)}
+                  >
+                    {SORT_OPTIONS.find((o) => o.value === sort)?.label}
+                    <FiChevronDown size={14} color="#555" />
+                  </button>
+                  {sortOpen && (
+                    <div className="th-sort-menu">
+                      {SORT_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          className={`th-sort-item${
+                            sort === opt.value ? " active" : ""
+                          }`}
+                          onClick={() => {
+                            setSort(opt.value as typeof sort);
+                            setSortOpen(false);
+                          }}
+                        >
+                          {opt.label}
+                          {sort === opt.value && <FiCheck size={14} />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-             <div className="th-grid">
-            {loading ? (
-                <div className="th-empty">
-                <div className="th-empty-icon">⏳</div>
-                <p>Loading listings…</p>
-                </div>
-            ) : error ? (
-                <div className="th-empty">
-                <div className="th-empty-icon">⚠️</div>
-                <p>Couldn&apos;t load listings</p>
-                <span>{error}</span>
-                </div>
-            ) : displayed.length === 0 ? (
-                <div className="th-empty">
-                <div className="th-empty-icon">🛠️</div>
-                <p>No results found</p>
-                <span>Try adjusting your filters or search query</span>
-                </div>
-            ) : (
-                displayed.map((l) => {
-                const isFav = !!favorites[l.id];
-                return (
-                    <Link key={l.id} href={`/category/trade-and-homerepair/${l.id}`} className="th-card">
-                    <div className="th-card-body">
-                        <div className="th-card-top-row">
-                        <span className="th-card-icon">{iconForTag(l.skillTags[0] ?? "")}</span>
-                        <button className="th-heart" aria-label="Save" onClick={(e) => toggleFav(l.id, e)}>
-                            {isFav ? <FaHeart size={15} color="#E74C3C" /> : <FiHeart size={15} color="#999" />}
-                        </button>
-                        </div>
-
-                        <p className="th-card-name">{l.title}</p>
-                        {l.skillTags[0] && <p className="th-card-cat">{l.skillTags[0]}</p>}
-                        {/* {l.rating > 0 && (
-                        <div className="th-card-rating">
-                            <FaStar size={12} color="#f5a623" />
-                            <span className="th-card-rating-num">{l.rating.toFixed(1)}</span>
-                            <span className="th-card-reviews">({l.reviewCount})</span>
-                        </div>
-                        )} */}
-                        <div className="th-card-location">
-                        <FiMapPin size={11} color="#bbb" />
-                        {l.location}
-                        </div>
-                        <div className="th-card-footer">
-                        {l.emergencyAvailable ? (
-                            <span className="th-avail-tag">
-                            <span className="th-avail-dot" />
-                            Emergency Available
-                            </span>
-                        ) : (
-                            <span style={{ fontSize: "11px", color: "#bbb" }}>{l.calloutCharge}</span>
-                        )}
-                        <span className="th-card-view">View Details →</span>
-                        </div>
+              <div className="th-grid">
+                {loading ? (
+                  <div className="th-empty">
+                    <div className="th-empty-icon">
+                      <FiLoader size={40} color="#ccc" />
                     </div>
-                    </Link>
-                );
-                })
-            )}
-            </div>
+                    <p>Loading listings…</p>
+                  </div>
+                ) : error ? (
+                  <div className="th-empty">
+                    <div className="th-empty-icon">
+                      <FiAlertTriangle size={40} color="#ccc" />
+                    </div>
+                    <p>Couldn&apos;t load listings</p>
+                    <span>{error}</span>
+                  </div>
+                ) : displayed.length === 0 ? (
+                  <div className="th-empty">
+                    <div className="th-empty-icon">
+                      <FiTool size={40} color="#ccc" />
+                    </div>
+                    <p>No results found</p>
+                    <span>Try adjusting your filters or search query</span>
+                  </div>
+                ) : (
+                  displayed.map((l) => {
+                    const isFav = !!favorites[l.id];
+                    return (
+                      <Link
+                        key={l.id}
+                        href={`/category/trade-and-homerepair/${l.id}`}
+                        className="th-card"
+                      >
+                        <div className="th-card-body">
+                          <div className="th-card-top-row">
+                            <span className="th-card-icon">
+                              {iconForTag(l.skillTags[0] ?? "")}
+                            </span>
+                            <button
+                              className="th-heart"
+                              aria-label="Save"
+                              onClick={(e) => toggleFav(l.id, e)}
+                            >
+                              {isFav ? (
+                                <FaHeart size={15} color="#E74C3C" />
+                              ) : (
+                                <FiHeart size={15} color="#999" />
+                              )}
+                            </button>
+                          </div>
+
+                          <p className="th-card-name">{l.title}</p>
+                          {l.skillTags[0] && (
+                            <p className="th-card-cat">{l.skillTags[0]}</p>
+                          )}
+                          <div className="th-card-location">
+                            <FiMapPin size={11} color="#bbb" />
+                            {l.location}
+                          </div>
+                          <div className="th-card-footer">
+                            {l.emergencyAvailable ? (
+                              <span className="th-avail-tag">
+                                <span className="th-avail-dot" />
+                                Emergency Available
+                              </span>
+                            ) : (
+                              <span
+                                style={{ fontSize: "11px", color: "#bbb" }}
+                              >
+                                {l.calloutCharge}
+                              </span>
+                            )}
+                            <span className="th-card-view">
+                              View Details →
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import {
@@ -30,7 +30,12 @@ const DISTRICTS = ["Chitwan", "Rupandehi", "Kathmandu", "Lalitpur", "Bhaktapur",
 const HEALTH_STATUS = ["VACCINATED", "NOT_VACCINATED"];
 const HEALTH_LABEL: Record<string, string> = { VACCINATED: "Vaccinated", NOT_VACCINATED: "Not Vaccinated" };
 
-/* ── PRICE PARSER ── */
+const sortLabel: Record<string, string> = {
+  newest: "Newest",
+  "price-low": "Price: Low to High",
+  "price-high": "Price: High to Low",
+};
+
 const parsePrice = (priceStr: string): number => {
   const match = priceStr.replace(/,/g, "").match(/\d+/);
   return match ? parseInt(match[0], 10) : 0;
@@ -52,6 +57,9 @@ export default function AgriculturePage() {
   const [priceRange, setPriceRange] = useState<number>(500000);
   const [showMore, setShowMore] = useState(false);
 
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -65,12 +73,18 @@ export default function AgriculturePage() {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : "Failed to load listings");
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
@@ -171,7 +185,6 @@ export default function AgriculturePage() {
         .al-results-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
         .al-count { font-size: 13px; color: #6b7280; font-weight: 500; }
         .al-count strong { color: #111; font-weight: 800; }
-        .al-sort { padding: 7px 28px 7px 12px; border: 1px solid #e0e4f0; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #333; background: #fff; outline: none; cursor: pointer; font-family: inherit; box-shadow: 0 1px 4px rgba(0,0,0,0.06); appearance: none; }
         .al-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
         .al-card { background: #fff; border-radius: 10px; border: 1px solid #e5e7eb; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; color: inherit; cursor: pointer; }
         .al-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.1); }
@@ -211,19 +224,28 @@ export default function AgriculturePage() {
         .al-cat-card:hover { border-color: #15803d; background: #f0fdf4; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(21,128,61,0.12); }
         .al-cat-card.active { border-color: #15803d; background: #dcfce7; box-shadow: 0 4px 16px rgba(21,128,61,0.2); }
         .al-cat-icon { font-size: 22px; display: flex; align-items: center; }
-        .al-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; }
-        .al-cat-count { font-size: 11px; color: #888; display: block; }
+        .al-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; white-space: nowrap; }
+        .al-cat-count { font-size: 11px; color: #888; display: block; white-space: nowrap; }
+        /* sort dropdown */
+        .al-sort-dropdown { position: relative; display: inline-block; }
+        .al-sort-btn { padding: 7px 12px 7px 14px; border: 1px solid #e0e4f0; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #333; background: #fff; outline: none; cursor: pointer; font-family: inherit; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 8px; }
+        .al-sort-menu { position: absolute; right: 0; top: calc(100% + 6px); background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 10px 28px rgba(0,0,0,0.12); padding: 6px 0; min-width: 180px; z-index: 50; }
+        .al-sort-option { padding: 8px 14px; font-size: 12.5px; font-weight: 500; color: #374151; cursor: pointer; transition: background 0.15s; }
+        .al-sort-option:hover { background: #f3f4f6; }
+        .al-sort-option.active { font-weight: 700; color: #15803d; background: #f0fdf4; }
         @media (max-width: 900px) {
           .al-sidebar { display: none; }
           .al-grid { grid-template-columns: repeat(2, 1fr); }
           .al-cats-row { gap: 8px; }
           .al-cat-card { min-width: 120px; padding: 8px 12px; }
         }
-        @media (max-width: 540px) {
+        @media (max-width: 640px) {
           .al-grid { grid-template-columns: 1fr; }
           .al-body { padding: 14px 14px 40px; }
-          .al-cats-row { gap: 6px; }
-          .al-cat-card { min-width: 0; flex: 1; }
+          /* ── category horizontal scroll fix ── */
+          .al-cats-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+          .al-cats-row::-webkit-scrollbar { display: none; }
+          .al-cat-card { min-width: 140px; flex: 0 0 auto; padding: 10px 14px; }
         }
       `}</style>
 
@@ -370,23 +392,31 @@ export default function AgriculturePage() {
               <span className="al-count">
                 <strong>{sortedDisplayed.length}</strong> results found
               </span>
-              <div style={{ position: "relative" }}>
-                <select className="al-sort" value={sort} onChange={(e) => setSort(e.target.value)}>
-                  <option value="newest">Newest</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                </select>
-                <FiChevronDown
-                  size={12}
-                  style={{
-                    position: "absolute",
-                    right: 8,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    pointerEvents: "none",
-                    color: "#666",
-                  }}
-                />
+
+              <div className="al-sort-dropdown" ref={sortRef}>
+                <button className="al-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                  {sortLabel[sort]}
+                  <FiChevronDown
+                    size={14}
+                    style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                  />
+                </button>
+                {isSortOpen && (
+                  <div className="al-sort-menu">
+                    {(["newest", "price-low", "price-high"] as const).map((key) => (
+                      <div
+                        key={key}
+                        className={`al-sort-option${sort === key ? " active" : ""}`}
+                        onClick={() => {
+                          setSort(key);
+                          setIsSortOpen(false);
+                        }}
+                      >
+                        {sortLabel[key]}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

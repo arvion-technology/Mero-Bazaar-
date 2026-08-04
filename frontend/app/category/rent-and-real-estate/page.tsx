@@ -1,10 +1,9 @@
 ﻿"use client";
 
-import { useState } from "react";
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiStar } from "react-icons/fi";
+import { FiSearch, FiMapPin, FiStar, FiHome, FiChevronDown } from "react-icons/fi";
 import { FaHeart, FaStar, FaBuilding, FaHome, FaTree, FaStore, FaBriefcase } from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
 import type { RentalListing, PropertyType } from "@/app/types/realestate";
@@ -89,7 +88,7 @@ const CATEGORY_CARDS: { id: string; label: string; icon: typeof FaBuilding; matc
 ];
 
 const HERO_IMAGE = "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1400&h=400&fit=crop";
-// ΓöÇΓöÇ PRICE PARSER: converts "Rs. 20,000/month" ΓåÆ 20000 ΓöÇΓöÇ
+// ── PRICE PARSER: converts "Rs. 20,000/month" → 20000 ──
 const parsePrice = (priceStr: string): number => {
   const cleaned = priceStr
     .replace(/Rs\.\s*/i, "")
@@ -106,6 +105,8 @@ export default function PropertyPage() {
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [activeType, setActiveType] = useState("All");
 
@@ -186,7 +187,6 @@ export default function PropertyPage() {
       (filterFurnished && l.isFurnished) ||
       (filterUnfurnished && !l.isFurnished);
 
-    // ΓöÇΓöÇ FIXED: Added missing price filter logic ΓöÇΓöÇ
     let matchPrice = true;
     if (filterPrice) {
       const numericPrice = parsePrice(l.price);
@@ -201,6 +201,12 @@ export default function PropertyPage() {
     if (sort === "rating") return b.rating - a.rating;
     return 0;
   });
+
+  const sortLabel: Record<string, string> = {
+    newest: "Newest",
+    featured: "Featured",
+    rating: "Top Rated",
+  };
 
   const StarRating = ({ rating }: { rating: number }) => (
     <div className="flex items-center gap-1">
@@ -265,29 +271,6 @@ export default function PropertyPage() {
         .pp-results-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
         .pp-results-count { font-size: 14px; color: #888; font-weight: 500; }
         .pp-results-count strong { color: #333; font-weight: 700; }
-        .pp-sort-select {
-          padding: 8px 32px 8px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px;
-          font-size: 13px; font-weight: 600; color: #333;
-          background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
-          appearance: none; outline: none; cursor: pointer;
-          font-family: inherit;
-        }
-
-        /* ΓöÇΓöÇ PROPERTY CARDS (2-2 GRID) ΓöÇΓöÇ */
-        .pp-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 20px;
-        }
-
-        .pp-card {
-          background: #fff; border-radius: 16px; border: 1px solid #e8e8e8;
-          overflow: hidden; text-decoration: none;
-          display: flex; flex-direction: column;
-          transition: box-shadow 0.22s ease;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-          cursor: pointer; position: relative;
-        }
         .pp-sort-select { padding: 8px 32px 8px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; font-weight: 600; color: #333; background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center; appearance: none; outline: none; cursor: pointer; font-family: inherit; }
         .pp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
         .pp-card { background: #fff; border-radius: 16px; border: 1px solid #e8e8e8; overflow: hidden; text-decoration: none; display: flex; flex-direction: column; transition: box-shadow 0.22s ease; box-shadow: 0 2px 12px rgba(0,0,0,0.04); cursor: pointer; position: relative; }
@@ -311,18 +294,32 @@ export default function PropertyPage() {
         .pp-card-reviews { font-size: 12px; color: #888; }
         .pp-btn-details { display: inline-block; padding: 8px 20px; background: #ffcdcd; color: #c0392b; font-size: 12px; font-weight: 700; border: none; border-radius: 20px; cursor: pointer; font-family: inherit; transition: background 0.2s; margin-top: 6px; align-self: flex-start; }
         .pp-btn-details:hover { background: #ffb8b8; }
-
-        /* ΓöÇΓöÇ EMPTY ΓöÇΓöÇ */
-        .pp-empty {
-          padding: 64px 24px; text-align: center;
-          background: #fff; border-radius: 16px;
-          grid-column: 1 / -1;
-        }
+        .pp-empty { padding: 64px 24px; text-align: center; background: #fff; border-radius: 16px; grid-column: 1 / -1; }
         .pp-empty-icon { font-size: 52px; margin-bottom: 14px; }
         .pp-empty p { font-size: 15px; font-weight: 600; color: #555; margin: 0 0 4px; }
         .pp-empty span { font-size: 13px; color: #aaa; }
 
-        /* ΓöÇΓöÇ RESPONSIVE ΓöÇΓöÇ */
+        /* ── custom sort dropdown ── */
+        .pp-sort-dropdown { position: relative; display: inline-block; z-index: 50; }
+        .pp-sort-btn {
+          display: flex; align-items: center; gap: 8px;
+          padding: 8px 32px 8px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px;
+          font-size: 13px; font-weight: 600; color: #333; background: #fff;
+          cursor: pointer; font-family: inherit; min-width: 130px; justify-content: space-between;
+        }
+        .pp-sort-menu {
+          position: absolute; top: calc(100% + 6px); right: 0;
+          background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.12); min-width: 150px; overflow: hidden;
+        }
+        .pp-sort-option {
+          padding: 10px 14px; font-size: 13px; font-weight: 600; color: #444;
+          cursor: pointer; transition: background 0.15s; border-bottom: 1px solid #f5f5f5;
+        }
+        .pp-sort-option:last-child { border-bottom: none; }
+        .pp-sort-option:hover { background: #f8f9ff; color: #3b5bdb; }
+        .pp-sort-option.active { color: #3b5bdb; font-weight: 700; background: #eef2ff; }
+
         @media (max-width: 960px) {
           .pp-layout { grid-template-columns: 1fr; }
           .pp-sidebar { display: none; }
@@ -333,14 +330,22 @@ export default function PropertyPage() {
           .pp-body { padding: 20px 16px 40px; }
           .pp-grid { grid-template-columns: 1fr; }
           .pp-card-body { padding: 14px 16px 16px; }
-          .pp-cat-card { min-width: 140px; padding: 12px 16px; }
+          /* ── responsive category fix ── */
+          .pp-cats-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+          }
+          .pp-cat-card {
+            min-width: auto;
+            width: 100%;
+            padding: 12px 14px;
+            gap: 10px;
+          }
+          .pp-cat-icon-wrap { width: 36px; height: 36px; }
+          .pp-cat-name { font-size: 14px; }
+          .pp-cat-count { font-size: 11px; }
         }
-        .pp-empty { padding: 64px 24px; text-align: center; background: #fff; border-radius: 16px; grid-column: 1 / -1; }
-        .pp-empty-icon { font-size: 52px; margin-bottom: 14px; }
-        .pp-empty p { font-size: 15px; font-weight: 600; color: #555; margin: 0 0 4px; }
-        .pp-empty span { font-size: 13px; color: #aaa; }
-        @media (max-width: 960px) { .pp-layout { grid-template-columns: 1fr; } .pp-sidebar { display: none; } .pp-cats-row { justify-content: center; } }
-        @media (max-width: 640px) { .pp-hero { height: 260px; } .pp-body { padding: 20px 16px 40px; } .pp-grid { grid-template-columns: 1fr; } .pp-card-body { padding: 14px 16px 16px; } .pp-cat-card { min-width: 140px; padding: 12px 16px; } }
       `}</style>
 
       <div className="pp">
@@ -474,27 +479,48 @@ export default function PropertyPage() {
                 <span className="pp-results-count">
                   <strong>{displayed.length}</strong> results found
                 </span>
-                <select className="pp-sort-select" value={sort} onChange={(e) => setSort(e.target.value)}>
-                  <option value="newest">Newest</option>
-                  <option value="featured">Featured</option>
-                  <option value="rating">Top Rated</option>
-                </select>
+
+                {/* ── CUSTOM DROPDOWN (fixes overflow) ── */}
+                <div className="pp-sort-dropdown" ref={sortRef}>
+                  <button className="pp-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                    {sortLabel[sort]}
+                    <FiChevronDown size={14} style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                  </button>
+                  {isSortOpen && (
+                    <div className="pp-sort-menu">
+                      {(["newest", "featured", "rating"] as const).map((key) => (
+                        <div
+                          key={key}
+                          className={`pp-sort-option${sort === key ? " active" : ""}`}
+                          onClick={() => {
+                            setSort(key);
+                            setIsSortOpen(false);
+                          }}
+                        >
+                          {sortLabel[key]}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="pp-grid">
                 {loading ? (
                   <div className="pp-empty">
-                    <p>Loading listingsΓÇª</p>
+                    <p>Loading listings…</p>
                   </div>
                 ) : loadError ? (
                   <div className="pp-empty">
-                    <div className="pp-empty-icon">ΓÜá∩╕Å</div>
+                    <div className="pp-empty-icon">⚠️</div>
                     <p>Couldn't load listings</p>
                     <span>{loadError}</span>
                   </div>
                 ) : displayed.length === 0 ? (
                   <div className="pp-empty">
-                    <div className="pp-empty-icon">≡ƒÅá</div>
+                    <div className="pp-empty-icon">
+                      <FiHome size={52} />
+                    </div>
                     <p>No properties found</p>
                     <span>Try adjusting your filters or search</span>
                   </div>

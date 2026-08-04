@@ -5,12 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
 import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
-import {
-
-  FiShare2, FiHeart, FiMapPin, FiClock, FiCheckCircle,
-  FiChevronRight, FiTool, FiShield, FiZap,
-
-} from "react-icons/fi";
+import { FiShare2, FiHeart, FiMapPin, FiClock, FiCheckCircle, FiChevronRight, FiTool, FiShield, FiZap } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { toTradesDetail, toTradesCard } from "@/lib/adapters/tradesAdapter";
 import type { TradesDetail } from "@/app/types/listing";
@@ -163,7 +158,6 @@ export default function TradeDetailPage() {
         .cd-left  { display: flex; flex-direction: column; gap: 14px; }
         .cd-right { display: flex; flex-direction: column; gap: 14px; }
 
-
         .cd-info-card {
           background: #fff; border-radius: 14px; padding: 18px 20px 20px;
           box-shadow: 0 2px 12px rgba(0,0,0,0.07); border: 1px solid #e8e8e8;
@@ -180,7 +174,6 @@ export default function TradeDetailPage() {
         .cd-share-btn { margin-left: auto; }  
         .cd-share-btn:hover, .cd-save-btn:hover { background: #f5f5f5; }
         .cd-save-btn.on { color: #e74c3c; }
-
 
         .cd-badge-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; }
         .cd-badge-verified {
@@ -314,8 +307,6 @@ export default function TradeDetailPage() {
         @media (max-width: 960px) {
           .cd-wrap { grid-template-columns: 1fr; }
           .cd-right { order: -1; }
-
-
         }
         @media (max-width: 640px) {
           .cd-wrap { padding: 0 12px; margin-top: 10px; gap: 10px; }
@@ -323,14 +314,10 @@ export default function TradeDetailPage() {
           .cd-info-card { padding: 14px; }
           .cd-title { font-size: 17px; }
           .cd-price { font-size: 18px; }
-
-
         }
       `}</style>
 
       <div className="cd-page">
-
-
         <div className="cd-topbar">
           <div className="cd-topbar-inner">
             <nav className="cd-breadcrumb" aria-label="Breadcrumb">
@@ -361,7 +348,6 @@ export default function TradeDetailPage() {
                     Verified
                   </span>
                 )}
-
                 {listing.warrantyGiven && (
                   <span className="cd-badge-warranty">
                     <FiShield size={9} color="#1d4ed8" style={{ marginRight: 3 }} />
@@ -373,7 +359,6 @@ export default function TradeDetailPage() {
                     <FiZap size={9} color="#b07000" style={{ marginRight: 3 }} />
                     Emergency
                   </span>
-
                 )}
               </div>
                 </div>
@@ -402,7 +387,6 @@ export default function TradeDetailPage() {
 
               <div className="cd-chips-row">
                 <div className="cd-chip">
-
                   <div className="cd-chip-icon"><FiTool size={14} color="#b45309" /></div>
                   <span className="cd-chip-val">{listing.serviceAreaKm} km</span>
                   <span className="cd-chip-label">Service Area</span>
@@ -416,7 +400,6 @@ export default function TradeDetailPage() {
                   <div className="cd-chip-icon"><FiShield size={14} color="#b45309" /></div>
                   <span className="cd-chip-val">{listing.warrantyGiven ? "Yes" : "No"}</span>
                   <span className="cd-chip-label">Warranty</span>
-
                 </div>
               </div>
             </div>
@@ -453,7 +436,6 @@ export default function TradeDetailPage() {
               />
           </div>
 
-
             {/* <div className="cd-lead-card">
               <p className="cd-company-card-title" style={{ marginBottom: 10 }}>Request a Quote</p>
               {leadSent ? (
@@ -484,7 +466,6 @@ export default function TradeDetailPage() {
                     {sendingLead ? "Sending…" : "Send Request"}
                   </button>
                 </>
-
               )}
             </div> */}
           </div>
@@ -520,7 +501,6 @@ export default function TradeDetailPage() {
         <div className="cd-footer-wrap">
           <Footer />
         </div>
-      </div>
     </>
   );
 }

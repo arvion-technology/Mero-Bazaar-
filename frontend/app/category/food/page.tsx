@@ -1,7 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { api } from "@/lib/api";
@@ -10,6 +9,7 @@ import type { FoodsListing, FoodsCard, FoodType, WeekDay } from "@/app/types/foo
 import {
   FiSearch,
   FiChevronDown,
+  FiChevronRight,
   FiCheckCircle,
   FiHeart,
 } from "react-icons/fi";
@@ -24,165 +24,6 @@ import {
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 
-
-type FoodType = "Veg" | "Non veg" | "Vegan" | "Egg Items";
-
-type PriceRange = "Under Rs.100" | "Rs.100 - Rs.200" | "Rs.200 - Rs.500" | "Above Rs.100";
-
-type DeliveryRange = "Under Rs.100" | "Rs.100 - Rs.200" | "Rs.200 - Rs.500" | "Above Rs.1000";
-
-type Subscription = "Daily Tiffin Available" | "Weekly Plan" | "Monthly Plan";
-
-type DayOfWeek = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
-
-type Restaurant = {
-  id: string;
-  name: string;
-  cuisine: string;
-  foodType: FoodType;
-  pricePerMeal: string;
-  distance: string;
-  location: string;
-  rating: number;
-  reviewCount: number;
-  images: string[];
-  tags: string[];
-  isFreshAndHygienic: boolean;
-  postedDaysAgo: number;
-  // FIX: added missing fields so filters have data to work with
-  deliveryFee?: string;
-  subscriptions?: Subscription[];
-  deliveryDays?: DayOfWeek[];
-};
-
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ CATEGORY ICONS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
-const CATEGORY_ICONS = [
-  { name: "Fast Food", icon: FaHamburger, count: 1245, color: "#e11d48", bg: "#fff1f2" },
-  { name: "Pizza", icon: FaPizzaSlice, count: 890, color: "#f97316", bg: "#fff7ed" },
-  { name: "Beverages", icon: FaMugHot, count: 567, color: "#1d4ed8", bg: "#eff6ff" },
-  { name: "Bakery", icon: FaBreadSlice, count: 445, color: "#b45309", bg: "#fffbeb" },
-  { name: "Desserts", icon: FaIceCream, count: 345, color: "#7c3aed", bg: "#faf5ff" },
-  { name: "Healthy", icon: FaCarrot, count: 245, color: "#16a34a", bg: "#f0fdf4" },
-];
-
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ DATA ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
-const RESTAURANTS: Restaurant[] = [
-  {
-    id: "healthy-home-kitchen",
-    name: "Healthy Home kitchen",
-    cuisine: "Veg Thali",
-    foodType: "Veg",
-    pricePerMeal: "NPR 250/meal",
-    distance: "3km",
-    location: "Kathmandu",
-    rating: 4.6,
-    reviewCount: 126,
-    images: ["/food-healthy.jpg"],
-    tags: ["Veg Thali"],
-    isFreshAndHygienic: true,
-    postedDaysAgo: 1,
-    deliveryFee: "NPR 50",
-    subscriptions: ["Daily Tiffin Available", "Monthly Plan"],
-    deliveryDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-  },
-  {
-    id: "bhojan-gariha",
-    name: "Bhojan Gariha",
-    cuisine: "Nepali, Traditional",
-    foodType: "Veg",
-    pricePerMeal: "NPR 180/meal",
-    distance: "3km",
-    location: "Kathmandu",
-    rating: 4.6,
-    reviewCount: 126,
-    images: ["/food-nepali.jpg"],
-    tags: ["Nepali", "Traditional"],
-    isFreshAndHygienic: true,
-    postedDaysAgo: 2,
-    deliveryFee: "NPR 80",
-    subscriptions: ["Weekly Plan"],
-    deliveryDays: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-  },
-  {
-    id: "thakali-kitchen",
-    name: "Thakali Kitchen",
-    cuisine: "Veg Thali",
-    foodType: "Veg",
-    pricePerMeal: "NPR 220/meal",
-    distance: "2km",
-    location: "Kathmandu",
-    rating: 4.6,
-    reviewCount: 126,
-    images: ["/food-thakali.jpg"],
-    tags: ["Veg Thali"],
-    isFreshAndHygienic: true,
-    postedDaysAgo: 0,
-    deliveryFee: "Free",
-    subscriptions: ["Daily Tiffin Available"],
-    deliveryDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-  },
-  {
-    id: "burger-house-nepal",
-    name: "Burger House Nepal",
-    cuisine: "Fast Food, Burgers",
-    foodType: "Non veg",
-    pricePerMeal: "NPR 350/meal",
-    distance: "3km",
-    location: "Kathmandu",
-    rating: 4.6,
-    reviewCount: 126,
-    images: ["/food-burger.jpg"],
-    tags: ["Fast Food", "Burgers"],
-    isFreshAndHygienic: true,
-    postedDaysAgo: 1,
-    deliveryFee: "NPR 120",
-    subscriptions: ["Monthly Plan"],
-    deliveryDays: ["Fri", "Sat", "Sun"],
-  },
-  {
-    id: "new-momo-hut",
-    name: "New Momo Hut",
-    cuisine: "Momos, Chinese",
-    foodType: "Non veg",
-    pricePerMeal: "NPR 150/meal",
-    distance: "3km",
-    location: "Kathmandu",
-    rating: 4.6,
-    reviewCount: 126,
-    images: ["/food-momo.jpg"],
-    tags: ["Momos", "Chinese"],
-    isFreshAndHygienic: true,
-    postedDaysAgo: 3,
-    deliveryFee: "NPR 60",
-    subscriptions: ["Daily Tiffin Available", "Weekly Plan"],
-    deliveryDays: ["Mon", "Wed", "Fri", "Sun"],
-  },
-  {
-    id: "himalayan-java-coffee",
-    name: "Himalayan Java Coffee",
-    cuisine: "Cafe, Beverages",
-    foodType: "Veg",
-    pricePerMeal: "NPR 400/meal",
-    distance: "3km",
-    location: "Kathmandu",
-    rating: 4.6,
-    reviewCount: 126,
-    images: ["/food-coffee.jpg"],
-    tags: ["Cafe", "Beverages"],
-    isFreshAndHygienic: true,
-    postedDaysAgo: 2,
-    deliveryFee: "NPR 1500",
-    subscriptions: ["Monthly Plan"],
-    deliveryDays: ["Tue", "Thu", "Sat"],
-  },
-];
-
-const FOOD_TYPES: { name: FoodType; icon: IconType; color: string }[] = [
-  { name: "Veg", icon: FaLeaf, color: "#22c55e" },
-  { name: "Non veg", icon: FaDrumstickBite, color: "#ef4444" },
-  { name: "Vegan", icon: FaSeedling, color: "#16a34a" },
-  { name: "Egg Items", icon: FaEgg, color: "#f59e0b" },
-];
 type PriceRange = "Under Rs.100" | "Rs.100 - Rs.200" | "Rs.200 - Rs.500" | "Above Rs.500";
 
 const PRICE_RANGES: PriceRange[] = [
@@ -209,11 +50,9 @@ const DAY_LABEL: Record<WeekDay, string> = {
 };
 const DAYS_OF_WEEK: WeekDay[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ PRICE PARSER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
-// FIX: helper to extract numeric value from price strings like "NPR 250/meal"
-const parsePrice = (priceStr: string): number => {
-  const match = priceStr.replace(/,/g, "").match(/\d+/);
-  return match ? parseInt(match[0], 10) : 0;
+const SORT_LABELS: Record<string, string> = {
+  newest: "Newest",
+  "price-low": "Price: Low to High",
 };
 
 export default function FoodDeliveryPage() {
@@ -222,13 +61,24 @@ export default function FoodDeliveryPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("newest");
-  const [activeCategory, setActiveCategory] = useState<string>("");
   const [sort, setSort] = useState<"newest" | "price-low">("newest");
   const [selectedFoodTypes, setSelectedFoodTypes] = useState<FoodType[]>([]);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>([]);
   const [selectedDays, setSelectedDays] = useState<WeekDay[]>([]);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -286,41 +136,18 @@ export default function FoodDeliveryPage() {
     if (s && !l.title.toLowerCase().includes(s)) return false;
     if (selectedFoodTypes.length && !selectedFoodTypes.includes(l.foods.foodType)) return false;
 
-    // FIX: Price Range filter
     if (selectedPriceRanges.length) {
       const price = l.foods.price;
       const matches = selectedPriceRanges.some((range) => {
         if (range === "Under Rs.100") return price < 100;
         if (range === "Rs.100 - Rs.200") return price >= 100 && price <= 200;
         if (range === "Rs.200 - Rs.500") return price >= 200 && price <= 500;
-        if (range === "Above Rs.100") return price > 100;
-        return false;
-      });
-      if (!matches) return false;
-    }
-
-    // FIX: Delivery fee filter
-    if (selectedDeliveryRanges.length) {
-      const fee = r.deliveryFee ? parsePrice(r.deliveryFee) : 0;
-      const matches = selectedDeliveryRanges.some((range) => {
-        if (range === "Under Rs.100") return fee < 100;
-        if (range === "Rs.100 - Rs.200") return fee >= 100 && fee <= 200;
-        if (range === "Rs.200 - Rs.500") return fee >= 200 && fee <= 500;
-        if (range === "Above Rs.1000") return fee > 1000;
         if (range === "Above Rs.500") return price > 500;
         return false;
       });
       if (!matches) return false;
     }
 
-    // FIX: Subscription filter
-    if (selectedSubscriptions.length) {
-      if (!r.subscriptions || !r.subscriptions.some((sub) => selectedSubscriptions.includes(sub))) {
-        return false;
-      }
-    }
-
-    // FIX: Delivery Days filter
     if (selectedDays.length) {
       if (!l.foods.deliveryDays?.some((d) => selectedDays.includes(d))) return false;
     }
@@ -328,32 +155,6 @@ export default function FoodDeliveryPage() {
     return true;
   });
 
-  const sortedDisplayed = [...displayed].sort((a, b) => {
-    if (sort === "newest") return a.postedDaysAgo - b.postedDaysAgo;
-    if (sort === "rating") return b.rating - a.rating;
-    // FIX: added missing price-low sort handler
-    if (sort === "price-low") return parsePrice(a.pricePerMeal) - parsePrice(b.pricePerMeal);
-    return 0;
-  });
-
-  const renderStars = (rating: number, reviewCount: number) => {
-    const fullStars = Math.floor(rating);
-    const hasHalf = rating % 1 >= 0.5;
-    return (
-      <div style={{ display: "flex", alignItems: "center", gap: 1 }}>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <FiStar
-            key={i}
-            size={11}
-            fill={i < fullStars ? "#f59e0b" : i === fullStars && hasHalf ? "#f59e0b" : "none"}
-            color={i < fullStars || (i === fullStars && hasHalf) ? "#f59e0b" : "#d1d5db"}
-          />
-        ))}
-        <span style={{ fontSize: 11, fontWeight: 700, color: "#111", marginLeft: 4 }}>{rating}</span>
-        <span style={{ fontSize: 10, color: "#9ca3af", marginLeft: 2 }}>({reviewCount} Reviews)</span>
-      </div>
-    );
-  };
   const sortedRaw = [...filteredRaw].sort((a, b) => {
     if (sort === "price-low") return (a.foods?.price ?? 0) - (b.foods?.price ?? 0);
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -370,6 +171,7 @@ export default function FoodDeliveryPage() {
           min-height: 100vh;
           background: #f5f5f5;
           font-family: 'Inter', -apple-system, sans-serif;
+          overflow-x: hidden;
         }
 
         /* HERO */
@@ -427,13 +229,16 @@ export default function FoodDeliveryPage() {
           font-size: 13px; font-weight: 700; color: #888;
           margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.6px;
         }
-        .fd-cats-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .fd-cats-row {
+          display: flex; gap: 12px; flex-wrap: wrap;
+        }
         .fd-cat-card {
           display: flex; align-items: center; gap: 10px;
           padding: 10px 18px; border-radius: 14px;
           border: 1.5px solid #e4e8f0; background: #fafbff;
           cursor: pointer; transition: all 0.18s;
           min-width: 140px; font-family: inherit; text-align: left;
+          flex-shrink: 0;
         }
         .fd-cat-card:hover {
           border-color: #e11d48; background: #fff1f2;
@@ -444,8 +249,8 @@ export default function FoodDeliveryPage() {
           box-shadow: 0 4px 16px rgba(225,29,72,0.2);
         }
         .fd-cat-icon { font-size: 22px; display: flex; align-items: center; }
-        .fd-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; }
-        .fd-cat-count { font-size: 11px; color: #888; display: block; }
+        .fd-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; white-space: nowrap; }
+        .fd-cat-count { font-size: 11px; color: #888; display: block; white-space: nowrap; }
 
         /* BODY LAYOUT */
         .fd-body {
@@ -552,23 +357,44 @@ export default function FoodDeliveryPage() {
         }
         .fd-count { font-size: 15px; color: #6b7280; font-weight: 600; }
         .fd-count strong { color: #111; font-weight: 800; }
+
+        /* CUSTOM SORT DROPDOWN */
         .fd-sort-wrap {
           position: relative;
           border: 1px solid #d1d5db;
           border-radius: 6px;
           background: #fff;
-          padding: 0;
-          min-width: 120px;
+          min-width: 140px;
+          max-width: 100%;
         }
-        .fd-sort {
-          padding: 8px 28px 8px 12px;
-          border: none;
-          border-radius: 6px;
+        .fd-sort-trigger {
+          display: flex; align-items: center; justify-content: space-between;
+          width: 100%; padding: 8px 12px;
+          border: none; border-radius: 6px;
           font-size: 13px; font-weight: 600;
-          color: #333; background: transparent; outline: none;
+          color: #333; background: transparent;
           cursor: pointer; font-family: inherit;
-          appearance: none;
-          width: 100%;
+        }
+        .fd-sort-menu {
+          position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+          background: #fff; border: 1px solid #e5e7eb;
+          border-radius: 6px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          z-index: 20;
+          overflow: hidden;
+        }
+        .fd-sort-item {
+          padding: 9px 12px;
+          font-size: 13px; font-weight: 500;
+          color: #374151;
+          cursor: pointer;
+          transition: background 0.12s;
+        }
+        .fd-sort-item:hover { background: #f3f4f6; }
+        .fd-sort-item.active {
+          background: #fff1f2;
+          color: #e11d48;
+          font-weight: 700;
         }
 
         /* CARD GRID */
@@ -659,18 +485,26 @@ export default function FoodDeliveryPage() {
           cursor: pointer; font-family: inherit;
         }
 
-        /* ΓöÇΓöÇ RESPONSIVE ΓöÇΓöÇ */
+        /* RESPONSIVE */
         @media (max-width: 900px) {
           .fd-sidebar { display: none; }
           .fd-grid { grid-template-columns: repeat(2, 1fr); }
           .fd-cats-row { gap: 8px; }
-          .fd-cat-card { min-width: 120px; padding: 8px 12px; }
+          .fd-cat-card { min-width: 130px; }
         }
-        @media (max-width: 540px) {
+        @media (max-width: 640px) {
           .fd-grid { grid-template-columns: 1fr; }
           .fd-body { padding: 14px 14px 40px; }
-          .fd-cats-row { gap: 6px; }
-          .fd-cat-card { min-width: 0; flex: 1; }
+          .fd-cats-row {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+          }
+          .fd-cats-row::-webkit-scrollbar { display: none; }
+          .fd-cat-card { min-width: 130px; flex: 0 0 auto; padding: 10px 14px; }
+          .fd-results-bar { flex-direction: column; align-items: stretch; }
+          .fd-sort-wrap { width: 100%; min-width: unset; }
         }
       `}</style>
 
@@ -732,7 +566,6 @@ export default function FoodDeliveryPage() {
               Filter
               <FiChevronRight size={16} />
             </div>
-            <div className="fd-sb-head">Filter</div>
 
             {/* Food Type */}
             <div className="fd-sb-section">
@@ -811,30 +644,44 @@ export default function FoodDeliveryPage() {
               <span className="fd-count">
                 <strong>{cards.length}</strong> Restaurants found
               </span>
-              <div className="fd-sort-wrap">
-                <select
-                  className="fd-sort"
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
+              <div className="fd-sort-wrap" ref={sortRef}>
+                <button
+                  className="fd-sort-trigger"
+                  onClick={() => setSortOpen((v) => !v)}
                 >
-                  <option value="newest">Newest</option>
-                  <option value="rating">Highest Rated</option>
-                  onChange={(e) => setSort(e.target.value as "newest" | "price-low")}
-                >
-                  <option value="newest">Newest</option>
-                  <option value="price-low">Price: Low to High</option>
-                </select>
-                <FiChevronDown
-                  size={12}
-                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#666" }}
-                />
+                  <span>{SORT_LABELS[sort]}</span>
+                  <FiChevronDown
+                    size={12}
+                    color="#666"
+                    style={{
+                      transition: "transform 0.2s",
+                      transform: sortOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    }}
+                  />
+                </button>
+                {sortOpen && (
+                  <div className="fd-sort-menu">
+                    <div
+                      className={`fd-sort-item${sort === "newest" ? " active" : ""}`}
+                      onClick={() => { setSort("newest"); setSortOpen(false); }}
+                    >
+                      Newest
+                    </div>
+                    <div
+                      className={`fd-sort-item${sort === "price-low" ? " active" : ""}`}
+                      onClick={() => { setSort("price-low"); setSortOpen(false); }}
+                    >
+                      Price: Low to High
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Loading */}
             {loading && (
               <div className="fd-empty">
-                <p style={{ fontWeight: 700, fontSize: 15, color: "#111", margin: 0 }}>Loading restaurantsΓÇª</p>
+                <p style={{ fontWeight: 700, fontSize: 15, color: "#111", margin: 0 }}>Loading restaurants...</p>
               </div>
             )}
 
@@ -848,7 +695,9 @@ export default function FoodDeliveryPage() {
             {/* Cards */}
             {!loading && !error && cards.length === 0 && (
               <div className="fd-empty">
-                <div style={{ fontSize: 48, marginBottom: 12 }}>≡ƒì╜∩╕Å</div>
+                <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}>
+                  <FaUtensils size={48} color="#d1d5db" />
+                </div>
                 <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No restaurants found</p>
                 <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters or search term</span>
                 <br />
@@ -885,26 +734,6 @@ export default function FoodDeliveryPage() {
                       <div className="fd-card-body">
                         <p className="fd-card-name">{item.title}</p>
                         <div className="fd-card-meta">
-                          <div className="fd-card-meta-left">
-                            <FiMapPin size={11} />
-                            <span>{item.distance} {item.location}</span>
-                          </div>
-                          <span className="fd-card-price">{item.pricePerMeal}</span>
-                        </div>
-                        <p className="fd-card-cuisine">
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                            <span style={{ fontSize: 10 }}>≡ƒì╜∩╕Å</span>
-                            {item.cuisine}
-                          </span>
-                        </p>
-                        {item.isFreshAndHygienic && (
-                          <div className="fd-card-hygienic">
-                            <span style={{ fontSize: 12 }}>≡ƒî┐</span>
-                            Fresh and Hygenic
-                          </div>
-                        )}
-                        <div className="fd-card-stars">
-                          {renderStars(item.rating, item.reviewCount)}
                           <span className="fd-card-type">{item.foodType}</span>
                           <span className="fd-card-price">{item.price}</span>
                         </div>

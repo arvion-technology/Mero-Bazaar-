@@ -17,7 +17,7 @@ const popularSearches = [
   { label: "Bajaj N160", href: "/category/vehicles" },
   { label: "2BHK Rent Kathmandu", href: "/category/rent-and-real-estate" },
   { label: "Plumber", href: "/category/trade-and-homerepair" },
-  { label: "Australia Study", href: "/search?q=Australia+Study" },
+  { label: "Australia Study", href: "/category/job" },
   { label: "Driver Job", href: "/category/job" },
 ];
 
