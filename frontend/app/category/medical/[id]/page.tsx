@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
-import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
+import { FaStar, FaRegStar, FaHeart, FaStethoscope, FaIdCard, FaCalendarCheck } from "react-icons/fa";
 import { FiShare2, FiHeart, FiMapPin, FiClock, FiBriefcase, FiCheckCircle, FiMail, FiMessageSquare, FiChevronRight } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { toMedicalDetail } from "@/lib/adapters/medicalAdapter";
