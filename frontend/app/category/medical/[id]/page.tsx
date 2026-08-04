@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
-import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
+import { FaStar, FaRegStar, FaHeart, FaStethoscope, FaIdCard, FaCalendarCheck } from "react-icons/fa";
 import { FiShare2, FiHeart, FiMapPin, FiClock, FiBriefcase, FiCheckCircle, FiMail, FiMessageSquare, FiChevronRight } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { toMedicalDetail } from "@/lib/adapters/medicalAdapter";
@@ -14,9 +14,11 @@ function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
   return (
     <span style={{ display: "inline-flex", gap: 1 }}>
       {[1, 2, 3, 4, 5].map((i) =>
-        i <= Math.round(rating)
-          ? <FaStar key={i} size={size} color="#F5A623" />
-          : <FaRegStar key={i} size={size} color="#F5A623" />
+        i <= Math.round(rating) ? (
+          <FaStar key={i} size={size} color="#F5A623" />
+        ) : (
+          <FaRegStar key={i} size={size} color="#F5A623" />
+        )
       )}
     </span>
   );
@@ -24,7 +26,12 @@ function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
 
 export default function MedicalDetailPage() {
   const params = useParams();
-  const id = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : "";
+  const id =
+    typeof params?.id === "string"
+      ? params.id
+      : Array.isArray(params?.id)
+      ? params.id[0]
+      : "";
 
   const [listing, setListing] = useState<MedicalDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,7 +53,8 @@ export default function MedicalDetailPage() {
         if (!cancelled) setListing(toMedicalDetail(raw));
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load listing");
+        if (!cancelled)
+          setError(err instanceof Error ? err.message : "Failed to load listing");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -64,7 +72,15 @@ export default function MedicalDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Inter, sans-serif" }}>
+      <div
+        style={{
+          minHeight: "60vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
         Loading listing…
       </div>
     );
@@ -72,15 +88,31 @@ export default function MedicalDetailPage() {
 
   if (error || !listing) {
     return (
-      <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "Inter, sans-serif", gap: 8 }}>
+      <div
+        style={{
+          minHeight: "60vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "Inter, sans-serif",
+          gap: 8,
+        }}
+      >
         <p style={{ fontWeight: 700 }}>Couldn&apos;t load this listing</p>
         <span style={{ color: "#888", fontSize: 13 }}>{error}</span>
-        <Link href="/category/medical" style={{ color: "#0d9488", fontWeight: 600, fontSize: 13 }}>Back to Medical &amp; Dental</Link>
+        <Link
+          href="/category/medical"
+          style={{ color: "#0d9488", fontWeight: 600, fontSize: 13 }}
+        >
+          Back to Medical &amp; Dental
+        </Link>
       </div>
     );
   }
 
-  const images = listing.images.length > 0 ? listing.images : ["/placeholder-item.jpg"];
+  const images =
+    listing.images.length > 0 ? listing.images : ["/placeholder-item.jpg"];
   const thumbs = images.slice(0, 5);
   const extra = images.length - 5;
 
@@ -131,7 +163,8 @@ export default function MedicalDetailPage() {
         }
         .md2-hero-wrap {
           position: relative; width: 100%; height: 380px;
-          overflow: hidden;  background: #f4f4f6; cursor: zoom-in; display: flex; align-items: center; justify-content: center;
+          overflow: hidden; background: #f4f4f6; display: flex;
+          align-items: center; justify-content: center;
         }
         .md2-hero-img {
           position: relative; z-index: 1;
@@ -142,6 +175,8 @@ export default function MedicalDetailPage() {
           transition: transform 0.4s ease;
         }
         .md2-hero-wrap:hover .md2-hero-img { transform: scale(1.04); }
+
+        .md2-thumbs-row {
           display: flex; gap: 6px; padding: 8px 10px;
           overflow-x: auto; scrollbar-width: none; background: #fff;
         }
@@ -362,18 +397,31 @@ export default function MedicalDetailPage() {
         <div className="md2-topbar">
           <div className="md2-topbar-inner">
             <nav className="md2-breadcrumb" aria-label="Breadcrumb">
-              <Link href="/" className="md2-bc-link">Home</Link>
+              <Link href="/" className="md2-bc-link">
+                Home
+              </Link>
               {listing.breadcrumbs.map((crumb, i) => (
-                <span key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span
+                  key={i}
+                  style={{ display: "flex", alignItems: "center", gap: 4 }}
+                >
                   <span className="md2-bc-sep">›</span>
-                  {i === listing.breadcrumbs.length - 1
-                    ? <span className="md2-bc-cur">{crumb}</span>
-                    : <Link href="/category/medical" className="md2-bc-link">{crumb}</Link>
-                  }
+                  {i === listing.breadcrumbs.length - 1 ? (
+                    <span className="md2-bc-cur">{crumb}</span>
+                  ) : (
+                    <Link href="/category/medical" className="md2-bc-link">
+                      {crumb}
+                    </Link>
+                  )}
                 </span>
               ))}
             </nav>
-            <span className="md2-bc-cur" style={{ fontWeight: 700, color: "#333", fontSize: 13 }}>{listing.title}</span>
+            <span
+              className="md2-bc-cur"
+              style={{ fontWeight: 700, color: "#333", fontSize: 13 }}
+            >
+              {listing.title}
+            </span>
             <span className="md2-lid">Listing ID: {listing.listingId}</span>
           </div>
         </div>
@@ -382,7 +430,11 @@ export default function MedicalDetailPage() {
           <div className="md2-left">
             <div className="md2-gallery">
               <div className="md2-hero-wrap">
-                <img src={images[activeImg]} alt="" className="md2-hero-bg-blur" aria-hidden="true" />
+                <img
+                  src={images[activeImg]}
+                  alt={listing.title}
+                  className="md2-hero-img"
+                />
               </div>
 
               <div className="md2-thumbs-row">
@@ -420,7 +472,11 @@ export default function MedicalDetailPage() {
                   className={`md2-save-btn${isFav ? " on" : ""}`}
                   onClick={() => setIsFav((v) => !v)}
                 >
-                  {isFav ? <FaHeart size={13} color="#e74c3c" /> : <FiHeart size={13} color="#888" />}
+                  {isFav ? (
+                    <FaHeart size={13} color="#e74c3c" />
+                  ) : (
+                    <FiHeart size={13} color="#888" />
+                  )}
                   Save
                 </button>
               </div>
@@ -441,16 +497,26 @@ export default function MedicalDetailPage() {
                 </span>
                 <span className="md2-meta-item">
                   <FiClock size={12} color="#bbb" />
-                  Listed {listing.postedDaysAgo} day{listing.postedDaysAgo !== 1 ? "s" : ""} ago
+                  Listed {listing.postedDaysAgo} day
+                  {listing.postedDaysAgo !== 1 ? "s" : ""} ago
                 </span>
               </div>
 
               <div className="md2-cta-row">
-                <button className="md2-btn-apply" onClick={() => setCallRevealed(true)}>
-                  {callRevealed ? `Call: ${listing.seller.phone}` : "Book Appointment / Call"}
+                <button
+                  className="md2-btn-apply"
+                  onClick={() => setCallRevealed(true)}
+                >
+                  {callRevealed
+                    ? `Call: ${listing.seller.phone}`
+                    : "Book Appointment / Call"}
                 </button>
                 <button className="md2-btn-chat">
-                  <FiMessageSquare size={14} color="#0d9488" style={{ marginRight: '5px' }} />
+                  <FiMessageSquare
+                    size={14}
+                    color="#0d9488"
+                    style={{ marginRight: "5px" }}
+                  />
                   Chat with Provider
                 </button>
               </div>
@@ -462,18 +528,30 @@ export default function MedicalDetailPage() {
                   <span className="md2-chip-label">Experience</span>
                 </div>
                 <div className="md2-chip">
-                  <div className="md2-chip-icon">🩺</div>
+                  <div className="md2-chip-icon">
+                    <FaStethoscope size={14} color="#0d9488" />
+                  </div>
                   <span className="md2-chip-val">{listing.serviceType}</span>
                   <span className="md2-chip-label">Specialization</span>
                 </div>
                 <div className="md2-chip">
-                  <div className="md2-chip-icon">🪪</div>
-                  <span className="md2-chip-val">{listing.nmcLicenseNumber}</span>
+                  <div className="md2-chip-icon">
+                    <FaIdCard size={14} color="#0d9488" />
+                  </div>
+                  <span className="md2-chip-val">
+                    {listing.nmcLicenseNumber}
+                  </span>
                   <span className="md2-chip-label">NMC License</span>
                 </div>
                 <div className="md2-chip">
-                  <div className="md2-chip-icon">📅</div>
-                  <span className="md2-chip-val">{listing.sameDayBooking ? "Same-day OK" : "Advance booking"}</span>
+                  <div className="md2-chip-icon">
+                    <FaCalendarCheck size={14} color="#0d9488" />
+                  </div>
+                  <span className="md2-chip-val">
+                    {listing.sameDayBooking
+                      ? "Same-day OK"
+                      : "Advance booking"}
+                  </span>
                   <span className="md2-chip-label">Booking</span>
                 </div>
               </div>
@@ -485,7 +563,10 @@ export default function MedicalDetailPage() {
                 {listing.shortBio || "No bio provided."}
               </p>
               {listing.shortBio && listing.shortBio.length > 200 && (
-                <button className="md2-see-more" onClick={() => setShowFull((v) => !v)}>
+                <button
+                  className="md2-see-more"
+                  onClick={() => setShowFull((v) => !v)}
+                >
                   {showFull ? "See Less" : "See More"}
                 </button>
               )}
@@ -503,7 +584,9 @@ export default function MedicalDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <span style={{ fontSize: 13, color: "#999" }}>No services listed.</span>
+                    <span style={{ fontSize: 13, color: "#999" }}>
+                      No services listed.
+                    </span>
                   )}
                 </div>
                 <div className="md2-req-col">
@@ -516,7 +599,9 @@ export default function MedicalDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <span style={{ fontSize: 13, color: "#999" }}>Not specified.</span>
+                    <span style={{ fontSize: 13, color: "#999" }}>
+                      Not specified.
+                    </span>
                   )}
                 </div>
               </div>
@@ -537,11 +622,17 @@ export default function MedicalDetailPage() {
                 </div>
                 <div className="md2-ci-row">
                   <span className="md2-ci-label">Home Visit</span>
-                  <span className="md2-ci-val">{listing.homeVisitAvailable ? "Available" : "Not available"}</span>
+                  <span className="md2-ci-val">
+                    {listing.homeVisitAvailable ? "Available" : "Not available"}
+                  </span>
                 </div>
                 <div className="md2-ci-row">
                   <span className="md2-ci-label">Online Appointments</span>
-                  <span className="md2-ci-val">{listing.onlineAppointments ? "Available" : "Not available"}</span>
+                  <span className="md2-ci-val">
+                    {listing.onlineAppointments
+                      ? "Available"
+                      : "Not available"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -551,7 +642,9 @@ export default function MedicalDetailPage() {
               <div className="md2-map-area">
                 <iframe
                   className="md2-map-iframe"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(listing.clinicAddress + ", " + listing.city)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                    listing.clinicAddress + ", " + listing.city
+                  )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
@@ -568,7 +661,11 @@ export default function MedicalDetailPage() {
                 rel="noopener noreferrer"
                 className="md2-map-link"
               >
-                <FiMapPin size={12} color="#0d9488" style={{ marginRight: '4px' }} />
+                <FiMapPin
+                  size={12}
+                  color="#0d9488"
+                  style={{ marginRight: "4px" }}
+                />
                 View on Map
               </a>
             </div>
@@ -580,25 +677,43 @@ export default function MedicalDetailPage() {
                   src={listing.seller.avatar}
                   alt={listing.seller.name}
                   className="md2-poster-avatar"
-                  onError={(e) => { e.currentTarget.src = "/placeholder-avatar.png"; }}
+                  onError={(e) => {
+                    e.currentTarget.src = "/placeholder-avatar.png";
+                  }}
                 />
                 <div>
                   <p className="md2-poster-name">{listing.seller.name}</p>
                   <div className="md2-poster-rating">
-                    <span className="md2-poster-rnum">{listing.seller.rating || "New"}</span>
-                    {listing.seller.rating > 0 && <Stars rating={listing.seller.rating} size={12} />}
-                    <span className="md2-poster-rcount">({listing.seller.reviewCount} Reviews)</span>
+                    <span className="md2-poster-rnum">
+                      {listing.seller.rating || "New"}
+                    </span>
+                    {listing.seller.rating && listing.seller.rating > 0 && (
+                      <Stars rating={listing.seller.rating} size={12} />
+                    )}
+                    {listing.seller.reviewCount ? (
+                      <span className="md2-poster-rcount">
+                        ({listing.seller.reviewCount} Reviews)
+                      </span>
+                    ) : null}
                   </div>
                 </div>
               </div>
               {listing.seller.isVerified && (
                 <div className="md2-verified-tag">
-                  <FiCheckCircle size={10} color="#0b8a6b" style={{ marginRight: '4px' }} />
+                  <FiCheckCircle
+                    size={10}
+                    color="#0b8a6b"
+                    style={{ marginRight: "4px" }}
+                  />
                   Verified Provider
                 </div>
               )}
               <button className="md2-send-msg">
-                <FiMail size={14} color="#555" style={{ marginRight: '5px' }} />
+                <FiMail
+                  size={14}
+                  color="#555"
+                  style={{ marginRight: "5px" }}
+                />
                 Send Message
               </button>
             </div>

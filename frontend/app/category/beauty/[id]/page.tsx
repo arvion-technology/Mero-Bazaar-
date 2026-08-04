@@ -5,8 +5,9 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import { useState, useEffect } from "react";
 import {
-  FiArrowLeft, FiPhone, FiShare2,
-  FiCalendar, FiStar, FiClock, FiScissors, FiHome, FiMapPin,
+  FiMapPin, FiArrowLeft, FiPhone, FiShare2,
+  FiCalendar, FiStar, FiClock, FiScissors, FiHome,
+  FiFrown, FiZap, FiCheck,
 } from "react-icons/fi";
 import { FaHeart, FaSpa } from "react-icons/fa";
 import { toBeautyCard, toBeautyDetail } from "@/lib/adapters/beautyAdapter";
@@ -113,123 +114,44 @@ export default function BeautyDetailPage() {
     );
   };
 
-  const sharedStyles = `
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-    * { box-sizing: border-box; }
-    html, body { overflow-x: hidden; }
-    .bd-wrap { min-height: 100vh; background: #f5f5f5; font-family: 'Inter', -apple-system, sans-serif; }
-    .bd-breadcrumb-bar { background: #fff; border-bottom: 1px solid #e5e7eb; }
-    .bd-breadcrumb-inner { max-width: 1200px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9ca3af; }
-    .bd-breadcrumb-inner a { color: #9ca3af; text-decoration: none; transition: color 0.15s; }
-    .bd-breadcrumb-inner a:hover { color: #e11d48; }
-    .bd-breadcrumb-inner span.active { color: #374151; font-weight: 600; }
-    .bd-body { max-width: 1200px; margin: 0 auto; padding: 24px 20px 60px; }
-    .bd-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #6b7280; text-decoration: none; margin-bottom: 18px; transition: color 0.15s; }
-    .bd-back:hover { color: #e11d48; }
-    .bd-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; align-items: start; }
-    .bd-img-section { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    .bd-main-img-wrap { position: relative; width: 100%; height: 390px; overflow: hidden; background: #e5e7eb; }
-    .bd-main-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .bd-img-cat-badge { position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
-    .bd-img-fav-btn { position: absolute; top: 10px; left: 10px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.92); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: transform 0.15s; padding: 0; }
-    .bd-img-fav-btn:hover { transform: scale(1.12); }
-    .bd-posted-tag { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.58); color: #fff; font-size: 10px; font-weight: 600; border-radius: 6px; padding: 3px 8px; backdrop-filter: blur(4px); }
-    .bd-home-tag { position: absolute; bottom: 10px; right: 10px; background: rgba(225,29,72,0.88); color: #fff; font-size: 10px; font-weight: 700; border-radius: 6px; padding: 3px 8px; display: flex; align-items: center; gap: 4px; }
-    .bd-thumb-strip { display: flex; gap: 8px; margin-top: 10px; padding: 0 2px; }
-    .bd-thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s, opacity 0.15s, transform 0.15s; flex-shrink: 0; background: #e5e7eb; }
-    .bd-thumb:hover { opacity: 0.85; transform: translateY(-1px); }
-    .bd-thumb.active { border-color: #e11d48; }
-    .bd-right { display: flex; flex-direction: column; gap: 16px; }
-    .bd-panel { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .bd-name { font-size: 22px; font-weight: 900; color: #111; margin: 0 0 6px; }
-    .bd-category { font-size: 13px; color: #6b7280; margin: 0 0 10px; }
-    .bd-price-label { font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 2px; }
-    .bd-price { font-size: 26px; font-weight: 900; color: #e11d48; margin: 0 0 12px; }
-    .bd-price-divider { width: 40px; height: 3px; background: #f43f5e; border-radius: 2px; margin-bottom: 14px; }
-    .bd-location { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #6b7280; margin-bottom: 14px; }
-    .bd-desc { font-size: 13.5px; color: #4b5563; line-height: 1.7; margin-bottom: 16px; }
-    .bd-subs-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-    .bd-sub-pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 5px; background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; }
-    .bd-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .bd-detail-item { background: #f9fafb; border-radius: 8px; padding: 10px 12px; border: 1px solid #f0f0f0; }
-    .bd-detail-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
-    .bd-detail-val { font-size: 13px; font-weight: 700; color: #111; }
-    .bd-badges-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-    .bd-badge-home { display: inline-flex; align-items: center; gap: 5px; background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; font-size: 11.5px; font-weight: 700; padding: 5px 12px; border-radius: 6px; }
-    .bd-badge-bridal { display: inline-flex; align-items: center; gap: 5px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-size: 11.5px; font-weight: 700; padding: 5px 12px; border-radius: 6px; }
-    .bd-badge-tag { display: inline-flex; align-items: center; gap: 5px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 11.5px; font-weight: 700; padding: 5px 12px; border-radius: 6px; }
-    .bd-avail { display: flex; align-items: center; gap: 8px; background: #fce7f3; border: 1px solid #fbcfe8; border-radius: 8px; padding: 10px 14px; font-size: 12.5px; font-weight: 700; color: #be185d; margin-bottom: 14px; }
-    .bd-avail-dot { width: 8px; height: 8px; border-radius: 50%; background: #e11d48; flex-shrink: 0; animation: bdpulse 1.4s infinite; }
-    @keyframes bdpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-    .bd-actions { display: flex; gap: 10px; }
-    .bd-btn-book { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 13px; background: #e11d48; color: #fff; font-size: 14px; font-weight: 800; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; transition: background 0.15s, transform 0.15s; text-decoration: none; }
-    .bd-btn-book:hover { background: #be123c; transform: translateY(-1px); }
-    .bd-btn-phone, .bd-btn-share { width: 48px; height: 48px; border-radius: 9px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #e5e7eb; background: #f9fafb; color: #374151; cursor: pointer; transition: all 0.15s; }
-    .bd-btn-phone:hover { background: #fce7f3; border-color: #fbcfe8; color: #be185d; }
-    .bd-btn-share:hover { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
-    .bd-provider-panel { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .bd-provider-title { font-size: 12px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
-    .bd-provider-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .bd-provider-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #f43f5e, #e11d48); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 800; flex-shrink: 0; }
-    .bd-provider-name { font-size: 14px; font-weight: 800; color: #111; }
-    .bd-provider-phone { font-size: 12px; color: #6b7280; margin-top: 2px; }
-    .bd-provider-chat-btn { display: flex; align-items: center; gap: 6px; background: #e11d48; color: #fff; font-size: 12.5px; font-weight: 800; border: none; padding: 9px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background 0.15s; }
-    .bd-provider-chat-btn:hover { background: #be123c; }
-    .bd-reviews-panel { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .bd-review-item { padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
-    .bd-review-item:last-child { border-bottom: none; }
-    .bd-review-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-    .bd-review-name { font-size: 12.5px; font-weight: 700; color: #111; }
-    .bd-review-date { font-size: 10.5px; color: #9ca3af; }
-    .bd-review-comment { font-size: 12.5px; color: #4b5563; line-height: 1.5; }
-    .bd-tips { background: #fdf2f8; border: 1px solid #fbcfe8; border-radius: 10px; padding: 14px 16px; }
-    .bd-tips-title { font-size: 12px; font-weight: 800; color: #be185d; margin-bottom: 8px; }
-    .bd-tip-item { display: flex; align-items: flex-start; gap: 6px; font-size: 11.5px; color: #831843; margin-bottom: 5px; line-height: 1.5; }
-    .bd-tip-item:last-child { margin-bottom: 0; }
-    .bd-related { margin-top: 32px; }
-    .bd-related-title { font-size: 17px; font-weight: 800; color: #111; margin-bottom: 14px; }
-    .bd-related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .bd-rel-card { background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; text-decoration: none; color: inherit; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; }
-    .bd-rel-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-    .bd-rel-img-wrap { aspect-ratio: 16/11; overflow: hidden; background: #e5e7eb; }
-    .bd-rel-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-    .bd-rel-card:hover .bd-rel-img { transform: scale(1.05); }
-    .bd-rel-body { padding: 10px 12px; }
-    .bd-rel-name { font-size: 13.5px; font-weight: 700; color: #111; margin: 0 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .bd-rel-price { font-size: 13px; font-weight: 800; color: #e11d48; }
-    .bd-rel-loc { font-size: 11px; color: #9ca3af; display: flex; align-items: center; gap: 3px; margin-top: 3px; }
-    .bd-rel-rating { display: flex; align-items: center; gap: 2px; margin-top: 4px; }
-    .bd-state { min-height: 60vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; flex-direction: column; text-align: center; padding: 40px 20px; }
-    @media (max-width: 900px) {
-      .bd-grid { grid-template-columns: 1fr; }
-      .bd-related-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 540px) {
-      .bd-body { padding: 16px 14px 40px; }
-      .bd-related-grid { grid-template-columns: 1fr; }
-      .bd-thumb { width: 56px; height: 56px; }
-    }
-  `;
+  if (item === undefined) {
+    return (
+      <div className="bd-state">
+        <div className="spinner" style={{
+          width: 32, height: 32, border: "3px solid #fbcfe8",
+          borderTopColor: "#e11d48", borderRadius: "50%",
+          animation: "spin 0.7s linear infinite",
+        }} />
+      </div>
+    );
+  }
 
   if (error) {
     return (
       <>
-        <style>{sharedStyles}</style>
-        <div className="bd-state">
-          <p style={{ fontWeight: 800, fontSize: 20, color: "#111" }}>Something went wrong</p>
-          <p style={{ color: "#888", fontSize: 14 }}>{error}</p>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
-  if (item === undefined) {
-    return (
-      <>
-        <style>{sharedStyles}</style>
-        <div className="bd-state">
-          <p style={{ fontWeight: 800, fontSize: 18, color: "#111" }}>Loading…</p>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+          html, body { overflow-x: hidden; }
+          .bd-404 {
+            min-height: 80vh; display: flex; align-items: center; justify-content: center;
+            font-family: 'Inter', sans-serif; background: #f5f5f5; flex-direction: column;
+            text-align: center; padding: 40px 20px;
+          }
+          .bd-404 h1 { font-size: 22px; font-weight: 800; color: #111; margin: 12px 0 6px; }
+          .bd-404 p { font-size: 14px; color: #888; margin: 0 0 18px; }
+          .bd-back-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #e11d48; color: #fff; font-weight: 700; font-size: 13px;
+            padding: 10px 22px; border-radius: 8px; text-decoration: none;
+          }
+        `}</style>
+        <div className="bd-404">
+          <FiFrown size={56} color="#e11d48" />
+          <h1>Service Not Found</h1>
+          <p>The beauty service you are looking for does not exist.</p>
+          <Link href="/category/beauty" className="bd-back-btn">
+            <FiArrowLeft size={14} /> Back to Services
+          </Link>
         </div>
         <Footer />
       </>
@@ -239,15 +161,27 @@ export default function BeautyDetailPage() {
   if (item === null) {
     return (
       <>
-        <style>{sharedStyles}</style>
-        <div className="bd-state">
-          <div style={{ fontSize: 56 }}>💅</div>
-          <p style={{ fontWeight: 800, fontSize: 22, color: "#111", margin: "12px 0 6px" }}>Service Not Found</p>
-          <p style={{ color: "#888", fontSize: 14, margin: "0 0 18px" }}>The beauty service you are looking for does not exist.</p>
-          <Link
-            href="/category/beauty"
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#e11d48", color: "#fff", fontWeight: 700, fontSize: 13, padding: "10px 22px", borderRadius: 8, textDecoration: "none" }}
-          >
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+          html, body { overflow-x: hidden; }
+          .bd-404 {
+            min-height: 80vh; display: flex; align-items: center; justify-content: center;
+            font-family: 'Inter', sans-serif; background: #f5f5f5; flex-direction: column;
+            text-align: center; padding: 40px 20px;
+          }
+          .bd-404 h1 { font-size: 22px; font-weight: 800; color: #111; margin: 12px 0 6px; }
+          .bd-404 p { font-size: 14px; color: #888; margin: 0 0 18px; }
+          .bd-back-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #e11d48; color: #fff; font-weight: 700; font-size: 13px;
+            padding: 10px 22px; border-radius: 8px; text-decoration: none;
+          }
+        `}</style>
+        <div className="bd-404">
+          <FiFrown size={56} color="#e11d48" />
+          <h1>Service Not Found</h1>
+          <p>The beauty service you are looking for does not exist.</p>
+          <Link href="/category/beauty" className="bd-back-btn">
             <FiArrowLeft size={14} /> Back to Services
           </Link>
         </div>
@@ -260,7 +194,321 @@ export default function BeautyDetailPage() {
 
   return (
     <>
-      <style>{sharedStyles}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        * { box-sizing: border-box; }
+        html, body { overflow-x: hidden; }
+        .bd-wrap {
+          min-height: 100vh; background: #f5f5f5;
+          font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        /* ── BREADCRUMB ── */
+        .bd-breadcrumb-bar {
+          background: #fff; border-bottom: 1px solid #e5e7eb;
+        }
+        .bd-breadcrumb-inner {
+          max-width: 1200px; margin: 0 auto;
+          padding: 12px 24px;
+          display: flex; align-items: center; gap: 6px;
+          font-size: 12px; color: #9ca3af;
+        }
+        .bd-breadcrumb-inner a {
+          color: #9ca3af; text-decoration: none; transition: color 0.15s;
+        }
+        .bd-breadcrumb-inner a:hover { color: #e11d48; }
+        .bd-breadcrumb-inner span.active { color: #374151; font-weight: 600; }
+
+        /* ── MAIN BODY ── */
+        .bd-body {
+          max-width: 1200px; margin: 0 auto;
+          padding: 24px 20px 60px;
+        }
+
+        /* ── BACK LINK ── */
+        .bd-back {
+          display: inline-flex; align-items: center; gap: 6px;
+          font-size: 13px; font-weight: 600; color: #6b7280;
+          text-decoration: none; margin-bottom: 18px;
+          transition: color 0.15s;
+        }
+        .bd-back:hover { color: #e11d48; }
+
+        /* ── GRID ── */
+        .bd-grid {
+          display: grid; grid-template-columns: 1fr 400px; gap: 24px;
+          align-items: start;
+        }
+
+        /* ── LEFT: IMAGE CARD ── */
+        .bd-img-section {
+          background: #fff; border-radius: 12px;
+          border: 1px solid #e5e7eb;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .bd-main-img-wrap {
+          position: relative;
+          width: 100%;
+          height: 390px;
+          overflow: hidden;
+          background: #e5e7eb;
+        }
+        .bd-main-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+        .bd-img-cat-badge {
+          position: absolute; top: 10px; right: 10px;
+          font-size: 10px; font-weight: 800;
+          padding: 3px 8px; border-radius: 5px;
+          text-transform: uppercase; letter-spacing: 0.4px;
+        }
+        .bd-img-fav-btn {
+          position: absolute; top: 10px; left: 10px;
+          width: 32px; height: 32px; border-radius: 50%;
+          background: rgba(255,255,255,0.92); border: none;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          transition: transform 0.15s; padding: 0;
+        }
+        .bd-img-fav-btn:hover { transform: scale(1.12); }
+
+        .bd-posted-tag {
+          position: absolute; bottom: 10px; left: 10px;
+          background: rgba(0,0,0,0.58); color: #fff;
+          font-size: 10px; font-weight: 600; border-radius: 6px;
+          padding: 3px 8px; backdrop-filter: blur(4px);
+        }
+        .bd-home-tag {
+          position: absolute; bottom: 10px; right: 10px;
+          background: rgba(225,29,72,0.88); color: #fff;
+          font-size: 10px; font-weight: 700; border-radius: 6px;
+          padding: 3px 8px; display: flex; align-items: center; gap: 4px;
+        }
+
+        /* ── THUMBNAILS: OUTSIDE THE BOX ── */
+        .bd-thumb-strip {
+          display: flex; gap: 8px;
+          margin-top: 10px;
+          padding: 0 2px;
+        }
+        .bd-thumb {
+          width: 64px; height: 64px; border-radius: 8px;
+          object-fit: cover; cursor: pointer; border: 2px solid transparent;
+          transition: border-color 0.15s, opacity 0.15s, transform 0.15s;
+          flex-shrink: 0;
+          background: #e5e7eb;
+        }
+        .bd-thumb:hover { opacity: 0.85; transform: translateY(-1px); }
+        .bd-thumb.active { border-color: #e11d48; }
+
+        /* ── RIGHT: DETAILS PANEL ── */
+        .bd-right { display: flex; flex-direction: column; gap: 16px; }
+
+        .bd-panel {
+          background: #fff; border-radius: 12px;
+          border: 1px solid #e5e7eb; padding: 20px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .bd-name { font-size: 22px; font-weight: 900; color: #111; margin: 0 0 6px; }
+        .bd-category {
+          font-size: 13px; color: #6b7280; margin: 0 0 10px;
+        }
+        .bd-price-label {
+          font-size: 11px; font-weight: 600; color: #9ca3af;
+          text-transform: uppercase; letter-spacing: 0.5px;
+          margin: 0 0 2px;
+        }
+        .bd-price { font-size: 26px; font-weight: 900; color: #e11d48; margin: 0 0 12px; }
+        .bd-price-divider {
+          width: 40px; height: 3px; background: #f43f5e;
+          border-radius: 2px; margin-bottom: 14px;
+        }
+
+        .bd-location {
+          display: flex; align-items: center; gap: 5px;
+          font-size: 13px; color: #6b7280; margin-bottom: 14px;
+        }
+
+        .bd-desc {
+          font-size: 13.5px; color: #4b5563; line-height: 1.7;
+          margin-bottom: 16px;
+        }
+
+        /* Sub-services pills */
+        .bd-subs-row {
+          display: flex; flex-wrap: wrap; gap: 6px;
+          margin-bottom: 14px;
+        }
+        .bd-sub-pill {
+          font-size: 11px; font-weight: 600;
+          padding: 4px 10px; border-radius: 5px;
+          background: #fdf2f8; color: #be185d;
+          border: 1px solid #fbcfe8;
+        }
+
+        /* Details grid */
+        .bd-details-grid {
+          display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+          margin-bottom: 14px;
+        }
+        .bd-detail-item {
+          background: #f9fafb; border-radius: 8px;
+          padding: 10px 12px;
+          border: 1px solid #f0f0f0;
+        }
+        .bd-detail-label {
+          font-size: 10px; font-weight: 700; color: #9ca3af;
+          text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;
+        }
+        .bd-detail-val { font-size: 13px; font-weight: 700; color: #111; }
+
+        /* Badges row */
+        .bd-badges-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .bd-badge-home {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8;
+          font-size: 11.5px; font-weight: 700; padding: 5px 12px; border-radius: 6px;
+        }
+        .bd-badge-bridal {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
+          font-size: 11.5px; font-weight: 700; padding: 5px 12px; border-radius: 6px;
+        }
+        .bd-badge-tag {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
+          font-size: 11.5px; font-weight: 700; padding: 5px 12px; border-radius: 6px;
+        }
+
+        /* Availability */
+        .bd-avail {
+          display: flex; align-items: center; gap: 8px;
+          background: #fce7f3; border: 1px solid #fbcfe8; border-radius: 8px;
+          padding: 10px 14px; font-size: 12.5px; font-weight: 700; color: #be185d;
+          margin-bottom: 14px;
+        }
+        .bd-avail-dot {
+          width: 8px; height: 8px; border-radius: 50%; background: #e11d48;
+          flex-shrink: 0; animation: bdpulse 1.4s infinite;
+        }
+        @keyframes bdpulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+
+        /* Action Buttons */
+        .bd-actions { display: flex; gap: 10px; }
+        .bd-btn-book {
+          flex: 1; display: flex; align-items: center; justify-content: center;
+          gap: 7px; padding: 13px;
+          background: #e11d48; color: #fff;
+          font-size: 14px; font-weight: 800; border: none;
+          border-radius: 9px; cursor: pointer; font-family: inherit;
+          transition: background 0.15s, transform 0.15s;
+          text-decoration: none;
+        }
+        .bd-btn-book:hover { background: #be123c; transform: translateY(-1px); }
+        .bd-btn-phone {
+          width: 48px; height: 48px; border-radius: 9px;
+          display: flex; align-items: center; justify-content: center;
+          border: 1.5px solid #e5e7eb; background: #f9fafb;
+          color: #374151; cursor: pointer; transition: all 0.15s;
+        }
+        .bd-btn-phone:hover { background: #fce7f3; border-color: #fbcfe8; color: #be185d; }
+        .bd-btn-share {
+          width: 48px; height: 48px; border-radius: 9px;
+          display: flex; align-items: center; justify-content: center;
+          border: 1.5px solid #e5e7eb; background: #f9fafb;
+          color: #374151; cursor: pointer; transition: all 0.15s;
+        }
+        .bd-btn-share:hover { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
+
+        /* Provider Panel */
+        .bd-provider-panel {
+          background: #fff; border-radius: 12px;
+          border: 1px solid #e5e7eb; padding: 18px 20px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .bd-provider-title {
+          font-size: 12px; font-weight: 700; color: #9ca3af;
+          text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+        }
+        .bd-provider-row {
+          display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .bd-provider-avatar {
+          width: 44px; height: 44px; border-radius: 50%;
+          background: linear-gradient(135deg, #f43f5e, #e11d48);
+          display: flex; align-items: center; justify-content: center;
+          color: #fff; font-size: 18px; font-weight: 800; flex-shrink: 0;
+        }
+        .bd-provider-name { font-size: 14px; font-weight: 800; color: #111; }
+        .bd-provider-phone { font-size: 12px; color: #6b7280; margin-top: 2px; }
+        .bd-provider-chat-btn {
+          display: flex; align-items: center; gap: 6px;
+          background: #e11d48; color: #fff;
+          font-size: 12.5px; font-weight: 800; border: none;
+          padding: 9px 18px; border-radius: 8px; cursor: pointer;
+          font-family: inherit; white-space: nowrap;
+          transition: background 0.15s;
+        }
+        .bd-provider-chat-btn:hover { background: #be123c; }
+
+        /* Safety tips panel */
+        .bd-tips {
+          background: #fdf2f8; border: 1px solid #fbcfe8; border-radius: 10px;
+          padding: 14px 16px;
+        }
+        .bd-tips-title { font-size: 12px; font-weight: 800; color: #be185d; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .bd-tip-item {
+          display: flex; align-items: flex-start; gap: 6px;
+          font-size: 11.5px; color: #831843; margin-bottom: 5px; line-height: 1.5;
+        }
+        .bd-tip-item:last-child { margin-bottom: 0; }
+
+        /* ── RELATED ── */
+        .bd-related { margin-top: 32px; }
+        .bd-related-title {
+          font-size: 17px; font-weight: 800; color: #111; margin-bottom: 14px;
+        }
+        .bd-related-grid {
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+        }
+        .bd-rel-card {
+          background: #fff; border-radius: 10px; overflow: hidden;
+          border: 1px solid #e5e7eb; text-decoration: none; color: inherit;
+          display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .bd-rel-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+        .bd-rel-img-wrap { aspect-ratio: 16/11; overflow: hidden; background: #e5e7eb; }
+        .bd-rel-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .bd-rel-card:hover .bd-rel-img { transform: scale(1.05); }
+        .bd-rel-body { padding: 10px 12px; }
+        .bd-rel-name { font-size: 13.5px; font-weight: 700; color: #111; margin: 0 0 3px;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bd-rel-price { font-size: 13px; font-weight: 800; color: #e11d48; }
+        .bd-rel-loc { font-size: 11px; color: #9ca3af; display: flex; align-items: center; gap: 3px; margin-top: 3px; }
+        .bd-rel-rating {
+          display: flex; align-items: center; gap: 2px; margin-top: 4px;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+          .bd-grid { grid-template-columns: 1fr; }
+          .bd-related-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 540px) {
+          .bd-body { padding: 16px 14px 40px; }
+          .bd-related-grid { grid-template-columns: 1fr; }
+          .bd-thumb { width: 56px; height: 56px; }
+        }
+      `}</style>
 
       <div className="bd-wrap">
         <div className="bd-breadcrumb-bar">
@@ -319,11 +567,25 @@ export default function BeautyDetailPage() {
               )}
 
               <div className="bd-tips" style={{ marginTop: 16 }}>
-                <p className="bd-tips-title">💡 Beauty Service Tips</p>
-                <div className="bd-tip-item">✓ Check provider reviews and portfolio before booking</div>
-                <div className="bd-tip-item">✓ Confirm product brands if you have allergies or preferences</div>
-                <div className="bd-tip-item">✓ For home visits, ensure a clean and well-lit space</div>
-                <div className="bd-tip-item">✓ Always patch test new products 24 hours before events</div>
+                <p className="bd-tips-title">
+                  <FiZap size={14} /> Beauty Service Tips
+                </p>
+                <div className="bd-tip-item">
+                  <FiCheck size={12} style={{ marginTop: 2, flexShrink: 0 }} />
+                  Check provider reviews and portfolio before booking
+                </div>
+                <div className="bd-tip-item">
+                  <FiCheck size={12} style={{ marginTop: 2, flexShrink: 0 }} />
+                  Confirm product brands if you have allergies or preferences
+                </div>
+                <div className="bd-tip-item">
+                  <FiCheck size={12} style={{ marginTop: 2, flexShrink: 0 }} />
+                  For home visits, ensure a clean and well-lit space
+                </div>
+                <div className="bd-tip-item">
+                  <FiCheck size={12} style={{ marginTop: 2, flexShrink: 0 }} />
+                  Always patch test new products 24 hours before events
+                </div>
               </div>
 
               {item.reviews.length > 0 && (

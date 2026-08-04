@@ -1,26 +1,62 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import {
   FiSearch,
   FiMapPin,
   FiHeart,
-  FiCheckCircle,
   FiCalendar,
   FiAward,
   FiFilter,
   FiX,
+  FiChevronDown,
+  FiCheck,
+  FiClock,
+  FiAlertTriangle,
+  FiInbox,
 } from "react-icons/fi";
-import { FaHeart, FaStethoscope } from "react-icons/fa";
+import {
+  FaStethoscope,
+  FaUserMd,
+  FaTooth,
+  FaHeartbeat,
+  FaSun,
+  FaBaby,
+  FaBone,
+  FaFemale,
+  FaBrain,
+  FaHeadSideCough,
+  FaNotesMedical,
+} from "react-icons/fa";
 import { api } from "@/lib/api";
-import { resolveImage, daysAgo } from "@/lib/adapters/shared";
+import { resolveImage } from "@/lib/adapters/shared";
 import { SERVICE_TYPE_LABEL } from "@/lib/adapters/medicalAdapter";
-import type { MedicalListing, MedicalServiceType } from "@/app/types/medical";
+import type { MedicalListing } from "@/app/types/medical";
 
-const SPECIALTIES = Object.values(SERVICE_TYPE_LABEL); // real enum-backed list
+const SPECIALTIES = Object.values(SERVICE_TYPE_LABEL);
 const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Biratnagar", "Butwal"];
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest First" },
+  { value: "fee_low", label: "Fee: Low to High" },
+  { value: "fee_high", label: "Fee: High to Low" },
+];
+
+/* ---------- Specialty → Icon mapping ---------- */
+const SPECIALTY_ICONS: Record<string, React.ElementType> = {
+  "All": FaStethoscope,
+  "General Medicine": FaUserMd,
+  "Dental Care": FaTooth,
+  "Cardiology": FaHeartbeat,
+  "Dermatology": FaSun,
+  "Pediatrics": FaBaby,
+  "Orthopedics": FaBone,
+  "Gynecology": FaFemale,
+  "Neurology": FaBrain,
+  "ENT": FaHeadSideCough,
+  "Other": FaNotesMedical,
+};
 
 export default function MedicalPage() {
   const [listings, setListings] = useState<MedicalListing[]>([]);
@@ -34,6 +70,8 @@ export default function MedicalPage() {
   const [availableOnly, setAvailableOnly] = useState(false);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+const [sortOpen, setSortOpen] = useState(false);
+const sortRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -195,12 +233,16 @@ export default function MedicalPage() {
         .msf-section:last-of-type { border-bottom: none; }
         .msf-label { font-size: 13.5px; font-weight: 700; color: #1a1a1a; margin: 0 0 10px; }
 
+        .msf-select-wrap { position: relative; }
+        .msf-select-wrap > svg {
+          position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+          pointer-events: none;
+        }
         .msf-select {
           width: 100%; padding: 10px 32px 10px 12px;
           border: 1.5px solid #e4e8f0; border-radius: 10px;
           font-size: 13px; color: #444; font-family: inherit;
-          background: #fafafa url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
-          appearance: none; outline: none; cursor: pointer; transition: border-color 0.2s;
+          background: #fafafa; appearance: none; outline: none; cursor: pointer; transition: border-color 0.2s;
         }
         .msf-select:focus { border-color: #0d9488; }
 
@@ -234,14 +276,31 @@ export default function MedicalPage() {
         }
         .mp-results-count { font-size: 14px; color: #666; font-weight: 500; }
         .mp-results-count strong { color: #111; font-weight: 800; }
-        .mp-sort-select {
+
+        .mp-sort-dropdown { position: relative; display: inline-block; }
+        .mp-sort-trigger {
           padding: 9px 36px 9px 14px; border: 1.5px solid #e0e4f0; border-radius: 10px;
-          font-size: 13px; font-weight: 600; color: #333;
-          background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
-          appearance: none; outline: none; cursor: pointer;
-          font-family: inherit; box-shadow: 0 1px 6px rgba(0,0,0,0.06); transition: border-color 0.2s;
+          font-size: 13px; font-weight: 600; color: #333; background: #fff;
+          font-family: inherit; box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+          cursor: pointer; display: flex; align-items: center; gap: 8px; min-width: 150px;
+          position: relative;
         }
-        .mp-sort-select:focus { border-color: #0d9488; }
+        .mp-sort-trigger > svg { position: absolute; right: 12px; }
+        .mp-sort-menu {
+          position: absolute; top: calc(100% + 6px); right: 0;
+          background: #fff; border: 1.5px solid #e0e4f0; border-radius: 10px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 100;
+          min-width: 180px; overflow: hidden; display: flex; flex-direction: column;
+        }
+        .mp-sort-item {
+          padding: 10px 14px; text-align: left; background: #fff; border: none;
+          border-bottom: 1px solid #f2f4f8; font-size: 13px; font-weight: 600;
+          color: #333; cursor: pointer; display: flex; align-items: center;
+          justify-content: space-between; font-family: inherit; transition: background 0.15s;
+        }
+        .mp-sort-item:last-child { border-bottom: none; }
+        .mp-sort-item:hover { background: #f0fdfa; }
+        .mp-sort-item.active { background: #f0fdfa; color: #0d9488; }
 
         .mp-active-filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
         .mp-active-tag {
@@ -343,7 +402,7 @@ export default function MedicalPage() {
 
         .mp-status-badges { display: flex; gap: 6px; }
         .mp-status-badge {
-          font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+          font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;
         }
         .mp-status-avail { background: #d1fae5; color: #065f46; }
         .mp-status-home { background: #e0f2fe; color: #075985; }
@@ -358,7 +417,7 @@ export default function MedicalPage() {
         .mp-book-btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
         .mp-empty { grid-column: 1/-1; padding: 64px 24px; text-align: center; background: #fff; border-radius: 18px; border: 1.5px solid #ececec; }
-        .mp-empty-icon { font-size: 52px; margin-bottom: 14px; }
+        .mp-empty-icon { margin-bottom: 14px; display: flex; justify-content: center; }
         .mp-empty p { font-size: 15px; font-weight: 600; color: #555; margin: 0 0 4px; }
         .mp-empty span { font-size: 13px; color: #aaa; }
 
@@ -428,23 +487,19 @@ export default function MedicalPage() {
           <div className="mp-cats-inner">
             <p className="mp-cats-label">Specialties</p>
             <div className="mp-cats-row">
-              <button
-                className={`mp-cat-chip${activeSpecialty === "All" ? " active" : ""}`}
-                onClick={() => setActiveSpecialty("All")}
-              >
-                <FaStethoscope size={14} />
-                All
-              </button>
-              {SPECIALTIES.map((s) => (
-                <button
-                  key={s}
-                  className={`mp-cat-chip${activeSpecialty === s ? " active" : ""}`}
-                  onClick={() => setActiveSpecialty(s)}
-                >
-                  <FaStethoscope size={14} />
-                  {s}
-                </button>
-              ))}
+              {["All", ...SPECIALTIES].map((s) => {
+                const Icon = SPECIALTY_ICONS[s] || FaStethoscope;
+                return (
+                  <button
+                    key={s}
+                    className={`mp-cat-chip${activeSpecialty === s ? " active" : ""}`}
+                    onClick={() => setActiveSpecialty(s)}
+                  >
+                    <Icon size={14} />
+                    {s}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -474,22 +529,28 @@ export default function MedicalPage() {
 
               <div className="msf-section">
                 <p className="msf-label">Location / City</p>
-                <select className="msf-select" value={city} onChange={(e) => setCity(e.target.value)}>
-                  <option value="">Select City</option>
-                  {CITIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                <div className="msf-select-wrap">
+                  <select className="msf-select" value={city} onChange={(e) => setCity(e.target.value)}>
+                    <option value="">Select City</option>
+                    {CITIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <FiChevronDown size={14} color="#888" />
+                </div>
               </div>
 
               <div className="msf-section">
                 <p className="msf-label">Specialization</p>
-                <select className="msf-select" value={activeSpecialty} onChange={(e) => setActiveSpecialty(e.target.value)}>
-                  <option value="All">All Specialization</option>
-                  {SPECIALTIES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
+                <div className="msf-select-wrap">
+                  <select className="msf-select" value={activeSpecialty} onChange={(e) => setActiveSpecialty(e.target.value)}>
+                    <option value="All">All Specialization</option>
+                    {SPECIALTIES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                  <FiChevronDown size={14} color="#888" />
+                </div>
               </div>
 
               <div className="msf-section">
@@ -538,28 +599,44 @@ export default function MedicalPage() {
                     </div>
                   )}
                 </div>
-                <select className="mp-sort-select" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}>
-                  <option value="newest">Newest First</option>
-                  <option value="fee_low">Fee: Low to High</option>
-                  <option value="fee_high">Fee: High to Low</option>
-                </select>
+
+                <div className="mp-sort-dropdown" ref={sortRef}>
+                  <button className="mp-sort-trigger" onClick={() => setSortOpen(!sortOpen)}>
+                    {SORT_OPTIONS.find(o => o.value === sort)?.label}
+                    <FiChevronDown size={14} color="#555" />
+                  </button>
+                  {sortOpen && (
+                    <div className="mp-sort-menu">
+                      {SORT_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          className={`mp-sort-item${sort === opt.value ? " active" : ""}`}
+                          onClick={() => { setSort(opt.value as typeof sort); setSortOpen(false); }}
+                        >
+                          {opt.label}
+                          {sort === opt.value && <FiCheck size={14} />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="mp-grid">
                 {loading ? (
                   <div className="mp-empty">
-                    <div className="mp-empty-icon">⏳</div>
+                    <div className="mp-empty-icon"><FiClock size={48} color="#0d9488" /></div>
                     <p>Loading listings…</p>
                   </div>
                 ) : error ? (
                   <div className="mp-empty">
-                    <div className="mp-empty-icon">⚠️</div>
+                    <div className="mp-empty-icon"><FiAlertTriangle size={48} color="#e74c3c" /></div>
                     <p>Couldn&apos;t load listings</p>
                     <span>{error}</span>
                   </div>
                 ) : displayed.length === 0 ? (
                   <div className="mp-empty">
-                    <div className="mp-empty-icon">🏥</div>
+                    <div className="mp-empty-icon"><FiInbox size={48} color="#0d9488" /></div>
                     <p>No results found</p>
                     <span>Try adjusting your filters or search query</span>
                   </div>
@@ -575,14 +652,16 @@ export default function MedicalPage() {
                           <div className="mp-img-wrap">
                             <img src={thumb} alt={m.doctorName} className="mp-img" />
                             <button className="mp-heart" aria-label="Save" onClick={(e) => toggleFav(l.id, e)}>
-                              {isFav ? <FaHeart size={14} color="#e74c3c" /> : <FiHeart size={14} color="#9ca3af" />}
+                              {isFav ? <FaHeartbeat size={14} color="#e74c3c" /> : <FiHeart size={14} color="#9ca3af" />}
                             </button>
                           </div>
                           <div className="mp-info">
                             <span className="mp-specialty-badge">{specialtyLabel}</span>
                             <h3 className="mp-title">{m.doctorName}</h3>
                             <div className="mp-badges">
-                              {m.verificationStatus === "VERIFIED" && <span className="mp-badge-verified">✓ Verified</span>}
+                              {m.verificationStatus === "VERIFIED" && (
+                                <span className="mp-badge-verified"><FiCheck size={10} strokeWidth={3} /> Verified</span>
+                              )}
                               <span className="mp-badge-nmc">NMC NO. {m.nmcLicenseNumber}</span>
                             </div>
                             <div className="mp-rating-row">
@@ -620,7 +699,11 @@ export default function MedicalPage() {
                               <p className="mp-price-val">NPR {m.appointmentFee.toLocaleString("en-IN")}</p>
                             </div>
                             <div className="mp-status-badges">
-                              {m.sameDayBooking && <span className="mp-status-badge mp-status-avail">✓ Same-Day</span>}
+                              {m.sameDayBooking && (
+                                <span className="mp-status-badge mp-status-avail">
+                                  <FiCheck size={10} strokeWidth={3} /> Same-Day
+                                </span>
+                              )}
                               {m.homeVisitAvailable && <span className="mp-status-badge mp-status-home">Home Visit</span>}
                             </div>
                           </div>
@@ -643,4 +726,4 @@ export default function MedicalPage() {
       </div>
     </>
   );
-}  
+}
