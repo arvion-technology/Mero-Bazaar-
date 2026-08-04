@@ -17,15 +17,20 @@ export class LeadsController {
   }
 
   @Get()
-  findAll(
-    @Query('category') category?: ListingCategory,
-    @Query('status') status?: LeadStatus,
-  ) {
+  @UseGuards(JwtAuthGuard) 
+  findAll(@Query('category') category?: ListingCategory, @Query('status') status?: LeadStatus) {
     return this.leadsService.findAll({ category, status });
   }
 
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body('status') status: LeadStatus) {
     return this.leadsService.updateStatus(id, status);
+  }
+
+  @Get('mine')
+  @UseGuards(JwtAuthGuard)
+  findMine(@Req() req: Request, @Query('status') status?: LeadStatus) {
+    const sellerId = (req.user as { id: string }).id;
+    return this.leadsService.findForSeller(sellerId, { status });
   }
 }

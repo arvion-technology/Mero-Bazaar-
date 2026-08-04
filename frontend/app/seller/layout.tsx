@@ -32,7 +32,15 @@ const sidebarItems = [
   { id: "payments", icon: FiCreditCard, label: "Payments", href: "/seller/payments" },
   { id: "reports", icon: FiBarChart2, label: "Reports", href: "/seller/reports" },
   { id: "clients", icon: FiMessageSquare, label: "Clients", href: "/seller/clients", badge: "2" },
-  { id: "settings", icon: FiSettings, label: "Settings", href: "/seller/settings" },
+  {
+    id: "settings",
+    icon: FiSettings,
+    label: "Settings",
+    href: "/seller/settings",
+    children: [
+      { label: "Account settings", href: "/seller/settings" },
+    ],
+  },
 ];
 
 function SellerShell({ children }: { children: React.ReactNode }) {
@@ -42,7 +50,9 @@ function SellerShell({ children }: { children: React.ReactNode }) {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [openNavDropdown, setOpenNavDropdown] = useState<string | null>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const navDropdownRef = useRef<HTMLDivElement>(null);
 
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -52,6 +62,9 @@ function SellerShell({ children }: { children: React.ReactNode }) {
     function handleClickOutside(e: MouseEvent) {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target as Node)) {
         setShowProfileDropdown(false);
+      }
+      if (navDropdownRef.current && !navDropdownRef.current.contains(e.target as Node)) {
+        setOpenNavDropdown(null);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -216,6 +229,52 @@ function SellerShell({ children }: { children: React.ReactNode }) {
           border-radius: 10px;
           min-width: 20px;
           text-align: center;
+        }
+
+        .dash-nav-item-wrap {
+          position: relative;
+        }
+
+        .dash-nav-chevron {
+          margin-left: auto;
+          flex-shrink: 0;
+          transition: transform 0.2s;
+          color: #94a3b8;
+        }
+
+        .dash-nav-chevron.open {
+          transform: rotate(180deg);
+        }
+
+        .dash-nav-dropdown {
+          position: absolute;
+          top: calc(100% + 4px);
+          left: 8px;
+          right: 8px;
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+          z-index: 999;
+          overflow: hidden;
+          padding: 6px;
+          animation: dropdownIn 0.15s ease;
+        }
+
+        .dash-nav-dropdown-item {
+          display: block;
+          padding: 9px 12px;
+          font-size: 13px;
+          font-weight: 500;
+          color: #475569;
+          text-decoration: none;
+          border-radius: 7px;
+          transition: all 0.15s;
+        }
+
+        .dash-nav-dropdown-item:hover {
+          background: #f8fafc;
+          color: ${SITE_PRIMARY};
         }
 
         .dash-sidebar-footer {
@@ -1011,7 +1070,8 @@ function SellerShell({ children }: { children: React.ReactNode }) {
         .dash-sidebar.desktop-collapsed .dash-nav-item span:not(.dash-nav-icon),
         .dash-sidebar.desktop-collapsed .dash-nav-badge,
         .dash-sidebar.desktop-collapsed .dash-sidebar-user,
-        .dash-sidebar.desktop-collapsed .dash-nav-label {
+        .dash-sidebar.desktop-collapsed .dash-nav-label,
+        .dash-sidebar.desktop-collapsed .dash-nav-chevron {
           display: none;
         }
         .dash-sidebar.desktop-collapsed .dash-logo { justify-content: center; padding: 20px 0; }
@@ -1338,6 +1398,42 @@ function SellerShell({ children }: { children: React.ReactNode }) {
             <div className="dash-nav-label">Main Menu</div>
             {sidebarItems.map((item) => {
               const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+              const hasChildren = "children" in item && !!item.children?.length;
+
+              if (hasChildren) {
+                const isOpen = openNavDropdown === item.id;
+                return (
+                  <div className="dash-nav-item-wrap" key={item.id} ref={isOpen ? navDropdownRef : undefined}>
+                    <button
+                      type="button"
+                      className={`dash-nav-item ${isActive ? "active" : ""}`}
+                      onClick={() => setOpenNavDropdown(isOpen ? null : item.id)}
+                    >
+                      <span className="dash-nav-icon"><item.icon size={18} /></span>
+                      <span>{item.label}</span>
+                      <FiChevronDown size={14} className={`dash-nav-chevron ${isOpen ? "open" : ""}`} />
+                    </button>
+                    {isOpen && (
+                      <div className="dash-nav-dropdown">
+                        {item.children!.map((sub) => (
+                          <Link
+                            key={sub.href}
+                            href={sub.href}
+                            className="dash-nav-dropdown-item"
+                            onClick={() => {
+                              setOpenNavDropdown(null);
+                              setSidebarOpen(false);
+                            }}
+                          >
+                            {sub.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <Link
                   key={item.id}
@@ -1392,7 +1488,7 @@ function SellerShell({ children }: { children: React.ReactNode }) {
                       <div className="dash-dropdown-username">{session?.user?.name || "Seller"}</div>
                       <div className="dash-dropdown-role">Seller Account</div>
                     </div>
-                    <Link href="/user/settings" className="dash-dropdown-item" onClick={() => setShowProfileDropdown(false)}>
+                    <Link href="/seller/settings" className="dash-dropdown-item" onClick={() => setShowProfileDropdown(false)}>
                       <FiUser size={15} /> Profile & Settings
                     </Link>
                     <div className="dash-dropdown-divider" />

@@ -64,7 +64,7 @@ export default function PreviewServicePage() {
       const listing = await listingRes.json();
 
       const photoFormData = new FormData();
-      images.forEach(({ file }) => photoFormData.append("photos", file));
+      images.forEach(({ file }) => photoFormData.append("images", file));
 
       const photosRes = await fetch(`${endpoint}/${listing.id}/photos`, {
         method: "POST",

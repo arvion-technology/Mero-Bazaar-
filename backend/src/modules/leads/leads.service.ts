@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateLeadDto } from './dto/create_lead.dto';
-import { LeadStatus, ListingCategory } from '@prisma/client';
+import { LeadStatus, ListingCategory, LeadType } from '@prisma/client';
 
 @Injectable()
 export class LeadsService {
@@ -118,6 +118,18 @@ export class LeadsService {
       include: {
         listing: true,
       },
+    });
+  }
+
+  async findForSeller(sellerId: string, filters?: { status?: LeadStatus; leadType?: LeadType }) {
+    return this.prisma.lead.findMany({
+      where: {
+        listing: { userId: sellerId },
+        ...(filters?.status && { status: filters.status }),
+        ...(filters?.leadType && { leadType: filters.leadType }),
+      },
+      include: { listing: true, user: true },
+      orderBy: { createdAt: 'desc' },
     });
   }
 }
