@@ -120,4 +120,16 @@ export class LeadsService {
       },
     });
   }
+
+  async findForSeller(sellerId: string, filters?: { status?: LeadStatus; leadType?: LeadType }) {
+    return this.prisma.lead.findMany({
+      where: {
+        listing: { userId: sellerId },
+        ...(filters?.status && { status: filters.status }),
+        ...(filters?.leadType && { leadType: filters.leadType }),
+      },
+      include: { listing: true, user: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }
