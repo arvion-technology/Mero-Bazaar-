@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   FiCamera, FiCheckCircle, FiEdit3
 } from "react-icons/fi";
@@ -15,6 +16,7 @@ type DocKey = "panCardUrl" | "photoUrl" | "selfieWithPanUrl";
 
 export default function SellerSettingsPage() {
   const { data: session } = useSession();
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeDocKey = useRef<DocKey | null>(null);
 
@@ -265,7 +267,10 @@ export default function SellerSettingsPage() {
           ))}
         </div>
 
-        <button className="settings-edit-btn">
+        <button
+          className="settings-edit-btn"
+          onClick={() => router.push("/kyc?edit=1")}
+        >
           <FiEdit3 size={14} /> Edit
         </button>
       </div>

@@ -8,7 +8,7 @@ import {
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const PRIMARY = "#C0392B";
 const PRIMARY_DARK = "#A93226";
@@ -57,12 +57,14 @@ function fuzzyMatchPan(ocrText: string, pan: string): boolean {
 export default function SellerKYCPage() {
   const dateInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isEditMode = searchParams.get("edit") === "1";
 
   const [phase, setPhase] = useState<Phase>(1);
   const [submitted, setSubmitted] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(true);
   const [existingStatus, setExistingStatus] = useState<"VERIFIED" | "PENDING" | "REJECTED" | null>(null);
-  const router = useRouter();
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [existingDocs, setExistingDocs] = useState<{ panCardUrl?: string | null; photoUrl?: string | null; selfieWithPanUrl?: string | null }>({});
 
@@ -77,6 +79,13 @@ export default function SellerKYCPage() {
     accountHolderName: "",
   });
   const [phoneVerified, setPhoneVerified] = useState(false);
+
+  const [panCard, setPanCard] = useState<File | null>(null);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [selfieWithPan, setSelfieWithPan] = useState<File | null>(null);
+  const [panCardPreview, setPanCardPreview] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
 
   useEffect(() => {
     const checkExisting = async () => {
@@ -103,13 +112,24 @@ export default function SellerKYCPage() {
             return;
           }
 
-          if (kyc.status === "VERIFIED" || kyc.status === "PENDING") {
+          // Pending review: editing isn't available either way — bounce to dashboard.
+          if (kyc.status === "PENDING") {
+            if (isEditMode) {
+              toast.info("Your KYC is under review — editing isn't available until it's decided.");
+            }
             router.replace("/seller/dashboard");
             return;
           }
 
-          if (kyc.status === "REJECTED") {
-            setExistingStatus("REJECTED");
+          // Verified: only allow the wizard here if the user came via Edit.
+          if (kyc.status === "VERIFIED" && !isEditMode) {
+            router.replace("/seller/dashboard");
+            return;
+          }
+
+          // Reached only for: REJECTED (always), or VERIFIED + edit mode.
+          if (kyc.status === "REJECTED" || (kyc.status === "VERIFIED" && isEditMode)) {
+            setExistingStatus(kyc.status);
             setRejectionReason(kyc.rejectionReason ?? null);
             setForm({
               fullName: kyc.fullName ?? "",
@@ -139,9 +159,8 @@ export default function SellerKYCPage() {
                   return;
                 }
                 const blob = await res.blob();
-                console.log("doc blob", filename, blob.type, blob.size);
                 setPreview(URL.createObjectURL(blob));
-              } catch (e){
+              } catch (e) {
                 console.error("doc fetch threw", filename, e);
               }
             };
@@ -164,15 +183,10 @@ export default function SellerKYCPage() {
     };
 
     checkExisting();
-  }, [session, router]);
-  
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, router, isEditMode]);
 
-  const [panCard, setPanCard] = useState<File | null>(null);
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [selfieWithPan, setSelfieWithPan] = useState<File | null>(null);
-  const [panCardPreview, setPanCardPreview] = useState<string | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+
   const [showCamera, setShowCamera] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -253,7 +267,6 @@ export default function SellerKYCPage() {
             langPath: "/models",
           });
           const result = await worker.recognize(processed);
-          console.log("RAW TEXT:", result.data.text);
           const words = (result.data as unknown as { words: { confidence: number; text: string }[] }).words ?? [];
           await worker.terminate();
 
@@ -290,9 +303,6 @@ export default function SellerKYCPage() {
       });
       streamRef.current = stream;
       setShowCamera(true);
-      // setTimeout(() => {
-      //   if (videoRef.current) videoRef.current.srcObject = stream;
-      // }, 0);
     } catch {
       toast.error("Could not access camera");
     }
@@ -455,7 +465,11 @@ export default function SellerKYCPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Submission failed");
       setSubmitted(true);
-      toast.success("KYC submitted successfully!");
+      toast.success(
+        existingStatus === "VERIFIED"
+          ? "Changes submitted for re-review!"
+          : "KYC submitted successfully!"
+      );
       setTimeout(() => router.push("/seller/dashboard"), 2000);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Something went wrong!");
@@ -737,7 +751,11 @@ export default function SellerKYCPage() {
             <div className="kyc-brand">
               <FiShield size={18} /> Mero Bazaar
             </div>
-            <div className="kyc-sub">Complete all 3 steps to activate your seller account</div>
+            <div className="kyc-sub">
+              {existingStatus === "VERIFIED"
+                ? "Update your seller information below"
+                : "Complete all 3 steps to activate your seller account"}
+            </div>
 
             <div className="stepper">
               <div className="stepper-line">
@@ -785,12 +803,24 @@ export default function SellerKYCPage() {
             </div>
           )}
 
+          {existingStatus === "VERIFIED" && isEditMode && (
+            <div className="kyc-card" style={{ background: "#FFF7ED", border: "1px solid #FDBA74" }}>
+              <strong style={{ color: "#9A3412" }}>Editing a verified profile.</strong>
+              <p style={{ fontSize: 13, color: "#9A3412", marginTop: 8 }}>
+                Submitting changes will send your account back for admin re-review. Your seller
+                badge stays active while the review is pending.
+              </p>
+            </div>
+          )}
+
           {/* ── Phase content ── */}
           {submitted ? (
             <div className="kyc-card">
               <div className="success-screen">
                 <div className="success-icon"><FiCheckCircle /></div>
-                <div className="success-title">KYC submitted!</div>
+                <div className="success-title">
+                  {existingStatus === "VERIFIED" ? "Changes submitted!" : "KYC submitted!"}
+                </div>
                 <div className="success-sub">
                   Your application is under review. We will notify you within 1–2 business
                   days once your seller account is activated.
@@ -1034,7 +1064,7 @@ export default function SellerKYCPage() {
                   ) : submitted ? (
                     <><FiCheckCircle size={15} /> Submitted</>
                   ) : (
-                    <><FiShield size={15} /> Submit for verification</>
+                    <><FiShield size={15} /> {existingStatus === "VERIFIED" ? "Save & submit for review" : "Submit for verification"}</>
                   )}
                 </button>
               </div>
