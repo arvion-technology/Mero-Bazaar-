@@ -67,7 +67,6 @@ export default function AgriculturePage() {
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-<<<<<<< HEAD
   }, []);
 
   useEffect(() => {
@@ -78,8 +77,6 @@ export default function AgriculturePage() {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-=======
->>>>>>> origin/main
   }, []);
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
