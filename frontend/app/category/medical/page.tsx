@@ -70,6 +70,8 @@ export default function MedicalPage() {
   const [availableOnly, setAvailableOnly] = useState(false);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+const [sortOpen, setSortOpen] = useState(false);
+const sortRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;

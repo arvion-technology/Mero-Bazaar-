@@ -51,6 +51,8 @@ export default function AgriculturePage() {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [priceRange, setPriceRange] = useState<number>(500000);
   const [showMore, setShowMore] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+const sortRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
