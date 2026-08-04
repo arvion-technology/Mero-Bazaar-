@@ -10,6 +10,7 @@ import {
   FiMessageSquare,
   FiHeart,
   FiCheckCircle,
+  FiInbox,
 } from "react-icons/fi";
 import { FaHeart, FaLeaf, FaSeedling, FaTractor, FaWrench, FaCarrot } from "react-icons/fa";
 import { FaCow } from "react-icons/fa6";
@@ -29,12 +30,6 @@ const SEASONS = ["Spring", "Summer", "Autumn", "Winter"];
 const DISTRICTS = ["Chitwan", "Rupandehi", "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara"];
 const HEALTH_STATUS = ["VACCINATED", "NOT_VACCINATED"];
 const HEALTH_LABEL: Record<string, string> = { VACCINATED: "Vaccinated", NOT_VACCINATED: "Not Vaccinated" };
-
-const sortLabel: Record<string, string> = {
-  newest: "Newest",
-  "price-low": "Price: Low to High",
-  "price-high": "Price: High to Low",
-};
 
 const parsePrice = (priceStr: string): number => {
   const match = priceStr.replace(/,/g, "").match(/\d+/);
@@ -57,9 +52,6 @@ export default function AgriculturePage() {
   const [priceRange, setPriceRange] = useState<number>(500000);
   const [showMore, setShowMore] = useState(false);
 
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const sortRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -75,6 +67,7 @@ export default function AgriculturePage() {
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
+<<<<<<< HEAD
   }, []);
 
   useEffect(() => {
@@ -85,6 +78,8 @@ export default function AgriculturePage() {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+=======
+>>>>>>> origin/main
   }, []);
 
   const toggleFav = (id: string, e: React.MouseEvent) => {

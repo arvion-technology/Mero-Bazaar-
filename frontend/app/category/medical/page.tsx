@@ -128,17 +128,6 @@ export default function MedicalPage() {
     availableOnly ? "available" : null,
   ].filter(Boolean).length;
 
-  /* ---------- Custom sort dropdown ---------- */
-  const [sortOpen, setSortOpen] = useState(false);
-  const sortRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (sortRef.current && !sortRef.current.contains(e.target as Node)) setSortOpen(false);
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
   return (
     <>
       <style>{`

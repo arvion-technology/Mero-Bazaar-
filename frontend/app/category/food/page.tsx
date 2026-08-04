@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { api } from "@/lib/api";
@@ -50,9 +50,9 @@ const DAY_LABEL: Record<WeekDay, string> = {
 };
 const DAYS_OF_WEEK: WeekDay[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
-const SORT_LABELS: Record<string, string> = {
-  newest: "Newest",
-  "price-low": "Price: Low to High",
+const parsePrice = (priceStr: string): number => {
+  const match = priceStr.replace(/,/g, "").match(/\d+/);
+  return match ? parseInt(match[0], 10) : 0;
 };
 
 export default function FoodDeliveryPage() {
@@ -66,19 +66,6 @@ export default function FoodDeliveryPage() {
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>([]);
   const [selectedDays, setSelectedDays] = useState<WeekDay[]>([]);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
-
-  const [sortOpen, setSortOpen] = useState(false);
-  const sortRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
-        setSortOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -644,37 +631,19 @@ export default function FoodDeliveryPage() {
               <span className="fd-count">
                 <strong>{cards.length}</strong> Restaurants found
               </span>
-              <div className="fd-sort-wrap" ref={sortRef}>
-                <button
-                  className="fd-sort-trigger"
-                  onClick={() => setSortOpen((v) => !v)}
+              <div className="fd-sort-wrap">
+                <select
+                  className="fd-sort"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as "newest" | "price-low")}
                 >
-                  <span>{SORT_LABELS[sort]}</span>
-                  <FiChevronDown
-                    size={12}
-                    color="#666"
-                    style={{
-                      transition: "transform 0.2s",
-                      transform: sortOpen ? "rotate(180deg)" : "rotate(0deg)",
-                    }}
-                  />
-                </button>
-                {sortOpen && (
-                  <div className="fd-sort-menu">
-                    <div
-                      className={`fd-sort-item${sort === "newest" ? " active" : ""}`}
-                      onClick={() => { setSort("newest"); setSortOpen(false); }}
-                    >
-                      Newest
-                    </div>
-                    <div
-                      className={`fd-sort-item${sort === "price-low" ? " active" : ""}`}
-                      onClick={() => { setSort("price-low"); setSortOpen(false); }}
-                    >
-                      Price: Low to High
-                    </div>
-                  </div>
-                )}
+                  <option value="newest">Newest</option>
+                  <option value="price-low">Price: Low to High</option>
+                </select>
+                <FiChevronDown
+                  size={12}
+                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#666" }}
+                />
               </div>
             </div>
 

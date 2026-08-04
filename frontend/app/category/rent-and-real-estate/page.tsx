@@ -298,54 +298,8 @@ export default function PropertyPage() {
         .pp-empty-icon { font-size: 52px; margin-bottom: 14px; }
         .pp-empty p { font-size: 15px; font-weight: 600; color: #555; margin: 0 0 4px; }
         .pp-empty span { font-size: 13px; color: #aaa; }
-
-        /* ── custom sort dropdown ── */
-        .pp-sort-dropdown { position: relative; display: inline-block; z-index: 50; }
-        .pp-sort-btn {
-          display: flex; align-items: center; gap: 8px;
-          padding: 8px 32px 8px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px;
-          font-size: 13px; font-weight: 600; color: #333; background: #fff;
-          cursor: pointer; font-family: inherit; min-width: 130px; justify-content: space-between;
-        }
-        .pp-sort-menu {
-          position: absolute; top: calc(100% + 6px); right: 0;
-          background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.12); min-width: 150px; overflow: hidden;
-        }
-        .pp-sort-option {
-          padding: 10px 14px; font-size: 13px; font-weight: 600; color: #444;
-          cursor: pointer; transition: background 0.15s; border-bottom: 1px solid #f5f5f5;
-        }
-        .pp-sort-option:last-child { border-bottom: none; }
-        .pp-sort-option:hover { background: #f8f9ff; color: #3b5bdb; }
-        .pp-sort-option.active { color: #3b5bdb; font-weight: 700; background: #eef2ff; }
-
-        @media (max-width: 960px) {
-          .pp-layout { grid-template-columns: 1fr; }
-          .pp-sidebar { display: none; }
-          .pp-cats-row { justify-content: center; }
-        }
-        @media (max-width: 640px) {
-          .pp-hero { height: 260px; }
-          .pp-body { padding: 20px 16px 40px; }
-          .pp-grid { grid-template-columns: 1fr; }
-          .pp-card-body { padding: 14px 16px 16px; }
-          /* ── responsive category fix ── */
-          .pp-cats-row {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-          }
-          .pp-cat-card {
-            min-width: auto;
-            width: 100%;
-            padding: 12px 14px;
-            gap: 10px;
-          }
-          .pp-cat-icon-wrap { width: 36px; height: 36px; }
-          .pp-cat-name { font-size: 14px; }
-          .pp-cat-count { font-size: 11px; }
-        }
+        @media (max-width: 960px) { .pp-layout { grid-template-columns: 1fr; } .pp-sidebar { display: none; } .pp-cats-row { justify-content: center; } }
+        @media (max-width: 640px) { .pp-hero { height: 260px; } .pp-body { padding: 20px 16px 40px; } .pp-grid { grid-template-columns: 1fr; } .pp-card-body { padding: 14px 16px 16px; } .pp-cat-card { min-width: 140px; padding: 12px 16px; } }
       `}</style>
 
       <div className="pp">

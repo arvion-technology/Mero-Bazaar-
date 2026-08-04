@@ -4,25 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
-import {
-  FaStar,
-  FaRegStar,
-  FaHeart,
-  FaMedal,
-  FaStethoscope,
-  FaIdCard,
-  FaCalendarCheck,
-} from "react-icons/fa";
-import {
-  FiShare2,
-  FiHeart,
-  FiMapPin,
-  FiClock,
-  FiBriefcase,
-  FiCheckCircle,
-  FiMail,
-  FiMessageSquare,
-} from "react-icons/fi";
+import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
+import { FiShare2, FiHeart, FiMapPin, FiClock, FiBriefcase, FiCheckCircle, FiMail, FiMessageSquare, FiChevronRight } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { toMedicalDetail } from "@/lib/adapters/medicalAdapter";
 import type { MedicalDetail } from "@/app/types/listing";
@@ -540,12 +523,8 @@ export default function MedicalDetailPage() {
 
               <div className="md2-chips-row">
                 <div className="md2-chip">
-                  <div className="md2-chip-icon">
-                    <FaMedal size={14} color="#0d9488" />
-                  </div>
-                  <span className="md2-chip-val">
-                    {listing.experience || "N/A"}
-                  </span>
+                  <div className="md2-chip-icon">🏅</div>
+                  <span className="md2-chip-val">{listing.experience || "N/A"}</span>
                   <span className="md2-chip-label">Experience</span>
                 </div>
                 <div className="md2-chip">
