@@ -2,10 +2,14 @@ import { Injectable, BadRequestException, NotFoundException, ForbiddenException 
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateLeadDto } from './dto/create_lead.dto';
 import { LeadStatus, ListingCategory, LeadType } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class LeadsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsService,
+  ) {}
 
   async create(dto: CreateLeadDto, userId: string) {
     const listing = await this.prisma.listing.findUnique({
@@ -44,7 +48,7 @@ export class LeadsService {
       );
     }
 
-    return this.prisma.lead.create({
+    const lead = await this.prisma.lead.create({
       data: {
         listingId: dto.listingId,
         userId,
@@ -56,6 +60,14 @@ export class LeadsService {
         listing: true,
       },
     });
+
+    await this.notifications.create(lead.listing.userId, {
+      category: 'ORDERS',
+      type: 'NEW_LEAD',
+      title: 'New client message',
+      description: `Someone sent an inquiry about "${lead.listing.title}"`,
+    });
+    return lead;
   }
 
   async findAll(filters?: {

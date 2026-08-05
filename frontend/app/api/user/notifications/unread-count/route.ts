@@ -7,7 +7,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/leads/mine/unread-count`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/notifications/unread-count`, {
     headers: { Authorization: `Bearer ${session.accessToken}` },
     cache: "no-store",
   });

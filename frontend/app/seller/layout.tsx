@@ -54,6 +54,7 @@ function SellerShell({ children }: { children: React.ReactNode }) {
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const navDropdownRef = useRef<HTMLDivElement>(null);
   const [unreadLeads, setUnreadLeads] = useState<number | null>(null);
+  const [notifCount, setNotifCount] = useState<number | null>(null);
 
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -80,14 +81,23 @@ function SellerShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     fetch("/api/leads/mine/unread-count")
-    .then((res) => (res.ok ? res.json() : null))
-    .then((data) => {
-      if (!cancelled && data) setUnreadLeads(data.count);
-    })
-    .catch(() => {});
-    return () => { 
-      cancelled= true;
-    };
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setUnreadLeads(data.count);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/user/notifications/unread-count")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setNotifCount(data.count);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
   }, []);
 
   return (
@@ -1487,11 +1497,10 @@ function SellerShell({ children }: { children: React.ReactNode }) {
               <div className={`dash-search ${searchFocused ? "focused" : ""}`}>
                 <FiSearch size={16} />
                 <input type="text" placeholder="Search orders, products..." onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)} />
-              </div>
-              <button type="button" className="dash-icon-btn">
-                <FiBell size={18} />
-                <span className="dash-badge">3</span>
-              </button>
+                <button type="button" className="dash-icon-btn">
+                  <FiBell size={18} />
+                  {notifCount !== null && notifCount > 0 && <span className="dash-badge">{notifCount}</span>}
+                </button>
               <div className="dash-profile-wrap" ref={profileDropdownRef}>
                 <button type="button" className="dash-profile-btn" onClick={() => setShowProfileDropdown((p) => !p)}>
                   <div className="dash-profile-btn-avatar">

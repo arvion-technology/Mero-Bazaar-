@@ -31,4 +31,9 @@ export class NotificationsController {
   markRead(@Request() req, @Param('id') id: string) {
     return this.service.markRead(req.user.id, id);
   }
+
+  @Get('unread-count')
+  countUnread(@Request() req) {
+    return this.service.countUnreadForUser(req.user.id);
+  }
 }
