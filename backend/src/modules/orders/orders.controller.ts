@@ -56,4 +56,9 @@ export class OrdersController {
   cancel(@Param('id') id: string, @Req() req) {
     return this.ordersService.cancelReservation(id, req.user.id);
   }
+
+  @Get('seller/stats')
+  getSellerStats(@Req() req) {
+    return this.ordersService.getSellerOrderStats(req.user.id);
+  }
 }

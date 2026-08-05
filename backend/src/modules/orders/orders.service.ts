@@ -121,10 +121,12 @@ export class OrdersService {
       where: { id: orderId },
       data: { status: 'CANCELLED', cancelReason: 'buyer_cancelled' },
     });
-    await tx.listing.update({
-      where: { id: order.listingId },
-      data: { status: 'ACTIVE' },
-    });
+    if (order.type === OrderType.RESERVATION) {
+      await tx.listing.update({
+        where: { id: order.listingId },
+        data: { status: 'ACTIVE' },
+      });
+    }
   });
 }
 
@@ -205,4 +207,16 @@ export class OrdersService {
   });
   return { count };
 }
+
+  async getSellerOrderStats(sellerId: string) {
+    const [totalOrders, pendingOrders] = await this.prisma.$transaction([
+      this.prisma.order.count({
+        where: { listing: { userId: sellerId } },
+      }),
+      this.prisma.order.count({
+        where: { listing: { userId: sellerId }, status: OrderStatus.PENDING },
+      }),
+    ]);
+    return { totalOrders, pendingOrders };
+  }
 }
