@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateLeadDto } from './dto/create_lead.dto';
 import { LeadStatus, ListingCategory, LeadType } from '@prisma/client';
@@ -93,27 +93,26 @@ export class LeadsService {
     });
   }
 
-  async updateStatus(id: string, status: LeadStatus) {
+  async updateStatus(id: string, status: LeadStatus, sellerId: string) {
     const lead = await this.prisma.lead.findUnique({
       where: { id },
+      include: { listing: true },
     });
 
     if (!lead) {
       throw new NotFoundException('Lead not found');
     }
 
+    if (lead.listing.userId !== sellerId) {
+      throw new ForbiddenException('Not your listing');
+    }
+
     return this.prisma.lead.update({
       where: { id },
       data: {
         status,
-
-        ...(status === LeadStatus.VIEWED && {
-          contactedAt: new Date(),
-        }),
-
-        ...(status === LeadStatus.INTERVIEWED && {
-          respondedAt: new Date(),
-        }),
+        ...(status === LeadStatus.VIEWED && { contactedAt: new Date() }),
+        ...(status === LeadStatus.INTERVIEWED && { respondedAt: new Date() }),
       },
       include: {
         listing: true,
