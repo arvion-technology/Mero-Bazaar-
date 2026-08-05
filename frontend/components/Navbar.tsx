@@ -22,18 +22,9 @@ const categories = [
 const navLinks = [
   { label: "Buy", href: "/buy" },
   {
-    label: "Services",
-    href: "/services",
-    dropdown: [
-      { label: "Trade & Home Repair", href: "/category/trade-and-homerepair" },
-      { label: "Beauty & Salon", href: "/category/beauty" },
-      { label: "Food Delivery", href: "/category/foods" },
-      { label: "Agriculture & Livestock", href: "/category/agriculture-and-livestock" },
-      { label: "Medical & Dental", href: "/category/medical" },
-    ],
+    label: "Services", href: "/api/navbar/services/page.js"
   },
-  
-  { label: "Jobs", href: "/category/job" },
+    { label: "Jobs", href: "/category/job" },
   { label: "Medical", href: "/category/medical" },
   { label: "Property", href: "/category/rent-and-real-estate" },
 ];
@@ -601,44 +592,18 @@ export default function Navbar() {
               )}
             </div>
 
-            {navLinks.map((link) =>
-              "dropdown" in link ? (
-                <div
-                  key={link.label}
-                  className="hnb-service-menu"
-                  onMouseEnter={() => setHoveredLink(link.label)}
-                  onMouseLeave={() => setHoveredLink(null)}
-                >
-                  <button className="hnb-btn">
-                    {link.label}
-                    <FiChevronDown size={13} />
-                  </button>
-
-                  <div className="hnb-service-dropdown">
-                    {link.dropdown.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="hnb-service-item"
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="hnb-btn"
-                  style={{ color: hoveredLink === link.label ? PRIMARY : undefined }}
-                  onMouseEnter={() => setHoveredLink(link.label)}
-                  onMouseLeave={() => setHoveredLink(null)}
-                >
-                  {link.label}
-                </Link>
-              )
-            )}
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="hnb-btn"
+                onMouseEnter={() => setHoveredLink(link.href)}
+                onMouseLeave={() => setHoveredLink(null)}
+                style={{ color: hoveredLink === link.href ? PRIMARY : undefined }}
+              >
+                {link.label}
+              </Link>
+            ))}
 
             <div style={{ position: "relative" }} ref={moreRef}>
               <button
@@ -765,25 +730,25 @@ export default function Navbar() {
 
         {showMobileMenu && (
           <div className="hnb-mobile-menu">
-           {navLinks.map((link) =>
-  "dropdown" in link ? (
-    <Link
-      key={link.label}
-      href="/services"
-      className="hnb-mobile-link"
-    >
-      {link.label}
-    </Link>
-  ) : (
-    <Link
-      key={link.href}
-      href={link.href}
-      className="hnb-mobile-link"
-    >
-      {link.label}
-    </Link>
-  )
-)}
+            {navLinks.map((link) =>
+              "dropdown" in link ? (
+                <Link
+                  key={link.label}
+                  href="/services"
+                  className="hnb-mobile-link"
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="hnb-mobile-link"
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
 
             <button className="hnb-mobile-cats-btn" onClick={() => setShowMobileCats(!showMobileCats)}>
               All Categories
