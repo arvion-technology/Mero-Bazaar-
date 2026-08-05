@@ -27,6 +27,11 @@ export class OrdersController {
     );
   }
 
+  @Get('seller/mine')
+  getSellerOrders(@Req() req) {
+    return this.ordersService.getOrdersForSeller(req.user.id);
+  }
+
   @Get('mine')
   getMine(@Req() req) {
     return this.ordersService.getMyOrders(req.user.id);
