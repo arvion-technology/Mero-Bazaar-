@@ -31,7 +31,7 @@ const sidebarItems = [
   { id: "products", icon: FiBox, label: "Products", href: "/seller/products" },
   { id: "payments", icon: FiCreditCard, label: "Payments", href: "/seller/payments" },
   { id: "reports", icon: FiBarChart2, label: "Reports", href: "/seller/reports" },
-  { id: "clients", icon: FiMessageSquare, label: "Clients", href: "/seller/clients", badge: "2" },
+  { id: "clients", icon: FiMessageSquare, label: "Clients", href: "/seller/clients" },
   {
     id: "settings",
     icon: FiSettings,
@@ -53,6 +53,7 @@ function SellerShell({ children }: { children: React.ReactNode }) {
   const [openNavDropdown, setOpenNavDropdown] = useState<string | null>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const navDropdownRef = useRef<HTMLDivElement>(null);
+  const [unreadLeads, setUnreadLeads] = useState<number | null>(null);
 
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -75,6 +76,19 @@ function SellerShell({ children }: { children: React.ReactNode }) {
     document.body.style.overflow = sidebarOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/leads/mine/unread-count")
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      if (!cancelled && data) setUnreadLeads(data.count);
+    })
+    .catch(() => {});
+    return () => { 
+      cancelled= true;
+    };
+  }, []);
 
   return (
     <>
@@ -1443,8 +1457,13 @@ function SellerShell({ children }: { children: React.ReactNode }) {
                 >
                   <span className="dash-nav-icon"><item.icon size={18} /></span>
                   <span>{item.label}</span>
-                  {item.badge && <span className="dash-nav-badge">{item.badge}</span>}
-                </Link>
+                  {item.id === "clients" && unreadLeads !== null && unreadLeads > 0 && (
+                    <span className="dash-nav-badge">{unreadLeads}</span>
+                  )}
+                  {item.id !== "clients" && item.badge && (
+                    <span className="dash-nav-badge">{item.badge}</span>
+                  )}
+              </Link>
               );
             })}
           </div>

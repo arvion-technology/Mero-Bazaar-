@@ -131,4 +131,14 @@ export class LeadsService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async countUnreadForSeller(sellerId: string) {
+    const count = await this.prisma.lead.count({
+      where: {
+        listing: { userId: sellerId },
+        status: LeadStatus.PENDING,
+      },
+    });
+    return { count };
+  }
 }

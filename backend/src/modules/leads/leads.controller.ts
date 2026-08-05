@@ -33,6 +33,13 @@ export class LeadsController {
     return this.leadsService.updateStatus(id, status, sellerId);
   }
 
+  @Get('mine/unread-count')
+  @UseGuards(JwtAuthGuard)
+  countUnread(@Req() req: Request) {
+    const sellerId = (req.user as { id: string }).id;
+    return this.leadsService.countUnreadForSeller(sellerId);
+  }
+
   @Get('mine')
   @UseGuards(JwtAuthGuard)
   findMine(@Req() req: Request, @Query('status') status?: LeadStatus) {
