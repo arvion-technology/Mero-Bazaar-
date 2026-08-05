@@ -32,6 +32,11 @@ export class OrdersController {
     return this.ordersService.getOrdersForSeller(req.user.id);
   }
 
+  @Get('seller/unread-count')
+  countPending(@Req() req) {
+    return this.ordersService.countPendingForSeller(req.user.id);
+  }
+
   @Get('mine')
   getMine(@Req() req) {
     return this.ordersService.getMyOrders(req.user.id);

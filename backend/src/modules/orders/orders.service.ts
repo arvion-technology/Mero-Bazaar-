@@ -198,4 +198,11 @@ export class OrdersService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async countPendingForSeller(sellerId: string) {
+  const count = await this.prisma.order.count({
+    where: { listing: { userId: sellerId }, status: OrderStatus.PENDING },
+  });
+  return { count };
+}
 }

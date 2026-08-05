@@ -27,7 +27,7 @@ const SIDEBAR_HOVER = "#f4f6fb";
 
 const sidebarItems = [
   { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/seller/dashboard" },
-  { id: "orders", icon: FiShoppingCart, label: "Orders", href: "/seller/orders", badge: "15" },
+  { id: "orders", icon: FiShoppingCart, label: "Orders", href: "/seller/orders" },
   { id: "products", icon: FiBox, label: "Products", href: "/seller/products" },
   { id: "payments", icon: FiCreditCard, label: "Payments", href: "/seller/payments" },
   { id: "reports", icon: FiBarChart2, label: "Reports", href: "/seller/reports" },
@@ -55,6 +55,7 @@ function SellerShell({ children }: { children: React.ReactNode }) {
   const navDropdownRef = useRef<HTMLDivElement>(null);
   const [unreadLeads, setUnreadLeads] = useState<number | null>(null);
   const [notifCount, setNotifCount] = useState<number | null>(null);
+  const [pendingOrders, setPendingOrders] = useState<number | null>(null);
 
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -95,6 +96,17 @@ function SellerShell({ children }: { children: React.ReactNode }) {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!cancelled && data) setNotifCount(data.count);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/orders/seller/unread-count")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setPendingOrders(data.count);
       })
       .catch(() => {});
     return () => { cancelled = true; };
@@ -1470,10 +1482,10 @@ function SellerShell({ children }: { children: React.ReactNode }) {
                   {item.id === "clients" && unreadLeads !== null && unreadLeads > 0 && (
                     <span className="dash-nav-badge">{unreadLeads}</span>
                   )}
-                  {item.id !== "clients" && item.badge && (
-                    <span className="dash-nav-badge">{item.badge}</span>
+                  {item.id === "orders" && pendingOrders !== null && pendingOrders > 0 && (
+                    <span className="dash-nav-badge">{pendingOrders}</span>
                   )}
-              </Link>
+                </Link>
               );
             })}
           </div>
@@ -1497,10 +1509,11 @@ function SellerShell({ children }: { children: React.ReactNode }) {
               <div className={`dash-search ${searchFocused ? "focused" : ""}`}>
                 <FiSearch size={16} />
                 <input type="text" placeholder="Search orders, products..." onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)} />
-                <button type="button" className="dash-icon-btn">
-                  <FiBell size={18} />
-                  {notifCount !== null && notifCount > 0 && <span className="dash-badge">{notifCount}</span>}
-                </button>
+              </div>
+              <button type="button" className="dash-icon-btn">
+                <FiBell size={18} />
+                {notifCount !== null && notifCount > 0 && <span className="dash-badge">{notifCount}</span>}
+              </button>
               <div className="dash-profile-wrap" ref={profileDropdownRef}>
                 <button type="button" className="dash-profile-btn" onClick={() => setShowProfileDropdown((p) => !p)}>
                   <div className="dash-profile-btn-avatar">

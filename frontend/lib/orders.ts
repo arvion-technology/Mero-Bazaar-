@@ -1,9 +1,13 @@
 type OrderStatus = "PENDING" | "CONFIRMED" | "PREPARING" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "EXPIRED";
+type OrderType = "DELIVERY" | "RESERVATION";
 
 export type OrderWithRelations = {
   id: string;
   totalPrice: number;
+  quantity: number;
+  type: OrderType;
   status: OrderStatus;
+  deliveryAddress: string | null;
   createdAt: string | Date;
   listing: { title: string } | null;
   user: { name: string | null; email: string } | null;
@@ -11,8 +15,11 @@ export type OrderWithRelations = {
 
 export type OrderRow = {
   id: string;
+  product: string;
   customer: string;
   email: string;
+  location: string;
+  type: string;
   amount: string;
   status: string;
   statusColor: string;
@@ -45,9 +52,12 @@ export function adaptOrderToRow(order: OrderWithRelations): OrderRow {
   const { label, color } = statusDisplay(order.status);
   return {
     id: `#${order.id.slice(-6).toUpperCase()}`,
+    product: order.listing?.title || "Unknown listing",
     customer: order.user?.name || order.user?.email || "Unknown",
     email: order.user?.email || "",
-    amount: `NPR ${order.totalPrice.toLocaleString()}`,
+    location: order.deliveryAddress || "—",
+    type: order.type === "RESERVATION" ? "Reservation" : "Delivery",
+    amount: `NPR ${order.totalPrice.toLocaleString()}${order.quantity > 1 ? ` (x${order.quantity})` : ""}`,
     status: label,
     statusColor: color,
   };

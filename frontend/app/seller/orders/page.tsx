@@ -48,7 +48,10 @@ export default function SellerOrdersPage() {
             <thead>
               <tr>
                 <th>Order ID</th>
+                <th>Product</th>
                 <th>Customer</th>
+                <th>Location</th>
+                <th>Type</th>
                 <th>Amount</th>
                 <th>Status</th>
               </tr>
@@ -57,10 +60,13 @@ export default function SellerOrdersPage() {
               {orders.map((order) => (
                 <tr key={order.id}>
                   <td><span className="dash-order-id">{order.id}</span></td>
+                  <td>{order.product}</td>
                   <td>
                     <div className="dash-customer-name">{order.customer}</div>
                     <div className="dash-customer-email">{order.email}</div>
                   </td>
+                  <td>{order.location}</td>
+                  <td>{order.type}</td>
                   <td><span className="dash-amount">{order.amount}</span></td>
                   <td>
                     <span className="dash-status" style={{ background: order.statusColor + "12", color: order.statusColor }}>
