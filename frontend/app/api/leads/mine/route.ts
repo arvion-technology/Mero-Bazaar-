@@ -10,7 +10,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
 
-  const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/leads/mine`);
+  const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/leads/mine`);
   if (status) url.searchParams.set("status", status);
 
   const res = await fetch(url.toString(), {

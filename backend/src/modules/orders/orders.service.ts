@@ -18,7 +18,7 @@ export class OrdersService {
     if (!listing) throw new NotFoundException('Listing not found.');
     if (!listing.price) throw new ConflictException('This listing has no price set.');
 
-    const price = listing.price; // now narrowed to `number`, and stays narrowed since it's a fresh const
+    const price = listing.price; 
 
     let chargeNow = price;
 
@@ -46,7 +46,7 @@ export class OrdersService {
             type: OrderType.RESERVATION,
             quantity: 1,
             totalPrice: chargeNow,
-            priceAtOrder: price, // ← use the local const, not listing.price
+            priceAtOrder: price, 
             status: OrderStatus.PENDING,
             reservedUntil: new Date(Date.now() + RESERVATION_MINUTES * 60 * 1000),
         },
@@ -121,10 +121,12 @@ export class OrdersService {
       where: { id: orderId },
       data: { status: 'CANCELLED', cancelReason: 'buyer_cancelled' },
     });
-    await tx.listing.update({
-      where: { id: order.listingId },
-      data: { status: 'ACTIVE' },
-    });
+    if (order.type === OrderType.RESERVATION) {
+      await tx.listing.update({
+        where: { id: order.listingId },
+        data: { status: 'ACTIVE' },
+      });
+    }
   });
 }
 
@@ -136,7 +138,7 @@ export class OrdersService {
     });
   }
 
-  // ── Cron: release reservations nobody paid for in time ──
+  // Cron: release reservations nobody paid for in time
   @Cron('*/1 * * * *')
   async releaseExpiredReservations() {
     const expired = await this.prisma.order.findMany({
@@ -186,5 +188,35 @@ export class OrdersService {
     if (order.userId !== buyerId) throw new ForbiddenException('Not your order.');
 
     return order;
+  }
+
+  async getOrdersForSeller(sellerId: string) {
+    return this.prisma.order.findMany({
+      where: { listing: { userId: sellerId } },
+      include: {
+        listing: true,
+        user: { select: { name: true, email: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async countPendingForSeller(sellerId: string) {
+  const count = await this.prisma.order.count({
+    where: { listing: { userId: sellerId }, status: OrderStatus.PENDING },
+  });
+  return { count };
+}
+
+  async getSellerOrderStats(sellerId: string) {
+    const [totalOrders, pendingOrders] = await this.prisma.$transaction([
+      this.prisma.order.count({
+        where: { listing: { userId: sellerId } },
+      }),
+      this.prisma.order.count({
+        where: { listing: { userId: sellerId }, status: OrderStatus.PENDING },
+      }),
+    ]);
+    return { totalOrders, pendingOrders };
   }
 }

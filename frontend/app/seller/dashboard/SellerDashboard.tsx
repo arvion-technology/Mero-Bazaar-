@@ -74,6 +74,7 @@ export default function SellerDashboard() {
     productsThisMonth: number;
     productsLastMonth: number;
   } | null>(null);
+  const [orderStats, setOrderStats] = useState<{ totalOrders: number; pendingOrders: number } | null>(null);
 
   useEffect(() => {
     if (!session?.accessToken) return;
@@ -84,6 +85,23 @@ export default function SellerDashboard() {
       .then((d) => setChartData(d))
       .catch(() => setChartData([]))
       .finally(() => setChartLoading(false));
+  }, [session?.accessToken]);
+
+
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    fetch("/api/orders/seller/stats", {
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error(`Order stats fetch failed: ${r.status}`);
+        return r.json();
+      })
+      .then((d) => setOrderStats(d))
+      .catch((err) => {
+        console.error(err);
+        setOrderStats(null);
+      });
   }, [session?.accessToken]);
 
   // lock page scroll while modal is open
@@ -122,8 +140,8 @@ export default function SellerDashboard() {
       locked: isKycLocked,
       action: "open-category-modal" as const,
     },
-    { icon: FiShoppingCart, label: "Total Orders", value: "-",  sub: "coming soon", color: SUCCESS, bg: "#ecfdf5" },
-    { icon: FiClock, label: "Pending", value: "-", sub: "coming soon", color: WARNING, bg: "#fffbeb" },
+    { icon: FiShoppingCart, label: "Total Orders", value: orderStats ? String(orderStats.totalOrders) : "-", sub: orderStats ? "all time" : "loading...", color: SUCCESS, bg: "#ecfdf5" },
+    { icon: FiClock, label: "Pending", value: orderStats ? String(orderStats.pendingOrders) : "-", sub: orderStats ? "awaiting action" : "loading...", color: WARNING, bg: "#fffbeb" },
     { icon: FiLayers, label: "Products", 
       value: statsData ? String(statsData.totalProducts) : "-",
       change: statsData ? `${productsDelta >= 0 ? "+" : ""}${productsDelta}` : undefined,

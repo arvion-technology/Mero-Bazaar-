@@ -10,7 +10,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const body = await req.json();
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${id}/status`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/leads/${id}/status`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

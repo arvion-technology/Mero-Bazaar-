@@ -44,4 +44,11 @@ export class NotificationsService {
   async create(userId: string, data: { category: NotificationCategory; type: string; title: string; description: string }) {
     return this.prisma.notification.create({ data: { userId, ...data } });
   }
+
+  async countUnreadForUser(userId: string) {
+    const count = await this.prisma.notification.count({
+      where: { userId, read: false },
+    });
+    return { count };
+  }
 }
