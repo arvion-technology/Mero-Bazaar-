@@ -392,6 +392,8 @@ export default function AdminDashboard() {
           border: 1px solid #eee;
           transition: all 0.25s ease;
           width: 100%;
+          text-decoration: none;
+          cursor: pointer;
         }
 
         .admin-stat-card:hover {
@@ -929,12 +931,12 @@ export default function AdminDashboard() {
 
           <div className="admin-stats">
             {[
-              { label: "Total KYC", value: stats.total, icon: "user", color: "#818cf8", bg: "#eef2ff" },
-              { label: "Verified KYC", value: stats.verified, icon: "check", color: "#34d399", bg: "#ecfdf5" },
-              { label: "Unverified KYC", value: stats.pending, icon: "user", color: "#fbbf24", bg: "#fffbeb" },
-              { label: "Rejected KYC", value: stats.rejected, icon: "x", color: "#f87171", bg: "#fef2f2" },
+              { label: "Total KYC", value: stats.total, icon: "user", color: "#818cf8", bg: "#eef2ff", href: "/admin"},
+              { label: "Verified KYC", value: stats.verified, icon: "check", color: "#34d399", bg: "#ecfdf5", href: "/admin/verified" },
+              { label: "Unverified KYC", value: stats.pending, icon: "user", color: "#fbbf24", bg: "#fffbeb", href: "/admin/unverified" },
+              { label: "Rejected KYC", value: stats.rejected, icon: "x", color: "#f87171", bg: "#fef2f2", href: "/admin/rejected" },
             ].map((stat) => (
-              <div key={stat.label} className="admin-stat-card">
+              <Link key={stat.label} href={stat.href} className="admin-stat-card">
                 <div className="admin-stat-icon-wrap" style={{ background: stat.bg }}>
                   <StatIcon type={stat.icon} color={stat.color} />
                 </div>
@@ -942,7 +944,7 @@ export default function AdminDashboard() {
                   <div className="admin-stat-value">{stat.value}</div>
                   <div className="admin-stat-label">{stat.label}</div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 
