@@ -14,7 +14,7 @@ const SITE_PRIMARY = "#C0392B";
 const BG = "#f8f5f5";
 const PRIMARY = "#0f172a";
 
-export default function VerifiedKYCDetailPage() {
+export default function RejectedKYCDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const [kyc, setKyc] = useState<MappedKycDetail | null>(null);
@@ -61,7 +61,7 @@ export default function VerifiedKYCDetailPage() {
   if (loading) {
     return (
       <div style={{ padding: 40, textAlign: "center", color: "#888" }}>
-        Loading KYC Details...
+        Loading Rejected KYC Details...
       </div>
     );
   }
@@ -72,7 +72,7 @@ export default function VerifiedKYCDetailPage() {
         <style>{sharedStyles}</style>
         <div className={`admin-backdrop ${sidebarOpen ? "active" : ""}`} onClick={() => setSidebarOpen(false)} aria-hidden="true" />
         <div className="admin-page">
-          <AdminSidebar activeId="verified" sidebarOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+          <AdminSidebar activeId="rejected" sidebarOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <main className="admin-main">
             <div className="admin-topbar">
               <div className="admin-topbar-left">
@@ -96,14 +96,14 @@ export default function VerifiedKYCDetailPage() {
       <div className={`admin-backdrop ${sidebarOpen ? "active" : ""}`} onClick={() => setSidebarOpen(false)} aria-hidden="true" />
 
       <div className="admin-page">
-        <AdminSidebar activeId="verified" sidebarOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <AdminSidebar activeId="rejected" sidebarOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <main className="admin-main">
           <div className="admin-topbar">
             <div className="admin-topbar-left">
               <button type="button" className="admin-hamburger" onClick={() => setSidebarOpen(true)}><FiMenu size={20} /></button>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <Link href="/admin/verified" className="admin-back-link">
+                <Link href="/admin/rejected" className="admin-back-link">
                   <FiChevronRight size={16} style={{ transform: "rotate(180deg)" }} /> Back
                 </Link>
                 <h1 className="admin-topbar-title">KYC Details</h1>
@@ -114,7 +114,7 @@ export default function VerifiedKYCDetailPage() {
             </div>
           </div>
 
-          <KYCDetailsContent kyc={kyc} pageType="verified" />
+          <KYCDetailsContent kyc={kyc} pageType="rejected" />
         </main>
       </div>
     </>

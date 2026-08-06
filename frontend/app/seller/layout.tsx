@@ -111,6 +111,43 @@ function SellerShell({ children }: { children: React.ReactNode }) {
       .catch(() => {});
     return () => { cancelled = true; };
   }, []);
+  
+  const pageHeadings: Record<string, { title: string; subtitle: string }> = {
+    "/seller/dashboard": {
+      title: "Dashboard",
+      subtitle: "Welcome back! Here's what's happening with your store today.",
+    },
+    "/seller/orders": {
+      title: "Orders",
+      subtitle: "Track and manage incoming orders",
+    },
+    "/seller/products": {
+      title: "Products",
+      subtitle: "Manage your listings and inventory",
+    },
+    "/seller/payments": {
+      title: "Payments",
+      subtitle: "Your earnings and transaction history",
+    },
+    "/seller/reports": {
+      title: "Reports",
+      subtitle: "Insights into your top listings and category performance",
+    },
+    "/seller/clients": {
+      title: "Clients",
+      subtitle: "Messages and leads from buyers",
+    },
+    "/seller/settings": {
+      title: "Settings",
+      subtitle: "Manage your account and preferences",
+    },
+  };
+
+  const defaultHeading = { title: "Dashboard", subtitle: "Welcome back!" };
+  const heading =
+  Object.entries(pageHeadings).find(
+    ([path]) => pathname === path || pathname?.startsWith(path + "/")
+  )?.[1] ?? defaultHeading;
 
   return (
     <>
@@ -1501,8 +1538,8 @@ function SellerShell({ children }: { children: React.ReactNode }) {
                 <FiMoreHorizontal size={18} />
               </button>
               <div className="dash-topbar-title-wrap">
-                <h1 className="dash-topbar-title">Dashboard</h1>
-                <p className="dash-topbar-sub">Welcome back! Here&apos;s what&apos;s happening with your store today.</p>
+                <h1 className="dash-topbar-title">{heading.title}</h1>
+                <p className="dash-topbar-sub">{heading.subtitle}</p>
               </div>
             </div>
             <div className="dash-topbar-right">
