@@ -3,30 +3,13 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { FiDollarSign, FiClock, FiTrendingUp, FiTrendingDown } from "react-icons/fi";
+import type { EarningsSummary, PaymentTransaction } from "../../types/payments";
 
 const PRIMARY = "#0f172a";
 const SUCCESS = "#10b981";
 const WARNING = "#f59e0b";
 const DANGER = "#ef4444";
 const CARD_BG = "#ffffff";
-
-interface EarningsSummary {
-  totalEarned: number;
-  pendingAmount: number;
-  thisMonthEarned: number;
-  lastMonthEarned: number;
-}
-
-interface PaymentTransaction {
-  orderId: string;
-  listingTitle: string;
-  buyerName: string | null;
-  amount: number;
-  status: string;
-  paymentMethod: string | null;
-  paymentRef: string | null;
-  createdAt: string;
-}
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   DELIVERED: { bg: "#ecfdf5", text: SUCCESS },
@@ -54,14 +37,15 @@ export default function SellerPaymentsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!session?.accessToken) return;
+    const accessToken = session?.accessToken;
+    if (!accessToken) return;
     let cancelled = false;
 
     async function fetchAll() {
       setLoading(true);
       setError(null);
       try {
-        const headers = { Authorization: `Bearer ${session.accessToken}` };
+        const headers = { Authorization: `Bearer ${accessToken}` };
         const [summaryRes, txRes] = await Promise.all([
           fetch("/api/payments/summary", { headers }),
           fetch("/api/payments/transactions", { headers }),
@@ -100,10 +84,6 @@ export default function SellerPaymentsPage() {
   return (
     <div>
       <style>{`
-        .pay-header { margin-bottom: 24px; }
-        .pay-title { font-size: 22px; font-weight: 700; color: ${PRIMARY}; letter-spacing: -0.3px; margin-bottom: 4px; }
-        .pay-subtitle { font-size: 13px; color: #64748b; }
-
         .pay-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
 
         .pay-stat-card {
@@ -170,11 +150,6 @@ export default function SellerPaymentsPage() {
           .pay-table { display: block; overflow-x: auto; }
         }
       `}</style>
-
-      <div className="pay-header">
-        <div className="pay-title">Payments</div>
-        <div className="pay-subtitle">Your earnings and transaction history</div>
-      </div>
 
       <div className="pay-stats">
         <div className="pay-stat-card">

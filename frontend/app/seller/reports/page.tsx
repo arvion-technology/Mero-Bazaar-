@@ -10,12 +10,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
   Cell,
-  Legend,
 } from "recharts";
 import { FiPackage, FiTag, FiClock } from "react-icons/fi";
+import type { TopListing, CategoryBreakdown, StatusBreakdown } from "../../types/reports";
 
 const PRIMARY = "#0f172a";
 const ACCENT = "#3b82f6";
@@ -34,30 +32,17 @@ const STATUS_COLORS: Record<string, string> = {
   EXPIRED: "#94a3b8",
 };
 
-interface TopListing {
-  listingId: string;
-  title: string;
-  category: string;
-  orderCount: number;
-  revenue: number;
-}
-
-interface CategoryBreakdown {
-  category: string;
-  orderCount: number;
-  revenue: number;
-}
-
-interface StatusBreakdown {
-  status: string;
-  count: number;
-}
-
 function formatNPR(value: number) {
   const abs = Math.abs(value);
   if (abs >= 100000) return `NPR ${(abs / 100000).toFixed(1)}L`;
   if (abs >= 1000) return `NPR ${(abs / 1000).toFixed(1)}K`;
   return `NPR ${abs.toLocaleString("en-IN")}`;
+}
+
+function formatCategoryLabel(value: React.ReactNode) {
+  const str = String(value ?? "");
+  if (!str) return "";
+  return str.charAt(0) + str.slice(1).toLowerCase().replace(/_/g, " ");
 }
 
 function EmptyState({ label }: { label: string }) {
@@ -77,14 +62,15 @@ export default function SellerReportsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!session?.accessToken) return;
+    const accessToken = session?.accessToken;
+    if (!accessToken) return;
     let cancelled = false;
 
     async function fetchAll() {
       setLoading(true);
       setError(null);
       try {
-        const headers = { Authorization: `Bearer ${session.accessToken}` };
+        const headers = { Authorization: `Bearer ${accessToken}` };
         const [topRes, catRes, statusRes] = await Promise.all([
           fetch("/api/reports/top-listings", { headers }),
           fetch("/api/reports/category-breakdown", { headers }),
@@ -129,10 +115,6 @@ export default function SellerReportsPage() {
   return (
     <div>
       <style>{`
-        .rep-header { margin-bottom: 24px; }
-        .rep-title { font-size: 22px; font-weight: 700; color: ${PRIMARY}; letter-spacing: -0.3px; margin-bottom: 4px; }
-        .rep-subtitle { font-size: 13px; color: #64748b; }
-
         .rep-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-bottom: 20px; }
 
         .rep-card {
@@ -168,11 +150,6 @@ export default function SellerReportsPage() {
           .rep-grid { grid-template-columns: 1fr; }
         }
       `}</style>
-
-      <div className="rep-header">
-        <div className="rep-title">Reports</div>
-        <div className="rep-subtitle">Insights into your top listings and category performance</div>
-      </div>
 
       <div className="rep-grid">
         {/* Top Listings */}
@@ -273,11 +250,11 @@ export default function SellerReportsPage() {
                   axisLine={false}
                   tickLine={false}
                   width={140}
-                  tickFormatter={(v: string) => v.charAt(0) + v.slice(1).toLowerCase().replace(/_/g, " ")}
+                  tickFormatter={formatCategoryLabel}
                 />
                 <Tooltip
-                  formatter={(value: number) => formatNPR(value)}
-                  labelFormatter={(label: string) => label.charAt(0) + label.slice(1).toLowerCase().replace(/_/g, " ")}
+                  formatter={(value) => formatNPR(Number(value ?? 0))}
+                  labelFormatter={formatCategoryLabel}
                   contentStyle={{ borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 12 }}
                 />
                 <Bar dataKey="revenue" radius={[0, 6, 6, 0]}>
