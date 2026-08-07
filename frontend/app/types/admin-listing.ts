@@ -4,6 +4,14 @@ export type ListingCategory =
 
 export type ListingStatus = "ACTIVE" | "RESERVED" | "SOLD" | "EXPIRED";
 
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
 export interface AdminListingRecord {
   id: string;
   title: string;
@@ -28,13 +36,13 @@ export interface AdminListingDetail {
   createdAt: string;
   updatedAt: string;
   user: { id: string; name: string | null; email: string; phone: string | null };
-  vehicle: Record<string, any> | null;
-  job: Record<string, any> | null;
-  medical: Record<string, any> | null;
-  trades: Record<string, any> | null;
-  rental: Record<string, any> | null;
-  agriculture: Record<string, any> | null;
-  secondhand: Record<string, any> | null;
-  foods: Record<string, any> | null;
-  beauty: Record<string, any> | null;
+  vehicle: Record<string, JsonValue> | null;
+  job: Record<string, JsonValue> | null;
+  medical: Record<string, JsonValue> | null;
+  trades: Record<string, JsonValue> | null;
+  rental: Record<string, JsonValue> | null;
+  agriculture: Record<string, JsonValue> | null;
+  secondhand: Record<string, JsonValue> | null;
+  foods: Record<string, JsonValue> | null;
+  beauty: Record<string, JsonValue> | null;
 }

@@ -1,4 +1,4 @@
-import type { ListingStatus } from "./admin-listing";
+import type { ListingStatus, ListingCategory } from "./admin-listing";
 
 interface BadgeInfo {
   bg: string;
@@ -17,6 +17,18 @@ export function getListingStatusBadge(status: ListingStatus): BadgeInfo {
   return STATUS_BADGE_MAP[status] || { bg: "#f1f5f9", color: "#64748b", label: status };
 }
 
+const CATEGORY_LABEL_MAP: Record<ListingCategory, string> = {
+  VEHICLE: "Vehicle",
+  JOB: "Job",
+  MEDICAL: "Medical & Dental",
+  TRADES: "Trades & Home Repair",
+  RENTAL: "Rental & Real Estate",
+  AGRICULTURE: "Agriculture & Livestock",
+  SECONDHAND: "Secondhand Goods",
+  FOODS: "Foods & Home Delivery",
+  BEAUTY: "Hair, Beauty & Wellness",
+};
+
 export function formatCategory(category: string): string {
-  return category.charAt(0) + category.slice(1).toLowerCase();
+  return CATEGORY_LABEL_MAP[category as ListingCategory] ?? category.charAt(0) + category.slice(1).toLowerCase();
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -27,5 +27,15 @@ export class AdminListingController {
   @Patch(':id/status')
   setStatus(@Param('id') id: string, @Body('status') status: ListingStatus) {
     return this.adminListingService.setStatus(id, status);
+  }
+
+  @Patch(':id')
+  updateListing(@Param('id') id: string, @Body() body: Record<string, any>) {
+    return this.adminListingService.updateListing(id, body);
+  }
+
+  @Delete(':id')
+  deleteListing(@Param('id') id: string) {
+    return this.adminListingService.deleteListing(id);
   }
 }
