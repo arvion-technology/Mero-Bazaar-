@@ -45,6 +45,16 @@ export class AdminUserService {
       },
     });
     if (!user) throw new NotFoundException('User not found. ');
+      
+    if (user.vendorProfile) {
+    const agg = await this.prisma.review.aggregate({
+      where: { listing: { userId: user.id } },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+    (user.vendorProfile as any).liveRating = agg._avg.rating ?? 0;
+    (user.vendorProfile as any).reviewCount = agg._count.rating;
+  }
     return user;
   }
 
