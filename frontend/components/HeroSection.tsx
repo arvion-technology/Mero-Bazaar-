@@ -2,19 +2,23 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
-  FiSearch, FiChevronDown,
-  FiCreditCard, FiShield,
+  FiSearch,
+  // FiChevronDown, // commented out until dropdown feature is ready
+  FiCreditCard,
+  FiShield,
+  FiCheckCircle,
+  FiBox,
+  FiMapPin,
 } from "react-icons/fi";
-import { MdVerified } from "react-icons/md";
-import { TbCubeUnfolded } from "react-icons/tb";
 
 const popularSearches = [
-  "Bajaj N160",
-  "2BHK Rent Kathmandu",
-  "Plumber",
-  "Australia Study",
-  "Driver Job",
+  { label: "Bajaj N160", href: "/category/vehicles" },
+  { label: "2BHK Rent Kathmandu", href: "/category/rent-and-real-estate" },
+  { label: "Plumber", href: "/category/trade-and-homerepair" },
+  { label: "Australia Study", href: "/category/job" },
+  { label: "Driver Job", href: "/category/job" },
 ];
 
 const locations = [
@@ -33,13 +37,13 @@ const locations = [
 const trustBadges = [
   {
     id: "verified",
-    icon: <MdVerified size={26} color="#C0392B" />,
+    icon: <FiCheckCircle size={26} color="#C0392B" />,
     title: "Verified Sellers",
     sub: "10,000+ Trusted",
   },
   {
     id: "blockchain",
-    icon: <TbCubeUnfolded size={26} color="#4B6BFB" />,
+    icon: <FiBox size={26} color="#4B6BFB" />,
     title: "Blockchain Verified",
     sub: "Tamper-proof records",
   },
@@ -58,6 +62,7 @@ const trustBadges = [
 ];
 
 export default function HeroSection() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("All Nepal");
   const [locOpen, setLocOpen] = useState(false);
@@ -74,6 +79,13 @@ export default function HeroSection() {
     return () => document.removeEventListener("mousedown", handleOutside);
   }, []);
 
+  const handleSearch = () => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    const url = `/search?q=${encodeURIComponent(trimmed)}&location=${encodeURIComponent(location)}`;
+    router.push(url);
+  };
+
   return (
     <>
       <style>{`
@@ -84,7 +96,7 @@ export default function HeroSection() {
           width: 100%;
           position: relative;
           overflow: hidden;
-          min-height: 380px;
+          min-height: 520px;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
         .hero-bg {
@@ -95,17 +107,17 @@ export default function HeroSection() {
           background-position: center 35%;
           z-index: 0;
         }
-        /* multi-stop overlay for deeper, more dramatic look */
+        /* deeper overlay that covers the full search section */
         .hero-bg::after {
           content: '';
           position: absolute;
           inset: 0;
           background: linear-gradient(
             160deg,
-            rgba(8,8,20,0.62) 0%,
-            rgba(15,15,35,0.42) 45%,
-            rgba(255,255,255,0.0) 72%,
-            rgba(255,255,255,0.88) 100%
+            rgba(8,8,20,0.72) 0%,
+            rgba(15,15,35,0.55) 50%,
+            rgba(15,15,35,0.30) 80%,
+            rgba(15,15,35,0.10) 100%
           );
         }
 
@@ -116,7 +128,7 @@ export default function HeroSection() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 44px 24px 0;
+          padding: 44px 24px 60px;
           text-align: center;
         }
 
@@ -220,12 +232,10 @@ export default function HeroSection() {
           color: #333;
           background: none;
           border: none;
-          cursor: pointer;
+          cursor: default;
           white-space: nowrap;
           font-family: inherit;
-          transition: color 0.15s;
         }
-        .hero-loc-btn:hover { color: #C0392B; }
         .hero-loc-chevron { transition: transform 0.2s; flex-shrink: 0; }
         .hero-loc-chevron.open { transform: rotate(180deg); }
         .hero-loc-dropdown {
@@ -315,7 +325,6 @@ export default function HeroSection() {
           gap: 8px;
           margin-top: 4px;
           justify-content: center;
-          padding-bottom: 32px;
         }
         .hero-popular-label {
           font-size: 12px;
@@ -430,20 +439,20 @@ export default function HeroSection() {
           {/* search bar */}
           <div className="hero-search-outer">
             <div className="hero-search-box">
-              {/* location picker */}
+              {/* location picker - dropdown commented out until new feature */}
               <div className="hero-loc-wrap" ref={locRef}>
-                <button
-                  className="hero-loc-btn"
-                  onClick={() => setLocOpen(!locOpen)}
-                  aria-label="Select location"
-                >
-                  📍 {location}
+                <div className="hero-loc-btn" aria-label="Location">
+                  <FiMapPin size={14} color="#C0392B" />
+                  {location}
+                  {/* 
                   <FiChevronDown
                     className={`hero-loc-chevron${locOpen ? " open" : ""}`}
                     size={13}
                     color="#999"
                   />
-                </button>
+                  */}
+                </div>
+                {/* 
                 {locOpen && (
                   <div className="hero-loc-dropdown">
                     {locations.map((loc) => (
@@ -457,6 +466,7 @@ export default function HeroSection() {
                     ))}
                   </div>
                 )}
+                */}
               </div>
 
               {/* search input */}
@@ -469,10 +479,10 @@ export default function HeroSection() {
                 placeholder="Search vehicles, jobs, homes, services and more..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && console.log("search:", query)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               />
 
-              <button className="hero-search-btn">
+              <button className="hero-search-btn" onClick={handleSearch}>
                 <FiSearch size={15} />
                 Search
               </button>
@@ -481,9 +491,9 @@ export default function HeroSection() {
             {/* popular chips */}
             <div className="hero-popular">
               <span className="hero-popular-label">Popular:</span>
-              {popularSearches.map((term) => (
-                <Link key={term} href={`/search?q=${encodeURIComponent(term)}`} className="hero-chip">
-                  {term}
+              {popularSearches.map((item) => (
+                <Link key={item.label} href={item.href} className="hero-chip">
+                  {item.label}
                 </Link>
               ))}
             </div>

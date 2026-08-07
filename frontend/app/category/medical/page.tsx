@@ -1,263 +1,96 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import {
   FiSearch,
   FiMapPin,
   FiHeart,
-  FiChevronDown,
-  FiCheckCircle,
   FiCalendar,
-  FiStar,
-  FiHome,
-  FiClock,
-  FiPhone,
   FiAward,
   FiFilter,
   FiX,
+  FiChevronDown,
+  FiCheck,
+  FiClock,
+  FiAlertTriangle,
+  FiInbox,
 } from "react-icons/fi";
-import { FaHeart, FaStethoscope, FaHospital, FaClinicMedical, FaPills, FaAmbulance, FaFlask } from "react-icons/fa";
+import {
+  FaStethoscope,
+  FaUserMd,
+  FaTooth,
+  FaHeartbeat,
+  FaSun,
+  FaBaby,
+  FaBone,
+  FaFemale,
+  FaBrain,
+  FaHeadSideCough,
+  FaNotesMedical,
+} from "react-icons/fa";
+import { api } from "@/lib/api";
+import { resolveImage } from "@/lib/adapters/shared";
+import { SERVICE_TYPE_LABEL } from "@/lib/adapters/medicalAdapter";
+import type { MedicalListing } from "@/app/types/medical";
 
-type MedicalListing = {
-  id: string;
-  name: string;
-  specialty: string;
-  type: string;
-  rating: number;
-  reviews: number;
-  location: string;
-  city: string;
-  image: string;
-  isVerified?: boolean;
-  isFeatured?: boolean;
-  availableToday?: boolean;
-  nmcNo?: string;
-  consultationFee?: string;
-  experience?: string;
-  languages?: string[];
-  services?: string[];
+const SPECIALTIES = Object.values(SERVICE_TYPE_LABEL);
+const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Biratnagar", "Butwal"];
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest First" },
+  { value: "fee_low", label: "Fee: Low to High" },
+  { value: "fee_high", label: "Fee: High to Low" },
+];
+
+/* ---------- Specialty → Icon mapping ---------- */
+const SPECIALTY_ICONS: Record<string, React.ElementType> = {
+  "All": FaStethoscope,
+  "General Medicine": FaUserMd,
+  "Dental Care": FaTooth,
+  "Cardiology": FaHeartbeat,
+  "Dermatology": FaSun,
+  "Pediatrics": FaBaby,
+  "Orthopedics": FaBone,
+  "Gynecology": FaFemale,
+  "Neurology": FaBrain,
+  "ENT": FaHeadSideCough,
+  "Other": FaNotesMedical,
 };
 
-const LISTINGS: MedicalListing[] = [
-  {
-    id: "dr-sudhil-thapa",
-    name: "Dr. Sudhil Thapa",
-    specialty: "Cardiologist",
-    type: "Doctors",
-    rating: 4.8,
-    reviews: 128,
-    location: "Putalisadak, Kathmandu",
-    city: "Kathmandu",
-    image: "/sudhil.jpg",
-    isVerified: true,
-    availableToday: true,
-    nmcNo: "12345",
-    consultationFee: "NPR 1,000",
-    experience: "15+ years",
-    languages: ["English", "Nepali", "Hindi"],
-    services: ["Consultation", "Checkup"],
-  },
-  {
-    id: "dr-anisha-karki",
-    name: "Dr. Anisha Karki",
-    specialty: "BDS (Dentist)",
-    type: "Doctors",
-    rating: 4.8,
-    reviews: 128,
-    location: "Lalitpur, Nepal",
-    city: "Lalitpur",
-    image: "/anisha.jpg",
-    isVerified: true,
-    availableToday: true,
-    nmcNo: "12346",
-    consultationFee: "NPR 800",
-    experience: "8+ years",
-    languages: ["English", "Nepali"],
-    services: ["Consultation", "Checkup", "Surgery"],
-  },
-  {
-    id: "dr-rajan-shah",
-    name: "Dr. Rajan Shah",
-    specialty: "Pediatrician",
-    type: "Doctors",
-    rating: 4.8,
-    reviews: 128,
-    location: "Putalisadak, Kathmandu",
-    city: "Kathmandu",
-    image: "/rajan.jpg",
-    isVerified: true,
-    availableToday: true,
-    nmcNo: "12347",
-    consultationFee: "NPR 900",
-    experience: "12+ years",
-    languages: ["English", "Nepali", "Hindi"],
-    services: ["Consultation", "Checkup"],
-  },
-  {
-    id: "dr-prativa-malla",
-    name: "Dr. Prativa Malla",
-    specialty: "Dermatologist",
-    type: "Doctors",
-    rating: 4.8,
-    reviews: 128,
-    location: "Putalisadak, Kathmandu",
-    city: "Kathmandu",
-    image: "/prativa.jpg",
-    isVerified: true,
-    availableToday: true,
-    nmcNo: "12348",
-    consultationFee: "NPR 1,000",
-    experience: "10+ years",
-    languages: ["English", "Nepali"],
-    services: ["Consultation", "Checkup", "Therapy"],
-  },
-  {
-    id: "norvic-hospital",
-    name: "Norvic International Hospital",
-    specialty: "Multi-Specialty Healthcare",
-    type: "Hospitals",
-    rating: 4.7,
-    reviews: 320,
-    location: "Thapathali, Kathmandu",
-    city: "Kathmandu",
-    image: "/nervic.jpg",
-    isVerified: true,
-    availableToday: true,
-    consultationFee: "NPR 1,500",
-    experience: "Established 1993",
-    languages: ["English", "Nepali"],
-    services: ["Consultation", "Checkup", "Surgery", "Operation"],
-  },
-  {
-    id: "kmc-hospital",
-    name: "Kathmandu Medical College (KMC)",
-    specialty: "General Medicine & Surgery",
-    type: "Hospitals",
-    rating: 4.5,
-    reviews: 450,
-    location: "Sinamangal, Kathmandu",
-    city: "Kathmandu",
-    image: "/hospital.png",
-    isVerified: true,
-    availableToday: true,
-    consultationFee: "NPR 500",
-    experience: "Teaching Hospital",
-    languages: ["English", "Nepali"],
-    services: ["Consultation", "Checkup", "Surgery", "Others"],
-  },
-  {
-    id: "city-dental-clinic",
-    name: "City Dental Clinic & Care",
-    specialty: "Orthodontics & Dental Care",
-    type: "Clinics",
-    rating: 4.9,
-    reviews: 88,
-    location: "Sanepa, Lalitpur",
-    city: "Lalitpur",
-    image: "/Dental Checkup & Cleaning.avif",
-    isVerified: true,
-    availableToday: true,
-    consultationFee: "NPR 800",
-    experience: "10+ years",
-    languages: ["English", "Nepali"],
-    services: ["Consultation", "Checkup", "Surgery"],
-  },
-  {
-    id: "srl-diagnostics",
-    name: "SRL Diagnostics Centre",
-    specialty: "Pathology & Radiology Labs",
-    type: "Diagnostic",
-    rating: 4.6,
-    reviews: 156,
-    location: "Maharajgunj, Kathmandu",
-    city: "Kathmandu",
-    image: "/daignostic centre.jpg",
-    isVerified: true,
-    availableToday: true,
-    consultationFee: "NPR 600",
-    experience: "ISO 9001:2015",
-    languages: ["English", "Nepali"],
-    services: ["Checkup", "Others"],
-  },
-  {
-    id: "sajha-pharmacy",
-    name: "Sajha Swasthya Sewa Cooperative",
-    specialty: "24/7 Cooperative Pharmacy",
-    type: "Pharmacy",
-    rating: 4.8,
-    reviews: 92,
-    location: "Maharajgunj, Kathmandu",
-    city: "Kathmandu",
-    image: "/medical room.jpg",
-    isVerified: true,
-    availableToday: true,
-    consultationFee: "N/A",
-    experience: "Established 1964",
-    languages: ["Nepali", "English"],
-    services: ["Others"],
-  },
-  {
-    id: "redcross-ambulance",
-    name: "Nepal Red Cross Society Ambulance",
-    specialty: "Emergency First Response Service",
-    type: "Ambulance",
-    rating: 4.9,
-    reviews: 120,
-    location: "Red Cross Marg, Kathmandu",
-    city: "Kathmandu",
-    image: "/medical room.jpg",
-    isVerified: true,
-    availableToday: true,
-    consultationFee: "N/A",
-    experience: "24/7 Support",
-    languages: ["Nepali", "English"],
-    services: ["Others"],
-  }
-];
-
-const CATEGORIES = [
-  { name: "Doctors", icon: FaStethoscope, count: 1245 },
-  { name: "Hospitals", icon: FaHospital, count: 567 },
-  { name: "Clinics", icon: FaClinicMedical, count: 245 },
-  { name: "Diagnostic", icon: FaFlask, count: 345 },
-  { name: "Pharmacy", icon: FaPills, count: 445 },
-  { name: "Ambulance", icon: FaAmbulance, count: 145 },
-];
-
-const SPECIALIZATIONS = [
-  "All Specialization",
-  "Cardiologist",
-  "Dermatologist",
-  "Neurologist",
-  "Orthopedic",
-  "Pediatrician",
-  "Gynecologist",
-  "Dentist",
-  "General Physician",
-];
-
-const SERVICE_TYPES = ["All", "Consultation", "Checkup", "Surgery", "Therapy", "Operation", "Others"];
-const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Biratnagar", "Butwal"];
-
-const TIME_SLOTS = [
-  { time: "10:00", period: "AM" },
-  { time: "11:00", period: "AM", selected: true },
-  { time: "12:00", period: "PM" },
-  { time: "02:00", period: "PM" },
-];
-
 export default function MedicalPage() {
+  const [listings, setListings] = useState<MedicalListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("newest");
-  const [activeCategory, setActiveCategory] = useState("Doctors");
+  const [sort, setSort] = useState<"newest" | "fee_low" | "fee_high">("newest");
+  const [activeSpecialty, setActiveSpecialty] = useState("All");
   const [city, setCity] = useState("");
-  const [specialization, setSpecialization] = useState("All Specialization");
-  const [serviceType, setServiceType] = useState("All");
   const [availableOnly, setAvailableOnly] = useState(false);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+const [sortOpen, setSortOpen] = useState(false);
+const sortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    api
+      .getMedicalListings()
+      .then((data) => {
+        if (!cancelled) setListings(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load listings");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -267,34 +100,33 @@ export default function MedicalPage() {
 
   const reset = () => {
     setCity("");
-    setSpecialization("All Specialization");
-    setServiceType("All");
+    setActiveSpecialty("All");
     setAvailableOnly(false);
-    setActiveCategory("Doctors");
     setSearch("");
   };
 
-  const displayed = LISTINGS.filter((l) => {
-    const matchSearch =
-      l.name.toLowerCase().includes(search.toLowerCase()) ||
-      l.specialty.toLowerCase().includes(search.toLowerCase()) ||
-      l.location.toLowerCase().includes(search.toLowerCase());
-    const matchCat = activeCategory === "All" || l.type === activeCategory;
-    const matchCity = !city || l.city === city;
-    const matchSpec =
-      specialization === "All Specialization" ||
-      l.specialty.toLowerCase().includes(specialization.toLowerCase());
-    const matchService =
-      serviceType === "All" ||
-      (l.services && l.services.includes(serviceType));
-    const matchAvail = !availableOnly || l.availableToday;
-    return matchSearch && matchCat && matchCity && matchSpec && matchService && matchAvail;
-  });
+  const displayed = listings
+    .filter((l) => {
+      const specialtyLabel = SERVICE_TYPE_LABEL[l.medical.serviceType];
+      const matchSearch =
+        !search ||
+        l.medical.doctorName.toLowerCase().includes(search.toLowerCase()) ||
+        specialtyLabel.toLowerCase().includes(search.toLowerCase()) ||
+        l.medical.city.toLowerCase().includes(search.toLowerCase());
+      const matchSpecialty = activeSpecialty === "All" || specialtyLabel === activeSpecialty;
+      const matchCity = !city || l.medical.city.toLowerCase() === city.toLowerCase();
+      const matchAvail = !availableOnly || l.medical.sameDayBooking;
+      return matchSearch && matchSpecialty && matchCity && matchAvail;
+    })
+    .sort((a, b) => {
+      if (sort === "fee_low") return a.medical.appointmentFee - b.medical.appointmentFee;
+      if (sort === "fee_high") return b.medical.appointmentFee - a.medical.appointmentFee;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
   const activeFiltersCount = [
     city,
-    specialization !== "All Specialization" ? specialization : null,
-    serviceType !== "All" ? serviceType : null,
+    activeSpecialty !== "All" ? activeSpecialty : null,
     availableOnly ? "available" : null,
   ].filter(Boolean).length;
 
@@ -305,7 +137,6 @@ export default function MedicalPage() {
 
         .mp { background: #f2f5f9; min-height: 100vh; font-family: 'Inter', sans-serif; }
 
-        /* ── HERO ── */
         .mp-hero {
           position: relative; height: 280px; overflow: hidden;
           display: flex; align-items: center;
@@ -360,7 +191,6 @@ export default function MedicalPage() {
           pointer-events: none; user-select: none; line-height: 1; z-index: 1;
         }
 
-        /* ── CATEGORY STRIP ── */
         .mp-cats-strip {
           background: #fff; border-bottom: 1.5px solid #eaeaea; padding: 18px 0;
         }
@@ -368,26 +198,20 @@ export default function MedicalPage() {
           max-width: 1200px; margin: 0 auto; padding: 0 28px;
         }
         .mp-cats-label { font-size: 13px; font-weight: 700; color: #888; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.6px; }
-        .mp-cats-row { display: flex; gap: 12px; flex-wrap: wrap; }
-        .mp-cat-card {
-          display: flex; align-items: center; gap: 10px;
-          padding: 10px 18px; border-radius: 14px;
+        .mp-cats-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .mp-cat-chip {
+          display: flex; align-items: center; gap: 8px;
+          padding: 9px 16px; border-radius: 100px;
           border: 1.5px solid #e4e8f0; background: #fafbff;
           cursor: pointer; transition: all 0.18s;
-          min-width: 140px; font-family: inherit; text-align: left;
+          font-family: inherit; font-size: 12.5px; font-weight: 700; color: #444;
         }
-        .mp-cat-card:hover { border-color: #0d9488; background: #f0fdfa; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(13,148,136,0.12); }
-        .mp-cat-card.active { border-color: #0d9488; background: #ccfbf1; box-shadow: 0 4px 16px rgba(13,148,136,0.2); }
-        .mp-cat-icon { font-size: 22px; color: #0d9488; display: flex; align-items: center; }
-        .mp-cat-card.active .mp-cat-icon { color: #0f766e; }
-        .mp-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; }
-        .mp-cat-count { font-size: 11px; color: #888; display: block; }
+        .mp-cat-chip:hover { border-color: #0d9488; background: #f0fdfa; }
+        .mp-cat-chip.active { border-color: #0d9488; background: #0d9488; color: #fff; box-shadow: 0 4px 16px rgba(13,148,136,0.25); }
 
-        /* ── BODY ── */
         .mp-body { max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px; }
         .mp-layout { display: grid; grid-template-columns: 280px 1fr; gap: 22px; align-items: start; }
 
-        /* ── SIDEBAR ── */
         .mp-sidebar {
           background: #fff; border-radius: 18px;
           border: 1.5px solid #e4e8f0; overflow: hidden;
@@ -409,23 +233,18 @@ export default function MedicalPage() {
         .msf-section:last-of-type { border-bottom: none; }
         .msf-label { font-size: 13.5px; font-weight: 700; color: #1a1a1a; margin: 0 0 10px; }
 
+        .msf-select-wrap { position: relative; }
+        .msf-select-wrap > svg {
+          position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+          pointer-events: none;
+        }
         .msf-select {
           width: 100%; padding: 10px 32px 10px 12px;
           border: 1.5px solid #e4e8f0; border-radius: 10px;
           font-size: 13px; color: #444; font-family: inherit;
-          background: #fafafa url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
-          appearance: none; outline: none; cursor: pointer; transition: border-color 0.2s;
+          background: #fafafa; appearance: none; outline: none; cursor: pointer; transition: border-color 0.2s;
         }
         .msf-select:focus { border-color: #0d9488; }
-
-        .msf-chips { display: flex; flex-wrap: wrap; gap: 7px; }
-        .msf-chip {
-          padding: 6px 14px; border-radius: 100px; font-size: 12px; font-weight: 600;
-          border: 1.5px solid #e0e4f0; background: #fff; color: #555;
-          cursor: pointer; transition: all 0.18s; font-family: inherit;
-        }
-        .msf-chip:hover { border-color: #0d9488; color: #0d9488; }
-        .msf-chip.active { background: #0d9488; color: #fff; border-color: #0d9488; box-shadow: 0 2px 10px rgba(13,148,136,0.3); }
 
         .msf-toggle-row { display: flex; align-items: center; justify-content: space-between; }
         .msf-toggle-label { font-size: 13.5px; font-weight: 600; color: #333; }
@@ -451,21 +270,37 @@ export default function MedicalPage() {
         }
         .msf-apply:hover { opacity: 0.88; transform: translateY(-1px); }
 
-        /* ── RESULTS BAR ── */
         .mp-results-bar {
           display: flex; align-items: center; justify-content: space-between;
           margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
         }
         .mp-results-count { font-size: 14px; color: #666; font-weight: 500; }
         .mp-results-count strong { color: #111; font-weight: 800; }
-        .mp-sort-select {
+
+        .mp-sort-dropdown { position: relative; display: inline-block; }
+        .mp-sort-trigger {
           padding: 9px 36px 9px 14px; border: 1.5px solid #e0e4f0; border-radius: 10px;
-          font-size: 13px; font-weight: 600; color: #333;
-          background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
-          appearance: none; outline: none; cursor: pointer;
-          font-family: inherit; box-shadow: 0 1px 6px rgba(0,0,0,0.06); transition: border-color 0.2s;
+          font-size: 13px; font-weight: 600; color: #333; background: #fff;
+          font-family: inherit; box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+          cursor: pointer; display: flex; align-items: center; gap: 8px; min-width: 150px;
+          position: relative;
         }
-        .mp-sort-select:focus { border-color: #0d9488; }
+        .mp-sort-trigger > svg { position: absolute; right: 12px; }
+        .mp-sort-menu {
+          position: absolute; top: calc(100% + 6px); right: 0;
+          background: #fff; border: 1.5px solid #e0e4f0; border-radius: 10px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 100;
+          min-width: 180px; overflow: hidden; display: flex; flex-direction: column;
+        }
+        .mp-sort-item {
+          padding: 10px 14px; text-align: left; background: #fff; border: none;
+          border-bottom: 1px solid #f2f4f8; font-size: 13px; font-weight: 600;
+          color: #333; cursor: pointer; display: flex; align-items: center;
+          justify-content: space-between; font-family: inherit; transition: background 0.15s;
+        }
+        .mp-sort-item:last-child { border-bottom: none; }
+        .mp-sort-item:hover { background: #f0fdfa; }
+        .mp-sort-item.active { background: #f0fdfa; color: #0d9488; }
 
         .mp-active-filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
         .mp-active-tag {
@@ -479,10 +314,8 @@ export default function MedicalPage() {
         }
         .mp-active-tag button:hover { color: #115e59; }
 
-        /* ── GRID ── */
         .mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 18px; }
 
-        /* ── CARD ── */
         .mp-card {
           background: #fff; border-radius: 18px; border: 1.5px solid #ececec;
           overflow: hidden; text-decoration: none;
@@ -539,11 +372,6 @@ export default function MedicalPage() {
         .mp-rating-row {
           display: flex; align-items: center; gap: 12px; margin-top: 4px;
         }
-        .mp-rating {
-          font-size: 12.5px; font-weight: 700; color: #1a1a1a; display: flex; align-items: center; gap: 3px;
-        }
-        .mp-rating svg { color: #f59e0b; fill: #f59e0b; }
-        .mp-reviews { font-size: 11.5px; color: #888; }
         .mp-exp { font-size: 12px; color: #555; display: flex; align-items: center; gap: 4px; }
 
         .mp-details {
@@ -574,20 +402,10 @@ export default function MedicalPage() {
 
         .mp-status-badges { display: flex; gap: 6px; }
         .mp-status-badge {
-          font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+          font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;
         }
         .mp-status-avail { background: #d1fae5; color: #065f46; }
         .mp-status-home { background: #e0f2fe; color: #075985; }
-
-        .mp-slots-grid {
-          display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
-        }
-        .mp-slot-btn {
-          text-align: center; padding: 6px 4px; border-radius: 8px; border: 1.5px solid #e5e7eb;
-          background: #fff; color: #374151; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s;
-        }
-        .mp-slot-btn:hover { border-color: #0d9488; color: #0d9488; }
-        .mp-slot-btn.selected { background: #0d9488; border-color: #0d9488; color: #fff; box-shadow: 0 2px 8px rgba(13,148,136,0.25); }
 
         .mp-book-btn {
           width: 100%; padding: 12px; text-align: center;
@@ -598,13 +416,11 @@ export default function MedicalPage() {
         }
         .mp-book-btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        /* ── EMPTY ── */
         .mp-empty { grid-column: 1/-1; padding: 64px 24px; text-align: center; background: #fff; border-radius: 18px; border: 1.5px solid #ececec; }
-        .mp-empty-icon { font-size: 52px; margin-bottom: 14px; }
+        .mp-empty-icon { margin-bottom: 14px; display: flex; justify-content: center; }
         .mp-empty p { font-size: 15px; font-weight: 600; color: #555; margin: 0 0 4px; }
         .mp-empty span { font-size: 13px; color: #aaa; }
 
-        /* ── MOBILE FILTER BAR ── */
         .mp-mobile-filter-bar { display: none; margin-bottom: 16px; }
         .mp-mobile-filter-btn {
           width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -617,7 +433,6 @@ export default function MedicalPage() {
           padding: 2px 7px; border-radius: 100px; margin-left: 2px;
         }
 
-        /* ── RESPONSIVE ── */
         @media (max-width: 960px) {
           .mp-layout { grid-template-columns: 1fr; }
           .mp-sidebar {
@@ -642,7 +457,6 @@ export default function MedicalPage() {
       `}</style>
 
       <div className="mp">
-        {/* ── HERO ── */}
         <section className="mp-hero">
           <div className="mp-hero-bg" />
           <div className="mp-hero-overlay" />
@@ -656,12 +470,12 @@ export default function MedicalPage() {
               Find The Best<br />
               <span>Healthcare Services</span>
             </h1>
-            <p className="mp-hero-sub">Trusted doctors, clinics, hospitals and medical services near you</p>
+            <p className="mp-hero-sub">Trusted doctors and clinics near you</p>
             <div className="mp-search-wrap">
               <FiSearch className="mp-search-icon" size={18} color="#aaa" />
               <input
                 className="mp-search"
-                placeholder="Search doctors, clinics, hospitals..."
+                placeholder="Search doctors, specialties, cities..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -669,31 +483,28 @@ export default function MedicalPage() {
           </div>
         </section>
 
-        {/* ── CATEGORY STRIP ── */}
         <section className="mp-cats-strip">
           <div className="mp-cats-inner">
-            <p className="mp-cats-label">Medical Categories</p>
+            <p className="mp-cats-label">Specialties</p>
             <div className="mp-cats-row">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.name}
-                  className={`mp-cat-card${activeCategory === cat.name ? " active" : ""}`}
-                  onClick={() => setActiveCategory(cat.name)}
-                >
-                  <span className="mp-cat-icon"><cat.icon size={22} /></span>
-                  <span>
-                    <span className="mp-cat-name">{cat.name}</span>
-                    <span className="mp-cat-count">{cat.count.toLocaleString()} listings</span>
-                  </span>
-                </button>
-              ))}
+              {["All", ...SPECIALTIES].map((s) => {
+                const Icon = SPECIALTY_ICONS[s] || FaStethoscope;
+                return (
+                  <button
+                    key={s}
+                    className={`mp-cat-chip${activeSpecialty === s ? " active" : ""}`}
+                    onClick={() => setActiveSpecialty(s)}
+                  >
+                    <Icon size={14} />
+                    {s}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        {/* ── MAIN BODY ── */}
         <div className="mp-body">
-          {/* Mobile Filter Toggle */}
           <div className="mp-mobile-filter-bar">
             <button className="mp-mobile-filter-btn" onClick={() => setShowMobileFilters(true)}>
               <FiFilter size={16} />
@@ -702,14 +513,12 @@ export default function MedicalPage() {
           </div>
 
           <div className="mp-layout">
-            {/* ── SIDEBAR ── */}
             <aside className={`mp-sidebar ${showMobileFilters ? "show-mobile" : ""}`}>
               <div className="msf-head">
                 <p className="msf-head-title">Filters</p>
                 <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                   <button className="msf-reset" onClick={reset}>Reset All</button>
                   <button
-                    className="lg:hidden"
                     onClick={() => setShowMobileFilters(false)}
                     style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
                   >
@@ -718,47 +527,35 @@ export default function MedicalPage() {
                 </div>
               </div>
 
-              {/* Location */}
               <div className="msf-section">
                 <p className="msf-label">Location / City</p>
-                <select className="msf-select" value={city} onChange={(e) => setCity(e.target.value)}>
-                  <option value="">Select City</option>
-                  {CITIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Specialization */}
-              <div className="msf-section">
-                <p className="msf-label">Specialization</p>
-                <select className="msf-select" value={specialization} onChange={(e) => setSpecialization(e.target.value)}>
-                  {SPECIALIZATIONS.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Service Type */}
-              <div className="msf-section">
-                <p className="msf-label">Service Type</p>
-                <div className="msf-chips">
-                  {SERVICE_TYPES.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setServiceType(s)}
-                      className={`msf-chip${serviceType === s ? " active" : ""}`}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                <div className="msf-select-wrap">
+                  <select className="msf-select" value={city} onChange={(e) => setCity(e.target.value)}>
+                    <option value="">Select City</option>
+                    {CITIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <FiChevronDown size={14} color="#888" />
                 </div>
               </div>
 
-              {/* Availability Toggle */}
+              <div className="msf-section">
+                <p className="msf-label">Specialization</p>
+                <div className="msf-select-wrap">
+                  <select className="msf-select" value={activeSpecialty} onChange={(e) => setActiveSpecialty(e.target.value)}>
+                    <option value="All">All Specialization</option>
+                    {SPECIALTIES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                  <FiChevronDown size={14} color="#888" />
+                </div>
+              </div>
+
               <div className="msf-section">
                 <div className="msf-toggle-row">
-                  <span className="msf-toggle-label">Available Today</span>
+                  <span className="msf-toggle-label">Same-Day Booking</span>
                   <label className="msf-toggle">
                     <input
                       type="checkbox"
@@ -776,78 +573,102 @@ export default function MedicalPage() {
               </button>
             </aside>
 
-            {/* ── RIGHT COLUMN ── */}
             <div>
               <div className="mp-results-bar">
                 <div className="mp-results-count">
                   <span>
                     <strong>{displayed.length}</strong> results found
                   </span>
-                  {(city || specialization !== "All Specialization" || serviceType !== "All") && (
+                  {(city || activeSpecialty !== "All" || availableOnly) && (
                     <div className="mp-active-filters">
                       {city && (
                         <span className="mp-active-tag">
                           {city} <button onClick={() => setCity("")}><FiX /></button>
                         </span>
                       )}
-                      {specialization !== "All Specialization" && (
+                      {activeSpecialty !== "All" && (
                         <span className="mp-active-tag">
-                          {specialization} <button onClick={() => setSpecialization("All Specialization")}><FiX /></button>
+                          {activeSpecialty} <button onClick={() => setActiveSpecialty("All")}><FiX /></button>
                         </span>
                       )}
-                      {serviceType !== "All" && (
+                      {availableOnly && (
                         <span className="mp-active-tag">
-                          {serviceType} <button onClick={() => setServiceType("All")}><FiX /></button>
+                          Same-day <button onClick={() => setAvailableOnly(false)}><FiX /></button>
                         </span>
                       )}
                     </div>
                   )}
                 </div>
-                <select className="mp-sort-select" value={sort} onChange={(e) => setSort(e.target.value)}>
-                  <option value="newest">Newest First</option>
-                  <option value="rating">Top Rated</option>
-                </select>
+
+                <div className="mp-sort-dropdown" ref={sortRef}>
+                  <button className="mp-sort-trigger" onClick={() => setSortOpen(!sortOpen)}>
+                    {SORT_OPTIONS.find(o => o.value === sort)?.label}
+                    <FiChevronDown size={14} color="#555" />
+                  </button>
+                  {sortOpen && (
+                    <div className="mp-sort-menu">
+                      {SORT_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          className={`mp-sort-item${sort === opt.value ? " active" : ""}`}
+                          onClick={() => { setSort(opt.value as typeof sort); setSortOpen(false); }}
+                        >
+                          {opt.label}
+                          {sort === opt.value && <FiCheck size={14} />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Medical Grid */}
               <div className="mp-grid">
-                {displayed.length === 0 ? (
+                {loading ? (
                   <div className="mp-empty">
-                    <div className="mp-empty-icon">🏥</div>
+                    <div className="mp-empty-icon"><FiClock size={48} color="#0d9488" /></div>
+                    <p>Loading listings…</p>
+                  </div>
+                ) : error ? (
+                  <div className="mp-empty">
+                    <div className="mp-empty-icon"><FiAlertTriangle size={48} color="#e74c3c" /></div>
+                    <p>Couldn&apos;t load listings</p>
+                    <span>{error}</span>
+                  </div>
+                ) : displayed.length === 0 ? (
+                  <div className="mp-empty">
+                    <div className="mp-empty-icon"><FiInbox size={48} color="#0d9488" /></div>
                     <p>No results found</p>
                     <span>Try adjusting your filters or search query</span>
                   </div>
                 ) : (
                   displayed.map((l) => {
                     const isFav = !!favorites[l.id];
+                    const m = l.medical;
+                    const specialtyLabel = SERVICE_TYPE_LABEL[m.serviceType];
+                    const thumb = l.images?.[0] ? resolveImage(l.images[0]) : "/placeholder-avatar.png";
                     return (
                       <Link key={l.id} href={`/category/medical/${l.id}`} className="mp-card" style={{ textDecoration: "none", color: "inherit" }}>
                         <div className="mp-card-header">
                           <div className="mp-img-wrap">
-                            <img src={l.image} alt={l.name} className="mp-img" />
+                            <img src={thumb} alt={m.doctorName} className="mp-img" />
                             <button className="mp-heart" aria-label="Save" onClick={(e) => toggleFav(l.id, e)}>
-                              {isFav ? <FaHeart size={14} color="#e74c3c" /> : <FiHeart size={14} color="#9ca3af" />}
+                              {isFav ? <FaHeartbeat size={14} color="#e74c3c" /> : <FiHeart size={14} color="#9ca3af" />}
                             </button>
                           </div>
                           <div className="mp-info">
-                            <span className="mp-specialty-badge">{l.specialty}</span>
-                            <h3 className="mp-title">{l.name}</h3>
+                            <span className="mp-specialty-badge">{specialtyLabel}</span>
+                            <h3 className="mp-title">{m.doctorName}</h3>
                             <div className="mp-badges">
-                              {l.isVerified && <span className="mp-badge-verified">✓ Verified</span>}
-                              {l.nmcNo && <span className="mp-badge-nmc">NMC NO. {l.nmcNo}</span>}
+                              {m.verificationStatus === "VERIFIED" && (
+                                <span className="mp-badge-verified"><FiCheck size={10} strokeWidth={3} /> Verified</span>
+                              )}
+                              <span className="mp-badge-nmc">NMC NO. {m.nmcLicenseNumber}</span>
                             </div>
                             <div className="mp-rating-row">
-                              <span className="mp-rating">
-                                <FiStar size={13} /> {l.rating}
-                              </span>
-                              <span className="mp-reviews">({l.reviews} reviews)</span>
-                              {l.experience && (
-                                <>
-                                  <span style={{ color: "#eee" }}>|</span>
-                                  <span className="mp-exp">
-                                    <FiAward size={13} /> {l.experience}
-                                  </span>
-                                </>
+                              {m.experience && (
+                                <span className="mp-exp">
+                                  <FiAward size={13} /> {m.experience}
+                                </span>
                               )}
                             </div>
                           </div>
@@ -856,13 +677,12 @@ export default function MedicalPage() {
                         <div className="mp-details">
                           <div className="mp-detail-item">
                             <FiMapPin size={14} />
-                            <span>{l.location}</span>
+                            <span>{m.clinicAddress}, {m.city}</span>
                           </div>
-                          {l.languages && (
+                          {m.languages?.length > 0 && (
                             <div className="mp-detail-item">
-                              <FiPhone size={13} style={{ transform: "rotate(90deg)" }} />
                               <div className="mp-languages">
-                                {l.languages.map((lang) => (
+                                {m.languages.map((lang) => (
                                   <span key={lang} className="mp-lang-tag">{lang}</span>
                                 ))}
                               </div>
@@ -876,30 +696,21 @@ export default function MedicalPage() {
                           <div className="mp-footer-row">
                             <div>
                               <p className="mp-price-label">Consultation Fee</p>
-                              <p className="mp-price-val">{l.consultationFee}</p>
+                              <p className="mp-price-val">NPR {m.appointmentFee.toLocaleString("en-IN")}</p>
                             </div>
                             <div className="mp-status-badges">
-                              {l.availableToday && <span className="mp-status-badge mp-status-avail">✓ Available Today</span>}
-                              {l.type === "Doctors" && <span className="mp-status-badge mp-status-home">Home Visit</span>}
+                              {m.sameDayBooking && (
+                                <span className="mp-status-badge mp-status-avail">
+                                  <FiCheck size={10} strokeWidth={3} /> Same-Day
+                                </span>
+                              )}
+                              {m.homeVisitAvailable && <span className="mp-status-badge mp-status-home">Home Visit</span>}
                             </div>
-                          </div>
-
-                          {/* Time Slots */}
-                          <div className="mp-slots-grid">
-                            {TIME_SLOTS.map((slot) => (
-                              <div
-                                key={slot.time}
-                                className={`mp-slot-btn${slot.selected ? " selected" : ""}`}
-                              >
-                                <div>{slot.time}</div>
-                                <div style={{ fontSize: "9px", opacity: 0.8 }}>{slot.period}</div>
-                              </div>
-                            ))}
                           </div>
 
                           <div className="mp-book-btn">
                             <FiCalendar size={14} />
-                            <span>Book Appointment</span>
+                            <span>View & Book</span>
                           </div>
                         </div>
                       </Link>
@@ -907,35 +718,6 @@ export default function MedicalPage() {
                   })
                 )}
               </div>
-
-              {/* Load More */}
-              {displayed.length > 0 && (
-                <div style={{ textAlign: "center", marginTop: "40px" }}>
-                  <button
-                    style={{
-                      background: "none",
-                      border: "none",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      color: "#666",
-                      cursor: "pointer",
-                      padding: "8px 24px",
-                      borderRadius: "8px",
-                      transition: "background 0.2s, color 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#e4e8f0";
-                      e.currentTarget.style.color = "#0d9488";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "none";
-                      e.currentTarget.style.color = "#666";
-                    }}
-                  >
-                    Load More Results
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
-import { IsOptional, IsString, IsBoolean } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
+import { MedicalServiceType } from '@prisma/client';
 
 export class MedicalQueryDto {
   @IsOptional()
@@ -7,8 +8,9 @@ export class MedicalQueryDto {
   city?: string;
 
   @IsOptional()
-  @IsString()
-  specialty?: string;
+  @IsEnum(MedicalServiceType)
+  specialty?: MedicalServiceType;
+
 
   @IsOptional()
   @IsString()

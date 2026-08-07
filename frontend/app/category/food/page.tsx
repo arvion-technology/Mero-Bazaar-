@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import type { FoodsListing, FoodsCard, FoodType, WeekDay } from "@/app/types/foo
 import {
   FiSearch,
   FiChevronDown,
+  FiChevronRight,
   FiCheckCircle,
   FiHeart,
 } from "react-icons/fi";
@@ -157,6 +158,7 @@ export default function FoodDeliveryPage() {
           min-height: 100vh;
           background: #f5f5f5;
           font-family: 'Inter', -apple-system, sans-serif;
+          overflow-x: hidden;
         }
 
         /* HERO */
@@ -214,13 +216,16 @@ export default function FoodDeliveryPage() {
           font-size: 13px; font-weight: 700; color: #888;
           margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.6px;
         }
-        .fd-cats-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .fd-cats-row {
+          display: flex; gap: 12px; flex-wrap: wrap;
+        }
         .fd-cat-card {
           display: flex; align-items: center; gap: 10px;
           padding: 10px 18px; border-radius: 14px;
           border: 1.5px solid #e4e8f0; background: #fafbff;
           cursor: pointer; transition: all 0.18s;
           min-width: 140px; font-family: inherit; text-align: left;
+          flex-shrink: 0;
         }
         .fd-cat-card:hover {
           border-color: #e11d48; background: #fff1f2;
@@ -231,8 +236,8 @@ export default function FoodDeliveryPage() {
           box-shadow: 0 4px 16px rgba(225,29,72,0.2);
         }
         .fd-cat-icon { font-size: 22px; display: flex; align-items: center; }
-        .fd-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; }
-        .fd-cat-count { font-size: 11px; color: #888; display: block; }
+        .fd-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; white-space: nowrap; }
+        .fd-cat-count { font-size: 11px; color: #888; display: block; white-space: nowrap; }
 
         /* BODY LAYOUT */
         .fd-body {
@@ -339,23 +344,44 @@ export default function FoodDeliveryPage() {
         }
         .fd-count { font-size: 15px; color: #6b7280; font-weight: 600; }
         .fd-count strong { color: #111; font-weight: 800; }
+
+        /* CUSTOM SORT DROPDOWN */
         .fd-sort-wrap {
           position: relative;
           border: 1px solid #d1d5db;
           border-radius: 6px;
           background: #fff;
-          padding: 0;
-          min-width: 120px;
+          min-width: 140px;
+          max-width: 100%;
         }
-        .fd-sort {
-          padding: 8px 28px 8px 12px;
-          border: none;
-          border-radius: 6px;
+        .fd-sort-trigger {
+          display: flex; align-items: center; justify-content: space-between;
+          width: 100%; padding: 8px 12px;
+          border: none; border-radius: 6px;
           font-size: 13px; font-weight: 600;
-          color: #333; background: transparent; outline: none;
+          color: #333; background: transparent;
           cursor: pointer; font-family: inherit;
-          appearance: none;
-          width: 100%;
+        }
+        .fd-sort-menu {
+          position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+          background: #fff; border: 1px solid #e5e7eb;
+          border-radius: 6px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          z-index: 20;
+          overflow: hidden;
+        }
+        .fd-sort-item {
+          padding: 9px 12px;
+          font-size: 13px; font-weight: 500;
+          color: #374151;
+          cursor: pointer;
+          transition: background 0.12s;
+        }
+        .fd-sort-item:hover { background: #f3f4f6; }
+        .fd-sort-item.active {
+          background: #fff1f2;
+          color: #e11d48;
+          font-weight: 700;
         }
 
         /* CARD GRID */
@@ -446,18 +472,26 @@ export default function FoodDeliveryPage() {
           cursor: pointer; font-family: inherit;
         }
 
-        /* ── RESPONSIVE ── */
+        /* RESPONSIVE */
         @media (max-width: 900px) {
           .fd-sidebar { display: none; }
           .fd-grid { grid-template-columns: repeat(2, 1fr); }
           .fd-cats-row { gap: 8px; }
-          .fd-cat-card { min-width: 120px; padding: 8px 12px; }
+          .fd-cat-card { min-width: 130px; }
         }
-        @media (max-width: 540px) {
+        @media (max-width: 640px) {
           .fd-grid { grid-template-columns: 1fr; }
           .fd-body { padding: 14px 14px 40px; }
-          .fd-cats-row { gap: 6px; }
-          .fd-cat-card { min-width: 0; flex: 1; }
+          .fd-cats-row {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+          }
+          .fd-cats-row::-webkit-scrollbar { display: none; }
+          .fd-cat-card { min-width: 130px; flex: 0 0 auto; padding: 10px 14px; }
+          .fd-results-bar { flex-direction: column; align-items: stretch; }
+          .fd-sort-wrap { width: 100%; min-width: unset; }
         }
       `}</style>
 
@@ -627,7 +661,23 @@ export default function FoodDeliveryPage() {
             {/* Cards */}
             {!loading && !error && cards.length === 0 && (
               <div className="fd-empty">
-                <div style={{ fontSize: 48, marginBottom: 12 }}>🍽️</div>
+                <p style={{ fontWeight: 700, fontSize: 15, color: "#111", margin: 0 }}>Loading restaurants...</p>
+              </div>
+            )}
+
+            {/* Error */}
+            {!loading && error && (
+              <div className="fd-empty">
+                <p style={{ fontWeight: 700, fontSize: 15, color: "#dc2626", margin: "0 0 4px" }}>{error}</p>
+              </div>
+            )}
+
+            {/* Cards */}
+            {!loading && !error && cards.length === 0 && (
+              <div className="fd-empty">
+                <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}>
+                  <FaUtensils size={48} color="#d1d5db" />
+                </div>
                 <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No restaurants found</p>
                 <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters or search term</span>
                 <br />

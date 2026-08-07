@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiStar } from "react-icons/fi";
+import { FiSearch, FiMapPin, FiStar, FiHome, FiChevronDown } from "react-icons/fi";
 import { FaHeart, FaStar, FaBuilding, FaHome, FaTree, FaStore, FaBriefcase } from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
 import type { RentalListing, PropertyType } from "@/app/types/realestate";
@@ -105,6 +105,8 @@ export default function PropertyPage() {
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [activeType, setActiveType] = useState("All");
 
@@ -185,7 +187,6 @@ export default function PropertyPage() {
       (filterFurnished && l.isFurnished) ||
       (filterUnfurnished && !l.isFurnished);
 
-    // ── FIXED: Added missing price filter logic ──
     let matchPrice = true;
     if (filterPrice) {
       const numericPrice = parsePrice(l.price);
@@ -200,6 +201,12 @@ export default function PropertyPage() {
     if (sort === "rating") return b.rating - a.rating;
     return 0;
   });
+
+  const sortLabel: Record<string, string> = {
+    newest: "Newest",
+    featured: "Featured",
+    rating: "Top Rated",
+  };
 
   const StarRating = ({ rating }: { rating: number }) => (
     <div className="flex items-center gap-1">
@@ -426,11 +433,30 @@ export default function PropertyPage() {
                 <span className="pp-results-count">
                   <strong>{displayed.length}</strong> results found
                 </span>
-                <select className="pp-sort-select" value={sort} onChange={(e) => setSort(e.target.value)}>
-                  <option value="newest">Newest</option>
-                  <option value="featured">Featured</option>
-                  <option value="rating">Top Rated</option>
-                </select>
+
+                {/* ── CUSTOM DROPDOWN (fixes overflow) ── */}
+                <div className="pp-sort-dropdown" ref={sortRef}>
+                  <button className="pp-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                    {sortLabel[sort]}
+                    <FiChevronDown size={14} style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                  </button>
+                  {isSortOpen && (
+                    <div className="pp-sort-menu">
+                      {(["newest", "featured", "rating"] as const).map((key) => (
+                        <div
+                          key={key}
+                          className={`pp-sort-option${sort === key ? " active" : ""}`}
+                          onClick={() => {
+                            setSort(key);
+                            setIsSortOpen(false);
+                          }}
+                        >
+                          {sortLabel[key]}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="pp-grid">
@@ -446,7 +472,9 @@ export default function PropertyPage() {
                   </div>
                 ) : displayed.length === 0 ? (
                   <div className="pp-empty">
-                    <div className="pp-empty-icon">🏠</div>
+                    <div className="pp-empty-icon">
+                      <FiHome size={52} />
+                    </div>
                     <p>No properties found</p>
                     <span>Try adjusting your filters or search</span>
                   </div>
