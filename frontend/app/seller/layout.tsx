@@ -27,11 +27,11 @@ const SIDEBAR_HOVER = "#f4f6fb";
 
 const sidebarItems = [
   { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/seller/dashboard" },
-  { id: "orders", icon: FiShoppingCart, label: "Orders", href: "/seller/orders", badge: "15" },
+  { id: "orders", icon: FiShoppingCart, label: "Orders", href: "/seller/orders" },
   { id: "products", icon: FiBox, label: "Products", href: "/seller/products" },
   { id: "payments", icon: FiCreditCard, label: "Payments", href: "/seller/payments" },
   { id: "reports", icon: FiBarChart2, label: "Reports", href: "/seller/reports" },
-  { id: "clients", icon: FiMessageSquare, label: "Clients", href: "/seller/clients", badge: "2" },
+  { id: "clients", icon: FiMessageSquare, label: "Clients", href: "/seller/clients" },
   {
     id: "settings",
     icon: FiSettings,
@@ -53,6 +53,9 @@ function SellerShell({ children }: { children: React.ReactNode }) {
   const [openNavDropdown, setOpenNavDropdown] = useState<string | null>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const navDropdownRef = useRef<HTMLDivElement>(null);
+  const [unreadLeads, setUnreadLeads] = useState<number | null>(null);
+  const [notifCount, setNotifCount] = useState<number | null>(null);
+  const [pendingOrders, setPendingOrders] = useState<number | null>(null);
 
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -75,6 +78,76 @@ function SellerShell({ children }: { children: React.ReactNode }) {
     document.body.style.overflow = sidebarOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/leads/mine/unread-count")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setUnreadLeads(data.count);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/user/notifications/unread-count")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setNotifCount(data.count);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/orders/seller/unread-count")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setPendingOrders(data.count);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+  
+  const pageHeadings: Record<string, { title: string; subtitle: string }> = {
+    "/seller/dashboard": {
+      title: "Dashboard",
+      subtitle: "Welcome back! Here's what's happening with your store today.",
+    },
+    "/seller/orders": {
+      title: "Orders",
+      subtitle: "Track and manage incoming orders",
+    },
+    "/seller/products": {
+      title: "Products",
+      subtitle: "Manage your listings and inventory",
+    },
+    "/seller/payments": {
+      title: "Payments",
+      subtitle: "Your earnings and transaction history",
+    },
+    "/seller/reports": {
+      title: "Reports",
+      subtitle: "Insights into your top listings and category performance",
+    },
+    "/seller/clients": {
+      title: "Clients",
+      subtitle: "Messages and leads from buyers",
+    },
+    "/seller/settings": {
+      title: "Settings",
+      subtitle: "Manage your account and preferences",
+    },
+  };
+
+  const defaultHeading = { title: "Dashboard", subtitle: "Welcome back!" };
+  const heading =
+  Object.entries(pageHeadings).find(
+    ([path]) => pathname === path || pathname?.startsWith(path + "/")
+  )?.[1] ?? defaultHeading;
 
   return (
     <>
@@ -1443,7 +1516,12 @@ function SellerShell({ children }: { children: React.ReactNode }) {
                 >
                   <span className="dash-nav-icon"><item.icon size={18} /></span>
                   <span>{item.label}</span>
-                  {item.badge && <span className="dash-nav-badge">{item.badge}</span>}
+                  {item.id === "clients" && unreadLeads !== null && unreadLeads > 0 && (
+                    <span className="dash-nav-badge">{unreadLeads}</span>
+                  )}
+                  {item.id === "orders" && pendingOrders !== null && pendingOrders > 0 && (
+                    <span className="dash-nav-badge">{pendingOrders}</span>
+                  )}
                 </Link>
               );
             })}
@@ -1460,8 +1538,8 @@ function SellerShell({ children }: { children: React.ReactNode }) {
                 <FiMoreHorizontal size={18} />
               </button>
               <div className="dash-topbar-title-wrap">
-                <h1 className="dash-topbar-title">Dashboard</h1>
-                <p className="dash-topbar-sub">Welcome back! Here&apos;s what&apos;s happening with your store today.</p>
+                <h1 className="dash-topbar-title">{heading.title}</h1>
+                <p className="dash-topbar-sub">{heading.subtitle}</p>
               </div>
             </div>
             <div className="dash-topbar-right">
@@ -1471,7 +1549,7 @@ function SellerShell({ children }: { children: React.ReactNode }) {
               </div>
               <button type="button" className="dash-icon-btn">
                 <FiBell size={18} />
-                <span className="dash-badge">3</span>
+                {notifCount !== null && notifCount > 0 && <span className="dash-badge">{notifCount}</span>}
               </button>
               <div className="dash-profile-wrap" ref={profileDropdownRef}>
                 <button type="button" className="dash-profile-btn" onClick={() => setShowProfileDropdown((p) => !p)}>

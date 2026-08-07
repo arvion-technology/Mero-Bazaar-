@@ -27,6 +27,16 @@ export class OrdersController {
     );
   }
 
+  @Get('seller/mine')
+  getSellerOrders(@Req() req) {
+    return this.ordersService.getOrdersForSeller(req.user.id);
+  }
+
+  @Get('seller/unread-count')
+  countPending(@Req() req) {
+    return this.ordersService.countPendingForSeller(req.user.id);
+  }
+
   @Get('mine')
   getMine(@Req() req) {
     return this.ordersService.getMyOrders(req.user.id);
@@ -45,5 +55,10 @@ export class OrdersController {
   @Post(':id/cancel')
   cancel(@Param('id') id: string, @Req() req) {
     return this.ordersService.cancelReservation(id, req.user.id);
+  }
+
+  @Get('seller/stats')
+  getSellerStats(@Req() req) {
+    return this.ordersService.getSellerOrderStats(req.user.id);
   }
 }

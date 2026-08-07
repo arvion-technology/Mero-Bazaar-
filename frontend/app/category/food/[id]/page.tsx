@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
@@ -15,6 +15,7 @@ import {
 } from "react-icons/fi";
 import { FaHeart, FaUtensils } from "react-icons/fa";
 import SellerCard from "@/components/SellerCard";
+import { useFoodCart } from "../../../context/FoodCartContext";
 
 const RELATED_LIMIT = 3;
 
@@ -38,6 +39,8 @@ const STATUS_LABEL: Record<FoodDetail["status"], string> = {
 export default function FoodDetailPage() {
   const params = useParams();
   const id = params?.id as string;
+  const router = useRouter();
+  const { addItem } = useFoodCart();
 
   const [rawItem, setRawItem] = useState<FoodsListing | null>(null);
   const [item, setItem] = useState<FoodDetail | null>(null);
@@ -96,6 +99,28 @@ export default function FoodDetailPage() {
     );
   };
 
+  const handleOrderNow = () => {
+    if (!item) return;
+
+    // Safely parse price whether it's a number or formatted string (e.g. "Rs. 280")
+    const numericPrice =
+      typeof item.price === "number"
+        ? item.price
+        : parseFloat(String(item.price).replace(/[^0-9.]/g, "")) || 0;
+
+    addItem({
+      id: item.id,
+      name: item.title,
+      description: item.description || item.foodType || "",
+      variant: item.priceUnit || "",
+      price: numericPrice,
+      quantity: 1,
+      image: item.images[0] || "",
+    });
+
+    router.push("/cart");
+  };
+
   if (loading) {
     return (
       <>
@@ -139,7 +164,6 @@ export default function FoodDetailPage() {
   }
 
   const badgeStyle = FOOD_TYPE_BADGE_STYLE[item.foodType] ?? { background: "#6b7280", color: "#fff" };
-  const hasPhone = !!item.seller.phone && item.seller.phone !== "N/A";
 
   return (
     <>
@@ -416,34 +440,16 @@ export default function FoodDetailPage() {
                   </div>
                 </div>
 
-                {/* <div className="fd-badges-row">
-                  {item.isVerified && (
-                    <span className="fd-badge-hygienic"><FiCheckCircle size={11} /> Verified Seller</span>
-                  )}
-                  {item.breadcrumbs.map((tag) => (
-                    <span key={tag} className="fd-badge-tag">#{tag}</span>
-                  ))}
-                  {item.deliveryDays.map((day) => (
-                    <span key={day} className="fd-badge-day">{day}</span>
-                  ))}
-                </div> */}
-
                 <div className={`fd-avail ${item.status === "ACTIVE" ? "active" : "inactive"}`}>
                   {item.status === "ACTIVE" && <span className="fd-avail-dot" />}
                   {STATUS_LABEL[item.status]}
                 </div>
 
-              {/*need to create an order page for foods ordering*/}
+                {/* ── ORDER NOW → ADD TO CART & GO ── */}
                 <div className="fd-actions">
-                  {hasPhone ? (
-                    <Link href={`tel:${item.seller.phone}`} className="fd-btn-order">
-                      <FiMessageSquare size={16} /> Order Now
-                    </Link>
-                  ) : (
-                    <button className="fd-btn-order" disabled>
-                      <FiMessageSquare size={16} /> Order Now
-                    </button>
-                  )}
+                  <button className="fd-btn-order" onClick={handleOrderNow}>
+                    <FiMessageSquare size={16} /> Order Now
+                  </button>
                   <button
                     className="fd-btn-share"
                     onClick={() => {
@@ -458,12 +464,12 @@ export default function FoodDetailPage() {
               </div>
 
               {/* Seller Panel */}
-                <SellerCard
-                  seller={item.seller}
-                  reviews={item.reviews}
-                  listingId={item.id}
-                  sellerId={item.sellerId}
-                />
+              <SellerCard
+                seller={item.seller}
+                reviews={item.reviews}
+                listingId={item.id}
+                sellerId={item.sellerId}
+              />
 
               {item.latitude != null && item.longitude != null && (
                 <Link
