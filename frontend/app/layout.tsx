@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import ConditionalNavbar from "@/components/ConditionalNavbar";
 import AuthProvider from "../components/AuthProviders";
+import { FoodCartProvider } from "./context/FoodCartContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,8 +27,10 @@ export default function RootLayout({
     <html lang="ne" className={inter.variable}>
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         <AuthProvider>
-          <ConditionalNavbar />
-          {children}
+          <FoodCartProvider>
+            <ConditionalNavbar />
+            {children}
+          </FoodCartProvider>
         </AuthProvider>
       </body>
     </html>
