@@ -1,11 +1,15 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateLeadDto } from './dto/create_lead.dto';
 import { LeadStatus, ListingCategory, LeadType } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class LeadsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsService,
+  ) {}
 
   async create(dto: CreateLeadDto, userId: string) {
     const listing = await this.prisma.listing.findUnique({
@@ -44,7 +48,7 @@ export class LeadsService {
       );
     }
 
-    return this.prisma.lead.create({
+    const lead = await this.prisma.lead.create({
       data: {
         listingId: dto.listingId,
         userId,
@@ -56,6 +60,14 @@ export class LeadsService {
         listing: true,
       },
     });
+
+    await this.notifications.create(lead.listing.userId, {
+      category: 'ORDERS',
+      type: 'NEW_LEAD',
+      title: 'New client message',
+      description: `Someone sent an inquiry about "${lead.listing.title}"`,
+    });
+    return lead;
   }
 
   async findAll(filters?: {
@@ -93,27 +105,26 @@ export class LeadsService {
     });
   }
 
-  async updateStatus(id: string, status: LeadStatus) {
+  async updateStatus(id: string, status: LeadStatus, sellerId: string) {
     const lead = await this.prisma.lead.findUnique({
       where: { id },
+      include: { listing: true },
     });
 
     if (!lead) {
       throw new NotFoundException('Lead not found');
     }
 
+    if (lead.listing.userId !== sellerId) {
+      throw new ForbiddenException('Not your listing');
+    }
+
     return this.prisma.lead.update({
       where: { id },
       data: {
         status,
-
-        ...(status === LeadStatus.VIEWED && {
-          contactedAt: new Date(),
-        }),
-
-        ...(status === LeadStatus.INTERVIEWED && {
-          respondedAt: new Date(),
-        }),
+        ...(status === LeadStatus.VIEWED && { contactedAt: new Date() }),
+        ...(status === LeadStatus.INTERVIEWED && { respondedAt: new Date() }),
       },
       include: {
         listing: true,
@@ -131,5 +142,15 @@ export class LeadsService {
       include: { listing: true, user: true },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async countUnreadForSeller(sellerId: string) {
+    const count = await this.prisma.lead.count({
+      where: {
+        listing: { userId: sellerId },
+        status: LeadStatus.PENDING,
+      },
+    });
+    return { count };
   }
 }

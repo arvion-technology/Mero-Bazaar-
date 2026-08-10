@@ -29,18 +29,18 @@ const navLinks = [
   { label: "Property", href: "/category/rent-and-real-estate" },
 ];
 
-const moreLinks = [
-  { label: "Labour Hire", href: "/category/labour-hire" },
-  { label: "Events", href: "/category/events" },
-  { label: "Home Services", href: "/category/home-services" },
-  { label: "Travel & Tourism", href: "/category/travel-tourism" },
-];
+// const moreLinks = [
+//   { label: "Labour Hire", href: "/category/labour-hire" },
+//   { label: "Events", href: "/category/events" },
+//   { label: "Home Services", href: "/category/home-services" },
+//   { label: "Travel & Tourism", href: "/category/travel-tourism" },
+// ];
 
 const PRIMARY = "#C0392B";
 
 export default function Navbar() {
   const [showCategories, setShowCategories] = useState(false);
-  const [showMore, setShowMore] = useState(false);
+  // const [showMore, setShowMore] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileCats, setShowMobileCats] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -53,7 +53,7 @@ export default function Navbar() {
   const [securityNotifs, setSecurityNotifs] = useState<{ id: string; type: string; createdAt: string; read: boolean }[]>([]);
 
   const catRef = useRef<HTMLDivElement>(null);
-  const moreRef = useRef<HTMLDivElement>(null);
+  // const moreRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
@@ -71,7 +71,7 @@ export default function Navbar() {
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (catRef.current && !catRef.current.contains(e.target as Node)) setShowCategories(false);
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) setShowMore(false);
+      // if (moreRef.current && !moreRef.current.contains(e.target as Node)) setShowMore(false);
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfileMenu(false);
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setOpenNotif(false);
     }
@@ -557,7 +557,7 @@ export default function Navbar() {
             <div style={{ position: "relative" }} ref={catRef}>
               <button
                 className={`hnb-btn${showCategories ? " active" : ""}`}
-                onClick={() => { setShowCategories(!showCategories); setShowMore(false); }}
+                onClick={() => { setShowCategories(!showCategories); /* setShowMore(false); */ }}
               >
                 <TbGridDots size={16} />
                 Categories
@@ -605,7 +605,7 @@ export default function Navbar() {
               </Link>
             ))}
 
-            <div style={{ position: "relative" }} ref={moreRef}>
+            {/* <div style={{ position: "relative" }} ref={moreRef}>
               <button
                 className={`hnb-btn${showMore ? " active" : ""}`}
                 onClick={() => { setShowMore(!showMore); setShowCategories(false); }}
@@ -632,7 +632,7 @@ export default function Navbar() {
                   ))}
                 </div>
               )}
-            </div>
+            </div> */}
           </div>
 
           {/* notifications */}

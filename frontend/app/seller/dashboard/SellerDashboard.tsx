@@ -74,6 +74,7 @@ export default function SellerDashboard() {
     productsThisMonth: number;
     productsLastMonth: number;
   } | null>(null);
+  const [orderStats, setOrderStats] = useState<{ totalOrders: number; pendingOrders: number } | null>(null);
 
   useEffect(() => {
     if (!session?.accessToken) return;
@@ -84,6 +85,23 @@ export default function SellerDashboard() {
       .then((d) => setChartData(d))
       .catch(() => setChartData([]))
       .finally(() => setChartLoading(false));
+  }, [session?.accessToken]);
+
+
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    fetch("/api/orders/seller/stats", {
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error(`Order stats fetch failed: ${r.status}`);
+        return r.json();
+      })
+      .then((d) => setOrderStats(d))
+      .catch((err) => {
+        console.error(err);
+        setOrderStats(null);
+      });
   }, [session?.accessToken]);
 
   // lock page scroll while modal is open
@@ -122,8 +140,8 @@ export default function SellerDashboard() {
       locked: isKycLocked,
       action: "open-category-modal" as const,
     },
-    { icon: FiShoppingCart, label: "Total Orders", value: "-",  sub: "coming soon", color: SUCCESS, bg: "#ecfdf5" },
-    { icon: FiClock, label: "Pending", value: "-", sub: "coming soon", color: WARNING, bg: "#fffbeb" },
+    { icon: FiShoppingCart, label: "Total Orders", value: orderStats ? String(orderStats.totalOrders) : "-", sub: orderStats ? "all time" : "loading...", color: SUCCESS, bg: "#ecfdf5" },
+    { icon: FiClock, label: "Pending", value: orderStats ? String(orderStats.pendingOrders) : "-", sub: orderStats ? "awaiting action" : "loading...", color: WARNING, bg: "#fffbeb" },
     { icon: FiLayers, label: "Products", 
       value: statsData ? String(statsData.totalProducts) : "-",
       change: statsData ? `${productsDelta >= 0 ? "+" : ""}${productsDelta}` : undefined,
@@ -187,20 +205,20 @@ export default function SellerDashboard() {
         .dash-stats {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 20px;
-          margin-bottom: 28px;
+          gap: 14px;
+          margin-bottom: 22px;
         }
 
         .dash-stat-card {
           background: ${CARD_BG};
-          border-radius: 16px;
-          padding: 22px;
+          border-radius: 12px;
+          padding: 14px 16px;
           display: flex;
-          align-items: flex-start;
-          gap: 16px;
+          align-items: center;
+          gap: 12px;
           box-shadow: 0 1px 3px rgba(0,0,0,0.04);
           border: 1px solid #f1f5f9;
-          transition: all 0.25s ease;
+          transition: all 0.2s ease;
           position: relative;
           overflow: hidden;
           width: 100%;
@@ -227,23 +245,23 @@ export default function SellerDashboard() {
         .dash-stat-card:hover::after { opacity: 1; }
 
         .dash-stat-icon-wrap {
-          width: 48px; height: 48px;
-          border-radius: 12px;
+          width: 38px; height: 38px;
+          border-radius: 10px;
           display: flex; align-items: center; justify-content: center;
-          font-size: 22px; flex-shrink: 0;
-          transition: transform 0.25s;
+          font-size: 18px; flex-shrink: 0;
+          transition: transform 0.2s;
         }
 
         .dash-stat-card:hover .dash-stat-icon-wrap { transform: scale(1.08); }
 
         .dash-stat-info { flex: 1; min-width: 0; }
-        .dash-stat-label { font-size: 12px; color: #94a3b8; font-weight: 500; margin-bottom: 6px; letter-spacing: 0.2px; }
-        .dash-stat-value { font-size: 24px; font-weight: 700; color: ${PRIMARY}; margin-bottom: 8px; letter-spacing: -0.5px; }
+        .dash-stat-label { font-size: 10.5px; color: #94a3b8; font-weight: 500; margin-bottom: 3px; letter-spacing: 0.2px; }
+        .dash-stat-value { font-size: 24px; font-weight: 700; color: ${PRIMARY}; margin-bottom: 2px; letter-spacing: -0.4px; }
         .dash-stat-footer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .dash-stat-change { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; display: flex; align-items: center; gap: 3px; }
+        .dash-stat-change { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 5px; display: flex; align-items: center; gap: 3px; }
         .dash-stat-change.up { background: #ecfdf5; color: ${SUCCESS}; }
         .dash-stat-change.down { background: #fef2f2; color: ${DANGER}; }
-        .dash-stat-sub { font-size: 11px; color: #94a3b8; font-weight: 400; }
+        .dash-stat-sub { font-size: 10px; color: #94a3b8; font-weight: 400; }
 
         .dash-two-col { display: grid; grid-template-columns: 1fr 1.4fr; gap: 24px; margin-bottom: 28px; }
 

@@ -8,10 +8,12 @@ import { KhaltiService } from './khalti.service';
 import { KhaltiController } from './khalti.controller';
 import { ConnectipsService } from './connectips.service';
 import { ConnectipsController } from './connectips.controller';
+import { SellerPaymentsService } from './payments.service';
+import { SellerPaymentsController } from './payments.controller';
 
 @Module({
   imports: [PrismaModule, OrdersModule, AuthModule],
-  providers: [EsewaService, KhaltiService, ConnectipsService],
-  controllers: [EsewaController, KhaltiController, ConnectipsController], 
+  providers: [EsewaService, KhaltiService, ConnectipsService, SellerPaymentsService],
+  controllers: [EsewaController, KhaltiController, ConnectipsController, SellerPaymentsController], 
 })
 export class PaymentsModule {}

@@ -24,14 +24,13 @@ import { VendorKycModule } from './modules/vendor-kyc/vendor-kyc.module';
 import { SessionsModule } from './modules/session/session.module';
 import { VendorModule } from './modules/vendor/vendor.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
-import { AdminUserService } from './modules/admin-user/admin-user.service';
-import { AdminUserController } from './modules/admin-user/admin-user.controller';
-import { AdminUserModule } from './modules/admin-user/admin-user.module';
 import { VendorSalesOverviewModule } from './modules/vendor-sales-overview/vendor-sales-overview.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { SellerModule } from './modules/seller/seller.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -57,14 +56,15 @@ import { PaymentsModule } from './modules/payments/payments.module';
     SessionsModule,
     VendorModule,
     NotificationsModule,
-    AdminUserModule,
+    AdminModule,
     VendorSalesOverviewModule,
     WishlistModule,
     SellerModule,
     OrdersModule,
     PaymentsModule,
+    ReportsModule,
   ],
-  controllers: [AppController, AdminUserController],
-  providers: [AppService, AdminUserService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

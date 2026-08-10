@@ -23,8 +23,21 @@ export class LeadsController {
   }
 
   @Patch(':id/status')
-  updateStatus(@Param('id') id: string, @Body('status') status: LeadStatus) {
-    return this.leadsService.updateStatus(id, status);
+  @UseGuards(JwtAuthGuard)
+  updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: LeadStatus,
+    @Req() req: Request,
+  ) {
+    const sellerId = (req.user as { id: string }).id;
+    return this.leadsService.updateStatus(id, status, sellerId);
+  }
+
+  @Get('mine/unread-count')
+  @UseGuards(JwtAuthGuard)
+  countUnread(@Req() req: Request) {
+    const sellerId = (req.user as { id: string }).id;
+    return this.leadsService.countUnreadForSeller(sellerId);
   }
 
   @Get('mine')
