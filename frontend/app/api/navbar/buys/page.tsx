@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { Search } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Search, Heart, MoreVertical, X } from "lucide-react";
 
 
@@ -11,6 +13,7 @@ export default function BuyPage() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedCondition, setSelectedCondition] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+
   const [showFilters, setShowFilters] = useState(false);
   const categories = [
     "Mobiles & Tablets",
@@ -111,6 +114,16 @@ export default function BuyPage() {
   const conditions = ["New", "Used"];
 
   const toggleWishlist = (id: number) => {
+  setWishlist((prev) => {
+    const updated = prev.includes(id)
+      ? prev.filter((item) => item !== id)
+      : [...prev, id];
+
+    localStorage.setItem("wishlist", JSON.stringify(updated));
+
+    return updated;
+  });
+};
     setWishlist((prev) => {
       const updated = prev.includes(id)
         ? prev.filter((item) => item !== id)
@@ -138,6 +151,13 @@ export default function BuyPage() {
 
   });
 
+useEffect(() => {
+  const saved = JSON.parse(
+    localStorage.getItem("wishlist") || "[]"
+  );
+
+  setWishlist(saved);
+}, []);
   useEffect(() => {
     const saved = JSON.parse(
       localStorage.getItem("wishlist") || "[]"
@@ -163,6 +183,10 @@ export default function BuyPage() {
   align-items: center;
   gap: 50px;
   overflow: hidden;
+}
+
+.left {
+  flex: 1;
 }
 
 
@@ -211,6 +235,7 @@ export default function BuyPage() {
 }
 
 .searchBox button {
+  width: 150px;
   width: 90px;
   border: none;
   background: #ff1e1e;
@@ -225,6 +250,9 @@ export default function BuyPage() {
 }
 
 .right {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
   flex:0 0 45%;
   display:flex;
   justify-content:center;
@@ -288,6 +316,11 @@ export default function BuyPage() {
 /* Tablet */
 
 @media (max-width: 992px) {
+  .content {
+    flex-direction: column;
+    text-align: center;
+    padding: 35px 25px;
+  }
  
 
   .left h1 {
@@ -295,6 +328,18 @@ export default function BuyPage() {
   }
 
   .searchBox {
+    flex-direction: column;
+  }
+
+  .searchBox button {
+    width: 100%;
+    height: 55px;
+  }
+
+  .right {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
     // flex-direction: column;
   }
 
@@ -326,6 +371,7 @@ export default function BuyPage() {
   }
 
   .mobileImage {
+    width: 110px;
     width: 100px;
     height: 170px;
   }
@@ -462,6 +508,14 @@ select{
   justify-content:space-between;
   align-items:center;
   margin-bottom:20px;
+}
+
+.products-header h2{
+  font-size:34px;
+  margin:0;
+}
+
+.sort{
   gap:80px;
 }
 
@@ -556,6 +610,8 @@ width:280px;
 
 @media(max-width:900px){
 
+.page{
+  flex-direction:column;
 .filter-sidebar{
     width:100%;
   }
@@ -606,6 +662,12 @@ width:280px;
 .buy-btn:hover{
   background:#dc2626;
 }
+
+@media(max-width:900px){
+  .filter-sidebar{
+    width:100%;
+  }
+}
 @media(max-width:1024px){
 
 .mobile-filter-bar{
@@ -645,9 +707,7 @@ width:280px;
 }
 }
 
-/* =========================
-   TABLET (768px - 991px)
-========================= */
+/*   TABLET (768px - 991px */
 
 @media (max-width:991px){
 
@@ -968,6 +1028,12 @@ width:280px;
           </div>
         </div>
       </section>
+      <div className="buy-container">
+        <div className="left-side">
+          <aside className="filter-sidebar">
+            <div className="filter-header">
+              <h3>Filters</h3>
+              <button>Clear All</button>
 
       <div className="buy-container">
         <div className="left-side">
@@ -1072,6 +1138,8 @@ width:280px;
         <section className="products-section">
 
           <div className="products-header">
+            <h2>1,248 Service Found</h2>
+
             <h2>{filteredProducts.length} Service Found</h2>
             <select className="sort">
               <option>Newest</option>
@@ -1093,6 +1161,15 @@ width:280px;
                     fill
                   />
                   <button
+  className="wishlist-btn"
+  onClick={() => toggleWishlist(item.id)}
+>
+  <Heart
+    size={22}
+    color={wishlist.includes(item.id) ? "red" : "white"}
+    fill={wishlist.includes(item.id) ? "red" : "transparent"}
+  />
+</button>
                     className="wishlist-btn"
                     onClick={() => toggleWishlist(item.id)}
                   >
