@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Search } from "lucide-react";
 import { Heart } from "lucide-react";
+import { Search, Heart, MoreVertical, X } from "lucide-react";
 
 
 export default function BuyPage() {
@@ -13,6 +14,7 @@ export default function BuyPage() {
   const [selectedCondition, setSelectedCondition] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [showFilters, setShowFilters] = useState(false);
   const categories = [
     "Mobiles & Tablets",
     "Electronics",
@@ -122,6 +124,16 @@ export default function BuyPage() {
     return updated;
   });
 };
+    setWishlist((prev) => {
+      const updated = prev.includes(id)
+        ? prev.filter((item) => item !== id)
+        : [...prev, id];
+
+      localStorage.setItem("wishlist", JSON.stringify(updated));
+
+      return updated;
+    });
+  };
 
   const filteredProducts = products.filter((product) => {
 
@@ -146,6 +158,13 @@ useEffect(() => {
 
   setWishlist(saved);
 }, []);
+  useEffect(() => {
+    const saved = JSON.parse(
+      localStorage.getItem("wishlist") || "[]"
+    );
+
+    setWishlist(saved);
+  }, []);
 
   return (
     <>
@@ -169,6 +188,12 @@ useEffect(() => {
 .left {
   flex: 1;
 }
+
+
+.left{
+  flex:0 0 55%;
+}
+
 
 .left h1 {
   font-size: 56px;
@@ -211,6 +236,7 @@ useEffect(() => {
 
 .searchBox button {
   width: 150px;
+  width: 90px;
   border: none;
   background: #ff1e1e;
   color: white;
@@ -227,6 +253,12 @@ useEffect(() => {
   display: flex;
   align-items: flex-end;
   gap: 18px;
+  flex:0 0 45%;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  gap:15px;
+  flex-wrap:nowrap;
 }
 
 .smallImage,
@@ -289,6 +321,7 @@ useEffect(() => {
     text-align: center;
     padding: 35px 25px;
   }
+ 
 
   .left h1 {
     font-size: 42px;
@@ -307,6 +340,17 @@ useEffect(() => {
     justify-content: center;
     flex-wrap: wrap;
   }
+    // flex-direction: column;
+  }
+
+  .searchBox button{
+  width:110px;
+  flex-shrink:0;
+}
+
+.right{
+  flex-wrap:nowrap;
+}
 }
 
 /* Mobile */
@@ -328,6 +372,7 @@ useEffect(() => {
 
   .mobileImage {
     width: 110px;
+    width: 100px;
     height: 170px;
   }
 
@@ -346,6 +391,20 @@ useEffect(() => {
   gap:25px;
   padding:25px;
   align-items:flex-start;
+}
+
+.mobile-filter-bar{
+    display:none;
+}
+
+.filter-actions{
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+
+.close-filter{
+    display:none;
 }
     .filter-sidebar {
   width: 280px;
@@ -457,6 +516,20 @@ select{
 }
 
 .sort{
+  gap:80px;
+}
+
+.products-header h2{
+   flex:1;
+  font-size:24px;
+  margin:0;
+  white-space:nowrap;
+
+}
+
+.sort{
+width:280px;
+  flex-shrink:0;
   padding:10px 16px;
   border:1px solid #ddd;
   border-radius:10px;
@@ -539,6 +612,11 @@ select{
 
 .page{
   flex-direction:column;
+.filter-sidebar{
+    width:100%;
+  }
+.page{
+  // flex-direction:column;
 }
 
 .product-grid{
@@ -590,6 +668,313 @@ select{
     width:100%;
   }
 }
+@media(max-width:1024px){
+
+.mobile-filter-bar{
+    display:block;
+    margin-bottom:15px;
+}
+
+.mobile-filter-btn{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:#fff;
+    border:1px solid #ddd;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.filter-sidebar{
+    position:fixed;
+    top:0;
+    left:-320px;
+    width:300px;
+    height:100vh;
+    background:#fff;
+    z-index:9999;
+    transition:.3s;
+    overflow:auto;
+}
+
+.filter-sidebar.show-sidebar{
+    left:0;
+}
+
+.close-filter{
+    display:block;
+}
+}
+
+/*   TABLET (768px - 991px */
+
+@media (max-width:991px){
+
+.hero{
+  padding:20px;
+}
+
+.content{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  padding:30px;
+}
+
+.left{
+  flex:0 0 58%;
+}
+
+.right{
+  flex:0 0 42%;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  gap:10px;
+}
+
+.left h1{
+  font-size:42px;
+}
+
+.left p{
+  font-size:16px;
+}
+
+.searchBox{
+  width:100%;
+}
+
+.inputWrapper{
+  flex:1;
+}
+
+.searchBox button{
+  width:110px;
+  flex-shrink:0;
+}
+
+.smallImage{
+  width:70px;
+  height:100px;
+}
+
+.mobileImage{
+  width:110px;
+  height:170px;
+}
+
+.bigImage{
+  width:130px;
+  height:170px;
+}
+
+}
+  
+@media (max-width: 768px) {
+
+.left h1{
+    font-size:58px;
+    line-height:1.1;
+}
+
+.left p{
+    font-size:18px;
+}
+
+.searchBox{
+    width:100%;
+    max-width:500px;
+}
+
+.inputWrapper{
+    flex:4;
+}
+
+  .buy-container{
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
+  }
+
+  
+  .filter-sidebar{
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .products-header{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .products-header h2{
+    font-size: 24px;
+    white-space: normal;
+  }
+
+  .sort{
+    width: 100%;
+  }
+
+  .product-grid{
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+
+      @media (max-width: 480px) {
+   
+      .hero{
+  padding:12px;
+}
+
+.content{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:18px;
+}
+
+.left{
+  flex:0 0 60%;
+}
+
+.right{
+  flex:0 0 40%;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  gap:5px;
+}
+
+.left h1{
+  font-size:28px;
+  line-height:1.2;
+}
+
+.left p{
+  font-size:13px;
+}
+
+.searchBox{
+  width:100%;
+}
+
+.inputWrapper{
+  flex:1;
+  padding:0 10px;
+}
+
+.inputWrapper input{
+  height:48px;
+  font-size:14px;
+}
+
+.searchBox button{
+  width:80px;
+  flex-shrink:0;
+  font-size:14px;
+}
+
+.smallImage{
+  width:40px;
+  height:60px;
+}
+
+.mobileImage{
+  width:65px;
+  height:100px;
+}
+
+.bigImage{
+  width:75px;
+  height:100px;
+}
+
+
+
+  .buy-container{
+    flex-direction: column;
+    padding: 12px;
+    gap: 16px;
+  }
+
+  .filter-sidebar{
+    width: 100%;
+    min-width: 100%;
+    padding: 16px;
+  }
+
+  .products-header{
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .products-header h2{
+    font-size: 22px;
+    white-space: normal;
+    text-align: left;
+  }
+
+  .sort{
+    width: 100%;
+    font-size: 14px;
+  }
+
+  .product-grid{
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .product-card{
+    width: 100%;
+  }
+
+  .product-image{
+    height: 220px;
+  }
+
+  .product-title{
+    font-size: 18px;
+  }
+
+  .product-price{
+    font-size: 18px;
+  }
+
+  .product-footer{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    font-size: 13px;
+  }
+
+  .product-actions{
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cart-btn,
+  .buy-btn{
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .wishlist-btn{
+    width: 36px;
+    height: 36px;
+  }
+}
+
     `}</style>
 
       <section className="hero">
@@ -649,6 +1034,32 @@ select{
             <div className="filter-header">
               <h3>Filters</h3>
               <button>Clear All</button>
+
+      <div className="buy-container">
+        <div className="left-side">
+          <div className="mobile-filter-bar">
+            <button
+              className="mobile-filter-btn"
+              onClick={() => setShowFilters(true)}
+            >
+              ☰ Filters
+            </button>
+          </div>
+          <aside
+            className={`filter-sidebar ${showFilters ? "show-sidebar" : ""}`}
+          >            <div className="filter-header">
+              <h3>Filters</h3>
+
+              <div className="filter-actions">
+                <button>Clear All</button>
+
+                <button
+                  className="close-filter"
+                  onClick={() => setShowFilters(false)}
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Category */}
@@ -729,6 +1140,7 @@ select{
           <div className="products-header">
             <h2>1,248 Service Found</h2>
 
+            <h2>{filteredProducts.length} Service Found</h2>
             <select className="sort">
               <option>Newest</option>
               <option>Price: Low to High</option>
@@ -758,6 +1170,15 @@ select{
     fill={wishlist.includes(item.id) ? "red" : "transparent"}
   />
 </button>
+                    className="wishlist-btn"
+                    onClick={() => toggleWishlist(item.id)}
+                  >
+                    <Heart
+                      size={22}
+                      color={wishlist.includes(item.id) ? "red" : "white"}
+                      fill={wishlist.includes(item.id) ? "red" : "transparent"}
+                    />
+                  </button>
 
                   {item.badge && (
                     <span className={`badge ${item.badge}`}>
