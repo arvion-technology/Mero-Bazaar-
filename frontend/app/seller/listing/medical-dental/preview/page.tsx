@@ -415,10 +415,13 @@ export default function MedicalPreviewPage() {
           border-color: ${ACCENT};
           background: #eff6ff;
         }
+<<<<<<< HEAD
+=======
         .edit-btn:disabled {
           opacity: 0.5;
           cursor: not-allowed;
         }
+>>>>>>> 2eb666c5a516ad5badfca97490d38fc4615759a8
 
         .publish-btn {
           padding: 12px 40px;
@@ -442,12 +445,15 @@ export default function MedicalPreviewPage() {
           box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
           transform: translateY(-1px);
         }
+<<<<<<< HEAD
+=======
         .publish-btn:disabled {
           opacity: 0.6;
           cursor: not-allowed;
           transform: none;
           box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
         }
+>>>>>>> 2eb666c5a516ad5badfca97490d38fc4615759a8
 
         @media (max-width: 768px) {
           .container { padding: 20px 20px 48px; }

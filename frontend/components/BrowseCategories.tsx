@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image"; 
+import Image from "next/image";
+
 
 const categories = [
   {
@@ -207,7 +208,7 @@ export default function BrowseCategories() {
           .bc-grid { grid-template-columns: 1fr; gap: 10px; }
           .bc-inner { padding: 0 16px; }
           .bc-title { font-size: 17px; }
-        }
+        } 
       `}</style>
 
       <section className="bc-section">
@@ -223,17 +224,26 @@ export default function BrowseCategories() {
 
           {/* Category Grid */}
           <div className="bc-grid">
-            {categories.map((cat) => (
+            {categories.slice(0, 3).map((cat) => (
               <Link key={cat.id} href={cat.href} className="bc-card">
-                <div className="bc-icon-wrap" style={{ background: cat.bg }}>
+                <div
+                  className="bc-icon-wrap"
+                  style={{ background: cat.bg }}
+                >
                   <Image
                     src={cat.img}
                     alt={cat.label}
                     width={54}
                     height={54}
-                    style={{ objectFit: "cover", width: "100%", height: "100%", borderRadius: "12px" }}
+                    style={{
+                      objectFit: "cover",
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "12px",
+                    }}
                   />
                 </div>
+
                 <div className="bc-text">
                   <p className="bc-label-np">{cat.labelNp}</p>
                   <p className="bc-label">{cat.label}</p>

@@ -672,7 +672,11 @@ export default function MedicalListingDetailsPage() {
         .form-textarea {
           padding: 12px 16px;
           border: 1.5px solid ${BORDER};
+<<<<<<< HEAD
+          borderRadius: 12px;
+=======
           border-radius: 12px;
+>>>>>>> 2eb666c5a516ad5badfca97490d38fc4615759a8
           font-size: 14px;
           color: ${TEXT_PRIMARY};
           background: ${CARD_BG};

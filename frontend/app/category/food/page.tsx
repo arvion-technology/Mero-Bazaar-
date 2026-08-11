@@ -549,10 +549,7 @@ export default function FoodDeliveryPage() {
 
           {/* SIDEBAR */}
           <aside className="fd-sidebar">
-            <div className="fd-sb-head">
-              Filter
-              <FiChevronRight size={16} />
-            </div>
+            <div className="fd-sb-head">Filter</div>
 
             {/* Food Type */}
             <div className="fd-sb-section">
@@ -649,6 +646,20 @@ export default function FoodDeliveryPage() {
 
             {/* Loading */}
             {loading && (
+              <div className="fd-empty">
+                <p style={{ fontWeight: 700, fontSize: 15, color: "#111", margin: 0 }}>Loading restaurants…</p>
+              </div>
+            )}
+
+            {/* Error */}
+            {!loading && error && (
+              <div className="fd-empty">
+                <p style={{ fontWeight: 700, fontSize: 15, color: "#dc2626", margin: "0 0 4px" }}>{error}</p>
+              </div>
+            )}
+
+            {/* Cards */}
+            {!loading && !error && cards.length === 0 && (
               <div className="fd-empty">
                 <p style={{ fontWeight: 700, fontSize: 15, color: "#111", margin: 0 }}>Loading restaurants...</p>
               </div>
