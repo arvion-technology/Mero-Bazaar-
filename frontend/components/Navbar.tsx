@@ -20,9 +20,9 @@ const categories = [
 ];
 
 const navLinks = [
-  { label: "Buy", href: "/api/navbar/buys" },
+  { label: "Buy", href: "/buy" },
   {
-    label: "Services", href: "/api/navbar/services"
+    label: "Services", href: "/services"
   },
     { label: "Jobs", href: "/category/job" },
   { label: "Medical", href: "/category/medical" },
