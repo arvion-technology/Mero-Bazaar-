@@ -10,12 +10,10 @@ import { ConnectipsService } from './connectips.service';
 import { ConnectipsController } from './connectips.controller';
 import { SellerPaymentsService } from './payments.service';
 import { SellerPaymentsController } from './payments.controller';
-import { AdminPaymentController } from './admin-payment.controller';
-import { AdminPaymentService } from './admin-payment.service';
 
 @Module({
   imports: [PrismaModule, OrdersModule, AuthModule],
-  providers: [EsewaService, KhaltiService, ConnectipsService, SellerPaymentsService, AdminPaymentService],
-  controllers: [EsewaController, KhaltiController, ConnectipsController, SellerPaymentsController, AdminPaymentController], 
+  providers: [EsewaService, KhaltiService, ConnectipsService, SellerPaymentsService],
+  controllers: [EsewaController, KhaltiController, ConnectipsController, SellerPaymentsController], 
 })
 export class PaymentsModule {}
