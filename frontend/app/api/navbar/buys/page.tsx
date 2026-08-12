@@ -2,10 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Search } from "lucide-react";
-import { Heart } from "lucide-react";
 import { Search, Heart, MoreVertical, X } from "lucide-react";
-
 
 export default function BuyPage() {
   const [price, setPrice] = useState(50000);
@@ -28,7 +25,6 @@ export default function BuyPage() {
       id: 1,
       title: "iPhone 14 Pro 128GB",
       category: "Mobiles & Tablets",
-
       price: "NPR 8,500",
       image: "/iphone.png",
       location: "Koteshwor",
@@ -39,7 +35,6 @@ export default function BuyPage() {
       id: 2,
       title: "MacBook Air M1 256GB",
       category: "Electronics",
-
       price: "NPR 89,500",
       image: "/macbook.png",
       location: "Lalitpur",
@@ -50,7 +45,6 @@ export default function BuyPage() {
       id: 3,
       title: "Badminton",
       category: "Sports",
-
       price: "NPR 500",
       image: "/badminton.png",
       location: "Ratnapark",
@@ -60,7 +54,6 @@ export default function BuyPage() {
       id: 4,
       title: "Wooden Dining Table",
       category: "Home & Living",
-
       price: "NPR 18,500",
       image: "/table.png",
       location: "Lalitpur",
@@ -71,7 +64,6 @@ export default function BuyPage() {
       id: 5,
       title: "Jersey Cow",
       category: "Agriculture",
-
       price: "NPR 1,58,500",
       image: "/cow.png",
       location: "Rupandehi",
@@ -81,7 +73,6 @@ export default function BuyPage() {
       id: 6,
       title: "Bajaj",
       category: "Vehicles",
-
       price: "NPR 8,50,500",
       image: "/bike.png",
       location: "Lalitpur",
@@ -92,7 +83,6 @@ export default function BuyPage() {
       id: 7,
       title: "4th Floor House",
       category: "Property",
-
       price: "NPR 1,50,00,000",
       image: "/house.png",
       location: "Ratnapark",
@@ -102,7 +92,6 @@ export default function BuyPage() {
       id: 8,
       title: "Baby Cloth",
       category: "Fashion",
-
       price: "NPR 1,500",
       image: "/baby.png",
       location: "Lalitpur",
@@ -114,16 +103,6 @@ export default function BuyPage() {
   const conditions = ["New", "Used"];
 
   const toggleWishlist = (id: number) => {
-  setWishlist((prev) => {
-    const updated = prev.includes(id)
-      ? prev.filter((item) => item !== id)
-      : [...prev, id];
-
-    localStorage.setItem("wishlist", JSON.stringify(updated));
-
-    return updated;
-  });
-};
     setWishlist((prev) => {
       const updated = prev.includes(id)
         ? prev.filter((item) => item !== id)
@@ -136,7 +115,6 @@ export default function BuyPage() {
   };
 
   const filteredProducts = products.filter((product) => {
-
     const categoryMatch =
       selectedCategory === "" ||
       product.category === selectedCategory;
@@ -148,16 +126,8 @@ export default function BuyPage() {
       product.title.toLowerCase().includes(searchTerm.toLowerCase());
 
     return categoryMatch && conditionMatch && searchMatch;
-
   });
 
-useEffect(() => {
-  const saved = JSON.parse(
-    localStorage.getItem("wishlist") || "[]"
-  );
-
-  setWishlist(saved);
-}, []);
   useEffect(() => {
     const saved = JSON.parse(
       localStorage.getItem("wishlist") || "[]"
@@ -340,7 +310,6 @@ useEffect(() => {
     justify-content: center;
     flex-wrap: wrap;
   }
-    // flex-direction: column;
   }
 
   .searchBox button{
@@ -612,12 +581,10 @@ width:280px;
 
 .page{
   flex-direction:column;
+}
 .filter-sidebar{
     width:100%;
   }
-.page{
-  // flex-direction:column;
-}
 
 .product-grid{
   grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
@@ -663,11 +630,6 @@ width:280px;
   background:#dc2626;
 }
 
-@media(max-width:900px){
-  .filter-sidebar{
-    width:100%;
-  }
-}
 @media(max-width:1024px){
 
 .mobile-filter-bar{
@@ -1028,12 +990,6 @@ width:280px;
           </div>
         </div>
       </section>
-      <div className="buy-container">
-        <div className="left-side">
-          <aside className="filter-sidebar">
-            <div className="filter-header">
-              <h3>Filters</h3>
-              <button>Clear All</button>
 
       <div className="buy-container">
         <div className="left-side">
@@ -1047,7 +1003,8 @@ width:280px;
           </div>
           <aside
             className={`filter-sidebar ${showFilters ? "show-sidebar" : ""}`}
-          >            <div className="filter-header">
+          >
+            <div className="filter-header">
               <h3>Filters</h3>
 
               <div className="filter-actions">
@@ -1138,8 +1095,6 @@ width:280px;
         <section className="products-section">
 
           <div className="products-header">
-            <h2>1,248 Service Found</h2>
-
             <h2>{filteredProducts.length} Service Found</h2>
             <select className="sort">
               <option>Newest</option>
@@ -1161,15 +1116,6 @@ width:280px;
                     fill
                   />
                   <button
-  className="wishlist-btn"
-  onClick={() => toggleWishlist(item.id)}
->
-  <Heart
-    size={22}
-    color={wishlist.includes(item.id) ? "red" : "white"}
-    fill={wishlist.includes(item.id) ? "red" : "transparent"}
-  />
-</button>
                     className="wishlist-btn"
                     onClick={() => toggleWishlist(item.id)}
                   >
