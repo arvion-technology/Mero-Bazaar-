@@ -42,7 +42,9 @@ model User {
   sessions      Session[]
   ActivityLogs  ActivityLog[]
   notifications Notification[]
-  wishlist            Wishlist[]
+  wishlist      Wishlist[]
+  reportsFiled  Report[] @relation("ReporterUser")
+  reportsReceived Report[] @relation("ReportedUser")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -280,6 +282,7 @@ model Listing {
   orders              Order[]
   reviews             Review[]
   wishlist            Wishlist[]
+  reports             Report[]
 
   @@index(userId)
   @@index([category])
@@ -820,6 +823,8 @@ model Review {
   HairBeautyAndWellness   HairBeautyAndWellness? @relation(fields: [hairBeautyAndWellnessId], references: [id])
   hairBeautyAndWellnessId String?
 
+  reports   Report[]
+
   @@index(userId)
   @@index([listingId])
 }
@@ -996,4 +1001,73 @@ enum BeautyServiceType {
   SPA
   COSMETICS
   BRIDAL
+}
+
+
+model Report {
+  id String @id @default(cuid())
+
+  source ReportSource @default(USER_REPORT)
+
+  targetType ReportTargetType
+
+  listingId String?
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  targetUserId String?
+  targetUser   User?   @relation("ReportedUser", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  reviewId String?
+  review   Review?  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  reporterId String?
+  reporter   User?   @relation("ReporterUser", fields: [reporterId], references: [id], onDelete: SetNull)
+
+  reason      ReportReason
+  description String?
+
+  status         ReportStatus @default(OPEN)
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  resolutionNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([targetType])
+  @@index([listingId])
+  @@index([targetUserId])
+  @@index([reviewId])
+  @@index([status])
+  @@index([source])
+}
+
+enum ReportSource {
+  USER_REPORT   
+  ADMIN_FLAG  
+}
+
+enum ReportTargetType {
+  LISTING
+  USER
+  REVIEW
+}
+
+enum ReportReason {
+  SPAM
+  SCAM_FRAUD
+  INAPPROPRIATE_CONTENT
+  FAKE_LISTING
+  HARASSMENT
+  PRICE_MANIPULATION
+  COUNTERFEIT
+  DUPLICATE
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  UNDER_REVIEW
+  ACTIONED
+  DISMISSED
 }
