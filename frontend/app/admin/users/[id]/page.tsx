@@ -10,6 +10,7 @@ import {
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import type { VendorKycFull as VendorKyc, AdminUserDetail } from "@/app/types/admin-user";
 import { getStatusPill } from "@/app/types/admin-user_mappers";
+import AdminNotificationBell from "@/components/admin/AdminNotificationBell";
 
 const PRIMARY = "#0f172a";
 const SITE_PRIMARY = "#C0392B";
@@ -179,7 +180,7 @@ export default function AdminUserDetailPage() {
               <h1 className="admin-topbar-title">User Detail</h1>
             </div>
             <div className="admin-topbar-right">
-              <button type="button" className="admin-icon-btn"><FiBell size={20} /><span className="admin-badge">1</span></button>
+              <AdminNotificationBell bg={BG} />
               <div className="admin-avatar-wrap">
                 <button type="button" className="admin-avatar-btn" onClick={() => setShowAvatarDropdown((v) => !v)}>
                   <div className="admin-avatar-circle">

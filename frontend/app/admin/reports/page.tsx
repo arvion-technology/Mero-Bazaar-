@@ -1,4 +1,3 @@
-// Target path: app/admin/reports/page.tsx
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
@@ -6,6 +5,7 @@ import { FiBell, FiMenu, FiLogOut, FiSearch } from "react-icons/fi";
 import Link from "next/link";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { adaptReportToRow, type ReportWithRelations, type ReportRow } from "@/lib/reports";
+import AdminNotificationBell from "@/components/admin/AdminNotificationBell";
 
 const PRIMARY = "#0f172a";
 const SITE_PRIMARY = "#C0392B";
@@ -172,7 +172,7 @@ export default function AdminReportsPage() {
               <h1 className="admin-topbar-title">Reports</h1>
             </div>
             <div className="admin-topbar-right">
-              <button type="button" className="admin-icon-btn"><FiBell size={20} /><span className="admin-badge">1</span></button>
+              <AdminNotificationBell bg={BG} />
               <div className="admin-avatar-wrap">
                 <button type="button" className="admin-avatar-btn" onClick={() => setShowAvatarDropdown((v) => !v)}>
                   <div className="admin-avatar-circle">

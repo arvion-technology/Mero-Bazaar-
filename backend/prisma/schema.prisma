@@ -852,7 +852,11 @@ model Order {
   cancelReason    String?
   paymentMethod   PaymentMethod?
 
-  status       OrderStatus @default(PENDING)
+  status            OrderStatus @default(PENDING)
+  disputeStatus     DisputeStatus @default(NONE)   
+  disputeReason     String?
+  disputeResolvedAt DateTime?
+  disputeResolvedBy String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -862,6 +866,7 @@ model Order {
   @@index([status])
   @@index([deliveryDate])
   @@index([type])
+  @@index([disputeStatus])
 }
 
 enum OrderType {
@@ -875,6 +880,13 @@ enum PaymentMethod {
   CONNECTIPS
 }
 
+enum DisputeStatus {
+  NONE
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+}
 enum FoodType {
   TIFFIN
   BAKERY

@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { ReportSource, ReportTargetType, ReportStatus } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AdminReportService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   findAllForAdmin(filters: {
     source?: ReportSource;
@@ -44,8 +48,8 @@ export class AdminReportService {
     });
   }
 
-  setStatus(id: string, status: ReportStatus, reviewerId: string, resolutionNote?: string) {
-    return this.prisma.report.update({
+  async setStatus(id: string, status: ReportStatus, reviewerId: string, resolutionNote?: string) {
+    const updated = await this.prisma.report.update({
       where: { id },
       data: {
         status,
@@ -54,5 +58,16 @@ export class AdminReportService {
         ...(resolutionNote && { resolutionNote }),
       },
     });
+
+    if (status === 'ACTIONED') {
+      await this.notificationsService.notifyAllAdmins({
+        category: 'SYSTEM',
+        type: 'REPORT_ACTIONED',
+        title: 'Report actioned',
+        description: `A ${updated.reason.replace(/_/g, ' ').toLowerCase()} report was actioned.`,
+      });
+    }
+
+    return updated;
   }
 }

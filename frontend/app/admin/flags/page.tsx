@@ -2,66 +2,70 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { FiBell, FiMenu, FiLogOut, FiSearch } from "react-icons/fi";
+import Link from "next/link";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import { adaptOrderToPaymentRow, type OrderWithRelations, type PaymentRow } from "@/lib/orders";
+import { adaptReportToRow, type ReportWithRelations, type ReportRow } from "@/lib/reports";
 import AdminNotificationBell from "@/components/admin/AdminNotificationBell";
 
 const PRIMARY = "#0f172a";
 const SITE_PRIMARY = "#C0392B";
 const BG = "#f8f5f5";
 
-type PaymentMethodFilter = "ESEWA" | "KHALTI" | "CONNECTIPS";
-type OrderStatusFilter = "PENDING" | "CONFIRMED" | "PREPARING" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "EXPIRED";
+type TargetTypeFilter = "LISTING" | "USER" | "REVIEW";
+type StatusFilter = "OPEN" | "UNDER_REVIEW" | "ACTIONED" | "DISMISSED";
 
-export default function AdminPaymentsPage() {
+const SOURCE = "ADMIN_FLAG";
+
+export default function AdminFlagsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showAvatarDropdown, setShowAvatarDropdown] = useState(false);
   const { data: session } = useSession();
   const accessToken = session?.accessToken;
 
   const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<PaymentRow[]>([]);
+  const [rows, setRows] = useState<ReportRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const [methodFilter, setMethodFilter] = useState<PaymentMethodFilter | "">("");
-  const [statusFilter, setStatusFilter] = useState<OrderStatusFilter | "">("");
+  const [targetTypeFilter, setTargetTypeFilter] = useState<TargetTypeFilter | "">("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter | "">("");
   const [search, setSearch] = useState("");
 
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "A";
 
-  const fetchPayments = useCallback(async () => {
+  const fetchFlags = useCallback(async () => {
     if (!accessToken) return;
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (methodFilter) params.set("paymentMethod", methodFilter);
+      params.set("source", SOURCE);
+      if (targetTypeFilter) params.set("targetType", targetTypeFilter);
       if (statusFilter) params.set("status", statusFilter);
 
-      const r = await fetch(`/api/admin/payments?${params.toString()}`, {
+      const r = await fetch(`/api/admin/flags?${params.toString()}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      const data: OrderWithRelations[] = await r.json();
+      const data: ReportWithRelations[] = await r.json();
       if (!r.ok || (data as unknown as { error?: string })?.error)
-        throw new Error((data as unknown as { message?: string })?.message || "Failed to load payments");
-      setRows(data.map(adaptOrderToPaymentRow));
+        throw new Error((data as unknown as { message?: string })?.message || "Failed to load flags");
+      setRows(data.map(adaptReportToRow));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load payments");
+      setError(e instanceof Error ? e.message : "Failed to load flags");
     } finally {
       setLoading(false);
     }
-  }, [accessToken, methodFilter, statusFilter]);
+  }, [accessToken, targetTypeFilter, statusFilter]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      await fetchPayments();
+      await fetchFlags();
       if (cancelled) return;
     })();
     return () => { cancelled = true; };
-  }, [fetchPayments]);
+  }, [fetchFlags]);
 
   useEffect(() => {
     if (sidebarOpen) document.body.style.overflow = "hidden";
@@ -73,24 +77,16 @@ export default function AdminPaymentsPage() {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
-      r.product.toLowerCase().includes(q) ||
-      r.customer.toLowerCase().includes(q) ||
-      r.paymentRef.toLowerCase().includes(q)
+      r.targetLabel.toLowerCase().includes(q) ||
+      r.reporter.toLowerCase().includes(q) ||
+      r.reason.toLowerCase().includes(q)
     );
   });
-
-  const totalRevenue = rows
-    .filter((r) => r.status === "Completed" || r.status === "Confirmed")
-    .reduce((sum, r) => sum + r.amountRaw, 0);
-  const pendingAmount = rows
-    .filter((r) => r.status === "Pending" || r.status === "Processing")
-    .reduce((sum, r) => sum + r.amountRaw, 0);
-  const failedCount = rows.filter((r) => r.status === "Cancelled" || r.status === "Expired").length;
 
   if (loading) {
     return (
       <div style={{ padding: 40, textAlign: "center", color: "#888" }}>
-        Loading Payments...
+        Loading Flags...
       </div>
     );
   }
@@ -110,10 +106,6 @@ export default function AdminPaymentsPage() {
         .admin-badge { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: ${SITE_PRIMARY}; color: #fff; font-size: 9px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid ${BG}; }
         .admin-section { padding: 24px 32px 32px; }
         .admin-section-title { font-size: 18px; font-weight: 700; color: ${PRIMARY}; letter-spacing: -0.2px; margin-bottom: 20px; }
-        .admin-stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-        .admin-stat-card { background: #fff; border: 1px solid #e8e4e4; border-radius: 12px; padding: 18px 20px; }
-        .admin-stat-label { font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .admin-stat-value { font-size: 22px; font-weight: 700; color: ${PRIMARY}; }
         .admin-filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
         .admin-search { position: relative; }
         .admin-search input { padding: 9px 12px 9px 34px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; width: 240px; }
@@ -146,13 +138,14 @@ export default function AdminPaymentsPage() {
         .admin-backdrop { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(2px); z-index: 99; animation: backdropIn 0.2s ease; }
         @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
         .admin-hamburger { display: none; width: 38px; height: 38px; border-radius: 8px; border: 1.5px solid #e2e8f0; background: #fff; align-items: center; justify-content: center; cursor: pointer; color: #64748b; flex-shrink: 0; }
+        .admin-target-link { color: #1e293b; text-decoration: none; font-weight: 600; }
+        .admin-target-link:hover { text-decoration: underline; }
         @media (max-width: 1023px) {
           .admin-backdrop.active { display: block; }
           .admin-hamburger { display: flex; }
           .admin-main { margin-left: 0 !important; max-width: 100% !important; }
           .admin-topbar { padding: 16px 20px; }
           .admin-section { padding: 20px; }
-          .admin-stats-row { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 767px) {
           .admin-topbar { flex-direction: column; align-items: stretch; gap: 12px; padding: 16px; }
@@ -161,8 +154,6 @@ export default function AdminPaymentsPage() {
           .admin-topbar-title { font-size: 18px; }
           .admin-section { padding: 16px; }
           .admin-section-title { font-size: 16px; }
-          .admin-stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
-          .admin-stat-value { font-size: 18px; }
           .admin-table th, .admin-table td { padding: 12px 14px; font-size: 13px; }
           .admin-table-wrap { margin: 0 -16px; padding: 0 16px; width: calc(100% + 32px); }
           .admin-table { min-width: 480px; }
@@ -172,13 +163,13 @@ export default function AdminPaymentsPage() {
       <div className={`admin-backdrop ${sidebarOpen ? "active" : ""}`} onClick={() => setSidebarOpen(false)} aria-hidden="true" />
 
       <div className="admin-page">
-        <AdminSidebar activeId="payments" sidebarOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <AdminSidebar activeId="flags" sidebarOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <main className="admin-main">
           <div className="admin-topbar">
             <div className="admin-topbar-left">
               <button type="button" className="admin-hamburger" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar"><FiMenu size={20} /></button>
-              <h1 className="admin-topbar-title">Payments</h1>
+              <h1 className="admin-topbar-title">Flags</h1>
             </div>
             <div className="admin-topbar-right">
               <AdminNotificationBell bg={BG} />
@@ -208,87 +199,57 @@ export default function AdminPaymentsPage() {
           </div>
 
           <div className="admin-section">
-            <h2 className="admin-section-title">All Payments ({filtered.length})</h2>
-
-            <div className="admin-stats-row">
-              <div className="admin-stat-card">
-                <div className="admin-stat-label">Total Revenue</div>
-                <div className="admin-stat-value">NPR {totalRevenue.toLocaleString()}</div>
-              </div>
-              <div className="admin-stat-card">
-                <div className="admin-stat-label">Pending</div>
-                <div className="admin-stat-value">NPR {pendingAmount.toLocaleString()}</div>
-              </div>
-              <div className="admin-stat-card">
-                <div className="admin-stat-label">Failed / Cancelled</div>
-                <div className="admin-stat-value">{failedCount}</div>
-              </div>
-              <div className="admin-stat-card">
-                <div className="admin-stat-label">Total Transactions</div>
-                <div className="admin-stat-value">{rows.length}</div>
-              </div>
-            </div>
+            <h2 className="admin-section-title">Admin Flags ({filtered.length})</h2>
 
             <div className="admin-filters">
               <div className="admin-search">
                 <FiSearch size={15} />
-                <input placeholder="Search listing, buyer, or ref" value={search} onChange={(e) => setSearch(e.target.value)} />
+                <input placeholder="Search target, flagged by, or reason" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
-              <select className="admin-select" value={methodFilter} onChange={(e) => setMethodFilter(e.target.value as PaymentMethodFilter | "")}>
-                <option value="">All providers</option>
-                <option value="ESEWA">eSewa</option>
-                <option value="KHALTI">Khalti</option>
-                <option value="CONNECTIPS">Connect IPS</option>
+              <select className="admin-select" value={targetTypeFilter} onChange={(e) => setTargetTypeFilter(e.target.value as TargetTypeFilter | "")}>
+                <option value="">All target types</option>
+                <option value="LISTING">Listing</option>
+                <option value="USER">User</option>
+                <option value="REVIEW">Review</option>
               </select>
-              <select className="admin-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as OrderStatusFilter | "")}>
+              <select className="admin-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter | "")}>
                 <option value="">All statuses</option>
-                <option value="PENDING">Pending</option>
-                <option value="CONFIRMED">Confirmed</option>
-                <option value="PREPARING">Preparing</option>
-                <option value="OUT_FOR_DELIVERY">Out for delivery</option>
-                <option value="DELIVERED">Delivered</option>
-                <option value="CANCELLED">Cancelled</option>
-                <option value="EXPIRED">Expired</option>
+                <option value="OPEN">Open</option>
+                <option value="UNDER_REVIEW">Under Review</option>
+                <option value="ACTIONED">Actioned</option>
+                <option value="DISMISSED">Dismissed</option>
               </select>
             </div>
 
             {error ? (
               <div className="admin-error">{error}</div>
             ) : filtered.length === 0 ? (
-              <div className="admin-empty">No payments match these filters.</div>
+              <div className="admin-empty">No flags match these filters.</div>
             ) : (
               <div className="admin-table-wrap">
                 <table className="admin-table">
                   <thead>
-                    <tr><th>Listing</th><th>Buyer</th><th>Amount</th><th>Provider</th><th>Status</th><th>Ref</th></tr>
+                    <tr><th>Target</th><th>Type</th><th>Flagged By</th><th>Reason</th><th>Status</th><th>Date</th></tr>
                   </thead>
                   <tbody>
                     {filtered.map((r) => (
-                      <tr key={r.rawId}>
+                      <tr key={r.id}>
                         <td>
-                          <div className="admin-name-cell">
-                            <strong>{r.product}</strong>
-                            {r.seller !== "—" && <span>Sold by {r.seller}</span>}
-                          </div>
+                          {r.targetHref ? (
+                            <Link href={r.targetHref} className="admin-target-link">{r.targetLabel}</Link>
+                          ) : (
+                            <strong>{r.targetLabel}</strong>
+                          )}
                         </td>
-                        <td>
-                          <div className="admin-name-cell">
-                            <strong>{r.customer}</strong>
-                            {r.email && <span>{r.email}</span>}
-                          </div>
-                        </td>
-                        <td>{r.amount}</td>
-                        <td>
-                          <span style={{ background: `${r.providerColor}1a`, color: r.providerColor, fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap" }}>
-                            {r.provider}
-                          </span>
-                        </td>
+                        <td>{r.targetType}</td>
+                        <td>{r.reporter}</td>
+                        <td>{r.reason}</td>
                         <td>
                           <span style={{ background: `${r.statusColor}1a`, color: r.statusColor, fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap" }}>
                             {r.status}
                           </span>
                         </td>
-                        <td style={{ fontSize: 13, color: "#64748b" }}>{r.paymentRef}</td>
+                        <td>{new Date(r.createdAt).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>
