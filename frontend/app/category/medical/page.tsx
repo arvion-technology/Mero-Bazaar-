@@ -16,6 +16,8 @@ import {
   FiClock,
   FiAlertTriangle,
   FiInbox,
+  FiShare2,
+
 } from "react-icons/fi";
 import {
   FaStethoscope,
@@ -70,8 +72,8 @@ export default function MedicalPage() {
   const [availableOnly, setAvailableOnly] = useState(false);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-const [sortOpen, setSortOpen] = useState(false);
-const sortRef = useRef<HTMLDivElement>(null);
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -96,6 +98,55 @@ const sortRef = useRef<HTMLDivElement>(null);
     e.preventDefault();
     e.stopPropagation();
     setFavorites((p) => ({ ...p, [id]: !p[id] }));
+  };
+  const shareMedical = async (
+    listing: MedicalListing,
+    e: React.MouseEvent
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const doctorName = listing.medical.doctorName;
+
+    const medicalUrl =
+      `${window.location.origin}/category/medical/${listing.id}`;
+
+    const shareData = {
+      title: `${doctorName} - HamroNepal Bazaar`,
+      text: `Check out ${doctorName}'s medical profile on HamroNepal Bazaar.`,
+      url: medicalUrl,
+    };
+
+    try {
+      // Mobile / supported browsers
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      // Desktop fallback
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(medicalUrl);
+        alert("Medical profile link copied!");
+        return;
+      }
+
+      // Final fallback
+      window.prompt(
+        "Copy medical profile link:",
+        medicalUrl
+      );
+    } catch (error) {
+      // User cancelled share dialog
+      if (
+        error instanceof DOMException &&
+        error.name === "AbortError"
+      ) {
+        return;
+      }
+
+      console.error("Medical share failed:", error);
+    }
   };
 
   const reset = () => {
@@ -347,7 +398,10 @@ const sortRef = useRef<HTMLDivElement>(null);
           transition: transform 0.18s, background 0.18s;
         }
         .mp-heart:hover { transform: scale(1.15); background: #f0fdfa; }
-
+        .mp-heart,.mp-share { width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 1px solid #e4e8f0; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10); transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;}
+        .mp-heart:hover,.mp-share:hover {  transform: scale(1.12); background: #f0fdfa;}
+        .mp-share {  color: #64748b;}
+        .mp-share:hover {  color: #0d9488;}
         .mp-info { flex: 1; min-width: 0; }
         .mp-specialty-badge {
           font-size: 10.5px; font-weight: 700; color: #0d9488; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: inline-block;
@@ -651,9 +705,33 @@ const sortRef = useRef<HTMLDivElement>(null);
                         <div className="mp-card-header">
                           <div className="mp-img-wrap">
                             <img src={thumb} alt={m.doctorName} className="mp-img" />
-                            <button className="mp-heart" aria-label="Save" onClick={(e) => toggleFav(l.id, e)}>
-                              {isFav ? <FaHeartbeat size={14} color="#e74c3c" /> : <FiHeart size={14} color="#9ca3af" />}
+
+                            {/* Favorite */}
+                            <button
+                              type="button"
+                              className="mp-heart"
+                              aria-label="Save doctor"
+                              title="Save doctor"
+                              onClick={(e) => toggleFav(l.id, e)}
+                            >
+                              {isFav ? (
+                                <FaHeartbeat size={14} color="#e74c3c" />
+                              ) : (
+                                <FiHeart size={14} color="#9ca3af" />
+                              )}
                             </button>
+
+                            {/* Share */}
+                            <button
+                              type="button"
+                              className="mp-share"
+                              aria-label={`Share ${m.doctorName}`}
+                              title="Share doctor"
+                              onClick={(e) => shareMedical(l, e)}
+                            >
+                              <FiShare2 size={14} />
+                            </button>
+
                           </div>
                           <div className="mp-info">
                             <span className="mp-specialty-badge">{specialtyLabel}</span>

@@ -5,7 +5,6 @@ import Image from "next/image";
 import { Search } from "lucide-react";
 import { Heart } from "lucide-react";
 
-
 export default function BuyPage() {
   const [price, setPrice] = useState(50000);
   const [wishlist, setWishlist] = useState<number[]>([]);

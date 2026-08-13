@@ -3,8 +3,23 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiStar, FiHome, FiChevronDown } from "react-icons/fi";
-import { FaHeart, FaStar, FaBuilding, FaHome, FaTree, FaStore, FaBriefcase } from "react-icons/fa";
+import {
+  FiSearch,
+  FiMapPin,
+  FiStar,
+  FiHome,
+  FiChevronDown,
+  FiShare2,
+} from "react-icons/fi";
+import {
+  FaHeart,
+  FaStar,
+  FaBuilding,
+  FaHome,
+  FaTree,
+  FaStore,
+  FaBriefcase,
+} from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
 import type { RentalListing, PropertyType } from "@/app/types/realestate";
 
@@ -77,17 +92,61 @@ function toDisplayCard(listing: RentalListing): DisplayCard | null {
   };
 }
 
-const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Biratnagar"];
-
-const CATEGORY_CARDS: { id: string; label: string; icon: typeof FaBuilding; matches: PropertyType[]; color: string }[] = [
-  { id: "Apartment", label: "Apartment", icon: FaBuilding, matches: ["APARTMENT", "FLAT"], color: "#3b5bdb" },
-  { id: "House", label: "House", icon: FaHome, matches: ["HOUSE"], color: "#2e7d32" },
-  { id: "Land", label: "Land", icon: FaTree, matches: ["LAND"], color: "#6a9c3e" },
-  { id: "Commercial", label: "Commercial", icon: FaStore, matches: ["SHUTTER"], color: "#e65100" },
-  { id: "Office", label: "Office", icon: FaBriefcase, matches: ["OFFICE"], color: "#1565c0" },
+const CITIES = [
+  "Kathmandu",
+  "Lalitpur",
+  "Bhaktapur",
+  "Pokhara",
+  "Chitwan",
+  "Biratnagar",
 ];
 
-const HERO_IMAGE = "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1400&h=400&fit=crop";
+const CATEGORY_CARDS: {
+  id: string;
+  label: string;
+  icon: typeof FaBuilding;
+  matches: PropertyType[];
+  color: string;
+}[] = [
+  {
+    id: "Apartment",
+    label: "Apartment",
+    icon: FaBuilding,
+    matches: ["APARTMENT", "FLAT"],
+    color: "#3b5bdb",
+  },
+  {
+    id: "House",
+    label: "House",
+    icon: FaHome,
+    matches: ["HOUSE"],
+    color: "#2e7d32",
+  },
+  {
+    id: "Land",
+    label: "Land",
+    icon: FaTree,
+    matches: ["LAND"],
+    color: "#6a9c3e",
+  },
+  {
+    id: "Commercial",
+    label: "Commercial",
+    icon: FaStore,
+    matches: ["SHUTTER"],
+    color: "#e65100",
+  },
+  {
+    id: "Office",
+    label: "Office",
+    icon: FaBriefcase,
+    matches: ["OFFICE"],
+    color: "#1565c0",
+  },
+];
+
+const HERO_IMAGE =
+  "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1400&h=400&fit=crop";
 // ── PRICE PARSER: converts "Rs. 20,000/month" → 20000 ──
 const parsePrice = (priceStr: string): number => {
   const cleaned = priceStr
@@ -131,10 +190,15 @@ export default function PropertyPage() {
         if (!res.ok) throw new Error(`Failed to load listings (${res.status})`);
         const data: RentalListing[] = await res.json();
         if (cancelled) return;
-        const cards = data.map(toDisplayCard).filter((c): c is DisplayCard => c !== null);
+        const cards = data
+          .map(toDisplayCard)
+          .filter((c): c is DisplayCard => c !== null);
         setListings(cards);
       } catch (err) {
-        if (!cancelled) setLoadError(err instanceof Error ? err.message : "Failed to load listings");
+        if (!cancelled)
+          setLoadError(
+            err instanceof Error ? err.message : "Failed to load listings",
+          );
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -150,57 +214,114 @@ export default function PropertyPage() {
     e.stopPropagation();
     setFavorites((p) => ({ ...p, [id]: !p[id] }));
   };
+  const shareProperty = async (property: DisplayCard, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const propertyUrl = `${window.location.origin}/category/rent-and-real-estate/${property.id}`;
+
+    const shareData = {
+      title: property.title,
+      text: `Check out this property: ${property.title}`,
+      url: propertyUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(propertyUrl);
+        alert("Property link copied!");
+        return;
+      }
+
+      window.prompt("Copy property link:", propertyUrl);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
+      console.error("Property share failed:", error);
+    }
+  };
 
   const resetFilters = () => {
     setActiveType("All");
-    setFilterSales(false); setFilterRent(false); setFilterBuy(false);
-    setFilter1BHK(false); setFilter2BHK(false); setFilter3BHK(false);
-    setFilterCity(""); setFilterPrice("");
-    setFilterFurnished(false); setFilterUnfurnished(false);
+    setFilterSales(false);
+    setFilterRent(false);
+    setFilterBuy(false);
+    setFilter1BHK(false);
+    setFilter2BHK(false);
+    setFilter3BHK(false);
+    setFilterCity("");
+    setFilterPrice("");
+    setFilterFurnished(false);
+    setFilterUnfurnished(false);
     setSearch("");
   };
 
   const activeCategory = CATEGORY_CARDS.find((c) => c.id === activeType);
 
-  const displayed = listings.filter((l) => {
-    const matchSearch = l.title.toLowerCase().includes(search.toLowerCase()) ||
-      l.location.toLowerCase().includes(search.toLowerCase());
+  const displayed = listings
+    .filter((l) => {
+      const matchSearch =
+        l.title.toLowerCase().includes(search.toLowerCase()) ||
+        l.location.toLowerCase().includes(search.toLowerCase());
 
-    const matchType = activeType === "All" || (activeCategory ? activeCategory.matches.includes(l.propertyType) : true);
+      const matchType =
+        activeType === "All" ||
+        (activeCategory
+          ? activeCategory.matches.includes(l.propertyType)
+          : true);
 
-    const purposeFilters: string[] = [];
-    if (filterSales) purposeFilters.push("Sale");
-    if (filterRent) purposeFilters.push("Rent");
-    const matchPurpose = filterBuy
-      ? false 
-      : purposeFilters.length === 0 || purposeFilters.includes(l.purpose);
+      const purposeFilters: string[] = [];
+      if (filterSales) purposeFilters.push("Sale");
+      if (filterRent) purposeFilters.push("Rent");
+      const matchPurpose = filterBuy
+        ? false
+        : purposeFilters.length === 0 || purposeFilters.includes(l.purpose);
 
-    const bhkFilters = [];
-    if (filter1BHK) bhkFilters.push(1);
-    if (filter2BHK) bhkFilters.push(2);
-    if (filter3BHK) bhkFilters.push(3);
-    const matchBHK = bhkFilters.length === 0 || bhkFilters.includes(l.beds);
+      const bhkFilters = [];
+      if (filter1BHK) bhkFilters.push(1);
+      if (filter2BHK) bhkFilters.push(2);
+      if (filter3BHK) bhkFilters.push(3);
+      const matchBHK = bhkFilters.length === 0 || bhkFilters.includes(l.beds);
 
-    const matchCity = !filterCity || l.city === filterCity;
+      const matchCity = !filterCity || l.city === filterCity;
 
-    const matchFurnished = (!filterFurnished && !filterUnfurnished) ||
-      (filterFurnished && l.isFurnished) ||
-      (filterUnfurnished && !l.isFurnished);
+      const matchFurnished =
+        (!filterFurnished && !filterUnfurnished) ||
+        (filterFurnished && l.isFurnished) ||
+        (filterUnfurnished && !l.isFurnished);
 
-    let matchPrice = true;
-    if (filterPrice) {
-      const numericPrice = parsePrice(l.price);
-      if (filterPrice === "low") matchPrice = numericPrice < 20000;
-      else if (filterPrice === "mid") matchPrice = numericPrice >= 20000 && numericPrice <= 50000;
-      else if (filterPrice === "high") matchPrice = numericPrice > 50000;
-    }
+      let matchPrice = true;
+      if (filterPrice) {
+        const numericPrice = parsePrice(l.price);
+        if (filterPrice === "low") matchPrice = numericPrice < 20000;
+        else if (filterPrice === "mid")
+          matchPrice = numericPrice >= 20000 && numericPrice <= 50000;
+        else if (filterPrice === "high") matchPrice = numericPrice > 50000;
+      }
 
-    return matchSearch && matchType && matchPurpose && matchBHK && matchCity && matchFurnished && matchPrice;
-  }).sort((a, b) => {
-    if (sort === "featured") return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
-    if (sort === "rating") return b.rating - a.rating;
-    return 0;
-  });
+      return (
+        matchSearch &&
+        matchType &&
+        matchPurpose &&
+        matchBHK &&
+        matchCity &&
+        matchFurnished &&
+        matchPrice
+      );
+    })
+    .sort((a, b) => {
+      if (sort === "featured")
+        return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
+      if (sort === "rating") return b.rating - a.rating;
+      return 0;
+    });
 
   const sortLabel: Record<string, string> = {
     newest: "Newest",
@@ -284,6 +405,10 @@ export default function PropertyPage() {
         .pp-badge-furnished { position: absolute; top: 12px; right: 12px; background: #e8f5e9; color: #2e7d32; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
         .pp-heart { position: absolute; bottom: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 4; padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.15); transition: transform 0.18s; }
         .pp-heart:hover { transform: scale(1.15); }
+        .pp-heart,.pp-share { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.15); transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;}
+        .pp-heart:hover,.pp-share:hover { transform: scale(1.15); background: #fff;}
+        .pp-share { color: #666;}
+        .pp-share:hover {  color: #e74c3c;}
         .pp-card-body { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 6px; }
         .pp-card-title { font-size: 17px; font-weight: 700; color: #1a1a1a; margin: 0; }
         .pp-card-price { font-size: 15px; font-weight: 700; color: #e74c3c; margin: 0; }
@@ -308,10 +433,13 @@ export default function PropertyPage() {
           <div className="pp-hero-overlay" />
           <div className="pp-hero-inner">
             <h1 className="pp-hero-title">
-              Find The Best<br />
+              Find The Best
+              <br />
               Rent & Real Estate Services
             </h1>
-            <p className="pp-hero-sub">Trusted Real Estate Services Since 2015</p>
+            <p className="pp-hero-sub">
+              Trusted Real Estate Services Since 2015
+            </p>
             <div className="pp-search-wrap">
               <FiSearch className="pp-search-icon" size={18} color="#999" />
               <input
@@ -331,7 +459,9 @@ export default function PropertyPage() {
               {CATEGORY_CARDS.map((cat) => {
                 const Icon = cat.icon;
                 const isActive = activeType === cat.id;
-                const count = listings.filter((l) => cat.matches.includes(l.propertyType)).length;
+                const count = listings.filter((l) =>
+                  cat.matches.includes(l.propertyType),
+                ).length;
                 return (
                   <button
                     key={cat.id}
@@ -340,13 +470,18 @@ export default function PropertyPage() {
                   >
                     <div
                       className="pp-cat-icon-wrap"
-                      style={{ background: isActive ? cat.color + "20" : "#f5f5f5", color: cat.color }}
+                      style={{
+                        background: isActive ? cat.color + "20" : "#f5f5f5",
+                        color: cat.color,
+                      }}
                     >
                       <Icon size={22} />
                     </div>
                     <div className="pp-cat-info">
                       <span className="pp-cat-name">{cat.label}</span>
-                      <span className="pp-cat-count">{count.toLocaleString()} listings</span>
+                      <span className="pp-cat-count">
+                        {count.toLocaleString()} listings
+                      </span>
                     </div>
                   </button>
                 );
@@ -366,15 +501,27 @@ export default function PropertyPage() {
               <div className="psf-section">
                 <p className="psf-label">Property Type</p>
                 <label className="psf-checkbox">
-                  <input type="checkbox" checked={filterSales} onChange={(e) => setFilterSales(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={filterSales}
+                    onChange={(e) => setFilterSales(e.target.checked)}
+                  />
                   <span>Sales</span>
                 </label>
                 <label className="psf-checkbox">
-                  <input type="checkbox" checked={filterRent} onChange={(e) => setFilterRent(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={filterRent}
+                    onChange={(e) => setFilterRent(e.target.checked)}
+                  />
                   <span>Rent</span>
                 </label>
                 <label className="psf-checkbox">
-                  <input type="checkbox" checked={filterBuy} onChange={(e) => setFilterBuy(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={filterBuy}
+                    onChange={(e) => setFilterBuy(e.target.checked)}
+                  />
                   <span>Buy</span>
                 </label>
               </div>
@@ -382,30 +529,54 @@ export default function PropertyPage() {
               <div className="psf-section">
                 <p className="psf-label">Room Types</p>
                 <label className="psf-checkbox">
-                  <input type="checkbox" checked={filter1BHK} onChange={(e) => setFilter1BHK(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={filter1BHK}
+                    onChange={(e) => setFilter1BHK(e.target.checked)}
+                  />
                   <span>1BHK</span>
                 </label>
                 <label className="psf-checkbox">
-                  <input type="checkbox" checked={filter2BHK} onChange={(e) => setFilter2BHK(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={filter2BHK}
+                    onChange={(e) => setFilter2BHK(e.target.checked)}
+                  />
                   <span>2BHK</span>
                 </label>
                 <label className="psf-checkbox">
-                  <input type="checkbox" checked={filter3BHK} onChange={(e) => setFilter3BHK(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={filter3BHK}
+                    onChange={(e) => setFilter3BHK(e.target.checked)}
+                  />
                   <span>3BHK</span>
                 </label>
               </div>
 
               <div className="psf-section">
                 <p className="psf-label">City</p>
-                <select className="psf-select" value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
+                <select
+                  className="psf-select"
+                  value={filterCity}
+                  onChange={(e) => setFilterCity(e.target.value)}
+                >
                   <option value="">Select city</option>
-                  {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {CITIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div className="psf-section">
                 <p className="psf-label">Price</p>
-                <select className="psf-select" value={filterPrice} onChange={(e) => setFilterPrice(e.target.value)}>
+                <select
+                  className="psf-select"
+                  value={filterPrice}
+                  onChange={(e) => setFilterPrice(e.target.value)}
+                >
                   <option value="">Select price</option>
                   <option value="low">Below Rs. 20,000</option>
                   <option value="mid">Rs. 20,000 - 50,000</option>
@@ -416,16 +587,26 @@ export default function PropertyPage() {
               <div className="psf-section">
                 <p className="psf-label">Furnished status</p>
                 <label className="psf-checkbox">
-                  <input type="checkbox" checked={filterFurnished} onChange={(e) => setFilterFurnished(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={filterFurnished}
+                    onChange={(e) => setFilterFurnished(e.target.checked)}
+                  />
                   <span>Yes</span>
                 </label>
                 <label className="psf-checkbox">
-                  <input type="checkbox" checked={filterUnfurnished} onChange={(e) => setFilterUnfurnished(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={filterUnfurnished}
+                    onChange={(e) => setFilterUnfurnished(e.target.checked)}
+                  />
                   <span>No</span>
                 </label>
               </div>
 
-              <button className="psf-readmore" onClick={resetFilters}>Reset All Filters</button>
+              <button className="psf-readmore" onClick={resetFilters}>
+                Reset All Filters
+              </button>
             </aside>
 
             <div>
@@ -436,24 +617,35 @@ export default function PropertyPage() {
 
                 {/* ── CUSTOM DROPDOWN (fixes overflow) ── */}
                 <div className="pp-sort-dropdown" ref={sortRef}>
-                  <button className="pp-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                  <button
+                    className="pp-sort-btn"
+                    onClick={() => setIsSortOpen((v) => !v)}
+                  >
                     {sortLabel[sort]}
-                    <FiChevronDown size={14} style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                    <FiChevronDown
+                      size={14}
+                      style={{
+                        transform: isSortOpen ? "rotate(180deg)" : "none",
+                        transition: "transform 0.2s",
+                      }}
+                    />
                   </button>
                   {isSortOpen && (
                     <div className="pp-sort-menu">
-                      {(["newest", "featured", "rating"] as const).map((key) => (
-                        <div
-                          key={key}
-                          className={`pp-sort-option${sort === key ? " active" : ""}`}
-                          onClick={() => {
-                            setSort(key);
-                            setIsSortOpen(false);
-                          }}
-                        >
-                          {sortLabel[key]}
-                        </div>
-                      ))}
+                      {(["newest", "featured", "rating"] as const).map(
+                        (key) => (
+                          <div
+                            key={key}
+                            className={`pp-sort-option${sort === key ? " active" : ""}`}
+                            onClick={() => {
+                              setSort(key);
+                              setIsSortOpen(false);
+                            }}
+                          >
+                            {sortLabel[key]}
+                          </div>
+                        ),
+                      )}
                     </div>
                   )}
                 </div>
@@ -482,20 +674,53 @@ export default function PropertyPage() {
                   displayed.map((l) => {
                     const isFav = !!favorites[l.id];
                     return (
-                      <Link key={l.id} href={`/category/rent-and-real-estate/${l.id}`} className="pp-card">
+                      <Link
+                        key={l.id}
+                        href={`/category/rent-and-real-estate/${l.id}`}
+                        className="pp-card"
+                      >
                         <div className="pp-card-img-wrap">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={l.image} alt={l.title} className="pp-card-img" />
+                          <img
+                            src={l.image}
+                            alt={l.title}
+                            className="pp-card-img"
+                          />
                           <div className="pp-card-badges">
-                            <span className={`pp-badge pp-badge-${l.purpose.toLowerCase()}`}>
+                            <span
+                              className={`pp-badge pp-badge-${l.purpose.toLowerCase()}`}
+                            >
                               {l.purpose}
                             </span>
                           </div>
                           {l.isFurnished && (
-                            <span className="pp-badge-furnished">Full Furnished</span>
+                            <span className="pp-badge-furnished">
+                              Full Furnished
+                            </span>
                           )}
-                          <button className="pp-heart" aria-label="Save" onClick={(e) => toggleFav(l.id, e)}>
-                            {isFav ? <FaHeart size={16} color="#E74C3C" /> : <FiHeart size={16} color="#999" />}
+                          <button
+                            type="button"
+                            className="pp-heart"
+                            aria-label="Save property"
+                            title="Save property"
+                            onClick={(e) => toggleFav(l.id, e)}
+                          >
+                            {isFav ? (
+                              <FaHeart size={16} color="#E74C3C" />
+                            ) : (
+                              <FiHeart size={16} color="#999" />
+                            )}
+                          </button>
+
+                          {/* Share */}
+                          <button
+                            type="button"
+                            className="pp-share"
+                            aria-label={`Share ${l.title}`}
+                            title="Share property"
+                            onClick={(e) => shareProperty(l, e)}
+                          >
+                            <FiShare2 size={16} />
                           </button>
                         </div>
                         <div className="pp-card-body">
@@ -512,9 +737,13 @@ export default function PropertyPage() {
                           </div>
                           <div className="pp-card-rating">
                             <StarRating rating={l.rating} />
-                            <span className="pp-card-reviews">({l.reviews} Reviews)</span>
+                            <span className="pp-card-reviews">
+                              ({l.reviews} Reviews)
+                            </span>
                           </div>
-                          <button className="pp-btn-details">View Details</button>
+                          <button className="pp-btn-details">
+                            View Details
+                          </button>
                         </div>
                       </Link>
                     );

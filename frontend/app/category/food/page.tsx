@@ -5,13 +5,19 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import { api } from "@/lib/api";
 import { toFoodsCard, FOOD_TYPE_LABEL } from "@/lib/adapters/foodsAdapter";
-import type { FoodsListing, FoodsCard, FoodType, WeekDay } from "@/app/types/foods";
+import type {
+  FoodsListing,
+  FoodsCard,
+  FoodType,
+  WeekDay,
+} from "@/app/types/foods";
 import {
   FiSearch,
   FiChevronDown,
   FiChevronRight,
   FiCheckCircle,
   FiHeart,
+  FiShare2,
 } from "react-icons/fi";
 import {
   FaUtensils,
@@ -24,7 +30,11 @@ import {
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 
-type PriceRange = "Under Rs.100" | "Rs.100 - Rs.200" | "Rs.200 - Rs.500" | "Above Rs.500";
+type PriceRange =
+  | "Under Rs.100"
+  | "Rs.100 - Rs.200"
+  | "Rs.200 - Rs.500"
+  | "Above Rs.500";
 
 const PRICE_RANGES: PriceRange[] = [
   "Under Rs.100",
@@ -43,12 +53,34 @@ const FOOD_TYPE_ICON: Record<FoodType, { icon: IconType; color: string }> = {
   WHOLESALE: { icon: FaWarehouse, color: "#1d4ed8" },
 };
 
-const FOOD_TYPE_ORDER: FoodType[] = ["TIFFIN", "BAKERY", "DAIRY", "MEAT", "ORGANIC", "HOME_COOK", "WHOLESALE"];
+const FOOD_TYPE_ORDER: FoodType[] = [
+  "TIFFIN",
+  "BAKERY",
+  "DAIRY",
+  "MEAT",
+  "ORGANIC",
+  "HOME_COOK",
+  "WHOLESALE",
+];
 
 const DAY_LABEL: Record<WeekDay, string> = {
-  MON: "Mon", TUE: "Tue", WED: "Wed", THU: "Thu", FRI: "Fri", SAT: "Sat", SUN: "Sun",
+  MON: "Mon",
+  TUE: "Tue",
+  WED: "Wed",
+  THU: "Thu",
+  FRI: "Fri",
+  SAT: "Sat",
+  SUN: "Sun",
 };
-const DAYS_OF_WEEK: WeekDay[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+const DAYS_OF_WEEK: WeekDay[] = [
+  "MON",
+  "TUE",
+  "WED",
+  "THU",
+  "FRI",
+  "SAT",
+  "SUN",
+];
 
 const parsePrice = (priceStr: string): number => {
   const match = priceStr.replace(/,/g, "").match(/\d+/);
@@ -63,7 +95,9 @@ export default function FoodDeliveryPage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"newest" | "price-low">("newest");
   const [selectedFoodTypes, setSelectedFoodTypes] = useState<FoodType[]>([]);
-  const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>([]);
+  const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>(
+    [],
+  );
   const [selectedDays, setSelectedDays] = useState<WeekDay[]>([]);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
 
@@ -76,27 +110,30 @@ export default function FoodDeliveryPage() {
         if (!cancelled) setRawListings(data);
       } catch (err) {
         console.error("Failed to load food listings:", err);
-        if (!cancelled) setError("Couldn't load restaurants right now. Please try again.");
+        if (!cancelled)
+          setError("Couldn't load restaurants right now. Please try again.");
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const toggleFoodType = (ft: FoodType) =>
     setSelectedFoodTypes((prev) =>
-      prev.includes(ft) ? prev.filter((x) => x !== ft) : [...prev, ft]
+      prev.includes(ft) ? prev.filter((x) => x !== ft) : [...prev, ft],
     );
 
   const togglePriceRange = (pr: PriceRange) =>
     setSelectedPriceRanges((prev) =>
-      prev.includes(pr) ? prev.filter((x) => x !== pr) : [...prev, pr]
+      prev.includes(pr) ? prev.filter((x) => x !== pr) : [...prev, pr],
     );
 
   const toggleDay = (day: WeekDay) =>
     setSelectedDays((prev) =>
-      prev.includes(day) ? prev.filter((x) => x !== day) : [...prev, day]
+      prev.includes(day) ? prev.filter((x) => x !== day) : [...prev, day],
     );
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
@@ -104,7 +141,39 @@ export default function FoodDeliveryPage() {
     e.stopPropagation();
     setFavorites((p) => ({ ...p, [id]: !p[id] }));
   };
+  const shareFood = async (item: FoodsCard, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
 
+    const foodUrl = `${window.location.origin}/category/food/${item.id}`;
+
+    const shareData = {
+      title: item.title,
+      text: `Check out ${item.title} on HamroCart.`,
+      url: foodUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(foodUrl);
+        alert("Food listing link copied!");
+        return;
+      }
+
+      window.prompt("Copy food listing link:", foodUrl);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
+      console.error("Food share failed:", error);
+    }
+  };
   const reset = () => {
     setSelectedFoodTypes([]);
     setSelectedPriceRanges([]);
@@ -112,16 +181,23 @@ export default function FoodDeliveryPage() {
     setSearch("");
   };
 
-  const categoryCounts: Record<FoodType, number> = FOOD_TYPE_ORDER.reduce((acc, ft) => {
-    acc[ft] = rawListings.filter((l) => l.foods?.foodType === ft).length;
-    return acc;
-  }, {} as Record<FoodType, number>);
+  const categoryCounts: Record<FoodType, number> = FOOD_TYPE_ORDER.reduce(
+    (acc, ft) => {
+      acc[ft] = rawListings.filter((l) => l.foods?.foodType === ft).length;
+      return acc;
+    },
+    {} as Record<FoodType, number>,
+  );
 
   const filteredRaw = rawListings.filter((l) => {
     if (!l.foods) return false;
     const s = search.toLowerCase();
     if (s && !l.title.toLowerCase().includes(s)) return false;
-    if (selectedFoodTypes.length && !selectedFoodTypes.includes(l.foods.foodType)) return false;
+    if (
+      selectedFoodTypes.length &&
+      !selectedFoodTypes.includes(l.foods.foodType)
+    )
+      return false;
 
     if (selectedPriceRanges.length) {
       const price = l.foods.price;
@@ -136,14 +212,16 @@ export default function FoodDeliveryPage() {
     }
 
     if (selectedDays.length) {
-      if (!l.foods.deliveryDays?.some((d) => selectedDays.includes(d))) return false;
+      if (!l.foods.deliveryDays?.some((d) => selectedDays.includes(d)))
+        return false;
     }
 
     return true;
   });
 
   const sortedRaw = [...filteredRaw].sort((a, b) => {
-    if (sort === "price-low") return (a.foods?.price ?? 0) - (b.foods?.price ?? 0);
+    if (sort === "price-low")
+      return (a.foods?.price ?? 0) - (b.foods?.price ?? 0);
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
@@ -421,6 +499,14 @@ export default function FoodDeliveryPage() {
           transition: transform 0.15s; padding: 0; z-index: 2;
         }
         .fd-card-fav:hover { transform: scale(1.15); }
+        
+        .fd-card-share { width: 30px; height: 30px; border-radius: 50%;
+          background: rgba(255,255,255,0.94);  border: none;  display: flex;
+          align-items: center;  justify-content: center;  cursor: pointer;  padding: 0;
+          box-shadow: 0 1px 6px rgba(0,0,0,0.15);  transition:transform 0.15s, background 0.15s, color 0.15s;}
+        .fd-card-share:hover {transform: scale(1.15); background: #fff;}
+        .fd-card-share { color: #64748b;}
+        .fd-card-share:hover {color: #e11d48;}
 
         .fd-card-badges {
           position: absolute; top: 8px; left: 8px;
@@ -496,14 +582,17 @@ export default function FoodDeliveryPage() {
       `}</style>
 
       <div className="fd-wrap">
-
         {/* HERO */}
         <section className="fd-hero">
           <div className="fd-hero-bg" />
           <div className="fd-hero-overlay" />
           <div className="fd-hero-inner">
             <h1>Food & Home Delivery in Nepal</h1>
-            <p>Discover the best Food & Home Delivery and<br />Delicious food around you.</p>
+            <p>
+              Discover the best Food & Home Delivery and
+              <br />
+              Delicious food around you.
+            </p>
             <div className="fd-search-wrap">
               <FiSearch className="fd-search-icon" size={16} />
               <input
@@ -523,7 +612,8 @@ export default function FoodDeliveryPage() {
             <div className="fd-cats-row">
               {FOOD_TYPE_ORDER.map((ft) => {
                 const meta = FOOD_TYPE_ICON[ft];
-                const active = selectedFoodTypes.length === 1 && selectedFoodTypes[0] === ft;
+                const active =
+                  selectedFoodTypes.length === 1 && selectedFoodTypes[0] === ft;
                 return (
                   <button
                     key={ft}
@@ -535,7 +625,9 @@ export default function FoodDeliveryPage() {
                     </span>
                     <span>
                       <span className="fd-cat-name">{FOOD_TYPE_LABEL[ft]}</span>
-                      <span className="fd-cat-count">{categoryCounts[ft]} listings</span>
+                      <span className="fd-cat-count">
+                        {categoryCounts[ft]} listings
+                      </span>
                     </span>
                   </button>
                 );
@@ -546,7 +638,6 @@ export default function FoodDeliveryPage() {
 
         {/* BODY */}
         <div className="fd-body">
-
           {/* SIDEBAR */}
           <aside className="fd-sidebar">
             <div className="fd-sb-head">Filter</div>
@@ -557,10 +648,24 @@ export default function FoodDeliveryPage() {
               {FOOD_TYPE_ORDER.map((ft) => {
                 const meta = FOOD_TYPE_ICON[ft];
                 return (
-                  <div key={ft} className="fd-check-row" onClick={() => toggleFoodType(ft)}>
-                    <div className={`fd-radio${selectedFoodTypes.includes(ft) ? " checked" : ""}`} />
-                    <span className={`fd-check-label${selectedFoodTypes.includes(ft) ? " checked" : ""}`}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <div
+                    key={ft}
+                    className="fd-check-row"
+                    onClick={() => toggleFoodType(ft)}
+                  >
+                    <div
+                      className={`fd-radio${selectedFoodTypes.includes(ft) ? " checked" : ""}`}
+                    />
+                    <span
+                      className={`fd-check-label${selectedFoodTypes.includes(ft) ? " checked" : ""}`}
+                    >
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
                         <meta.icon size={13} color={meta.color} />
                         {FOOD_TYPE_LABEL[ft]}
                       </span>
@@ -573,11 +678,28 @@ export default function FoodDeliveryPage() {
             {/* Price Range */}
             <div className="fd-sb-section">
               <p className="fd-sb-title">Price range</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 4px" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "8px 4px",
+                }}
+              >
                 {PRICE_RANGES.map((pr) => (
-                  <div key={pr} className="fd-check-row" onClick={() => togglePriceRange(pr)}>
-                    <div className={`fd-radio${selectedPriceRanges.includes(pr) ? " checked" : ""}`} />
-                    <span className={`fd-check-label${selectedPriceRanges.includes(pr) ? " checked" : ""}`} style={{ fontSize: 11 }}>{pr}</span>
+                  <div
+                    key={pr}
+                    className="fd-check-row"
+                    onClick={() => togglePriceRange(pr)}
+                  >
+                    <div
+                      className={`fd-radio${selectedPriceRanges.includes(pr) ? " checked" : ""}`}
+                    />
+                    <span
+                      className={`fd-check-label${selectedPriceRanges.includes(pr) ? " checked" : ""}`}
+                      style={{ fontSize: 11 }}
+                    >
+                      {pr}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -606,19 +728,30 @@ export default function FoodDeliveryPage() {
                 <select
                   className="fd-sort-select"
                   value={sort}
-                  onChange={(e) => setSort(e.target.value as "newest" | "price-low")}
+                  onChange={(e) =>
+                    setSort(e.target.value as "newest" | "price-low")
+                  }
                 >
                   <option value="newest">Newest</option>
                   <option value="price-low">Price: Low to High</option>
                 </select>
                 <FiChevronDown
                   size={12}
-                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#666" }}
+                  style={{
+                    position: "absolute",
+                    right: 8,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    pointerEvents: "none",
+                    color: "#666",
+                  }}
                 />
               </div>
             </div>
 
-            <button className="fd-more-btn" onClick={reset}>Reset Filters</button>
+            <button className="fd-more-btn" onClick={reset}>
+              Reset Filters
+            </button>
           </aside>
 
           {/* MAIN */}
@@ -632,14 +765,23 @@ export default function FoodDeliveryPage() {
                 <select
                   className="fd-sort"
                   value={sort}
-                  onChange={(e) => setSort(e.target.value as "newest" | "price-low")}
+                  onChange={(e) =>
+                    setSort(e.target.value as "newest" | "price-low")
+                  }
                 >
                   <option value="newest">Newest</option>
                   <option value="price-low">Price: Low to High</option>
                 </select>
                 <FiChevronDown
                   size={12}
-                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#666" }}
+                  style={{
+                    position: "absolute",
+                    right: 8,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    pointerEvents: "none",
+                    color: "#666",
+                  }}
                 />
               </div>
             </div>
@@ -647,41 +789,96 @@ export default function FoodDeliveryPage() {
             {/* Loading */}
             {loading && (
               <div className="fd-empty">
-                <p style={{ fontWeight: 700, fontSize: 15, color: "#111", margin: 0 }}>Loading restaurants…</p>
+                <p
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 15,
+                    color: "#111",
+                    margin: 0,
+                  }}
+                >
+                  Loading restaurants…
+                </p>
               </div>
             )}
 
             {/* Error */}
             {!loading && error && (
               <div className="fd-empty">
-                <p style={{ fontWeight: 700, fontSize: 15, color: "#dc2626", margin: "0 0 4px" }}>{error}</p>
+                <p
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 15,
+                    color: "#dc2626",
+                    margin: "0 0 4px",
+                  }}
+                >
+                  {error}
+                </p>
               </div>
             )}
 
             {/* Cards */}
             {!loading && !error && cards.length === 0 && (
               <div className="fd-empty">
-                <p style={{ fontWeight: 700, fontSize: 15, color: "#111", margin: 0 }}>Loading restaurants...</p>
+                <p
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 15,
+                    color: "#111",
+                    margin: 0,
+                  }}
+                >
+                  Loading restaurants...
+                </p>
               </div>
             )}
 
             {/* Error */}
             {!loading && error && (
               <div className="fd-empty">
-                <p style={{ fontWeight: 700, fontSize: 15, color: "#dc2626", margin: "0 0 4px" }}>{error}</p>
+                <p
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 15,
+                    color: "#dc2626",
+                    margin: "0 0 4px",
+                  }}
+                >
+                  {error}
+                </p>
               </div>
             )}
 
             {/* Cards */}
             {!loading && !error && cards.length === 0 && (
               <div className="fd-empty">
-                <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}>
+                <div
+                  style={{
+                    marginBottom: 12,
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
                   <FaUtensils size={48} color="#d1d5db" />
                 </div>
-                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No restaurants found</p>
-                <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters or search term</span>
+                <p
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 16,
+                    color: "#111",
+                    margin: "0 0 4px",
+                  }}
+                >
+                  No restaurants found
+                </p>
+                <span style={{ fontSize: 13, color: "#888" }}>
+                  Try adjusting your filters or search term
+                </span>
                 <br />
-                <button className="fd-empty-btn" onClick={reset}>Reset Filters</button>
+                <button className="fd-empty-btn" onClick={reset}>
+                  Reset Filters
+                </button>
               </div>
             )}
 
@@ -697,17 +894,52 @@ export default function FoodDeliveryPage() {
                         style={{ display: "block", textDecoration: "none" }}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={item.thumb} alt={item.title} className="fd-card-img" />
+                        <img
+                          src={item.thumb}
+                          alt={item.title}
+                          className="fd-card-img"
+                        />
 
                         <div className="fd-card-badges">
-                          {item.isVerified && <span className="fd-card-badge fd-badge-verified"><FiCheckCircle size={9} style={{ marginRight: 3 }} />Verified</span>}
-                          {item.isFeatured && <span className="fd-card-badge fd-badge-featured">Featured</span>}
+                          {item.isVerified && (
+                            <span className="fd-card-badge fd-badge-verified">
+                              <FiCheckCircle
+                                size={9}
+                                style={{ marginRight: 3 }}
+                              />
+                              Verified
+                            </span>
+                          )}
+                          {item.isFeatured && (
+                            <span className="fd-card-badge fd-badge-featured">
+                              Featured
+                            </span>
+                          )}
                         </div>
 
-                        <button className="fd-card-fav" onClick={(e) => toggleFav(item.id, e)}>
-                          {isFav
-                            ? <FaHeart size={12} color="#ef4444" />
-                            : <FiHeart size={12} color="#9ca3af" />}
+                        <button
+                          type="button"
+                          className="fd-card-fav"
+                          onClick={(e) => toggleFav(item.id, e)}
+                          aria-label="Save food listing"
+                          title="Save"
+                        >
+                          {isFav ? (
+                            <FaHeart size={12} color="#ef4444" />
+                          ) : (
+                            <FiHeart size={12} color="#9ca3af" />
+                          )}
+                        </button>
+
+                        {/* Share */}
+                        <button
+                          type="button"
+                          className="fd-card-share"
+                          onClick={(e) => shareFood(item, e)}
+                          aria-label={`Share ${item.title}`}
+                          title="Share"
+                        >
+                          <FiShare2 size={13} />
                         </button>
                       </Link>
 
@@ -718,11 +950,16 @@ export default function FoodDeliveryPage() {
                           <span className="fd-card-price">{item.price}</span>
                         </div>
                         <span className="fd-card-posted">
-                          {item.postedDaysAgo === 0 ? "Posted today" : `Posted ${item.postedDaysAgo}d ago`}
+                          {item.postedDaysAgo === 0
+                            ? "Posted today"
+                            : `Posted ${item.postedDaysAgo}d ago`}
                         </span>
 
                         <div className="fd-card-actions">
-                          <Link href={`/category/food/${item.id}`} className="fd-btn-order">
+                          <Link
+                            href={`/category/food/${item.id}`}
+                            className="fd-btn-order"
+                          >
                             View Details
                           </Link>
                         </div>

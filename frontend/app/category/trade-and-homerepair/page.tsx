@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiHeart, FiCheck, FiChevronDown, FiTool, FiLoader, FiAlertTriangle } from "react-icons/fi";
+import { FiSearch, FiMapPin, FiHeart, FiCheck, FiChevronDown, FiTool, FiLoader, FiAlertTriangle, FiShare2, } from "react-icons/fi";
 import { FaHeart, FaStar, FaHammer } from "react-icons/fa";
 import { MdHandyman, MdConstruction, MdPlumbing, MdElectricalServices, MdFormatPaint, MdCleaningServices } from "react-icons/md";
 import { api } from "@/lib/api";
@@ -96,6 +96,50 @@ export default function TradeAndHomeRepairPage() {
     setFavorites((p) => ({ ...p, [id]: !p[id] }));
   };
 
+  const shareTrade = async (
+    listing: TradesCard,
+    e: React.MouseEvent
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const tradeUrl =
+      `${window.location.origin}/category/trade-and-homerepair/${listing.id}`;
+
+    const shareData = {
+      title: listing.title,
+      text: `Check out ${listing.title} on HamroNepal Bazaar.`,
+      url: tradeUrl,
+    };
+
+    try {
+      // Mobile / supported browsers
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      // Desktop fallback
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(tradeUrl);
+        alert("Service link copied!");
+        return;
+      }
+
+      // Final fallback
+      window.prompt("Copy service link:", tradeUrl);
+    } catch (error) {
+      // User cancelled share dialog
+      if (
+        error instanceof DOMException &&
+        error.name === "AbortError"
+      ) {
+        return;
+      }
+
+      console.error("Trade share failed:", error);
+    }
+  };
   const reset = () => {
     setCity("");
     setActiveTag("All");
@@ -366,6 +410,10 @@ export default function TradeAndHomeRepairPage() {
           position: absolute; top: 9px; left: 9px;
           display: flex; flex-direction: column; gap: 4px;
         }
+          .th-heart,.th-share { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); border: none; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center;box-shadow: 0 2px 10px rgba(0,0,0,0.16); transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;}
+          .th-heart:hover,.th-share:hover { transform: scale(1.15); background: #fff;}
+          .th-share {  color: #777;}
+          .th-share:hover {  color: #b45309;}
         .th-badge-verified {
           display: inline-flex; align-items: center; gap: 4px;
           background: #fef3c7; color: #b45309; border: 1px solid #fcd34d;
@@ -452,9 +500,8 @@ export default function TradeAndHomeRepairPage() {
                 {topTags.map((tag) => (
                   <button
                     key={tag}
-                    className={`th-cat-card${
-                      activeTag === tag ? " active" : ""
-                    }`}
+                    className={`th-cat-card${activeTag === tag ? " active" : ""
+                      }`}
                     onClick={() =>
                       setActiveTag(activeTag === tag ? "All" : tag)
                     }
@@ -508,9 +555,8 @@ export default function TradeAndHomeRepairPage() {
                   <p className="thf-label">Skill</p>
                   <div className="thf-chips">
                     <button
-                      className={`thf-chip${
-                        activeTag === "All" ? " active" : ""
-                      }`}
+                      className={`thf-chip${activeTag === "All" ? " active" : ""
+                        }`}
                       onClick={() => setActiveTag("All")}
                     >
                       All
@@ -518,9 +564,8 @@ export default function TradeAndHomeRepairPage() {
                     {topTags.map((tag) => (
                       <button
                         key={tag}
-                        className={`thf-chip${
-                          activeTag === tag ? " active" : ""
-                        }`}
+                        className={`thf-chip${activeTag === tag ? " active" : ""
+                          }`}
                         onClick={() => setActiveTag(tag)}
                       >
                         {tag}
@@ -556,9 +601,8 @@ export default function TradeAndHomeRepairPage() {
                 {/* ---------- custom sort dropdown ---------- */}
                 <div className="th-sort-dropdown" ref={sortRef}>
                   <button
-                    className={`th-sort-trigger${
-                      sortOpen ? " open" : ""
-                    }`}
+                    className={`th-sort-trigger${sortOpen ? " open" : ""
+                      }`}
                     onClick={() => setSortOpen(!sortOpen)}
                   >
                     {SORT_OPTIONS.find((o) => o.value === sort)?.label}
@@ -569,9 +613,8 @@ export default function TradeAndHomeRepairPage() {
                       {SORT_OPTIONS.map((opt) => (
                         <button
                           key={opt.value}
-                          className={`th-sort-item${
-                            sort === opt.value ? " active" : ""
-                          }`}
+                          className={`th-sort-item${sort === opt.value ? " active" : ""
+                            }`}
                           onClick={() => {
                             setSort(opt.value as typeof sort);
                             setSortOpen(false);
@@ -624,9 +667,12 @@ export default function TradeAndHomeRepairPage() {
                             <span className="th-card-icon">
                               {iconForTag(l.skillTags[0] ?? "")}
                             </span>
+                            {/* Favorite */}
                             <button
+                              type="button"
                               className="th-heart"
-                              aria-label="Save"
+                              aria-label="Save service"
+                              title="Save service"
                               onClick={(e) => toggleFav(l.id, e)}
                             >
                               {isFav ? (
@@ -634,6 +680,17 @@ export default function TradeAndHomeRepairPage() {
                               ) : (
                                 <FiHeart size={15} color="#999" />
                               )}
+                            </button>
+
+                            {/* Share */}
+                            <button
+                              type="button"
+                              className="th-share"
+                              aria-label={`Share ${l.title}`}
+                              title="Share service"
+                              onClick={(e) => shareTrade(l, e)}
+                            >
+                              <FiShare2 size={15} />
                             </button>
                           </div>
 
