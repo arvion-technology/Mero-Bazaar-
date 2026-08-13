@@ -1,13 +1,17 @@
 import { Injectable, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { OrderType, OrderStatus, ListingStatus, PaymentMethod } from '@prisma/client';
+import { OrderType, OrderStatus, ListingStatus, PaymentMethod, DisputeStatus } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const RESERVATION_MINUTES = 15;
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   // Vehicle / SecondHand / Rental deposit / Livestock
     async reserveListing(listingId: string, buyerId: string) {
@@ -129,6 +133,36 @@ export class OrdersService {
     }
   });
 }
+
+  async raiseDispute(orderId: string, userId: string, reason: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { listing: { select: { title: true } } },
+    });
+    if (!order) throw new NotFoundException('Order not found.');
+    if (order.userId !== userId) throw new ForbiddenException('Not your order.');
+
+    if (order.disputeStatus !== 'NONE') {
+      throw new ConflictException(`Dispute already ${order.disputeStatus.toLowerCase()} for this order.`);
+    }
+
+    const updated = await this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        disputeStatus: DisputeStatus.OPEN,
+        disputeReason: reason,
+      },
+    });
+
+    await this.notificationsService.notifyAllAdmins({
+      category: 'SYSTEM',
+      type: 'DISPUTE_OPENED',
+      title: 'Payment dispute opened',
+      description: `A dispute was opened on order for "${order.listing.title}".`,
+    });
+
+    return updated;
+  }
 
   async getMyOrders(buyerId: string) {
     return this.prisma.order.findMany({

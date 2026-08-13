@@ -10,6 +10,7 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
 import { Response } from 'express';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class VendorKycService {
@@ -18,6 +19,7 @@ export class VendorKycService {
     private phoneOtpService: PhoneOtpService,
     private fileValidationService: FileValidationService,
     private fileSanitizeService: FileSanitizeService,
+    private notificationService: NotificationsService,
   ) {}
 
   private async processUpload(
@@ -103,6 +105,13 @@ export class VendorKycService {
           reviewedBy: null,
         },
       });
+
+      await this.notificationService.notifyAllAdmins({
+        category: 'SYSTEM',
+        type: 'KYC_SUBMITTED',
+        title: 'New KYC submission',
+        description: `${kyc.fullName} submitted KYC for review.`,
+      })
 
       return { message: 'KYC submitted successfully.', kyc };
     } catch (e) {

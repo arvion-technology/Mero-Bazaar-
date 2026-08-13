@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ListingCategory, ListingStatus } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const DETAIL_SELECT = {
   id: true,
@@ -28,7 +29,10 @@ const DETAIL_SELECT = {
 
 @Injectable()
 export class AdminListingService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async listListings(category?: ListingCategory, status?: ListingStatus) {
     return this.prisma.listing.findMany({
@@ -99,6 +103,13 @@ export class AdminListingService {
     if (!listing) throw new NotFoundException('Listing not found.');
 
     await this.prisma.listing.delete({ where: { id } });
+
+    await this.notificationsService.notifyAllAdmins({
+      category: 'SYSTEM',
+      type: 'LISTING_DELETED',
+      title: 'Listing deleted',
+      description: `"${listing.title}" was removed.`,
+    });
     return { id, deleted: true };
   }
 }

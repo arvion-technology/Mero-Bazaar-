@@ -51,4 +51,20 @@ export class NotificationsService {
     });
     return { count };
   }
+
+  async notifyAllAdmins(data: { category: NotificationCategory; type: string; title: string; description: string }) {
+    const admins = await this.prisma.user.findMany({
+      where: { role: 'ADMIN' },
+      select: { id: true },
+    });
+
+    if (admins.length === 0) return;
+
+    await this.prisma.notification.createMany({
+      data: admins.map((admin) => ({
+        userId: admin.id,
+        ...data,
+      })),
+    });
+  }
 }

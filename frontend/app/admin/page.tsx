@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { FiBell, FiChevronRight, FiMenu, FiLogOut } from "react-icons/fi";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import type { VendorKycRecord } from "../types/kyc";
+import AdminNotificationBell from "@/components/admin/AdminNotificationBell";
 
 const PRIMARY = "#0f172a";
 const SITE_PRIMARY = "#C0392B";
@@ -206,10 +207,7 @@ export default function AdminDashboard() {
               <h1 className="admin-topbar-title">Admin Dashboard</h1>
             </div>
             <div className="admin-topbar-right">
-              <button type="button" className="admin-icon-btn">
-                <FiBell size={20} />
-                <span className="admin-badge">1</span>
-              </button>
+              <AdminNotificationBell bg={BG} />
               <div className="admin-avatar-wrap">
                 <button type="button" className="admin-avatar-btn" onClick={() => setShowAvatarDropdown((v) => !v)}>
                   <div className="admin-avatar-circle">
