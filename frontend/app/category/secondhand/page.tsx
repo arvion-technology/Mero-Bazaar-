@@ -4,7 +4,11 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { api } from "@/lib/api";
-import type { SecondhandListing, SecondHandCategory, SecondhandCondition } from "@/app/types/secondhand";
+import type {
+  SecondhandListing,
+  SecondHandCategory,
+  SecondhandCondition,
+} from "@/app/types/secondhand";
 import {
   FiSearch,
   FiMapPin,
@@ -17,6 +21,7 @@ import {
   FiLoader,
   FiAlertTriangle,
   FiShoppingBag,
+  FiShare2,
 } from "react-icons/fi";
 import {
   FaHeart,
@@ -36,12 +41,48 @@ const CATEGORY_ICONS: {
   color: string;
   bg: string;
 }[] = [
-  { name: "Clothing", value: "CLOTHING", icon: FaTshirt, color: "#e11d48", bg: "#fff1f2" },
-  { name: "Furniture", value: "FURNITURE", icon: FaCouch, color: "#b45309", bg: "#fffbeb" },
-  { name: "Books", value: "BOOKS", icon: FaBook, color: "#1d4ed8", bg: "#eff6ff" },
-  { name: "Appliances", value: "APPLIANCES", icon: FaBlender, color: "#0f766e", bg: "#f0fdfa" },
-  { name: "Sports", value: "SPORTS", icon: FaFutbol, color: "#15803d", bg: "#f0fdf4" },
-  { name: "Baby", value: "BABY", icon: FaBaby, color: "#7c3aed", bg: "#faf5ff" },
+  {
+    name: "Clothing",
+    value: "CLOTHING",
+    icon: FaTshirt,
+    color: "#e11d48",
+    bg: "#fff1f2",
+  },
+  {
+    name: "Furniture",
+    value: "FURNITURE",
+    icon: FaCouch,
+    color: "#b45309",
+    bg: "#fffbeb",
+  },
+  {
+    name: "Books",
+    value: "BOOKS",
+    icon: FaBook,
+    color: "#1d4ed8",
+    bg: "#eff6ff",
+  },
+  {
+    name: "Appliances",
+    value: "APPLIANCES",
+    icon: FaBlender,
+    color: "#0f766e",
+    bg: "#f0fdfa",
+  },
+  {
+    name: "Sports",
+    value: "SPORTS",
+    icon: FaFutbol,
+    color: "#15803d",
+    bg: "#f0fdf4",
+  },
+  {
+    name: "Baby",
+    value: "BABY",
+    icon: FaBaby,
+    color: "#7c3aed",
+    bg: "#faf5ff",
+  },
 ];
 
 type Condition = "Like New" | "Good" | "Fair" | "For parts";
@@ -49,8 +90,8 @@ const CONDITIONS: Condition[] = ["Like New", "Good", "Fair", "For parts"];
 
 const CONDITION_TO_DB: Record<Condition, SecondhandCondition> = {
   "Like New": "LIKE_NEW",
-  "Good": "GOOD",
-  "Fair": "FAIR",
+  Good: "GOOD",
+  Fair: "FAIR",
   "For parts": "FOR_PARTS",
 };
 const CONDITION_FROM_DB: Record<SecondhandCondition, Condition> = {
@@ -60,14 +101,24 @@ const CONDITION_FROM_DB: Record<SecondhandCondition, Condition> = {
   FOR_PARTS: "For parts",
 };
 
-const CONDITION_BADGE: Record<Condition, { bg: string; color: string; dot: string }> = {
+const CONDITION_BADGE: Record<
+  Condition,
+  { bg: string; color: string; dot: string }
+> = {
   "Like New": { bg: "#dcfce7", color: "#15803d", dot: "#22c55e" },
-  "Good": { bg: "#d1fae5", color: "#065f46", dot: "#10b981" },
-  "Fair": { bg: "#fef3c7", color: "#92400e", dot: "#f59e0b" },
+  Good: { bg: "#d1fae5", color: "#065f46", dot: "#10b981" },
+  Fair: { bg: "#fef3c7", color: "#92400e", dot: "#f59e0b" },
   "For parts": { bg: "#fee2e2", color: "#991b1b", dot: "#ef4444" },
 };
 
-const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal"];
+const CITIES = [
+  "Kathmandu",
+  "Lalitpur",
+  "Bhaktapur",
+  "Pokhara",
+  "Chitwan",
+  "Butwal",
+];
 const PLACEHOLDER_IMG = "/placeholder-item.jpg";
 const IMG_BASE = process.env.NEXT_PUBLIC_API_URL;
 
@@ -85,7 +136,9 @@ export default function SecondhandPage() {
   const [sort, setSort] = useState("newest");
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
-  const [activeCategory, setActiveCategory] = useState<SecondHandCategory | "">("");
+  const [activeCategory, setActiveCategory] = useState<SecondHandCategory | "">(
+    "",
+  );
   const [selectedConditions, setSelectedConditions] = useState<Condition[]>([]);
   const [selectedCity, setSelectedCity] = useState("");
   const [priceRange, setPriceRange] = useState<number>(10000);
@@ -136,10 +189,45 @@ export default function SecondhandPage() {
     e.stopPropagation();
     setFavorites((p) => ({ ...p, [id]: !p[id] }));
   };
+  const shareSecondhand = async (
+    item: SecondhandListing,
+    e: React.MouseEvent,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
 
+    const itemUrl = `${window.location.origin}/category/secondhand/${item.id}`;
+
+    const shareData = {
+      title: item.title,
+      text: `Check out this secondhand item: ${item.title}`,
+      url: itemUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(itemUrl);
+        alert("Item link copied!");
+        return;
+      }
+
+      window.prompt("Copy item link:", itemUrl);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
+      console.error("Share failed:", error);
+    }
+  };
   const toggleCondition = (c: Condition) =>
     setSelectedConditions((prev) =>
-      prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]
+      prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
     );
 
   const nextImage = (id: string, total: number, e: React.MouseEvent) => {
@@ -151,7 +239,10 @@ export default function SecondhandPage() {
   const prevImage = (id: string, total: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setImageIndices((p) => ({ ...p, [id]: ((p[id] || 0) - 1 + total) % total }));
+    setImageIndices((p) => ({
+      ...p,
+      [id]: ((p[id] || 0) - 1 + total) % total,
+    }));
   };
 
   const reset = () => {
@@ -166,8 +257,11 @@ export default function SecondhandPage() {
   // a SECONDHAND-category listing missing this relation is a backend data issue,
   // not something this page should try to render.
   const withSecondhand = listings.filter(
-    (l): l is SecondhandListing & { secondhand: NonNullable<SecondhandListing["secondhand"]> } =>
-      l.secondhand != null
+    (
+      l,
+    ): l is SecondhandListing & {
+      secondhand: NonNullable<SecondhandListing["secondhand"]>;
+    } => l.secondhand != null,
   );
 
   const displayed = withSecondhand.filter((l) => {
@@ -178,10 +272,13 @@ export default function SecondhandPage() {
       !l.secondhand.city.toLowerCase().includes(s)
     )
       return false;
-    if (activeCategory && l.secondhand.category !== activeCategory) return false;
+    if (activeCategory && l.secondhand.category !== activeCategory)
+      return false;
     if (
       selectedConditions.length &&
-      !selectedConditions.map((c) => CONDITION_TO_DB[c]).includes(l.secondhand.condition)
+      !selectedConditions
+        .map((c) => CONDITION_TO_DB[c])
+        .includes(l.secondhand.condition)
     )
       return false;
     if (selectedCity && l.secondhand.city !== selectedCity) return false;
@@ -193,8 +290,10 @@ export default function SecondhandPage() {
   const sortedDisplayed = [...displayed].sort((a, b) => {
     if (sort === "newest")
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    if (sort === "price-low") return (a.secondhand.price ?? 0) - (b.secondhand.price ?? 0);
-    if (sort === "price-high") return (b.secondhand.price ?? 0) - (a.secondhand.price ?? 0);
+    if (sort === "price-low")
+      return (a.secondhand.price ?? 0) - (b.secondhand.price ?? 0);
+    if (sort === "price-high")
+      return (b.secondhand.price ?? 0) - (a.secondhand.price ?? 0);
     return 0;
   });
 
@@ -487,7 +586,14 @@ export default function SecondhandPage() {
           transition: transform 0.15s; padding: 0; z-index: 2;
         }
         .sh-card-fav:hover { transform: scale(1.15); }
-
+        .sh-card-share { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.94);
+         border: none; display: flex; align-items: center; 
+         justify-content: center; cursor: pointer; padding: 0; 
+         box-shadow: 0 1px 6px rgba(0,0,0,0.15);  transition:   
+         transform 0.15s,    background 0.15s,    color 0.15s;}
+        .sh-card-share:hover {  transform: scale(1.15);  background: #fff;}
+        .sh-card-share { color: #64748b;}
+        .sh-card-share:hover { color: #e11d48;}
         .sh-carousel-btn {
           position: absolute; top: 50%; transform: translateY(-50%);
           width: 26px; height: 26px; border-radius: 50%;
@@ -601,7 +707,6 @@ export default function SecondhandPage() {
       `}</style>
 
       <div className="sh-wrap">
-
         {/* ── HERO ── */}
         <section className="sh-hero">
           <div className="sh-hero-bg" />
@@ -637,7 +742,9 @@ export default function SecondhandPage() {
                   key={cat.value}
                   className={`sh-cat-card${activeCategory === cat.value ? " active" : ""}`}
                   onClick={() =>
-                    setActiveCategory(activeCategory === cat.value ? "" : cat.value)
+                    setActiveCategory(
+                      activeCategory === cat.value ? "" : cat.value,
+                    )
                   }
                 >
                   <span className="sh-cat-icon" style={{ color: cat.color }}>
@@ -646,7 +753,10 @@ export default function SecondhandPage() {
                   <span>
                     <span className="sh-cat-name">{cat.name}</span>
                     <span className="sh-cat-count">
-                      {withSecondhand.filter((l) => l.secondhand.category === cat.value).length.toLocaleString()} listings
+                      {withSecondhand
+                        .filter((l) => l.secondhand.category === cat.value)
+                        .length.toLocaleString()}{" "}
+                      listings
                     </span>
                   </span>
                 </button>
@@ -657,12 +767,13 @@ export default function SecondhandPage() {
 
         {/* ── BODY ── */}
         <div className="sh-body">
-
           {/* ── SIDEBAR ── */}
           <aside className="sh-sidebar">
             <div className="sh-sb-head">
               Filter
-              <button className="sh-sb-reset" onClick={reset}>Reset</button>
+              <button className="sh-sb-reset" onClick={reset}>
+                Reset
+              </button>
             </div>
 
             {/* Category */}
@@ -673,13 +784,21 @@ export default function SecondhandPage() {
                   key={cat.value}
                   className="sh-check-row"
                   onClick={() =>
-                    setActiveCategory(activeCategory === cat.value ? "" : cat.value)
+                    setActiveCategory(
+                      activeCategory === cat.value ? "" : cat.value,
+                    )
                   }
                 >
-                  <div className={`sh-checkbox${activeCategory === cat.value ? " checked" : ""}`}>
-                    {activeCategory === cat.value && <FiCheckCircle size={10} color="#fff" />}
+                  <div
+                    className={`sh-checkbox${activeCategory === cat.value ? " checked" : ""}`}
+                  >
+                    {activeCategory === cat.value && (
+                      <FiCheckCircle size={10} color="#fff" />
+                    )}
                   </div>
-                  <span className={`sh-check-label${activeCategory === cat.value ? " checked" : ""}`}>
+                  <span
+                    className={`sh-check-label${activeCategory === cat.value ? " checked" : ""}`}
+                  >
                     {cat.name}
                   </span>
                 </div>
@@ -690,11 +809,23 @@ export default function SecondhandPage() {
             <div className="sh-sb-section">
               <p className="sh-sb-title">Condition</p>
               {CONDITIONS.map((c) => (
-                <div key={c} className="sh-check-row" onClick={() => toggleCondition(c)}>
-                  <div className={`sh-checkbox${selectedConditions.includes(c) ? " checked" : ""}`}>
-                    {selectedConditions.includes(c) && <FiCheckCircle size={10} color="#fff" />}
+                <div
+                  key={c}
+                  className="sh-check-row"
+                  onClick={() => toggleCondition(c)}
+                >
+                  <div
+                    className={`sh-checkbox${selectedConditions.includes(c) ? " checked" : ""}`}
+                  >
+                    {selectedConditions.includes(c) && (
+                      <FiCheckCircle size={10} color="#fff" />
+                    )}
                   </div>
-                  <span className={`sh-check-label${selectedConditions.includes(c) ? " checked" : ""}`}>{c}</span>
+                  <span
+                    className={`sh-check-label${selectedConditions.includes(c) ? " checked" : ""}`}
+                  >
+                    {c}
+                  </span>
                 </div>
               ))}
             </div>
@@ -725,11 +856,17 @@ export default function SecondhandPage() {
                 onChange={(e) => setSelectedCity(e.target.value)}
               >
                 <option value="">Select City</option>
-                {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                {CITIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
               </select>
             </div>
 
-            <button className="sh-apply-btn" onClick={reset}>Apply Filters</button>
+            <button className="sh-apply-btn" onClick={reset}>
+              Apply Filters
+            </button>
           </aside>
 
           {/* ── MAIN ── */}
@@ -737,32 +874,41 @@ export default function SecondhandPage() {
             {/* Results bar */}
             <div className="sh-results-bar">
               <span className="sh-count">
-                <strong>{loading ? "…" : sortedDisplayed.length}</strong> results found
+                <strong>{loading ? "…" : sortedDisplayed.length}</strong>{" "}
+                results found
               </span>
 
               {/* ── CUSTOM SORT DROPDOWN (fixes overflow) ── */}
               <div className="sh-sort-dropdown" ref={sortRef}>
-                <button className="sh-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                <button
+                  className="sh-sort-btn"
+                  onClick={() => setIsSortOpen((v) => !v)}
+                >
                   {sortLabel[sort]}
                   <FiChevronDown
                     size={14}
-                    style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                    style={{
+                      transform: isSortOpen ? "rotate(180deg)" : "none",
+                      transition: "transform 0.2s",
+                    }}
                   />
                 </button>
                 {isSortOpen && (
                   <div className="sh-sort-menu">
-                    {(["newest", "price-low", "price-high"] as const).map((key) => (
-                      <div
-                        key={key}
-                        className={`sh-sort-option${sort === key ? " active" : ""}`}
-                        onClick={() => {
-                          setSort(key);
-                          setIsSortOpen(false);
-                        }}
-                      >
-                        {sortLabel[key]}
-                      </div>
-                    ))}
+                    {(["newest", "price-low", "price-high"] as const).map(
+                      (key) => (
+                        <div
+                          key={key}
+                          className={`sh-sort-option${sort === key ? " active" : ""}`}
+                          onClick={() => {
+                            setSort(key);
+                            setIsSortOpen(false);
+                          }}
+                        >
+                          {sortLabel[key]}
+                        </div>
+                      ),
+                    )}
                   </div>
                 )}
               </div>
@@ -787,13 +933,16 @@ export default function SecondhandPage() {
                 <p>Couldn&apos;t load listings</p>
                 <span>Something went wrong fetching data</span>
                 <br />
-                <button className="sh-empty-btn" onClick={loadListings}>Retry</button>
+                <button className="sh-empty-btn" onClick={loadListings}>
+                  Retry
+                </button>
               </div>
             )}
 
             {/* Cards */}
-            {!loading && !loadError && (
-              sortedDisplayed.length === 0 ? (
+            {!loading &&
+              !loadError &&
+              (sortedDisplayed.length === 0 ? (
                 <div className="sh-empty">
                   <div className="sh-empty-icon">
                     <FiShoppingBag size={48} />
@@ -801,16 +950,21 @@ export default function SecondhandPage() {
                   <p>No listings found</p>
                   <span>Try adjusting your filters or search term</span>
                   <br />
-                  <button className="sh-empty-btn" onClick={reset}>Reset Filters</button>
+                  <button className="sh-empty-btn" onClick={reset}>
+                    Reset Filters
+                  </button>
                 </div>
               ) : (
                 <div className="sh-grid">
                   {sortedDisplayed.map((item) => {
                     const isFav = !!favorites[item.id];
-                    const images = item.images?.length ? item.images : [PLACEHOLDER_IMG];
+                    const images = item.images?.length
+                      ? item.images
+                      : [PLACEHOLDER_IMG];
                     const currentImg = imageIndices[item.id] || 0;
                     const hasMultiple = images.length > 1;
-                    const conditionLabel = CONDITION_FROM_DB[item.secondhand.condition];
+                    const conditionLabel =
+                      CONDITION_FROM_DB[item.secondhand.condition];
                     const badge = CONDITION_BADGE[conditionLabel];
                     const posted = daysAgo(item.createdAt);
                     const price = item.secondhand.price ?? 0;
@@ -826,7 +980,8 @@ export default function SecondhandPage() {
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={
-                              images[currentImg] && images[currentImg] !== PLACEHOLDER_IMG
+                              images[currentImg] &&
+                              images[currentImg] !== PLACEHOLDER_IMG
                                 ? `${IMG_BASE}${images[currentImg]}`
                                 : PLACEHOLDER_IMG
                             }
@@ -838,33 +993,62 @@ export default function SecondhandPage() {
                             className="sh-card-condition"
                             style={{ background: badge.bg, color: badge.color }}
                           >
-                            <span className="sh-cond-dot" style={{ background: badge.dot }} />
+                            <span
+                              className="sh-cond-dot"
+                              style={{ background: badge.dot }}
+                            />
                             {conditionLabel}
                           </span>
 
-                          <button className="sh-card-fav" onClick={(e) => toggleFav(item.id, e)}>
-                            {isFav
-                              ? <FaHeart size={12} color="#ef4444" />
-                              : <FiHeart size={12} color="#9ca3af" />}
+                          <button
+                            type="button"
+                            className="sh-card-fav"
+                            onClick={(e) => toggleFav(item.id, e)}
+                            aria-label="Save item"
+                            title="Save item"
+                          >
+                            {isFav ? (
+                              <FaHeart size={12} color="#ef4444" />
+                            ) : (
+                              <FiHeart size={12} color="#9ca3af" />
+                            )}
+                          </button>
+
+                          {/* Share */}
+                          <button
+                            type="button"
+                            className="sh-card-share"
+                            onClick={(e) => shareSecondhand(item, e)}
+                            aria-label={`Share ${item.title}`}
+                            title="Share item"
+                          >
+                            <FiShare2 size={13} />
                           </button>
 
                           {hasMultiple && (
                             <>
                               <button
                                 className="sh-carousel-btn prev"
-                                onClick={(e) => prevImage(item.id, images.length, e)}
+                                onClick={(e) =>
+                                  prevImage(item.id, images.length, e)
+                                }
                               >
                                 <FiChevronLeft size={14} />
                               </button>
                               <button
                                 className="sh-carousel-btn next"
-                                onClick={(e) => nextImage(item.id, images.length, e)}
+                                onClick={(e) =>
+                                  nextImage(item.id, images.length, e)
+                                }
                               >
                                 <FiChevronRight size={14} />
                               </button>
                               <div className="sh-dots">
                                 {images.map((_, idx) => (
-                                  <div key={idx} className={`sh-dot${idx === currentImg ? " active" : ""}`} />
+                                  <div
+                                    key={idx}
+                                    className={`sh-dot${idx === currentImg ? " active" : ""}`}
+                                  />
                                 ))}
                               </div>
                             </>
@@ -874,17 +1058,25 @@ export default function SecondhandPage() {
                         {/* Body */}
                         <div className="sh-card-body">
                           <p className="sh-card-title">{item.title}</p>
-                          <p className="sh-card-price">NPR {price.toLocaleString()}</p>
+                          <p className="sh-card-price">
+                            NPR {price.toLocaleString()}
+                          </p>
                           <div className="sh-card-location">
                             <FiMapPin size={11} />
                             {item.secondhand.city}
                           </div>
                           <div className="sh-card-tags">
                             <span className="sh-tag">
-                              {posted === 0 ? "Today" : posted === 1 ? "1 day ago" : `${posted} days ago`}
+                              {posted === 0
+                                ? "Today"
+                                : posted === 1
+                                  ? "1 day ago"
+                                  : `${posted} days ago`}
                             </span>
                             {item.secondhand.isNegotiable && (
-                              <span className="sh-tag offer">Open to Offers</span>
+                              <span className="sh-tag offer">
+                                Open to Offers
+                              </span>
                             )}
                           </div>
 
@@ -893,15 +1085,16 @@ export default function SecondhandPage() {
                             className="sh-chat-btn"
                           >
                             <FiMessageSquare size={13} />
-                            {item.secondhand.isNegotiable ? "Buy Now" : "Contact"}
+                            {item.secondhand.isNegotiable
+                              ? "Buy Now"
+                              : "Contact"}
                           </Link>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              )
-            )}
+              ))}
 
             {/* Load More */}
             {!loading && sortedDisplayed.length > 0 && (

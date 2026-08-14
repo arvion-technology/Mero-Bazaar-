@@ -11,12 +11,23 @@ import {
   FiHeart,
   FiCheckCircle,
   FiInbox,
+  FiShare2,
 } from "react-icons/fi";
-import { FaHeart, FaLeaf, FaSeedling, FaTractor, FaWrench, FaCarrot } from "react-icons/fa";
+import {
+  FaHeart,
+  FaLeaf,
+  FaSeedling,
+  FaTractor,
+  FaWrench,
+  FaCarrot,
+} from "react-icons/fa";
 import { FaCow } from "react-icons/fa6";
 import { api } from "@/lib/api";
 import { toAgricultureCard } from "@/lib/adapters/agricultureAdapter";
-import type { AgricultureListing, AgricultureCard } from "@/app/types/agriculture";
+import type {
+  AgricultureListing,
+  AgricultureCard,
+} from "@/app/types/agriculture";
 
 const CATEGORY_ICONS = [
   { name: "Produce", icon: FaCarrot, color: "#f97316" },
@@ -25,17 +36,34 @@ const CATEGORY_ICONS = [
   { name: "Service", icon: FaTractor, color: "#15803d" },
 ];
 
-const LISTING_TYPES = ["Produce", "Livestock", "Tool", "Seed", "Fertilizer", "Vet Service", "Farm Labour"];
+const LISTING_TYPES = [
+  "Produce",
+  "Livestock",
+  "Tool",
+  "Seed",
+  "Fertilizer",
+  "Vet Service",
+  "Farm Labour",
+];
 const SEASONS = ["Spring", "Summer", "Autumn", "Winter"];
-const DISTRICTS = ["Chitwan", "Rupandehi", "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara"];
+const DISTRICTS = [
+  "Chitwan",
+  "Rupandehi",
+  "Kathmandu",
+  "Lalitpur",
+  "Bhaktapur",
+  "Pokhara",
+];
 const HEALTH_STATUS = ["VACCINATED", "NOT_VACCINATED"];
-const HEALTH_LABEL: Record<string, string> = { VACCINATED: "Vaccinated", NOT_VACCINATED: "Not Vaccinated" };
+const HEALTH_LABEL: Record<string, string> = {
+  VACCINATED: "Vaccinated",
+  NOT_VACCINATED: "Not Vaccinated",
+};
 const sortLabel: Record<string, string> = {
-  "newest": "Newest",
+  newest: "Newest",
   "price-low": "Price: Low to High",
   "price-high": "Price: High to Low",
 };
-
 
 const parsePrice = (priceStr: string): number => {
   const match = priceStr.replace(/,/g, "").match(/\d+/);
@@ -58,7 +86,7 @@ export default function AgriculturePage() {
   const [priceRange, setPriceRange] = useState<number>(500000);
   const [showMore, setShowMore] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
-const sortRef = useRef<HTMLDivElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -71,10 +99,16 @@ const sortRef = useRef<HTMLDivElement>(null);
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "Failed to load listings");
+        setError(
+          err instanceof Error ? err.message : "Failed to load listings",
+        );
       })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -92,13 +126,52 @@ const sortRef = useRef<HTMLDivElement>(null);
     e.stopPropagation();
     setFavorites((p) => ({ ...p, [id]: !p[id] }));
   };
+  const shareCategory = async (categoryName: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const categoryUrl =
+      `${window.location.origin}/category/agriculture-and-livestock` +
+      `?type=${encodeURIComponent(categoryName)}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${categoryName} - HamroCart`,
+          text: `Check out ${categoryName} listings on HamroCart.`,
+          url: categoryUrl,
+        });
+        return;
+      }
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(categoryUrl);
+        alert("Category link copied!");
+        return;
+      }
+
+      window.prompt("Copy category link:", categoryUrl);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
+      console.error("Share failed:", error);
+    }
+  };
 
   const toggleType = (t: string) =>
-    setSelectedTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+    setSelectedTypes((prev) =>
+      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t],
+    );
   const toggleSeason = (s: string) =>
-    setSelectedSeasons((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+    setSelectedSeasons((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
+    );
   const toggleHealth = (h: string) =>
-    setSelectedHealth((prev) => (prev.includes(h) ? prev.filter((x) => x !== h) : [...prev, h]));
+    setSelectedHealth((prev) =>
+      prev.includes(h) ? prev.filter((x) => x !== h) : [...prev, h],
+    );
 
   const reset = () => {
     setSelectedTypes([]);
@@ -112,12 +185,28 @@ const sortRef = useRef<HTMLDivElement>(null);
 
   const displayed = cards.filter((l) => {
     const s = search.toLowerCase();
-    if (s && !l.title.toLowerCase().includes(s) && !l.location.toLowerCase().includes(s)) return false;
-    if (selectedTypes.length && !selectedTypes.includes(l.listingType)) return false;
-    if (selectedSeasons.length && l.seasonalAvailability && !selectedSeasons.includes(l.seasonalAvailability)) return false;
+    if (
+      s &&
+      !l.title.toLowerCase().includes(s) &&
+      !l.location.toLowerCase().includes(s)
+    )
+      return false;
+    if (selectedTypes.length && !selectedTypes.includes(l.listingType))
+      return false;
+    if (
+      selectedSeasons.length &&
+      l.seasonalAvailability &&
+      !selectedSeasons.includes(l.seasonalAvailability)
+    )
+      return false;
     if (selectedDistrict && l.district !== selectedDistrict) return false;
     if (organicOnly && !l.organicCertified) return false;
-    if (selectedHealth.length && (!l.healthVaccineStatus || !selectedHealth.includes(l.healthVaccineStatus))) return false;
+    if (
+      selectedHealth.length &&
+      (!l.healthVaccineStatus ||
+        !selectedHealth.includes(l.healthVaccineStatus))
+    )
+      return false;
     if (parsePrice(l.price) > priceRange) return false;
     return true;
   });
@@ -220,9 +309,13 @@ const sortRef = useRef<HTMLDivElement>(null);
         .al-cats-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
         .al-cats-label { font-size: 13px; font-weight: 700; color: #888; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.6px; }
         .al-cats-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .al-cat-wrap {display: flex; align-items: stretch; min-width: 140px;}
         .al-cat-card { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 14px; border: 1.5px solid #e4e8f0; background: #fafbff; cursor: pointer; transition: all 0.18s; min-width: 140px; font-family: inherit; text-align: left; }
         .al-cat-card:hover { border-color: #15803d; background: #f0fdf4; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(21,128,61,0.12); }
         .al-cat-card.active { border-color: #15803d; background: #dcfce7; box-shadow: 0 4px 16px rgba(21,128,61,0.2); }
+        .al-cat-share { width: 42px; border: 1.5px solid #e4e8f0; border-left: 1px solid #dce1ea; border-radius: 0 14px 14px 0; background: #fafbff; color: #64748b; display: flex; align-items: center;justify-content: center; cursor: pointer; padding: 0; transition: all 0.18s;}
+        .al-cat-share:hover {border-color: #15803d; background: #f0fdf4;color: #15803d;}
+        .al-cat-card.active + .al-cat-share {border-color: #15803d;  background: #dcfce7;  color: #15803d;}
         .al-cat-icon { font-size: 22px; display: flex; align-items: center; }
         .al-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; white-space: nowrap; }
         .al-cat-count { font-size: 11px; color: #888; display: block; white-space: nowrap; }
@@ -246,6 +339,7 @@ const sortRef = useRef<HTMLDivElement>(null);
           .al-cats-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
           .al-cats-row::-webkit-scrollbar { display: none; }
           .al-cat-card { min-width: 140px; flex: 0 0 auto; padding: 10px 14px; }
+          .al-cat-share { width: 40px; flex-shrink: 0;}
         }
       `}</style>
 
@@ -278,21 +372,40 @@ const sortRef = useRef<HTMLDivElement>(null);
             <p className="al-cats-label">Browse Categories</p>
             <div className="al-cats-row">
               {CATEGORY_ICONS.map((cat) => (
-                <button
-                  key={cat.name}
-                  className={`al-cat-card${selectedTypes.includes(cat.name) ? " active" : ""}`}
-                  onClick={() => toggleType(cat.name)}
-                >
-                  <span className="al-cat-icon" style={{ color: cat.color }}>
-                    <cat.icon size={22} />
-                  </span>
-                  <span>
-                    <span className="al-cat-name">{cat.name}</span>
-                    <span className="al-cat-count">
-                      {cards.filter((c) => c.listingType === cat.name).length} listings
+                <div key={cat.name} className="al-cat-wrap">
+                  {/* Category */}
+                  <button
+                    type="button"
+                    className={`al-cat-card${
+                      selectedTypes.includes(cat.name) ? " active" : ""
+                    }`}
+                    onClick={() => toggleType(cat.name)}
+                  >
+                    <span className="al-cat-icon" style={{ color: cat.color }}>
+                      <cat.icon size={22} />
                     </span>
-                  </span>
-                </button>
+
+                    <span>
+                      <span className="al-cat-name">{cat.name}</span>
+
+                      <span className="al-cat-count">
+                        {cards.filter((c) => c.listingType === cat.name).length}{" "}
+                        listings
+                      </span>
+                    </span>
+                  </button>
+
+                  {/* Share */}
+                  <button
+                    type="button"
+                    className="al-cat-share"
+                    onClick={(e) => shareCategory(cat.name, e)}
+                    aria-label={`Share ${cat.name}`}
+                    title={`Share ${cat.name}`}
+                  >
+                    <FiShare2 size={17} />
+                  </button>
+                </div>
               ))}
             </div>
           </div>
@@ -305,11 +418,23 @@ const sortRef = useRef<HTMLDivElement>(null);
             <div className="al-sb-section">
               <p className="al-sb-title">Listing Type</p>
               {LISTING_TYPES.map((t) => (
-                <div key={t} className="al-check-row" onClick={() => toggleType(t)}>
-                  <div className={`al-checkbox${selectedTypes.includes(t) ? " checked" : ""}`}>
-                    {selectedTypes.includes(t) && <FiCheckCircle size={10} color="#fff" />}
+                <div
+                  key={t}
+                  className="al-check-row"
+                  onClick={() => toggleType(t)}
+                >
+                  <div
+                    className={`al-checkbox${selectedTypes.includes(t) ? " checked" : ""}`}
+                  >
+                    {selectedTypes.includes(t) && (
+                      <FiCheckCircle size={10} color="#fff" />
+                    )}
                   </div>
-                  <span className={`al-check-label${selectedTypes.includes(t) ? " checked" : ""}`}>{t}</span>
+                  <span
+                    className={`al-check-label${selectedTypes.includes(t) ? " checked" : ""}`}
+                  >
+                    {t}
+                  </span>
                 </div>
               ))}
             </div>
@@ -317,11 +442,23 @@ const sortRef = useRef<HTMLDivElement>(null);
             <div className="al-sb-section">
               <p className="al-sb-title">Seasonal Product</p>
               {SEASONS.map((s) => (
-                <div key={s} className="al-check-row" onClick={() => toggleSeason(s)}>
-                  <div className={`al-checkbox${selectedSeasons.includes(s) ? " checked" : ""}`}>
-                    {selectedSeasons.includes(s) && <FiCheckCircle size={10} color="#fff" />}
+                <div
+                  key={s}
+                  className="al-check-row"
+                  onClick={() => toggleSeason(s)}
+                >
+                  <div
+                    className={`al-checkbox${selectedSeasons.includes(s) ? " checked" : ""}`}
+                  >
+                    {selectedSeasons.includes(s) && (
+                      <FiCheckCircle size={10} color="#fff" />
+                    )}
                   </div>
-                  <span className={`al-check-label${selectedSeasons.includes(s) ? " checked" : ""}`}>{s}</span>
+                  <span
+                    className={`al-check-label${selectedSeasons.includes(s) ? " checked" : ""}`}
+                  >
+                    {s}
+                  </span>
                 </div>
               ))}
             </div>
@@ -344,11 +481,18 @@ const sortRef = useRef<HTMLDivElement>(null);
 
             <div className="al-sb-section">
               <p className="al-sb-title">Certificated</p>
-              <div className="al-check-row" onClick={() => setOrganicOnly(!organicOnly)}>
+              <div
+                className="al-check-row"
+                onClick={() => setOrganicOnly(!organicOnly)}
+              >
                 <div className={`al-checkbox${organicOnly ? " checked" : ""}`}>
                   {organicOnly && <FiCheckCircle size={10} color="#fff" />}
                 </div>
-                <span className={`al-check-label${organicOnly ? " checked" : ""}`}>Organic Certified</span>
+                <span
+                  className={`al-check-label${organicOnly ? " checked" : ""}`}
+                >
+                  Organic Certified
+                </span>
               </div>
             </div>
 
@@ -371,18 +515,31 @@ const sortRef = useRef<HTMLDivElement>(null);
             <div className="al-sb-section">
               <p className="al-sb-title">Livestock health Status</p>
               {HEALTH_STATUS.map((h) => (
-                <div key={h} className="al-check-row" onClick={() => toggleHealth(h)}>
-                  <div className={`al-checkbox${selectedHealth.includes(h) ? " checked" : ""}`}>
-                    {selectedHealth.includes(h) && <FiCheckCircle size={10} color="#fff" />}
+                <div
+                  key={h}
+                  className="al-check-row"
+                  onClick={() => toggleHealth(h)}
+                >
+                  <div
+                    className={`al-checkbox${selectedHealth.includes(h) ? " checked" : ""}`}
+                  >
+                    {selectedHealth.includes(h) && (
+                      <FiCheckCircle size={10} color="#fff" />
+                    )}
                   </div>
-                  <span className={`al-check-label${selectedHealth.includes(h) ? " checked" : ""}`}>
+                  <span
+                    className={`al-check-label${selectedHealth.includes(h) ? " checked" : ""}`}
+                  >
                     {HEALTH_LABEL[h]}
                   </span>
                 </div>
               ))}
             </div>
 
-            <button className="al-more-btn" onClick={() => setShowMore(!showMore)}>
+            <button
+              className="al-more-btn"
+              onClick={() => setShowMore(!showMore)}
+            >
               {showMore ? "Less" : "More"}
             </button>
           </aside>
@@ -394,27 +551,35 @@ const sortRef = useRef<HTMLDivElement>(null);
               </span>
 
               <div className="al-sort-dropdown" ref={sortRef}>
-                <button className="al-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                <button
+                  className="al-sort-btn"
+                  onClick={() => setIsSortOpen((v) => !v)}
+                >
                   {sortLabel[sort]}
                   <FiChevronDown
                     size={14}
-                    style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                    style={{
+                      transform: isSortOpen ? "rotate(180deg)" : "none",
+                      transition: "transform 0.2s",
+                    }}
                   />
                 </button>
                 {isSortOpen && (
                   <div className="al-sort-menu">
-                    {(["newest", "price-low", "price-high"] as const).map((key) => (
-                      <div
-                        key={key}
-                        className={`al-sort-option${sort === key ? " active" : ""}`}
-                        onClick={() => {
-                          setSort(key);
-                          setIsSortOpen(false);
-                        }}
-                      >
-                        {sortLabel[key]}
-                      </div>
-                    ))}
+                    {(["newest", "price-low", "price-high"] as const).map(
+                      (key) => (
+                        <div
+                          key={key}
+                          className={`al-sort-option${sort === key ? " active" : ""}`}
+                          onClick={() => {
+                            setSort(key);
+                            setIsSortOpen(false);
+                          }}
+                        >
+                          {sortLabel[key]}
+                        </div>
+                      ),
+                    )}
                   </div>
                 )}
               </div>
@@ -422,17 +587,32 @@ const sortRef = useRef<HTMLDivElement>(null);
 
             {loading ? (
               <div className="al-empty">
-                <p style={{ fontWeight: 700, fontSize: 16, color: "#111" }}>Loading listings...</p>
+                <p style={{ fontWeight: 700, fontSize: 16, color: "#111" }}>
+                  Loading listings...
+                </p>
               </div>
             ) : error ? (
               <div className="al-empty">
-                <p style={{ fontWeight: 700, fontSize: 16, color: "#111" }}>{error}</p>
+                <p style={{ fontWeight: 700, fontSize: 16, color: "#111" }}>
+                  {error}
+                </p>
               </div>
             ) : sortedDisplayed.length === 0 ? (
               <div className="al-empty">
                 <div style={{ fontSize: 48, marginBottom: 12 }}>🌾</div>
-                <p style={{ fontWeight: 700, fontSize: 16, color: "#111", margin: "0 0 4px" }}>No listings found</p>
-                <span style={{ fontSize: 13, color: "#888" }}>Try adjusting your filters</span>
+                <p
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 16,
+                    color: "#111",
+                    margin: "0 0 4px",
+                  }}
+                >
+                  No listings found
+                </p>
+                <span style={{ fontSize: 13, color: "#888" }}>
+                  Try adjusting your filters
+                </span>
                 <br />
                 <button className="al-empty-btn" onClick={reset}>
                   Reset Filters
@@ -451,12 +631,23 @@ const sortRef = useRef<HTMLDivElement>(null);
                         style={{ display: "block", textDecoration: "none" }}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={item.thumb} alt={item.title} className="al-card-img" />
+                        <img
+                          src={item.thumb}
+                          alt={item.title}
+                          className="al-card-img"
+                        />
                         <span className="al-card-cat-badge" style={badgeStyle}>
                           #{item.listingType}
                         </span>
-                        <button className="al-card-fav" onClick={(e) => toggleFav(item.id, e)}>
-                          {isFav ? <FaHeart size={12} color="#ef4444" /> : <FiHeart size={12} color="#9ca3af" />}
+                        <button
+                          className="al-card-fav"
+                          onClick={(e) => toggleFav(item.id, e)}
+                        >
+                          {isFav ? (
+                            <FaHeart size={12} color="#ef4444" />
+                          ) : (
+                            <FiHeart size={12} color="#9ca3af" />
+                          )}
                         </button>
                       </Link>
                       <div className="al-card-body">
@@ -484,10 +675,15 @@ const sortRef = useRef<HTMLDivElement>(null);
                         </div>
                         {item.healthVaccineStatus && (
                           <div className="al-vaccinated-row">
-                            <span className="al-vax-dot" /> {HEALTH_LABEL[item.healthVaccineStatus] ?? item.healthVaccineStatus}
+                            <span className="al-vax-dot" />{" "}
+                            {HEALTH_LABEL[item.healthVaccineStatus] ??
+                              item.healthVaccineStatus}
                           </div>
                         )}
-                        <Link href={`/category/agriculture-and-livestock/${item.id}`} className="al-chat-btn">
+                        <Link
+                          href={`/category/agriculture-and-livestock/${item.id}`}
+                          className="al-chat-btn"
+                        >
                           <FiMessageSquare size={13} /> Chat Seller
                         </Link>
                       </div>

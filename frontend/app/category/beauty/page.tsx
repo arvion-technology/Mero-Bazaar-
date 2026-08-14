@@ -12,17 +12,35 @@ import {
   FiScissors,
   FiDroplet,
   FiHome,
+  FiShare2,
 } from "react-icons/fi";
-import { FaHeart, FaPaintBrush, FaHandSparkles, FaSpa, FaCut } from "react-icons/fa";
+import {
+  FaHeart,
+  FaPaintBrush,
+  FaHandSparkles,
+  FaSpa,
+  FaCut,
+} from "react-icons/fa";
 import type { IconType } from "react-icons";
 import { toBeautyCard } from "@/lib/adapters/beautyAdapter";
-import type { BeautyListing, BeautyCard, BeautyServiceType } from "@/app/types/beauty";
+import type {
+  BeautyListing,
+  BeautyCard,
+  BeautyServiceType,
+} from "@/app/types/beauty";
 
 /* ─────────── SERVICE TYPE META (matches Prisma BeautyServiceType enum) ─────────── */
-const SERVICE_TYPE_META: Record<BeautyServiceType, { label: string; icon: IconType; color: string }> = {
+const SERVICE_TYPE_META: Record<
+  BeautyServiceType,
+  { label: string; icon: IconType; color: string }
+> = {
   SALON: { label: "Salon", icon: FiScissors, color: "#7c3aed" },
   BARBER: { label: "Barber", icon: FaCut, color: "#0f766e" },
-  MAKEUP_ARTIST: { label: "Makeup Artist", icon: FaPaintBrush, color: "#e11d48" },
+  MAKEUP_ARTIST: {
+    label: "Makeup Artist",
+    icon: FaPaintBrush,
+    color: "#e11d48",
+  },
   SKINCARE: { label: "Skincare", icon: FiDroplet, color: "#1d4ed8" },
   SPA: { label: "Spa", icon: FaSpa, color: "#059669" },
   COSMETICS: { label: "Cosmetics", icon: FaHandSparkles, color: "#db2777" },
@@ -32,7 +50,11 @@ const SERVICE_TYPE_META: Record<BeautyServiceType, { label: string; icon: IconTy
 const ALL = "ALL" as const;
 type CategoryFilter = BeautyServiceType | typeof ALL;
 
-type PriceRange = "Under Rs.1,000" | "Rs.1,000 - Rs.3,000" | "Rs.3,000 - Rs.6,000" | "Above Rs.6,000";
+type PriceRange =
+  | "Under Rs.1,000"
+  | "Rs.1,000 - Rs.3,000"
+  | "Rs.3,000 - Rs.6,000"
+  | "Above Rs.6,000";
 const PRICE_RANGES: PriceRange[] = [
   "Under Rs.1,000",
   "Rs.1,000 - Rs.3,000",
@@ -72,7 +94,9 @@ export default function BeautyWellnessPage() {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>(ALL);
-  const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>([]);
+  const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>(
+    [],
+  );
   const [homeVisit, setHomeVisit] = useState(false);
   const [bridalPackage, setBridalPackage] = useState(false);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
@@ -117,12 +141,47 @@ export default function BeautyWellnessPage() {
   }, []);
 
   const togglePriceRange = (pr: PriceRange) =>
-    setSelectedPriceRanges((prev) => (prev.includes(pr) ? prev.filter((x) => x !== pr) : [...prev, pr]));
+    setSelectedPriceRanges((prev) =>
+      prev.includes(pr) ? prev.filter((x) => x !== pr) : [...prev, pr],
+    );
 
   const toggleFav = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setFavorites((p) => ({ ...p, [id]: !p[id] }));
+  };
+  const shareBeauty = async (item: BeautyCard, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const beautyUrl = `${window.location.origin}/category/beauty/${item.id}`;
+
+    const shareData = {
+      title: item.title,
+      text: `Check out ${item.title} on HamroCart.`,
+      url: beautyUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(beautyUrl);
+        alert("Beauty service link copied!");
+        return;
+      }
+
+      window.prompt("Copy beauty service link:", beautyUrl);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
+      console.error("Beauty share failed:", error);
+    }
   };
 
   const reset = () => {
@@ -135,7 +194,9 @@ export default function BeautyWellnessPage() {
   };
 
   const categoryCount = (key: CategoryFilter) =>
-    key === ALL ? listings.length : listings.filter((l) => l.serviceType === key).length;
+    key === ALL
+      ? listings.length
+      : listings.filter((l) => l.serviceType === key).length;
 
   const displayed = listings.filter((s) => {
     const searchLower = search.toLowerCase();
@@ -145,14 +206,17 @@ export default function BeautyWellnessPage() {
       !(s.city ?? "").toLowerCase().includes(searchLower)
     )
       return false;
-    if (activeCategory !== ALL && s.serviceType !== activeCategory) return false;
+    if (activeCategory !== ALL && s.serviceType !== activeCategory)
+      return false;
 
     if (selectedPriceRanges.length) {
       const price = parsePrice(s.price);
       const matches = selectedPriceRanges.some((range) => {
         if (range === "Under Rs.1,000") return price < 1000;
-        if (range === "Rs.1,000 - Rs.3,000") return price >= 1000 && price <= 3000;
-        if (range === "Rs.3,000 - Rs.6,000") return price > 3000 && price <= 6000;
+        if (range === "Rs.1,000 - Rs.3,000")
+          return price >= 1000 && price <= 3000;
+        if (range === "Rs.3,000 - Rs.6,000")
+          return price > 3000 && price <= 6000;
         if (range === "Above Rs.6,000") return price > 6000;
         return false;
       });
@@ -189,11 +253,26 @@ export default function BeautyWellnessPage() {
           <FiStar
             key={i}
             size={10}
-            fill={i < fullStars || (i === fullStars && hasHalf) ? "#f59e0b" : "none"}
-            color={i < fullStars || (i === fullStars && hasHalf) ? "#f59e0b" : "#d1d5db"}
+            fill={
+              i < fullStars || (i === fullStars && hasHalf) ? "#f59e0b" : "none"
+            }
+            color={
+              i < fullStars || (i === fullStars && hasHalf)
+                ? "#f59e0b"
+                : "#d1d5db"
+            }
           />
         ))}
-        <span style={{ fontSize: 10, fontWeight: 700, color: "#111", marginLeft: 3 }}>{rating.toFixed(1)}</span>
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            color: "#111",
+            marginLeft: 3,
+          }}
+        >
+          {rating.toFixed(1)}
+        </span>
       </div>
     );
   };
@@ -270,6 +349,14 @@ export default function BeautyWellnessPage() {
         .bw-card:hover .bw-card-img { transform: scale(1.06); }
         .bw-card-fav { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.92); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 6px rgba(0,0,0,0.15); transition: transform 0.15s; padding: 0; z-index: 2; }
         .bw-card-fav:hover { transform: scale(1.15); }
+        .bw-card-share { width: 30px; height: 30px; border-radius: 50%;
+         background: rgba(255,255,255,0.94); border: none; display: flex;
+         align-items: center; justify-content: center; cursor: pointer;
+         padding: 0; box-shadow: 0 1px 6px rgba(0,0,0,0.15); transition:
+         transform 0.15s, background 0.15s, color 0.15s;}
+         .bw-card-share:hover { transform: scale(1.15); background: #fff;}
+         .bw-card-share { color: #64748b;}
+         .bw-card-share:hover { color: #e11d48;}
         .bw-card-home-badge { position: absolute; bottom: 8px; left: 8px; background: rgba(225,29,72,0.9); color: #fff; font-size: 9px; font-weight: 700; border-radius: 5px; padding: 3px 7px; display: flex; align-items: center; gap: 3px; }
         .bw-card-body { padding: 14px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
         .bw-card-name { font-size: 15px; font-weight: 800; color: #111; margin: 0; }
@@ -305,7 +392,11 @@ export default function BeautyWellnessPage() {
           <div className="bw-hero-bg" />
           <div className="bw-hero-overlay" />
           <div className="bw-hero-inner">
-            <h1>Find The Best<br />Hair, Beauty & Wellness Services</h1>
+            <h1>
+              Find The Best
+              <br />
+              Hair, Beauty & Wellness Services
+            </h1>
             <p>Trusted Professionals ready to serve you</p>
             <div className="bw-search-wrap">
               <FiSearch className="bw-search-icon" size={16} />
@@ -332,27 +423,36 @@ export default function BeautyWellnessPage() {
                 </span>
                 <span>
                   <span className="bw-cat-name">All</span>
-                  <span className="bw-cat-count">{categoryCount(ALL)} listings</span>
+                  <span className="bw-cat-count">
+                    {categoryCount(ALL)} listings
+                  </span>
                 </span>
               </button>
-              {(Object.keys(SERVICE_TYPE_META) as BeautyServiceType[]).map((key) => {
-                const meta = SERVICE_TYPE_META[key];
-                return (
-                  <button
-                    key={key}
-                    className={`bw-cat-card${activeCategory === key ? " active" : ""}`}
-                    onClick={() => setActiveCategory(key)}
-                  >
-                    <span className="bw-cat-icon" style={{ color: meta.color }}>
-                      <meta.icon size={22} />
-                    </span>
-                    <span>
-                      <span className="bw-cat-name">{meta.label}</span>
-                      <span className="bw-cat-count">{categoryCount(key)} listings</span>
-                    </span>
-                  </button>
-                );
-              })}
+              {(Object.keys(SERVICE_TYPE_META) as BeautyServiceType[]).map(
+                (key) => {
+                  const meta = SERVICE_TYPE_META[key];
+                  return (
+                    <button
+                      key={key}
+                      className={`bw-cat-card${activeCategory === key ? " active" : ""}`}
+                      onClick={() => setActiveCategory(key)}
+                    >
+                      <span
+                        className="bw-cat-icon"
+                        style={{ color: meta.color }}
+                      >
+                        <meta.icon size={22} />
+                      </span>
+                      <span>
+                        <span className="bw-cat-name">{meta.label}</span>
+                        <span className="bw-cat-count">
+                          {categoryCount(key)} listings
+                        </span>
+                      </span>
+                    </button>
+                  );
+                },
+              )}
             </div>
           </div>
         </section>
@@ -371,67 +471,114 @@ export default function BeautyWellnessPage() {
                   className={`bw-cat-btn${activeCategory === ALL ? " active" : ""}`}
                   onClick={() => setActiveCategory(ALL)}
                 >
-                  <span className="bw-cat-icon"><FiGrid size={20} /></span>
+                  <span className="bw-cat-icon">
+                    <FiGrid size={20} />
+                  </span>
                   <span className="bw-cat-label">All</span>
                 </button>
-                {(Object.keys(SERVICE_TYPE_META) as BeautyServiceType[]).map((key) => {
-                  const meta = SERVICE_TYPE_META[key];
-                  return (
-                    <button
-                      key={key}
-                      className={`bw-cat-btn${activeCategory === key ? " active" : ""}`}
-                      onClick={() => setActiveCategory(key)}
-                    >
-                      <span className="bw-cat-icon"><meta.icon size={20} /></span>
-                      <span className="bw-cat-label">{meta.label}</span>
-                    </button>
-                  );
-                })}
+                {(Object.keys(SERVICE_TYPE_META) as BeautyServiceType[]).map(
+                  (key) => {
+                    const meta = SERVICE_TYPE_META[key];
+                    return (
+                      <button
+                        key={key}
+                        className={`bw-cat-btn${activeCategory === key ? " active" : ""}`}
+                        onClick={() => setActiveCategory(key)}
+                      >
+                        <span className="bw-cat-icon">
+                          <meta.icon size={20} />
+                        </span>
+                        <span className="bw-cat-label">{meta.label}</span>
+                      </button>
+                    );
+                  },
+                )}
               </div>
             </div>
 
             <div className="bw-sb-section">
               <p className="bw-sb-title">Price range</p>
               {PRICE_RANGES.map((pr) => (
-                <div key={pr} className="bw-check-row" onClick={() => togglePriceRange(pr)}>
-                  <div className={`bw-checkbox${selectedPriceRanges.includes(pr) ? " checked" : ""}`} />
-                  <span className={`bw-check-label${selectedPriceRanges.includes(pr) ? " checked" : ""}`}>{pr}</span>
+                <div
+                  key={pr}
+                  className="bw-check-row"
+                  onClick={() => togglePriceRange(pr)}
+                >
+                  <div
+                    className={`bw-checkbox${selectedPriceRanges.includes(pr) ? " checked" : ""}`}
+                  />
+                  <span
+                    className={`bw-check-label${selectedPriceRanges.includes(pr) ? " checked" : ""}`}
+                  >
+                    {pr}
+                  </span>
                 </div>
               ))}
             </div>
 
             <div className="bw-sb-section">
               <p className="bw-sb-title">Home Visit</p>
-              <div className="bw-check-row" onClick={() => setHomeVisit(!homeVisit)}>
+              <div
+                className="bw-check-row"
+                onClick={() => setHomeVisit(!homeVisit)}
+              >
                 <div className={`bw-checkbox${homeVisit ? " checked" : ""}`} />
-                <span className={`bw-check-label${homeVisit ? " checked" : ""}`}>Home Visit Available</span>
+                <span
+                  className={`bw-check-label${homeVisit ? " checked" : ""}`}
+                >
+                  Home Visit Available
+                </span>
               </div>
             </div>
 
             <div className="bw-sb-section">
               <p className="bw-sb-title">Bridal Packages</p>
-              <div className="bw-check-row" onClick={() => setBridalPackage(!bridalPackage)}>
-                <div className={`bw-checkbox${bridalPackage ? " checked" : ""}`} />
-                <span className={`bw-check-label${bridalPackage ? " checked" : ""}`}>Bridal Service</span>
+              <div
+                className="bw-check-row"
+                onClick={() => setBridalPackage(!bridalPackage)}
+              >
+                <div
+                  className={`bw-checkbox${bridalPackage ? " checked" : ""}`}
+                />
+                <span
+                  className={`bw-check-label${bridalPackage ? " checked" : ""}`}
+                >
+                  Bridal Service
+                </span>
               </div>
             </div>
 
             <div className="bw-sb-section">
               <p className="bw-sb-title">Sort By</p>
               <div style={{ position: "relative" }}>
-                <select className="bw-sort-select" value={sort} onChange={(e) => setSort(e.target.value)}>
+                <select
+                  className="bw-sort-select"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                >
                   {SORT_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
                   ))}
                 </select>
                 <FiChevronDown
                   size={12}
-                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#666" }}
+                  style={{
+                    position: "absolute",
+                    right: 8,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    pointerEvents: "none",
+                    color: "#666",
+                  }}
                 />
               </div>
             </div>
 
-            <button className="bw-more-btn" onClick={reset}>Reset Filters</button>
+            <button className="bw-more-btn" onClick={reset}>
+              Reset Filters
+            </button>
           </aside>
 
           <div className="bw-main">
@@ -448,15 +595,22 @@ export default function BeautyWellnessPage() {
               <>
                 <div className="bw-results-bar">
                   <span className="bw-count">
-                    <strong>{sortedDisplayed.length}</strong> Hair, Beauty & Wellness found
+                    <strong>{sortedDisplayed.length}</strong> Hair, Beauty &
+                    Wellness found
                   </span>
 
                   <div className="bw-sort-dropdown" ref={sortRef}>
-                    <button className="bw-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                    <button
+                      className="bw-sort-btn"
+                      onClick={() => setIsSortOpen((v) => !v)}
+                    >
                       {sortLabel[sort]}
                       <FiChevronDown
                         size={14}
-                        style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                        style={{
+                          transform: isSortOpen ? "rotate(180deg)" : "none",
+                          transition: "transform 0.2s",
+                        }}
                       />
                     </button>
                     {isSortOpen && (
@@ -486,7 +640,9 @@ export default function BeautyWellnessPage() {
                     <p>No services found</p>
                     <span>Try adjusting your filters or search term</span>
                     <br />
-                    <button className="bw-empty-btn" onClick={reset}>Reset Filters</button>
+                    <button className="bw-empty-btn" onClick={reset}>
+                      Reset Filters
+                    </button>
                   </div>
                 ) : (
                   <div className="bw-grid">
@@ -501,10 +657,38 @@ export default function BeautyWellnessPage() {
                             style={{ display: "block", textDecoration: "none" }}
                           >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={item.thumb} alt={item.title} className="bw-card-img" />
-                            <button className="bw-card-fav" onClick={(e) => toggleFav(item.id, e)}>
-                              {isFav ? <FaHeart size={12} color="#ef4444" /> : <FiHeart size={12} color="#9ca3af" />}
+                            <img
+                              src={item.thumb}
+                              alt={item.title}
+                              className="bw-card-img"
+                            />
+
+                            {/* Favorite */}
+                            <button
+                              type="button"
+                              className="bw-card-fav"
+                              onClick={(e) => toggleFav(item.id, e)}
+                              aria-label="Save beauty service"
+                              title="Save"
+                            >
+                              {isFav ? (
+                                <FaHeart size={12} color="#ef4444" />
+                              ) : (
+                                <FiHeart size={12} color="#9ca3af" />
+                              )}
                             </button>
+
+                            {/* Share */}
+                            <button
+                              type="button"
+                              className="bw-card-share"
+                              onClick={(e) => shareBeauty(item, e)}
+                              aria-label={`Share ${item.title}`}
+                              title="Share"
+                            >
+                              <FiShare2 size={13} />
+                            </button>
+
                             {item.homeVisit && (
                               <span className="bw-card-home-badge">
                                 <FiHome size={9} /> Home Visit
@@ -520,13 +704,22 @@ export default function BeautyWellnessPage() {
                             </p>
                             <div className="bw-card-price-row">
                               <div>
-                                <span className="bw-card-price-label">Starting From</span>
-                                <div className="bw-card-price">{item.price}</div>
+                                <span className="bw-card-price-label">
+                                  Starting From
+                                </span>
+                                <div className="bw-card-price">
+                                  {item.price}
+                                </div>
                               </div>
                             </div>
-                            <div className="bw-card-stars">{renderStars(item.rating ?? 0)}</div>
+                            <div className="bw-card-stars">
+                              {renderStars(item.rating ?? 0)}
+                            </div>
 
-                            <Link href={`/category/beauty/${item.id}`} className="bw-card-btn">
+                            <Link
+                              href={`/category/beauty/${item.id}`}
+                              className="bw-card-btn"
+                            >
                               Book Now
                             </Link>
                           </div>

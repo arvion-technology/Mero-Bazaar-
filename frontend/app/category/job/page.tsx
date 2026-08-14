@@ -3,9 +3,9 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiPhone, FiMessageSquare, FiChevronDown, FiBookmark, FiTarget, FiLoader, FiBriefcase } from "react-icons/fi";
+import { FiSearch, FiMapPin, FiPhone, FiMessageSquare, FiChevronDown, FiBookmark, FiTarget, FiLoader, FiBriefcase, FiShare2, } from "react-icons/fi";
 import { FaHeart, FaBriefcase } from "react-icons/fa";
-import { JOB_TYPES, CITIES, SKILLS, JobCard} from "../../types/jobs";
+import { JOB_TYPES, CITIES, SKILLS, JobCard } from "../../types/jobs";
 import { toContractType, toJobCard } from "@/lib/adapter";
 import { api } from "@/lib/api";
 
@@ -48,6 +48,51 @@ export default function JobsPage() {
     setFavorites((p) => ({ ...p, [id]: !p[id] }));
   };
 
+  const shareJob = async (
+    job: JobCard,
+    e: React.MouseEvent
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const jobUrl =
+      `${window.location.origin}/category/job/${job.id}`;
+
+    const shareData = {
+      title: job.title,
+      text: `Check out this job: ${job.title} at ${job.company}`,
+      url: jobUrl,
+    };
+
+    try {
+      // Mobile / supported browsers
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      // Desktop fallback
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(jobUrl);
+        alert("Job link copied!");
+        return;
+      }
+
+      // Final fallback
+      window.prompt("Copy this job link:", jobUrl);
+    } catch (error) {
+      // User cancelled share popup
+      if (
+        error instanceof DOMException &&
+        error.name === "AbortError"
+      ) {
+        return;
+      }
+
+      console.error("Job share failed:", error);
+    }
+  };
+
   const toggleType = (t: string) =>
     setSelectedTypes((prev) =>
       prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
@@ -72,12 +117,12 @@ export default function JobsPage() {
         selectedTypes.forEach((t) =>
           params.append("contractType", toContractType(t))
         );
-        
+
         console.log("Sending params:", params.toString());
         const data = await api.getJobs(params);
         const mapped = data.map(toJobCard);
         console.log("Job IDs:", mapped.map(j => j.id));
-        setJobs(mapped);       
+        setJobs(mapped);
       } catch (err) {
         console.error(err);
       } finally {
@@ -186,8 +231,12 @@ export default function JobsPage() {
         .jp-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
         .jp-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; gap: 16px; }
         .jp-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
-        .jp-card-save { position: absolute; top: 16px; right: 16px; border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #333; padding: 0; transition: transform 0.15s; z-index: 5; }
-        .jp-card-save:hover { transform: scale(1.15); }
+        .jp-card-save,.jp-card-share {width: 34px; height: 34px; border: 1px solid #e2e8f0; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+          transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);}
+        .jp-card-save:hover,
+        .jp-card-share:hover { transform: scale(1.12); background: #fff5f4; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);}
+        .jp-card-share { color: #555;}
+        .jp-card-share:hover { color: #e05c3a;}        
         .jp-card-body-row { display: flex; align-items: flex-start; gap: 16px; }
         .jp-thumb { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid #e2e8f0; background: #f7fafc; }
         .jp-card-main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
@@ -365,23 +414,42 @@ export default function JobsPage() {
                     const isFav = !!favorites[j.id];
                     const typeClass =
                       j.type.toLowerCase().includes("part") ? "part"
-                      : j.type.toLowerCase().includes("gig") ? "gig"
-                      : j.type.toLowerCase().includes("labour") ? "construction"
-                      : "";
+                        : j.type.toLowerCase().includes("gig") ? "gig"
+                          : j.type.toLowerCase().includes("labour") ? "construction"
+                            : "";
                     const visibleSkills = j.skills.slice(0, EXTRA_SKILLS_THRESHOLD);
                     const extraCount = j.skills.length - EXTRA_SKILLS_THRESHOLD;
 
                     return (
                       <Link key={j.id} href={`/category/job/${j.id}`} className="jp-card" style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", gap: "16px" }}>
+
+                        {/* Favorite / Wishlist */}
                         <button
+                          type="button"
                           className="jp-card-save"
-                          aria-label="Save"
+                          aria-label="Save job"
+                          title="Save job"
                           onClick={(e) => toggleFav(j.id, e)}
                         >
-                          {isFav
-                            ? <FaHeart size={16} color="#ff3b30" />
-                            : <FiBookmark size={16} color="#000" />}
+                          {isFav ? (
+                            <FaHeart size={16} color="#ff3b30" />
+                          ) : (
+                            <FiBookmark size={16} color="#000" />
+                          )}
                         </button>
+
+                        {/* Share */}
+                        <button
+                          type="button"
+                          className="jp-card-share"
+                          aria-label={`Share ${j.title}`}
+                          title="Share job"
+                          onClick={(e) => shareJob(j, e)}
+                        >
+                          <FiShare2 size={16} />
+                        </button>
+
+
                         <div className="jp-card-body-row">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={j.thumb} alt={j.company} className="jp-thumb" />

@@ -8,6 +8,8 @@ import {
   FiHeart,
   FiMapPin,
   FiChevronDown,
+  FiShare2,
+
 } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 import { IoSpeedometerOutline } from "react-icons/io5";
@@ -166,6 +168,51 @@ export default function VehiclesPage() {
     e.preventDefault();
     e.stopPropagation();
     setFavorites((p) => ({ ...p, [id]: !p[id] }));
+  };
+  
+  const shareVehicle = async (
+    vehicle: Vehicle,
+    e: React.MouseEvent
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const vehicleUrl =
+      `${window.location.origin}/category/vehicles/${vehicle.id}`;
+
+    const shareData = {
+      title: displayTitle(vehicle),
+      text: `Check out this vehicle on HamroCart: ${displayTitle(vehicle)}`,
+      url: vehicleUrl,
+    };
+
+    try {
+      // Mobile / supported browsers
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      // Desktop fallback
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(vehicleUrl);
+        toast.success("Vehicle link copied!");
+        return;
+      }
+
+      // Final fallback
+      window.prompt("Copy vehicle link:", vehicleUrl);
+    } catch (error) {
+      if (
+        error instanceof DOMException &&
+        error.name === "AbortError"
+      ) {
+        return;
+      }
+
+      console.error("Vehicle share failed:", error);
+      toast.error("Unable to share vehicle");
+    }
   };
 
   const toggle = (arr: string[], val: string, set: (v: string[]) => void) =>
@@ -466,6 +513,10 @@ export default function VehiclesPage() {
           padding: 0;
         }
         .vp-heart:hover { transform: scale(1.18); background: #fff; }
+         
+        .vp-share { position: absolute; top: 9px; right: 50px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;  color: #64748b;  box-shadow: 0 2px 10px rgba(0,0,0,0.16);  transition: transform 0.18s, background 0.18s;  padding: 0;  z-index: 3;}
+
+        .vp-share:hover {transform: scale(1.18);  background: #fff;  color: #b91c1c;}
 
         .vp-card-body { padding: 14px; display: flex; flex-direction: column; gap: 5px; }
         .vp-card-title {
@@ -737,9 +788,11 @@ export default function VehiclesPage() {
                               className="vp-card-img"
                             />
                             <span className="vp-card-cat">{vehicle.type}</span>
+                            {/* Favorite */}
                             <button
+                              type="button"
                               className="vp-heart"
-                              aria-label="Save"
+                              aria-label="Save vehicle"
                               onClick={(e) => toggleFav(v.id, e)}
                             >
                               {isFav ? (
@@ -747,6 +800,17 @@ export default function VehiclesPage() {
                               ) : (
                                 <FiHeart size={13} color="#999" />
                               )}
+                            </button>
+
+                            {/* Share */}
+                            <button
+                              type="button"
+                              className="vp-share"
+                              aria-label={`Share ${displayTitle(v)}`}
+                              title="Share vehicle"
+                              onClick={(e) => shareVehicle(v, e)}
+                            >
+                              <FiShare2 size={14} />
                             </button>
                           </div>
 
