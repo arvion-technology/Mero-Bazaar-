@@ -253,6 +253,24 @@ export class VendorKycService {
       return record;
     });
 
+    if (dto.status === VerificationStatus.VERIFIED) {
+      await this.notificationService.create(kyc.userId, {
+        category: 'KYC',
+        type: 'KYC_VERIFIED',
+        title: 'KYC verified',
+        description: 'Your seller verification was approved. Your verified badge is now active.',
+      });
+    } else if (dto.status === VerificationStatus.REJECTED) {
+      await this.notificationService.create(kyc.userId, {
+        category: 'KYC',
+        type: 'KYC_REJECTED',
+        title: 'KYC rejected',
+        description: dto.rejectionReason
+          ? `Your KYC submission was rejected: ${dto.rejectionReason}`
+          : 'Your KYC submission was rejected. Please review and resubmit.',
+      });
+    }
+
     return {
       message: `KYC ${dto.status.toLowerCase()} successfully.`,
       kyc: updated,

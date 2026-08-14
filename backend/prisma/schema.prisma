@@ -210,9 +210,17 @@ model ActivityLog {
 
 enum NotificationCategory {
   ORDERS
+  LISTINGS
+  PAYMENTS
+  DISPUTES
+  LEADS
+  REVIEWS
+  KYC
+  APPOINTMENTS
   ACCOUNT
   PROMOTIONS
   SYSTEM
+
 }
 
 model Notification {
@@ -225,9 +233,12 @@ model Notification {
   description   String
   read          Boolean @default(false)
   createdAt     DateTime @default(now())
+  entityId      String?
+  entityType    String?
 
   @@index([userId, read])
   @@index([userId, createdAt])
+  @@index([entityType, entityId])
 
 }
 

@@ -48,7 +48,10 @@ export class AdminPaymentService {
     adminId: string,
     resolutionNote?: string,
   ) {
-    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { listing: { select: { title: true, userId: true } } },
+    });
     if (!order) throw new NotFoundException('Order not found.');
 
     const updated = await this.prisma.order.update({
@@ -69,6 +72,27 @@ export class AdminPaymentService {
         type: 'PAYMENT_DISPUTE_RESOLVED',
         title: `Payment dispute ${status.toLowerCase()}`,
         description: `Dispute on order ${orderId} was ${status.toLowerCase()}.`,
+      });
+
+      const outcomeText =
+        status === 'RESOLVED'
+          ? `Your dispute on "${order.listing.title}" was resolved.`
+          : `Your dispute on "${order.listing.title}" was rejected.`;
+
+      // Notify the buyer who raised the dispute
+      await this.notificationsService.create(order.userId, {
+        category: 'DISPUTES',
+        type: `DISPUTE_${status}`,
+        title: `Dispute ${status.toLowerCase()}`,
+        description: resolutionNote ? `${outcomeText} ${resolutionNote}` : outcomeText,
+      });
+
+      // Notify the seller whose listing/order is affected
+      await this.notificationsService.create(order.listing.userId, {
+        category: 'DISPUTES',
+        type: `DISPUTE_${status}`,
+        title: `Dispute ${status.toLowerCase()} on your order`,
+        description: `A dispute on an order for "${order.listing.title}" was ${status.toLowerCase()} by an admin.`,
       });
     }
 
