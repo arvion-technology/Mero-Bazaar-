@@ -6,7 +6,7 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import SellerCard from "@/components/SellerCard";
 import { MOCK_PRODUCTS } from "@/lib/data/buy-mock";
-import type { BuyProduct } from "@/types/buy";
+import type { BuyProduct } from "@/app/types/buy";
 import {
   FiArrowLeft,
   FiMapPin,
