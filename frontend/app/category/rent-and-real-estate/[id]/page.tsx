@@ -3,12 +3,24 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { FiShare2, FiHeart, FiMapPin, FiClock, FiCheckCircle, FiPhone, FiMessageSquare, FiMaximize, FiDroplet } from "react-icons/fi";
+import {
+  FiShare2,
+  FiHeart,
+  FiMapPin,
+  FiClock,
+  FiCheckCircle,
+  FiPhone,
+  FiMessageSquare,
+  FiMaximize,
+  FiDroplet,
+} from "react-icons/fi";
 import { FaStar, FaRegStar, FaHeart, FaBed, FaCar } from "react-icons/fa";
 import type { RentalListing } from "@/app/types/realestate";
 import type { RealEstateDetail } from "@/app/types/listing";
 import { toRentalDetail } from "@/lib/adapters/realEstateAdapter";
 import SellerCard from "@/components/SellerCard";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
@@ -22,7 +34,11 @@ function formatAvailableFrom(value: string): string {
   if (!value || value === "N/A") return "N/A";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 type RelatedCard = {
@@ -35,7 +51,12 @@ type RelatedCard = {
 
 export default function PropertyDetailPage() {
   const params = useParams();
-  const id = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
+  const id =
+    typeof params.id === "string"
+      ? params.id
+      : Array.isArray(params.id)
+        ? params.id[0]
+        : "";
 
   const [detail, setDetail] = useState<RealEstateDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,6 +67,26 @@ export default function PropertyDetailPage() {
   const [isFav, setIsFav] = useState(false);
   const [callClicked, setCallClicked] = useState(false);
   const [showFull, setShowFull] = useState(false);
+  const { data: session } = useSession();
+  const [favLoading, setFavLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!session?.accessToken || !id) return;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/check/${id}`, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setIsFav(data.favorited);
+        }
+      })
+      .catch(() => {});
+  }, [id, session?.accessToken]);
 
   useEffect(() => {
     if (!id) return;
@@ -56,14 +97,21 @@ export default function PropertyDetailPage() {
       setLoadError(null);
       try {
         const res = await fetch(`${API_BASE}/api/rental/${id}`);
-        if (!res.ok) throw new Error(res.status === 404 ? "Listing not found" : `Failed to load listing (${res.status})`);
+        if (!res.ok)
+          throw new Error(
+            res.status === 404
+              ? "Listing not found"
+              : `Failed to load listing (${res.status})`,
+          );
         const listing: RentalListing = await res.json();
         if (cancelled) return;
         const mapped = toRentalDetail(listing);
         setDetail(mapped);
 
         try {
-          const relRes = await fetch(`${API_BASE}/api/rental?city=${encodeURIComponent(listing.rental.city)}`);
+          const relRes = await fetch(
+            `${API_BASE}/api/rental?city=${encodeURIComponent(listing.rental.city)}`,
+          );
           if (relRes.ok) {
             const relData: RentalListing[] = await relRes.json();
             const cards: RelatedCard[] = relData
@@ -76,7 +124,9 @@ export default function PropertyDetailPage() {
                   r.rental.listingType === "RENT"
                     ? `Rs. ${r.rental.monthlyRent.toLocaleString()}/month`
                     : `Rs. ${r.rental.monthlyRent.toLocaleString()}`,
-                location: r.rental.area ? `${r.rental.area}, ${r.rental.city}` : r.rental.city,
+                location: r.rental.area
+                  ? `${r.rental.area}, ${r.rental.city}`
+                  : r.rental.city,
                 image: prefixImage(r.images?.[0]),
               }));
             if (!cancelled) setRelated(cards);
@@ -85,7 +135,10 @@ export default function PropertyDetailPage() {
           // related listings are non-critical; ignore failures silently
         }
       } catch (err) {
-        if (!cancelled) setLoadError(err instanceof Error ? err.message : "Failed to load listing");
+        if (!cancelled)
+          setLoadError(
+            err instanceof Error ? err.message : "Failed to load listing",
+          );
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -99,7 +152,16 @@ export default function PropertyDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Inter, sans-serif", color: "#666" }}>
+      <div
+        style={{
+          minHeight: "60vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "Inter, sans-serif",
+          color: "#666",
+        }}
+      >
         Loading listing…
       </div>
     );
@@ -107,10 +169,27 @@ export default function PropertyDetailPage() {
 
   if (loadError || !detail) {
     return (
-      <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "Inter, sans-serif", gap: "8px" }}>
-        <p style={{ fontWeight: 700, color: "#1a1a1a" }}>Couldn't load this listing</p>
-        <span style={{ color: "#888", fontSize: "14px" }}>{loadError ?? "Listing not found"}</span>
-        <Link href="/category/rent-and-real-estate" style={{ color: "#C0392B", fontWeight: 600, marginTop: "8px" }}>
+      <div
+        style={{
+          minHeight: "60vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "Inter, sans-serif",
+          gap: "8px",
+        }}
+      >
+        <p style={{ fontWeight: 700, color: "#1a1a1a" }}>
+          Couldn't load this listing
+        </p>
+        <span style={{ color: "#888", fontSize: "14px" }}>
+          {loadError ?? "Listing not found"}
+        </span>
+        <Link
+          href="/category/rent-and-real-estate"
+          style={{ color: "#C0392B", fontWeight: 600, marginTop: "8px" }}
+        >
           Back to listings
         </Link>
       </div>
@@ -120,6 +199,58 @@ export default function PropertyDetailPage() {
   const images = detail.images.map(prefixImage);
   const visibleThumbs = images.slice(0, 5);
   const extraCount = images.length - 5;
+
+  const handleToggleFavorite = async () => {
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
+    }
+
+    setFavLoading(true);
+
+    const previousState = isFav;
+    setIsFav(!previousState);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      const data = await res.json();
+
+      setIsFav(data.favorited);
+
+      toast.success(
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
+      );
+    } catch (error) {
+      console.error(error);
+      setIsFav(previousState);
+      toast.error("Something went wrong, please try again");
+    } finally {
+      setFavLoading(false);
+    }
+  };
+  const handleShare = () => {
+    navigator.clipboard?.writeText(window.location.href).catch(() => {});
+    setCopied(true);
+    toast.success("Link copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <>
@@ -257,9 +388,13 @@ export default function PropertyDetailPage() {
       <div className="pd-page">
         <nav className="pd-breadcrumb" aria-label="Breadcrumb">
           <div className="pd-breadcrumb-inner">
-            <Link href="/" className="pd-bc-link">Home</Link>
+            <Link href="/" className="pd-bc-link">
+              Home
+            </Link>
             <span className="pd-bc-sep">›</span>
-            <Link href="/category/rent-and-real-estate" className="pd-bc-link">Property</Link>
+            <Link href="/category/rent-and-real-estate" className="pd-bc-link">
+              Property
+            </Link>
             <span className="pd-bc-sep">›</span>
             <span className="pd-bc-current">{detail.title}</span>
           </div>
@@ -270,7 +405,11 @@ export default function PropertyDetailPage() {
             <div className="pd-img-card">
               <div className="pd-main-img-wrap">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={images[activeImg] ?? images[0]} alt={detail.title} className="pd-main-img" />
+                <img
+                  src={images[activeImg] ?? images[0]}
+                  alt={detail.title}
+                  className="pd-main-img"
+                />
               </div>
               <div className="pd-thumbs">
                 {visibleThumbs.map((src, i) => (
@@ -280,7 +419,11 @@ export default function PropertyDetailPage() {
                     onClick={() => setActiveImg(i)}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={src} alt={`View ${i + 1}`} className="pd-thumb-img" />
+                    <img
+                      src={src}
+                      alt={`View ${i + 1}`}
+                      className="pd-thumb-img"
+                    />
                     {i === 4 && extraCount > 0 && (
                       <div className="pd-thumb-overlay">+{extraCount}</div>
                     )}
@@ -300,15 +443,27 @@ export default function PropertyDetailPage() {
               <div className="pd-title-row">
                 <h1 className="pd-title">{detail.title}</h1>
                 <div className="pd-action-btns">
-                  <button className="pd-action-btn" aria-label="Share listing">
-                    <FiShare2 size={16} color="#555" />
+                  <button
+                    className="ld-action-btn"
+                    aria-label="Share listing"
+                    onClick={handleShare}
+                  >
+                    <span className="ld-tooltip">
+                      {copied ? "Copied!" : "Share"}
+                    </span>
+                    <FiShare2 size={15} color="#555" />
                   </button>
                   <button
-                    className={`pd-action-btn${isFav ? " fav-active" : ""}`}
+                    className={`ld-action-btn${isFav ? " fav-active" : ""}`}
                     aria-label="Save to wishlist"
-                    onClick={() => setIsFav((v) => !v)}
+                    onClick={handleToggleFavorite}
+                    disabled={favLoading}
                   >
-                    {isFav ? <FaHeart size={16} color="#e74c3c" /> : <FiHeart size={16} color="#888" />}
+                    {isFav ? (
+                      <FaHeart size={16} color="#e74c3c" />
+                    ) : (
+                      <FiHeart size={16} color="#888" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -323,10 +478,18 @@ export default function PropertyDetailPage() {
                 {detail.postedDaysAgo != null && (
                   <span className="pd-dist">
                     <FiClock size={13} color="#aaa" />
-                    Posted {detail.postedDaysAgo === 0 ? "today" : `${detail.postedDaysAgo} day(s) ago`}
+                    Posted{" "}
+                    {detail.postedDaysAgo === 0
+                      ? "today"
+                      : `${detail.postedDaysAgo} day(s) ago`}
                   </span>
                 )}
-                <a href={detail.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="pd-map-link">
+                <a
+                  href={detail.googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="pd-map-link"
+                >
                   <FiMapPin size={13} color="#C0392B" />
                   View on Map
                 </a>
@@ -351,14 +514,19 @@ export default function PropertyDetailPage() {
                   <div className="pd-feat-icon">
                     <FiMaximize size={22} color="#4B6BFB" />
                   </div>
-                  <span className="pd-feat-val" style={{ fontSize: "12px" }}>{detail.specs.sqft}</span>
+                  <span className="pd-feat-val" style={{ fontSize: "12px" }}>
+                    {detail.specs.sqft}
+                  </span>
                   <span className="pd-feat-label">Sq. ft</span>
                 </div>
                 <div className="pd-feat">
                   <div className="pd-feat-icon">
                     <FaCar size={22} color="#4B6BFB" />
                   </div>
-                  <span className="pd-feat-val" style={{ fontSize: "10px", lineHeight: "1.2" }}>
+                  <span
+                    className="pd-feat-val"
+                    style={{ fontSize: "10px", lineHeight: "1.2" }}
+                  >
                     {detail.amenities.parking ? "Avail." : "None"}
                   </span>
                   <span className="pd-feat-label">Parking</span>
@@ -368,8 +536,13 @@ export default function PropertyDetailPage() {
 
             <div className="pd-desc-card">
               <h2 className="pd-section-title">Description</h2>
-              <p className={`pd-desc-text${showFull ? "" : " clamped"}`}>{detail.description}</p>
-              <button className="pd-see-more" onClick={() => setShowFull((v) => !v)}>
+              <p className={`pd-desc-text${showFull ? "" : " clamped"}`}>
+                {detail.description}
+              </p>
+              <button
+                className="pd-see-more"
+                onClick={() => setShowFull((v) => !v)}
+              >
                 {showFull ? "See Less ▲" : "See More ▼"}
               </button>
             </div>
@@ -380,41 +553,62 @@ export default function PropertyDetailPage() {
                 <div className="pd-details-col-left">
                   <div className="pd-detail-row">
                     <span className="pd-detail-label">Property type</span>
-                    <span className="pd-detail-val">{detail.specs.propertyType}</span>
+                    <span className="pd-detail-val">
+                      {detail.specs.propertyType}
+                    </span>
                   </div>
                   <div className="pd-detail-row">
                     <span className="pd-detail-label">Listing type</span>
-                    <span className="pd-detail-val">{detail.specs.listingType}</span>
+                    <span className="pd-detail-val">
+                      {detail.specs.listingType}
+                    </span>
                   </div>
                   <div className="pd-detail-row">
                     <span className="pd-detail-label">Furnished</span>
-                    <span className="pd-detail-val">{detail.amenities.furnished ? "Yes" : "No"}</span>
+                    <span className="pd-detail-val">
+                      {detail.amenities.furnished ? "Yes" : "No"}
+                    </span>
                   </div>
                   <div className="pd-detail-row">
                     <span className="pd-detail-label">Owner type</span>
-                    <span className="pd-detail-val" style={{ textTransform: "capitalize" }}>{detail.ownerType}</span>
+                    <span
+                      className="pd-detail-val"
+                      style={{ textTransform: "capitalize" }}
+                    >
+                      {detail.ownerType}
+                    </span>
                   </div>
                 </div>
                 <div className="pd-details-col-right">
                   <div className="pd-detail-row">
                     <span className="pd-detail-label">No broker</span>
-                    <span className="pd-detail-val">{detail.noBroker ? "Yes" : "No"}</span>
+                    <span className="pd-detail-val">
+                      {detail.noBroker ? "Yes" : "No"}
+                    </span>
                   </div>
                   <div className="pd-detail-row">
                     <span className="pd-detail-label">Available from</span>
-                    <span className="pd-detail-val">{formatAvailableFrom(detail.availableFrom)}</span>
+                    <span className="pd-detail-val">
+                      {formatAvailableFrom(detail.availableFrom)}
+                    </span>
                   </div>
                   <div className="pd-detail-row">
                     <span className="pd-detail-label">Wifi</span>
-                    <span className="pd-detail-val">{detail.amenities.wifi ? "Yes" : "No"}</span>
+                    <span className="pd-detail-val">
+                      {detail.amenities.wifi ? "Yes" : "No"}
+                    </span>
                   </div>
                   <div className="pd-detail-row">
                     <span className="pd-detail-label">Water / Electricity</span>
                     <span className="pd-detail-val">
                       {detail.amenities.water ? "Water" : ""}
-                      {detail.amenities.water && detail.amenities.electricity ? " / " : ""}
+                      {detail.amenities.water && detail.amenities.electricity
+                        ? " / "
+                        : ""}
                       {detail.amenities.electricity ? "Electricity" : ""}
-                      {!detail.amenities.water && !detail.amenities.electricity ? "None" : ""}
+                      {!detail.amenities.water && !detail.amenities.electricity
+                        ? "None"
+                        : ""}
                     </span>
                   </div>
                 </div>
@@ -422,10 +616,21 @@ export default function PropertyDetailPage() {
 
               {detail.landmarks.length > 0 && (
                 <>
-                  <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#1a1a1a", margin: "20px 0 4px" }}>Nearby Landmarks</h3>
+                  <h3
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: 700,
+                      color: "#1a1a1a",
+                      margin: "20px 0 4px",
+                    }}
+                  >
+                    Nearby Landmarks
+                  </h3>
                   <div className="pd-tags-wrap">
                     {detail.landmarks.map((l) => (
-                      <span key={l} className="pd-tag">{l}</span>
+                      <span key={l} className="pd-tag">
+                        {l}
+                      </span>
                     ))}
                   </div>
                 </>
@@ -433,10 +638,21 @@ export default function PropertyDetailPage() {
 
               {detail.houseRules.length > 0 && (
                 <>
-                  <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#1a1a1a", margin: "20px 0 4px" }}>House Rules</h3>
+                  <h3
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: 700,
+                      color: "#1a1a1a",
+                      margin: "20px 0 4px",
+                    }}
+                  >
+                    House Rules
+                  </h3>
                   <div className="pd-tags-wrap">
                     {detail.houseRules.map((r) => (
-                      <span key={r} className="pd-tag">{r}</span>
+                      <span key={r} className="pd-tag">
+                        {r}
+                      </span>
                     ))}
                   </div>
                 </>
@@ -444,26 +660,39 @@ export default function PropertyDetailPage() {
             </div>
           </div>
 
-            <SellerCard
-              seller={detail.seller}
-              reviews={detail.reviews}
-              listingId={detail.id}
-              sellerId={detail.sellerId}
-            />
+          <SellerCard
+            seller={detail.seller}
+            reviews={detail.reviews}
+            listingId={detail.id}
+            sellerId={detail.sellerId}
+          />
         </div>
 
         {related.length > 0 && (
           <div className="pd-related-section">
             <div className="pd-related-header">
               <h2 className="pd-related-title">Related Listings</h2>
-              <Link href="/category/rent-and-real-estate" className="pd-related-viewall">View All →</Link>
+              <Link
+                href="/category/rent-and-real-estate"
+                className="pd-related-viewall"
+              >
+                View All →
+              </Link>
             </div>
             <div className="pd-related-scroll">
               {related.map((item) => (
-                <Link key={item.id} href={`/category/rent-and-real-estate/${item.id}`} className="pd-rel-card">
+                <Link
+                  key={item.id}
+                  href={`/category/rent-and-real-estate/${item.id}`}
+                  className="pd-rel-card"
+                >
                   <div className="pd-rel-img-wrap">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.image} alt={item.title} className="pd-rel-img" />
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="pd-rel-img"
+                    />
                   </div>
                   <div className="pd-rel-body">
                     <p className="pd-rel-name">{item.title}</p>

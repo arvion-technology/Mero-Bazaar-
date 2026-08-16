@@ -4,20 +4,36 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
-import { FiHeart, FiShare2, FiMapPin, FiBriefcase, FiClock, FiMessageSquare, FiCalendar, FiSend, FiPlusSquare, FiCheck, FiUser } from "react-icons/fi";
+import {
+  FiHeart,
+  FiShare2,
+  FiMapPin,
+  FiBriefcase,
+  FiClock,
+  FiMessageSquare,
+  FiCalendar,
+  FiSend,
+  FiPlusSquare,
+  FiCheck,
+  FiUser,
+} from "react-icons/fi";
 import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
 import { api } from "@/lib/api";
 import { toJobDetail, toJobCard } from "@/lib/adapter";
 import type { JobDetail } from "@/app/types/listing";
 import type { JobCard, JobListing } from "../../../types/jobs";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 
 function StarRating({ rating }: { rating: number }) {
   return (
     <span style={{ display: "flex", gap: "2px" }}>
       {[1, 2, 3, 4, 5].map((i) =>
-        i <= Math.round(rating)
-          ? <FaStar key={i} size={13} color="#F39C12" />
-          : <FaRegStar key={i} size={13} color="#F39C12" />
+        i <= Math.round(rating) ? (
+          <FaStar key={i} size={13} color="#F39C12" />
+        ) : (
+          <FaRegStar key={i} size={13} color="#F39C12" />
+        ),
       )}
     </span>
   );
@@ -25,16 +41,44 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function JobDetailPage() {
   const params = useParams();
-  const id = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : "";
+  const id =
+    typeof params?.id === "string"
+      ? params.id
+      : Array.isArray(params?.id)
+        ? params.id[0]
+        : "";
   const [job, setJob] = useState<JobDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [similarJobs, setSimilarJobs] = useState<JobCard[]>([]);
-  const [geoCoords, setGeoCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoCoords, setGeoCoords] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const [isFav, setIsFav] = useState(false);
   const [showFull, setShowFull] = useState(false);
   const [applied, setApplied] = useState(false);
   const [msgSent, setMsgSent] = useState(false);
+  const { data: session } = useSession();
+  const [favLoading, setFavLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!session?.accessToken || !id) return;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/check/${id}`, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setIsFav(data.favorited);
+        }
+      })
+      .catch(() => {});
+  }, [id, session?.accessToken]);
 
   useEffect(() => {
     if (!job) return;
@@ -47,11 +91,14 @@ export default function JobDetailPage() {
       try {
         const query = encodeURIComponent(job.location);
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=np`
+          `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=np`,
         );
         const data = await res.json();
         if (!cancelled && data?.[0]) {
-          setGeoCoords({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+          setGeoCoords({
+            lat: parseFloat(data[0].lat),
+            lng: parseFloat(data[0].lon),
+          });
         }
       } catch (err) {
         console.error("Geocoding failed:", err);
@@ -60,14 +107,16 @@ export default function JobDetailPage() {
       }
     };
     geocode();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [job]);
 
   useEffect(() => {
     if (!id) return;
     const load = async () => {
       try {
-        const raw = await api.getJob(id) as unknown as JobListing;
+        const raw = (await api.getJob(id)) as unknown as JobListing;
         setJob(toJobDetail(raw));
 
         const similarParams = new URLSearchParams({
@@ -75,12 +124,14 @@ export default function JobDetailPage() {
           limit: "5",
         });
 
-        const similar = await api.getJobs(similarParams) as unknown as JobListing[];
+        const similar = (await api.getJobs(
+          similarParams,
+        )) as unknown as JobListing[];
         setSimilarJobs(
           similar
-            .filter(j => j.job != null)
+            .filter((j) => j.job != null)
             .map(toJobCard)
-            .filter(j => j.id !== id)
+            .filter((j) => j.id !== id),
         );
       } catch (err) {
         console.error(err);
@@ -91,12 +142,74 @@ export default function JobDetailPage() {
     load();
   }, [id]);
 
-  if (loading) return <div style={{ padding: 40, textAlign: "center" }}>Loading...</div>;
-  if (!job) return <div style={{ padding: 40, textAlign: "center" }}>Job not found</div>;
+  if (loading)
+    return <div style={{ padding: 40, textAlign: "center" }}>Loading...</div>;
+  if (!job)
+    return (
+      <div style={{ padding: 40, textAlign: "center" }}>Job not found</div>
+    );
 
-const mapLat = job.lat ?? geoCoords?.lat ?? null;
-const mapLng = job.lng ?? geoCoords?.lng ?? null;
-const hasCoords = mapLat != null && mapLng != null;
+  const mapLat = job.lat ?? geoCoords?.lat ?? null;
+  const mapLng = job.lng ?? geoCoords?.lng ?? null;
+  const hasCoords = mapLat != null && mapLng != null;
+
+  const handleShare = () => {
+    navigator.clipboard?.writeText(window.location.href).catch(() => {});
+    setCopied(true);
+    toast.success("Link copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!session?.accessToken) {
+      toast.error("Please log in to save jobs");
+      return;
+    }
+
+    setFavLoading(true);
+
+    const previousState = isFav;
+
+    // Optimistic UI
+    setIsFav(!previousState);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      const data = await res.json();
+
+      setIsFav(data.favorited);
+
+      toast.success(
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
+      );
+    } catch (error) {
+      console.error(error);
+
+      // API fail भयो भने पुरानो state मा फर्काउने
+      setIsFav(previousState);
+
+      toast.error("Something went wrong, please try again");
+    } finally {
+      setFavLoading(false);
+    }
+  };
 
   return (
     <>
@@ -388,11 +501,18 @@ const hasCoords = mapLat != null && mapLng != null;
         <div className="jd-topbar">
           <div className="jd-topbar-inner">
             <nav className="jd-breadcrumb">
-              <Link href="/" className="jd-bc-link">Home</Link>
+              <Link href="/" className="jd-bc-link">
+                Home
+              </Link>
               <span className="jd-bc-sep">›</span>
-              <Link href="/category/job" className="jd-bc-link">Job</Link>
+              <Link href="/category/job" className="jd-bc-link">
+                Job
+              </Link>
               {job.breadcrumbs.map((bc) => (
-                <span key={bc} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                <span
+                  key={bc}
+                  style={{ display: "flex", alignItems: "center", gap: "5px" }}
+                >
                   <span className="jd-bc-sep">›</span>
                   <span className="jd-bc-current">{bc}</span>
                 </span>
@@ -402,7 +522,9 @@ const hasCoords = mapLat != null && mapLng != null;
             </nav>
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
               <span className="jd-job-id">Job ID: {job.jobId}</span>
-              <a href="#" className="jd-report">Report This Job</a>
+              <a href="#" className="jd-report">
+                Report This Job
+              </a>
             </div>
           </div>
         </div>
@@ -410,177 +532,227 @@ const hasCoords = mapLat != null && mapLng != null;
         <div className="jd-main">
           {/* MAIN LAYOUT */}
           <div className="jd-container">
-          {/* LEFT */}
-          <div className="jd-left">
-            {/* INFO */}
-            <div className="jd-info-card">
-              <div className="jd-title-row">
-                <h1 className="jd-title">{job.title}</h1>
-                <div className="jd-action-btns">
+            {/* LEFT */}
+            <div className="jd-left">
+              {/* INFO */}
+              <div className="jd-info-card">
+                <div className="jd-title-row">
+                  <h1 className="jd-title">{job.title}</h1>
+                  <div className="jd-action-btns">
+                    <button
+                      className="ld-action-btn"
+                      aria-label="Share listing"
+                      onClick={handleShare}
+                    >
+                      <span className="ld-tooltip">
+                        {copied ? "Copied!" : "Share"}
+                      </span>
+                      <FiShare2 size={15} color="#555" />
+                    </button>
+                    <button
+                      className={`ld-action-btn${isFav ? " fav-active" : ""}`}
+                      aria-label="Save to wishlist"
+                      onClick={handleToggleFavorite}
+                      disabled={favLoading}
+                    >
+                      {isFav ? (
+                        <FaHeart size={15} color="#E74C3C" />
+                      ) : (
+                        <FiHeart size={15} color="#999" />
+                      )}
+                    </button>
+                    {/* <button
+                      className="jd-action-btn"
+                      aria-label="Share job"
+                      title="Share"
+                      onClick={() =>
+                        navigator.clipboard
+                          ?.writeText(window.location.href)
+                          .catch(() => {})
+                      }
+                    >
+                      <FiShare2 size={15} color="#666" />
+                    </button> */}
+                  </div>
+                </div>
+
+                <p className="jd-salary">{job.salary}</p>
+
+                {/* CTA + SPECS  */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    marginBottom: "0",
+                  }}
+                >
+                  <div className="jd-specs-bar" style={{ flex: 1 }}>
+                    <div className="jd-spec-chip">
+                      <div className="jd-spec-icon">
+                        <FiBriefcase size={18} color="#1a5fd4" />
+                      </div>
+                      <span className="jd-spec-val">{job.type}</span>
+                      <span className="jd-spec-label">Employment Type</span>
+                    </div>
+                    <div className="jd-spec-chip">
+                      <div className="jd-spec-icon">
+                        <FiCalendar size={18} color="#1a5fd4" />
+                      </div>
+                      <span className="jd-spec-val">{job.postedDate}</span>
+                      <span className="jd-spec-label">Posted</span>
+                    </div>
+                  </div>
+
                   <button
-                    className={`jd-action-btn${isFav ? " fav-active" : ""}`}
-                    onClick={() => setIsFav(!isFav)}
-                    aria-label="Save job"
-                    title="Save"
+                    className={`jd-btn-apply${applied ? " applied" : ""}`}
+                    onClick={() => setApplied(!applied)}
+                    style={{ flex: "0 0 auto", minWidth: 160 }}
                   >
-                    {isFav ? <FaHeart size={15} color="#E74C3C" /> : <FiHeart size={15} color="#999" />}
-                  </button>
-                  <button
-                    className="jd-action-btn"
-                    aria-label="Share job"
-                    title="Share"
-                    onClick={() => navigator.clipboard?.writeText(window.location.href).catch(() => {})}
-                  >
-                    <FiShare2 size={15} color="#666" />
+                    {applied ? (
+                      <>
+                        <FiCheck size={15} color="#fff" /> Applied!
+                      </>
+                    ) : (
+                      <>
+                        <FiSend size={15} color="#fff" /> Apply Now
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
 
-              <p className="jd-salary">{job.salary}</p>      
+              {/* DESCRIPTION */}
+              <div className="jd-desc-card">
+                <h2 className="jd-section-title">Job Description</h2>
+                <p className={`jd-desc-text${showFull ? "" : " clamped"}`}>
+                  {job.description}
+                </p>
+                <button
+                  className="jd-see-more"
+                  onClick={() => setShowFull(!showFull)}
+                >
+                  {showFull ? "See Less" : "See More"}
+                </button>
+              </div>
 
-            {/* CTA + SPECS  */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  marginBottom: "0",
-                }}
-              >
-                <div className="jd-specs-bar" style={{ flex: 1 }}>
-                  <div className="jd-spec-chip">
-                    <div className="jd-spec-icon"><FiBriefcase size={18} color="#1a5fd4" /></div>
-                    <span className="jd-spec-val">{job.type}</span>
-                    <span className="jd-spec-label">Employment Type</span>
+              {/* SIMILAR JOBS */}
+              <div className="jd-similar-card">
+                <div className="jd-similar-head">
+                  <p className="jd-similar-title">Similar Jobs</p>
+                  <Link href="/category/job" className="jd-similar-viewall">
+                    View All
+                  </Link>
+                </div>
+                <div className="jd-similar-scroll">
+                  {similarJobs.map((s) => (
+                    <Link
+                      key={s.id}
+                      href={`/category/job/${s.id}`}
+                      className="jd-sim-card"
+                    >
+                      <p className="jd-sim-company">{s.company}</p>
+                      <p className="jd-sim-title">{s.title}</p>
+                      <span className="jd-sim-type">{s.type}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT */}
+            <div className="jd-right">
+              {/* MAP CARD */}
+              <div className="jd-map-card">
+                <p className="jd-map-card-title">Location</p>
+                {geoLoading ? (
+                  <p className="jd-map-unavailable">Loading map...</p>
+                ) : hasCoords ? (
+                  <>
+                    <div style={{ height: 160, overflow: "hidden" }}>
+                      <iframe
+                        title="Job Location Map"
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0, display: "block" }}
+                        loading="lazy"
+                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapLng! - 0.015}%2C${mapLat! - 0.01}%2C${mapLng! + 0.015}%2C${mapLat! + 0.01}&layer=mapnik&marker=${mapLat}%2C${mapLng}`}
+                      />
+                    </div>
+                    <p className="jd-map-city">{job.location}</p>
+                    <a
+                      href={`https://www.openstreetmap.org/?mlat=${mapLat}&mlon=${mapLng}#map=15/${mapLat}/${mapLng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="jd-map-link"
+                    >
+                      <FiMapPin size={12} color="#1a5fd4" />
+                      View Full Map
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <p className="jd-map-unavailable">Location not available</p>
+                    <p className="jd-map-city" style={{ paddingTop: 0 }}>
+                      {job.location}
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* POSTED BY CARD */}
+              <div className="jd-postedby-card">
+                <p className="jd-postedby-title">Posted By</p>
+                <div className="jd-poster-top">
+                  <div className="jd-poster-avatar-wrap">
+                    <div className="jd-poster-avatar">
+                      <FiUser size={22} color="#1a5fd4" />
+                    </div>
+                    <span className="jd-poster-online" />
                   </div>
-                  <div className="jd-spec-chip">
-                    <div className="jd-spec-icon"><FiCalendar size={18} color="#1a5fd4" /></div>
-                    <span className="jd-spec-val">{job.postedDate}</span>
-                    <span className="jd-spec-label">Posted</span>
+                  <div>
+                    <p className="jd-poster-name">{job.postedBy.name}</p>
+                    <div
+                      className="jd-rating-row"
+                      style={{ marginBottom: "5px" }}
+                    >
+                      <span className="jd-rating-num">
+                        {job.postedBy.rating}
+                      </span>
+                      <StarRating rating={job.postedBy.rating} />
+                      <span className="jd-reviews">
+                        ({job.postedBy.reviewCount} Reviews)
+                      </span>
+                    </div>
+                    {job.postedBy.isVerified && (
+                      <span className="jd-poster-badge">
+                        <FiCheck size={9} color="#1e8449" />
+                        Verified employer
+                      </span>
+                    )}
                   </div>
                 </div>
-
                 <button
-                  className={`jd-btn-apply${applied ? " applied" : ""}`}
-                  onClick={() => setApplied(!applied)}
-                  style={{ flex: "0 0 auto", minWidth: 160 }}
+                  className={`jd-btn-msg${msgSent ? " sent" : ""}`}
+                  onClick={() => setMsgSent(!msgSent)}
                 >
-                  {applied ? (
-                    <><FiCheck size={15} color="#fff" /> Applied!</>
+                  {msgSent ? (
+                    <>
+                      <FiCheck size={14} color="#1e8449" /> Message Sent!
+                    </>
                   ) : (
-                    <><FiSend size={15} color="#fff" /> Apply Now</>
+                    <>
+                      <FiMessageSquare size={14} color="#555" /> Send Message
+                    </>
                   )}
                 </button>
               </div>
             </div>
-
-            {/* DESCRIPTION */}
-            <div className="jd-desc-card">
-              <h2 className="jd-section-title">Job Description</h2>
-              <p className={`jd-desc-text${showFull ? "" : " clamped"}`}>{job.description}</p>
-              <button className="jd-see-more" onClick={() => setShowFull(!showFull)}>
-                {showFull ? "See Less" : "See More"}
-              </button>
-            </div>
-
-            {/* SIMILAR JOBS */}
-            <div className="jd-similar-card">
-              <div className="jd-similar-head">
-                <p className="jd-similar-title">Similar Jobs</p>
-                <Link href="/category/job" className="jd-similar-viewall">View All</Link>
-              </div>
-              <div className="jd-similar-scroll">
-                {similarJobs.map((s) => (
-                  <Link key={s.id} href={`/category/job/${s.id}`} className="jd-sim-card">
-                    <p className="jd-sim-company">{s.company}</p>
-                    <p className="jd-sim-title">{s.title}</p>
-                    <span className="jd-sim-type">{s.type}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT */}
-          <div className="jd-right">
-          {/* MAP CARD */}
-          <div className="jd-map-card">
-            <p className="jd-map-card-title">Location</p>
-            {geoLoading ? (
-              <p className="jd-map-unavailable">Loading map...</p>
-            ) : hasCoords ? (
-              <>
-                <div style={{ height: 160, overflow: "hidden" }}>
-                  <iframe
-                    title="Job Location Map"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0, display: "block" }}
-                    loading="lazy"
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapLng! - 0.015}%2C${mapLat! - 0.010}%2C${mapLng! + 0.015}%2C${mapLat! + 0.010}&layer=mapnik&marker=${mapLat}%2C${mapLng}`}
-                  />
-                </div>
-                <p className="jd-map-city">{job.location}</p>
-                <a
-                  href={`https://www.openstreetmap.org/?mlat=${mapLat}&mlon=${mapLng}#map=15/${mapLat}/${mapLng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="jd-map-link"
-                >
-                  <FiMapPin size={12} color="#1a5fd4" />
-                  View Full Map
-                </a>
-              </>
-            ) : (
-              <>
-                <p className="jd-map-unavailable">Location not available</p>
-                <p className="jd-map-city" style={{ paddingTop: 0 }}>{job.location}</p>
-              </>
-            )}
-          </div>
-
-            {/* POSTED BY CARD */}
-            <div className="jd-postedby-card">
-              <p className="jd-postedby-title">Posted By</p>
-              <div className="jd-poster-top">
-                <div className="jd-poster-avatar-wrap">
-                  <div className="jd-poster-avatar">
-                    <FiUser size={22} color="#1a5fd4" />
-                  </div>
-                  <span className="jd-poster-online" />
-                </div>
-                <div>
-                  <p className="jd-poster-name">{job.postedBy.name}</p>
-                  <div className="jd-rating-row" style={{ marginBottom: "5px" }}>
-                    <span className="jd-rating-num">{job.postedBy.rating}</span>
-                    <StarRating rating={job.postedBy.rating} />
-                    <span className="jd-reviews">({job.postedBy.reviewCount} Reviews)</span>
-                  </div>
-                  {job.postedBy.isVerified && (
-                    <span className="jd-poster-badge">
-                      <FiCheck size={9} color="#1e8449" />
-                      Verified employer
-                    </span>
-                  )}
-                </div>
-              </div>
-              <button
-                className={`jd-btn-msg${msgSent ? " sent" : ""}`}
-                onClick={() => setMsgSent(!msgSent)}
-              >
-                {msgSent ? (
-                  <><FiCheck size={14} color="#1e8449" /> Message Sent!</>
-                ) : (
-                  <><FiMessageSquare size={14} color="#555" /> Send Message</>
-                )}
-              </button>
-            </div>
           </div>
         </div>
-      </div>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
     </>
   );
 }

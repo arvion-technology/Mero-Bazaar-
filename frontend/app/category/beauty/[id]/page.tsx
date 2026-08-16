@@ -5,14 +5,26 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import { useState, useEffect } from "react";
 import {
-  FiMapPin, FiArrowLeft, FiPhone, FiShare2,
-  FiCalendar, FiStar, FiClock, FiScissors, FiHome,
-  FiFrown, FiZap, FiCheck,
+  FiMapPin,
+  FiArrowLeft,
+  FiPhone,
+  FiShare2,
+  FiCalendar,
+  FiStar,
+  FiClock,
+  FiScissors,
+  FiHome,
+  FiFrown,
+  FiZap,
+  FiCheck,
+  FiHeart,
 } from "react-icons/fi";
 import { FaHeart, FaSpa } from "react-icons/fa";
 import { toBeautyCard, toBeautyDetail } from "@/lib/adapters/beautyAdapter";
 import type { BeautyListing, BeautyCard } from "@/app/types/beauty";
 import type { BeautyDetail } from "@/app/types/listing";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 
 const RELATED_LIMIT = 3;
 
@@ -41,6 +53,24 @@ export default function BeautyDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isFav, setIsFav] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
+  const { data: session } = useSession();
+  const [favLoading, setFavLoading] = useState(false);
+  useEffect(() => {
+    if (!session?.accessToken || !id) return;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/check/${id}`, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setIsFav(data.favorited);
+        }
+      })
+      .catch(() => {});
+  }, [id, session?.accessToken]);
 
   useEffect(() => {
     if (!id) return;
@@ -59,7 +89,11 @@ export default function BeautyDetailPage() {
         const all = await fetchBeautyListings();
         if (cancelled) return;
         const relatedCards = all
-          .filter((l) => l.id !== raw.id && l.beauty?.serviceType === raw.beauty?.serviceType)
+          .filter(
+            (l) =>
+              l.id !== raw.id &&
+              l.beauty?.serviceType === raw.beauty?.serviceType,
+          )
           .slice(0, RELATED_LIMIT)
           .map((l) => {
             try {
@@ -82,14 +116,22 @@ export default function BeautyDetailPage() {
 
   const getCategoryBadgeStyle = (serviceType: string) => {
     switch (serviceType) {
-      case "Makeup Artist": return { background: "#db2777", color: "#fff" };
-      case "Salon": return { background: "#7c3aed", color: "#fff" };
-      case "Barber": return { background: "#0f766e", color: "#fff" };
-      case "Skincare": return { background: "#1d4ed8", color: "#fff" };
-      case "Spa": return { background: "#059669", color: "#fff" };
-      case "Cosmetics": return { background: "#e11d48", color: "#fff" };
-      case "Bridal": return { background: "#f59e0b", color: "#fff" };
-      default: return { background: "#6b7280", color: "#fff" };
+      case "Makeup Artist":
+        return { background: "#db2777", color: "#fff" };
+      case "Salon":
+        return { background: "#7c3aed", color: "#fff" };
+      case "Barber":
+        return { background: "#0f766e", color: "#fff" };
+      case "Skincare":
+        return { background: "#1d4ed8", color: "#fff" };
+      case "Spa":
+        return { background: "#059669", color: "#fff" };
+      case "Cosmetics":
+        return { background: "#e11d48", color: "#fff" };
+      case "Bridal":
+        return { background: "#f59e0b", color: "#fff" };
+      default:
+        return { background: "#6b7280", color: "#fff" };
     }
   };
 
@@ -102,13 +144,30 @@ export default function BeautyDetailPage() {
           <FiStar
             key={i}
             size={14}
-            fill={i < fullStars || (i === fullStars && hasHalf) ? "#f59e0b" : "none"}
-            color={i < fullStars || (i === fullStars && hasHalf) ? "#f59e0b" : "#d1d5db"}
+            fill={
+              i < fullStars || (i === fullStars && hasHalf) ? "#f59e0b" : "none"
+            }
+            color={
+              i < fullStars || (i === fullStars && hasHalf)
+                ? "#f59e0b"
+                : "#d1d5db"
+            }
           />
         ))}
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#111", marginLeft: 6 }}>{rating.toFixed(1)}</span>
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: "#111",
+            marginLeft: 6,
+          }}
+        >
+          {rating.toFixed(1)}
+        </span>
         {reviewCount > 0 && (
-          <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: 3 }}>({reviewCount} Reviews)</span>
+          <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: 3 }}>
+            ({reviewCount} Reviews)
+          </span>
         )}
       </div>
     );
@@ -117,11 +176,17 @@ export default function BeautyDetailPage() {
   if (item === undefined) {
     return (
       <div className="bd-state">
-        <div className="spinner" style={{
-          width: 32, height: 32, border: "3px solid #fbcfe8",
-          borderTopColor: "#e11d48", borderRadius: "50%",
-          animation: "spin 0.7s linear infinite",
-        }} />
+        <div
+          className="spinner"
+          style={{
+            width: 32,
+            height: 32,
+            border: "3px solid #fbcfe8",
+            borderTopColor: "#e11d48",
+            borderRadius: "50%",
+            animation: "spin 0.7s linear infinite",
+          }}
+        />
       </div>
     );
   }
@@ -191,6 +256,51 @@ export default function BeautyDetailPage() {
   }
 
   const badgeStyle = getCategoryBadgeStyle(item.serviceType);
+  const handleToggleFavorite = async () => {
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
+    }
+
+    setFavLoading(true);
+
+    const previousState = isFav;
+    setIsFav(!previousState);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      const data = await res.json();
+
+      setIsFav(data.favorited);
+
+      toast.success(
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
+      );
+    } catch (error) {
+      console.error(error);
+      setIsFav(previousState);
+      toast.error("Something went wrong, please try again");
+    } finally {
+      setFavLoading(false);
+    }
+  };
 
   return (
     <>
@@ -531,17 +641,21 @@ export default function BeautyDetailPage() {
               <div className="bd-img-section">
                 <div className="bd-main-img-wrap">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.images[activeImg] ?? item.images[0]} alt={item.title} className="bd-main-img" />
+                  <img
+                    src={item.images[activeImg] ?? item.images[0]}
+                    alt={item.title}
+                    className="bd-main-img"
+                  />
 
-                  <span className="bd-img-cat-badge" style={badgeStyle}>{item.serviceType}</span>
-
-                  <button className="bd-img-fav-btn" onClick={() => setIsFav(!isFav)}>
-                    {isFav ? <FaHeart size={16} color="#ef4444" /> : <FaHeart size={16} color="#d1d5db" />}
-                  </button>
+                  <span className="bd-img-cat-badge" style={badgeStyle}>
+                    {item.serviceType}
+                  </span>
 
                   <span className="bd-posted-tag">
                     <FiClock size={10} style={{ marginRight: 4 }} />
-                    {item.postedDaysAgo === 0 ? "Today" : `${item.postedDaysAgo}d ago`}
+                    {item.postedDaysAgo === 0
+                      ? "Today"
+                      : `${item.postedDaysAgo}d ago`}
                   </span>
 
                   {item.homeVisit && (
@@ -598,7 +712,14 @@ export default function BeautyDetailPage() {
                         <span className="bd-review-date">{r.createdAt}</span>
                       </div>
                       {renderStars(r.rating, 0)}
-                      {r.comment && <p className="bd-review-comment" style={{ marginTop: 4 }}>{r.comment}</p>}
+                      {r.comment && (
+                        <p
+                          className="bd-review-comment"
+                          style={{ marginTop: 4 }}
+                        >
+                          {r.comment}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -607,9 +728,43 @@ export default function BeautyDetailPage() {
 
             <div className="bd-right">
               <div className="bd-panel">
-                <h1 className="bd-name">{item.title}</h1>
+                <div className="jd-title-row">
+                  <h1 className="jd-title">{item.title}</h1>
+                  <div className="jd-action-btns">
+                    <button
+                      className={`ld-action-btn${isFav ? " fav-active" : ""}`}
+                      aria-label="Save to wishlist"
+                      onClick={handleToggleFavorite}
+                      disabled={favLoading}
+                    >
+                      {isFav ? (
+                        <FaHeart size={15} color="#E74C3C" />
+                      ) : (
+                        <FiHeart size={15} color="#999" />
+                      )}
+                    </button>
+                    <button
+                      className="jd-action-btn"
+                      aria-label="Share listing"
+                      title="Share"
+                      onClick={() =>
+                        navigator.clipboard
+                          ?.writeText(window.location.href)
+                          .catch(() => {})
+                      }
+                    >
+                      <FiShare2 size={15} color="#666" />
+                    </button>
+                  </div>
+                </div>
                 <p className="bd-category">
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                    }}
+                  >
                     <FiScissors size={11} color="#9ca3af" />
                     {item.serviceType}
                   </span>
@@ -617,24 +772,25 @@ export default function BeautyDetailPage() {
                 <p className="bd-price-label">Starting From</p>
                 <p className="bd-price">{item.price}</p>
                 <div className="bd-price-divider" />
-
-                <div style={{ marginBottom: 12 }}>{renderStars(item.rating, item.reviews.length)}</div>
-
+                <div style={{ marginBottom: 12 }}>
+                  {renderStars(item.rating, item.reviews.length)}
+                </div>
                 <div className="bd-location">
                   <FiMapPin size={14} />
                   {item.location}
                 </div>
-
-                {item.detailedDescription && <p className="bd-desc">{item.detailedDescription}</p>}
-
+                {item.detailedDescription && (
+                  <p className="bd-desc">{item.detailedDescription}</p>
+                )}
                 {item.tags.length > 0 && (
                   <div className="bd-subs-row">
                     {item.tags.map((tag) => (
-                      <span key={tag} className="bd-sub-pill">{tag}</span>
+                      <span key={tag} className="bd-sub-pill">
+                        {tag}
+                      </span>
                     ))}
                   </div>
                 )}
-
                 <div className="bd-details-grid">
                   {item.duration !== "N/A" && (
                     <div className="bd-detail-item">
@@ -666,11 +822,12 @@ export default function BeautyDetailPage() {
                   <div className="bd-detail-item">
                     <p className="bd-detail-label">Posted</p>
                     <p className="bd-detail-val">
-                      {item.postedDaysAgo === 0 ? "Today" : `${item.postedDaysAgo} day${item.postedDaysAgo > 1 ? "s" : ""} ago`}
+                      {item.postedDaysAgo === 0
+                        ? "Today"
+                        : `${item.postedDaysAgo} day${item.postedDaysAgo > 1 ? "s" : ""} ago`}
                     </p>
                   </div>
                 </div>
-
                 <div className="bd-badges-row">
                   {item.homeVisit && (
                     <span className="bd-badge-home">
@@ -683,25 +840,34 @@ export default function BeautyDetailPage() {
                     </span>
                   )}
                 </div>
-
                 <div className="bd-avail">
                   <span className="bd-avail-dot" />
                   Currently Accepting Bookings
                 </div>
-
                 <div className="bd-actions">
-                  <Link href={`tel:${item.seller.phone}`} className="bd-btn-book">
+                  <Link
+                    href={`tel:${item.seller.phone}`}
+                    className="bd-btn-book"
+                  >
                     <FiCalendar size={16} />
                     Book Now
                   </Link>
-                  <button className="bd-btn-phone" onClick={() => window.open(`tel:${item.seller.phone}`, "_self")}>
+                  <button
+                    className="bd-btn-phone"
+                    onClick={() =>
+                      window.open(`tel:${item.seller.phone}`, "_self")
+                    }
+                  >
                     <FiPhone size={16} />
                   </button>
                   <button
                     className="bd-btn-share"
                     onClick={() => {
                       if (navigator.share) {
-                        navigator.share({ title: item.title, url: window.location.href });
+                        navigator.share({
+                          title: item.title,
+                          url: window.location.href,
+                        });
                       }
                     }}
                   >
@@ -713,14 +879,23 @@ export default function BeautyDetailPage() {
               <div className="bd-provider-panel">
                 <p className="bd-provider-title">Service Provider</p>
                 <div className="bd-provider-row">
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div className="bd-provider-avatar">{(item.seller.name ?? "P")[0]}</div>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 12 }}
+                  >
+                    <div className="bd-provider-avatar">
+                      {(item.seller.name ?? "P")[0]}
+                    </div>
                     <div>
                       <p className="bd-provider-name">{item.seller.name}</p>
                       <p className="bd-provider-phone">{item.seller.phone}</p>
                     </div>
                   </div>
-                  <button className="bd-provider-chat-btn" onClick={() => window.open(`tel:${item.seller.phone}`, "_self")}>
+                  <button
+                    className="bd-provider-chat-btn"
+                    onClick={() =>
+                      window.open(`tel:${item.seller.phone}`, "_self")
+                    }
+                  >
                     <FiPhone size={13} /> Call Now
                   </button>
                 </div>
@@ -730,10 +905,16 @@ export default function BeautyDetailPage() {
 
           {related.length > 0 && (
             <div className="bd-related">
-              <p className="bd-related-title">Similar {item.serviceType} Services</p>
+              <p className="bd-related-title">
+                Similar {item.serviceType} Services
+              </p>
               <div className="bd-related-grid">
                 {related.map((r) => (
-                  <Link key={r.id} href={`/category/beauty/${r.id}`} className="bd-rel-card">
+                  <Link
+                    key={r.id}
+                    href={`/category/beauty/${r.id}`}
+                    className="bd-rel-card"
+                  >
                     <div className="bd-rel-img-wrap">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={r.thumb} alt={r.title} className="bd-rel-img" />
@@ -741,17 +922,37 @@ export default function BeautyDetailPage() {
                     <div className="bd-rel-body">
                       <p className="bd-rel-name">{r.title}</p>
                       <p className="bd-rel-price">{r.price}</p>
-                      {r.city && <p className="bd-rel-loc"><FiMapPin size={10} />{r.city}</p>}
+                      {r.city && (
+                        <p className="bd-rel-loc">
+                          <FiMapPin size={10} />
+                          {r.city}
+                        </p>
+                      )}
                       <div className="bd-rel-rating">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <FiStar
                             key={i}
                             size={10}
-                            fill={i < Math.floor(r.rating ?? 0) ? "#f59e0b" : "none"}
-                            color={i < Math.floor(r.rating ?? 0) ? "#f59e0b" : "#d1d5db"}
+                            fill={
+                              i < Math.floor(r.rating ?? 0) ? "#f59e0b" : "none"
+                            }
+                            color={
+                              i < Math.floor(r.rating ?? 0)
+                                ? "#f59e0b"
+                                : "#d1d5db"
+                            }
                           />
                         ))}
-                        <span style={{ fontSize: 10, fontWeight: 700, color: "#111", marginLeft: 3 }}>{(r.rating ?? 0).toFixed(1)}</span>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: "#111",
+                            marginLeft: 3,
+                          }}
+                        >
+                          {(r.rating ?? 0).toFixed(1)}
+                        </span>
                       </div>
                     </div>
                   </Link>

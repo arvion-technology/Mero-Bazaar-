@@ -3,12 +3,31 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiHeart, FiCheck, FiChevronDown, FiTool, FiLoader, FiAlertTriangle, FiShare2, } from "react-icons/fi";
+import {
+  FiSearch,
+  FiMapPin,
+  FiHeart,
+  FiCheck,
+  FiChevronDown,
+  FiTool,
+  FiLoader,
+  FiAlertTriangle,
+  FiShare2,
+} from "react-icons/fi";
 import { FaHeart, FaStar, FaHammer } from "react-icons/fa";
-import { MdHandyman, MdConstruction, MdPlumbing, MdElectricalServices, MdFormatPaint, MdCleaningServices } from "react-icons/md";
+import {
+  MdHandyman,
+  MdConstruction,
+  MdPlumbing,
+  MdElectricalServices,
+  MdFormatPaint,
+  MdCleaningServices,
+} from "react-icons/md";
 import { api } from "@/lib/api";
 import { toTradesCard } from "@/lib/adapters/tradesAdapter";
 import type { TradesCard, TradesListing } from "@/app/types/trades";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 
 const TAG_ICON_MATCHERS: Array<[RegExp, React.ReactNode]> = [
   [/plumb/i, <MdPlumbing size={22} color="#b45309" />],
@@ -39,16 +58,14 @@ export default function TradeAndHomeRepairPage() {
   const [city, setCity] = useState("");
   const [emergencyOnly, setEmergencyOnly] = useState(false);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+  const { data: session } = useSession();
 
   /* ---------- sort dropdown ---------- */
   const [sortOpen, setSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (
-        sortRef.current &&
-        !sortRef.current.contains(e.target as Node)
-      )
+      if (sortRef.current && !sortRef.current.contains(e.target as Node))
         setSortOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
@@ -78,7 +95,7 @@ export default function TradeAndHomeRepairPage() {
       .catch((err) => {
         if (!cancelled)
           setError(
-            err instanceof Error ? err.message : "Failed to load listings"
+            err instanceof Error ? err.message : "Failed to load listings",
           );
       })
       .finally(() => {
@@ -90,21 +107,94 @@ export default function TradeAndHomeRepairPage() {
     };
   }, []);
 
-  const toggleFav = (id: string, e: React.MouseEvent) => {
+  useEffect(() => {
+    if (!session?.accessToken) return;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`,
+          {
+            headers: { Authorization: `Bearer ${session.accessToken}` },
+          },
+        );
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const favMap: Record<string, boolean> = {};
+        data.forEach((item: { listingId: string }) => {
+          favMap[item.listingId] = true;
+        });
+        setFavorites(favMap);
+      } catch {
+        // silently ignore
+      }
+    })();
+  }, [session?.accessToken]);
+
+  const toggleFav = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setFavorites((p) => ({ ...p, [id]: !p[id] }));
+
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
+    }
+
+    const previousState = !!favorites[id];
+
+    // Instant UI update
+    setFavorites((p) => ({
+      ...p,
+      [id]: !previousState,
+    }));
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      const data = await res.json();
+
+      setFavorites((p) => ({
+        ...p,
+        [id]: data.favorited,
+      }));
+
+      toast.success(
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
+      );
+    } catch (error) {
+      console.error("Wishlist error:", error);
+
+      // Rollback UI if API fails
+      setFavorites((p) => ({
+        ...p,
+        [id]: previousState,
+      }));
+
+      toast.error("Something went wrong. Please try again.");
+    }
   };
-
-  const shareTrade = async (
-    listing: TradesCard,
-    e: React.MouseEvent
-  ) => {
+  const shareTrade = async (listing: TradesCard, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const tradeUrl =
-      `${window.location.origin}/category/trade-and-homerepair/${listing.id}`;
+    const tradeUrl = `${window.location.origin}/category/trade-and-homerepair/${listing.id}`;
 
     const shareData = {
       title: listing.title,
@@ -130,10 +220,7 @@ export default function TradeAndHomeRepairPage() {
       window.prompt("Copy service link:", tradeUrl);
     } catch (error) {
       // User cancelled share dialog
-      if (
-        error instanceof DOMException &&
-        error.name === "AbortError"
-      ) {
+      if (error instanceof DOMException && error.name === "AbortError") {
         return;
       }
 
@@ -165,7 +252,7 @@ export default function TradeAndHomeRepairPage() {
         .sort((a, b) => b[1] - a[1])
         .slice(0, 7)
         .map(([tag]) => tag),
-    [tagCounts]
+    [tagCounts],
   );
 
   const displayed = useMemo(() => {
@@ -500,8 +587,9 @@ export default function TradeAndHomeRepairPage() {
                 {topTags.map((tag) => (
                   <button
                     key={tag}
-                    className={`th-cat-card${activeTag === tag ? " active" : ""
-                      }`}
+                    className={`th-cat-card${
+                      activeTag === tag ? " active" : ""
+                    }`}
                     onClick={() =>
                       setActiveTag(activeTag === tag ? "All" : tag)
                     }
@@ -555,8 +643,9 @@ export default function TradeAndHomeRepairPage() {
                   <p className="thf-label">Skill</p>
                   <div className="thf-chips">
                     <button
-                      className={`thf-chip${activeTag === "All" ? " active" : ""
-                        }`}
+                      className={`thf-chip${
+                        activeTag === "All" ? " active" : ""
+                      }`}
                       onClick={() => setActiveTag("All")}
                     >
                       All
@@ -564,8 +653,9 @@ export default function TradeAndHomeRepairPage() {
                     {topTags.map((tag) => (
                       <button
                         key={tag}
-                        className={`thf-chip${activeTag === tag ? " active" : ""
-                          }`}
+                        className={`thf-chip${
+                          activeTag === tag ? " active" : ""
+                        }`}
                         onClick={() => setActiveTag(tag)}
                       >
                         {tag}
@@ -601,8 +691,7 @@ export default function TradeAndHomeRepairPage() {
                 {/* ---------- custom sort dropdown ---------- */}
                 <div className="th-sort-dropdown" ref={sortRef}>
                   <button
-                    className={`th-sort-trigger${sortOpen ? " open" : ""
-                      }`}
+                    className={`th-sort-trigger${sortOpen ? " open" : ""}`}
                     onClick={() => setSortOpen(!sortOpen)}
                   >
                     {SORT_OPTIONS.find((o) => o.value === sort)?.label}
@@ -613,8 +702,9 @@ export default function TradeAndHomeRepairPage() {
                       {SORT_OPTIONS.map((opt) => (
                         <button
                           key={opt.value}
-                          className={`th-sort-item${sort === opt.value ? " active" : ""
-                            }`}
+                          className={`th-sort-item${
+                            sort === opt.value ? " active" : ""
+                          }`}
                           onClick={() => {
                             setSort(opt.value as typeof sort);
                             setSortOpen(false);
@@ -709,15 +799,11 @@ export default function TradeAndHomeRepairPage() {
                                 Emergency Available
                               </span>
                             ) : (
-                              <span
-                                style={{ fontSize: "11px", color: "#bbb" }}
-                              >
+                              <span style={{ fontSize: "11px", color: "#bbb" }}>
                                 {l.calloutCharge}
                               </span>
                             )}
-                            <span className="th-card-view">
-                              View Details →
-                            </span>
+                            <span className="th-card-view">View Details →</span>
                           </div>
                         </div>
                       </Link>

@@ -5,9 +5,17 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
 import {
-  FiMapPin, FiMessageSquare, FiArrowLeft,
-  FiPhone, FiShare2, FiHeart, FiCheckCircle,
-  FiCalendar, FiUser, FiAlertTriangle, FiSun,
+  FiMapPin,
+  FiMessageSquare,
+  FiArrowLeft,
+  FiPhone,
+  FiShare2,
+  FiHeart,
+  FiCheckCircle,
+  FiCalendar,
+  FiUser,
+  FiAlertTriangle,
+  FiSun,
 } from "react-icons/fi";
 import { FaHeart, FaLeaf, FaShieldAlt } from "react-icons/fa";
 import { api } from "@/lib/api";
@@ -15,6 +23,8 @@ import { toAgricultureDetail } from "@/lib/adapters/agricultureAdapter";
 import type { AgricultureListing } from "@/app/types/agriculture";
 import type { AgricultureDetail } from "@/app/types/listing";
 import SellerCard from "@/components/SellerCard";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 
 export default function AgriDetailPage() {
   const params = useParams();
@@ -23,30 +33,72 @@ export default function AgriDetailPage() {
   const [detail, setDetail] = useState<AgricultureDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const [favLoading, setFavLoading] = useState(false);
+  useEffect(() => {
+    if (!session?.accessToken || !id) return;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/check/${id}`, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setIsFav(data.favorited);
+        }
+      })
+      .catch(() => {});
+  }, [id, session?.accessToken]);
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
     setLoading(true);
-    api.getAgricultureListing(id)
-      .then((raw: AgricultureListing) => { if (!cancelled) setDetail(toAgricultureDetail(raw)); })
-      .catch((err) => { if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load listing"); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+    api
+      .getAgricultureListing(id)
+      .then((raw: AgricultureListing) => {
+        if (!cancelled) setDetail(toAgricultureDetail(raw));
+      })
+      .catch((err) => {
+        if (!cancelled)
+          setError(
+            err instanceof Error ? err.message : "Failed to load listing",
+          );
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const getCategoryBadgeStyle = (category: string) => {
     switch (category) {
-      case "Livestock": return { background: "#ec4899", color: "#fff" };
-      case "Produce":   return { background: "#10b981", color: "#fff" };
-      case "Tool":      return { background: "#3b82f6", color: "#fff" };
-      default:          return { background: "#8b5cf6", color: "#fff" };
+      case "Livestock":
+        return { background: "#ec4899", color: "#fff" };
+      case "Produce":
+        return { background: "#10b981", color: "#fff" };
+      case "Tool":
+        return { background: "#3b82f6", color: "#fff" };
+      default:
+        return { background: "#8b5cf6", color: "#fff" };
     }
   };
 
   if (loading) {
     return (
-      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280" }}>
+      <div
+        style={{
+          minHeight: "60vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#6b7280",
+        }}
+      >
         Loading listing...
       </div>
     );
@@ -70,10 +122,15 @@ export default function AgriDetailPage() {
           }
         `}</style>
         <div className="al-404">
-          <div style={{ fontSize: 56, color: "#15803d" }}><FiSun /></div>
+          <div style={{ fontSize: 56, color: "#15803d" }}>
+            <FiSun />
+          </div>
           <h1>Listing Not Found</h1>
           <p>{error ?? "The item you are looking for does not exist."}</p>
-          <Link href="/category/agriculture-and-livestock" className="al-back-btn">
+          <Link
+            href="/category/agriculture-and-livestock"
+            className="al-back-btn"
+          >
             <FiArrowLeft size={14} /> Back to Listings
           </Link>
         </div>
@@ -83,6 +140,51 @@ export default function AgriDetailPage() {
   }
 
   const badgeStyle = getCategoryBadgeStyle(detail.listingType);
+  const handleToggleFavorite = async () => {
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
+    }
+
+    setFavLoading(true);
+
+    const previousState = isFav;
+    setIsFav(!previousState);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      const data = await res.json();
+
+      setIsFav(data.favorited);
+
+      toast.success(
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
+      );
+    } catch (error) {
+      console.error(error);
+      setIsFav(previousState);
+      toast.error("Something went wrong, please try again");
+    } finally {
+      setFavLoading(false);
+    }
+  };
 
   return (
     <>
@@ -321,8 +423,12 @@ export default function AgriDetailPage() {
       <div className="ald-wrap">
         <div className="ald-breadcrumb-bar">
           <div className="ald-breadcrumb-inner">
-            <Link href="/">Home</Link><span>/</span>
-            <Link href="/category/agriculture-and-livestock">Agriculture &amp; Livestock</Link><span>/</span>
+            <Link href="/">Home</Link>
+            <span>/</span>
+            <Link href="/category/agriculture-and-livestock">
+              Agriculture &amp; Livestock
+            </Link>
+            <span>/</span>
             <span className="active">{detail.title}</span>
           </div>
         </div>
@@ -337,19 +443,27 @@ export default function AgriDetailPage() {
               <div className="ald-img-section">
                 <div className="ald-main-img-wrap">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={detail.images[0]} alt={detail.title} className="ald-main-img" />
-                  <span className="ald-img-cat-badge" style={badgeStyle}>#{detail.listingType}</span>
-                  <button className="ald-img-fav-btn" onClick={() => setIsFav(!isFav)}>
+                  <img
+                    src={detail.images[0]}
+                    alt={detail.title}
+                    className="ald-main-img"
+                  />
+                  <span className="ald-img-cat-badge" style={badgeStyle}>
+                    #{detail.listingType}
+                  </span>
+                  {/* <button className="ald-img-fav-btn" onClick={() => setIsFav(!isFav)}>
                     <FaHeart size={16} color={isFav ? "#ef4444" : "#d1d5db"} />
-                  </button>
+                  </button> */}
 
                   {/* Posted time */}
                   {detail.postedDaysAgo !== undefined && (
                     <span className="ald-posted-tag">
-                      {detail.postedDaysAgo === 0 ? "Today" : `${detail.postedDaysAgo}d ago`}
+                      {detail.postedDaysAgo === 0
+                        ? "Today"
+                        : `${detail.postedDaysAgo}d ago`}
                     </span>
                   )}
-            {/* 
+                  {/* 
                   {/* Organic ribbon 
                   {detail.isOrganic && (
                     <span className="ald-organic-tag"><FaLeaf size={10} /> Organic</span>
@@ -358,41 +472,139 @@ export default function AgriDetailPage() {
               </div>
 
               <div className="ald-tips" style={{ marginTop: 16 }}>
-                <p className="ald-tips-title"><FiAlertTriangle size={12} style={{ marginRight: 6 }} /> Safety Tips</p>
-                <div className="ald-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Meet in a safe, public location</div>
-                <div className="ald-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Verify livestock health certificates before buying</div>
-                <div className="ald-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Never pay full amount before receiving the item</div>
-                <div className="ald-tip-item"><FiCheckCircle size={11} style={{ marginTop: 2, flexShrink: 0 }} /> Report suspicious listings to our support team</div>
+                <p className="ald-tips-title">
+                  <FiAlertTriangle size={12} style={{ marginRight: 6 }} />{" "}
+                  Safety Tips
+                </p>
+                <div className="ald-tip-item">
+                  <FiCheckCircle
+                    size={11}
+                    style={{ marginTop: 2, flexShrink: 0 }}
+                  />{" "}
+                  Meet in a safe, public location
+                </div>
+                <div className="ald-tip-item">
+                  <FiCheckCircle
+                    size={11}
+                    style={{ marginTop: 2, flexShrink: 0 }}
+                  />{" "}
+                  Verify livestock health certificates before buying
+                </div>
+                <div className="ald-tip-item">
+                  <FiCheckCircle
+                    size={11}
+                    style={{ marginTop: 2, flexShrink: 0 }}
+                  />{" "}
+                  Never pay full amount before receiving the item
+                </div>
+                <div className="ald-tip-item">
+                  <FiCheckCircle
+                    size={11}
+                    style={{ marginTop: 2, flexShrink: 0 }}
+                  />{" "}
+                  Report suspicious listings to our support team
+                </div>
               </div>
             </div>
 
             <div className="ald-right">
               <div className="ald-panel">
-                <h1 className="ald-title">{detail.title}</h1>
+                <div className="jd-title-row">
+                  <h1 className="jd-title">{detail.title}</h1>
+                  <div className="jd-action-btns">
+                    <button
+                      className={`ld-action-btn${isFav ? " fav-active" : ""}`}
+                      aria-label="Save to wishlist"
+                      onClick={handleToggleFavorite}
+                      disabled={favLoading}
+                    >
+                      {isFav ? (
+                        <FaHeart size={15} color="#E74C3C" />
+                      ) : (
+                        <FiHeart size={15} color="#999" />
+                      )}
+                    </button>
+                    <button
+                      className="jd-action-btn"
+                      aria-label="Share listing"
+                      title="Share"
+                      onClick={() =>
+                        navigator.clipboard
+                          ?.writeText(window.location.href)
+                          .catch(() => {})
+                      }
+                    >
+                      <FiShare2 size={15} color="#666" />
+                    </button>
+                  </div>
+                </div>
                 <p className="ald-price">{detail.price}</p>
                 <div className="ald-price-divider" />
-                <div className="ald-location"><FiMapPin size={14} /> {detail.location}</div>
+                <div className="ald-location">
+                  <FiMapPin size={14} /> {detail.location}
+                </div>
                 <p className="ald-desc">{detail.description}</p>
-
                 <div className="ald-details-grid">
                   {detail.breed !== "N/A" && (
-                    <div className="ald-detail-item"><p className="ald-detail-label">Breed</p><p className="ald-detail-val">{detail.breed}</p></div>
+                    <div className="ald-detail-item">
+                      <p className="ald-detail-label">Breed</p>
+                      <p className="ald-detail-val">{detail.breed}</p>
+                    </div>
                   )}
                   {detail.age !== "N/A" && (
-                    <div className="ald-detail-item"><p className="ald-detail-label">Age</p><p className="ald-detail-val">{detail.age}</p></div>
+                    <div className="ald-detail-item">
+                      <p className="ald-detail-label">Age</p>
+                      <p className="ald-detail-val">{detail.age}</p>
+                    </div>
                   )}
                   {detail.seasonalAvailability !== "N/A" && (
-                    <div className="ald-detail-item"><p className="ald-detail-label">Season</p><p className="ald-detail-val">{detail.seasonalAvailability}</p></div>
+                    <div className="ald-detail-item">
+                      <p className="ald-detail-label">Season</p>
+                      <p className="ald-detail-val">
+                        {detail.seasonalAvailability}
+                      </p>
+                    </div>
                   )}
-                  <div className="ald-detail-item"><p className="ald-detail-label">District</p><p className="ald-detail-val">{detail.district}</p></div>
-                  <div className="ald-detail-item"><p className="ald-detail-label">Posted</p><p className="ald-detail-val">{detail.postedDaysAgo === 0 ? "Today" : `${detail.postedDaysAgo} day${detail.postedDaysAgo > 1 ? "s" : ""} ago`}</p></div>
-                  <div className="ald-detail-item"><p className="ald-detail-label">Category</p><p className="ald-detail-val">{detail.listingType}</p></div>
+                  <div className="ald-detail-item">
+                    <p className="ald-detail-label">District</p>
+                    <p className="ald-detail-val">{detail.district}</p>
+                  </div>
+                  <div className="ald-detail-item">
+                    <p className="ald-detail-label">Posted</p>
+                    <p className="ald-detail-val">
+                      {detail.postedDaysAgo === 0
+                        ? "Today"
+                        : `${detail.postedDaysAgo} day${detail.postedDaysAgo > 1 ? "s" : ""} ago`}
+                    </p>
+                  </div>
+                  <div className="ald-detail-item">
+                    <p className="ald-detail-label">Category</p>
+                    <p className="ald-detail-val">{detail.listingType}</p>
+                  </div>
                 </div>
-
                 <div className="ald-badges-row">
-                  {detail.organicCertified && <span className="ald-badge-organic"><FaLeaf size={11} /> Organic Certified</span>}
-                  {detail.healthVaccineStatus !== "N/A" && <span className="ald-badge-vax"><FaShieldAlt size={11} /> {detail.healthVaccineStatus}</span>}
-                  <button className="ald-btn-share" onClick={() => { if (navigator.share) navigator.share({ title: detail.title, url: window.location.href }); }}><FiShare2 size={16} /></button>
+                  {detail.organicCertified && (
+                    <span className="ald-badge-organic">
+                      <FaLeaf size={11} /> Organic Certified
+                    </span>
+                  )}
+                  {detail.healthVaccineStatus !== "N/A" && (
+                    <span className="ald-badge-vax">
+                      <FaShieldAlt size={11} /> {detail.healthVaccineStatus}
+                    </span>
+                  )}
+                  <button
+                    className="ald-btn-share"
+                    onClick={() => {
+                      if (navigator.share)
+                        navigator.share({
+                          title: detail.title,
+                          url: window.location.href,
+                        });
+                    }}
+                  >
+                    <FiShare2 size={16} />
+                  </button>
                 </div>
               </div>
 

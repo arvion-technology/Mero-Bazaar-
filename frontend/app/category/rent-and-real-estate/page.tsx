@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 import {
   FiSearch,
   FiMapPin,
@@ -179,6 +181,8 @@ export default function PropertyPage() {
   const [filterPrice, setFilterPrice] = useState("");
   const [filterFurnished, setFilterFurnished] = useState(false);
   const [filterUnfurnished, setFilterUnfurnished] = useState(false);
+    const { data: session } = useSession();
+
 
   useEffect(() => {
     let cancelled = false;
@@ -209,10 +213,87 @@ export default function PropertyPage() {
     };
   }, []);
 
-  const toggleFav = (id: string, e: React.MouseEvent) => {
+  useEffect(() => {
+      if (!session?.accessToken) return;
+  
+      (async () => {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
+            headers: { Authorization: `Bearer ${session.accessToken}` },
+          });
+          if (!res.ok) return;
+  
+          const data = await res.json();
+          const favMap: Record<string, boolean> = {};
+          data.forEach((item: { listingId: string }) => {
+            favMap[item.listingId] = true;
+          });
+          setFavorites(favMap);
+        } catch {
+          // silently ignore
+        }
+      })();
+    }, [session?.accessToken]);
+  
+    const toggleFav = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setFavorites((p) => ({ ...p, [id]: !p[id] }));
+  
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
+    }
+  
+    const previousState = !!favorites[id];
+  
+    // Instant UI update
+    setFavorites((p) => ({
+      ...p,
+      [id]: !previousState,
+    }));
+  
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        }
+      );
+  
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+  
+      const data = await res.json();
+  
+      setFavorites((p) => ({
+        ...p,
+        [id]: data.favorited,
+      }));
+  
+      toast.success(
+        data.favorited
+          ? "Added to wishlist"
+          : "Removed from wishlist"
+      );
+    } catch (error) {
+      console.error("Wishlist error:", error);
+  
+      // Rollback UI if API fails
+      setFavorites((p) => ({
+        ...p,
+        [id]: previousState,
+      }));
+  
+      toast.error("Something went wrong. Please try again.");
+    }
   };
   const shareProperty = async (property: DisplayCard, e: React.MouseEvent) => {
     e.preventDefault();
