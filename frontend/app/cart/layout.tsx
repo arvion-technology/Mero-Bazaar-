@@ -1,3 +1,5 @@
+import { FoodCartProvider } from "../context/FoodCartContext";
+
 export default function CartLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <FoodCartProvider>{children}</FoodCartProvider>;
 }

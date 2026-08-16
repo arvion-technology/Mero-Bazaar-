@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useFoodCart } from "../../context/FoodCartContext";
 import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
 const methods = [
   { id: "esewa" as const, name: "eSewa", logo: "/esewa_logo.png" },
@@ -10,10 +11,43 @@ const methods = [
   { id: "connectips" as const, name: "ConnectIPS", logo: "/logo_connectIPS.png" },
 ];
 
+function defaultDeliveryDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString();
+}
+
+function submitEsewaForm(gatewayUrl: string, fields: Record< string, string>) {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = gatewayUrl;
+  Object.entries(fields). forEach(([Key, value]) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = Key;
+    input.value = value;
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  form.submit();
+}
+
 export default function CartPaymentPage() {
   const router = useRouter();
-  const { paymentMethod, setPaymentMethod, totalAmount, deliveryInfo } = useFoodCart();
   const [isDesktop, setIsDesktop] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
+  const { 
+    selectedItems,
+    paymentMethod,
+    setPaymentMethod,
+    itemTotal,
+    deliveryFee,
+    platformFee,
+    totalAmount,
+    selectedCount,
+    deliveryInfo,
+  } = useFoodCart();
 
   useEffect(() => {
     const check = () => setIsDesktop(window.innerWidth >= 768);
