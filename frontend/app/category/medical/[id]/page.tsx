@@ -22,6 +22,7 @@ import {
   FiMail,
   FiMessageSquare,
   FiChevronRight,
+  FiActivity,
 } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { toMedicalDetail } from "@/lib/adapters/medicalAdapter";
@@ -560,10 +561,10 @@ export default function MedicalDetailPage() {
                   {copied ? "Copied!" : "Share"}
                 </button>
                 <button
-                 className={`ld-action-btn${isFav ? " fav-active" : ""}`}
-                      aria-label="Save to wishlist"
-                      onClick={handleToggleFavorite}
-                      disabled={favLoading}
+                  className={`ld-action-btn${isFav ? " fav-active" : ""}`}
+                  aria-label="Save to wishlist"
+                  onClick={handleToggleFavorite}
+                  disabled={favLoading}
                 >
                   {isFav ? (
                     <FaHeart size={13} color="#e74c3c" />
@@ -616,7 +617,9 @@ export default function MedicalDetailPage() {
 
               <div className="md2-chips-row">
                 <div className="md2-chip">
-                  <div className="md2-chip-icon">🏅</div>
+                  <div className="md2-chip-icon">
+                    <FiActivity size={16} />
+                  </div>{" "}
                   <span className="md2-chip-val">
                     {listing.experience || "N/A"}
                   </span>
