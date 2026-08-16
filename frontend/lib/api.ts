@@ -25,6 +25,22 @@ export interface OrderResponse {
   [key: string]: unknown;
 }
 
+export interface OrderDetail {
+  id: string;
+  status: string;
+  totalPrice: number;
+  paymentMethod: string | null;
+  paymentRef: string | null;
+  quantity: number;
+  createdAt: string;
+  listing: {
+    id: string;
+    title: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 export interface EsewaInitiateResponse {
   gatewayUrl: string;
   fields: Record<string, string>;
@@ -170,8 +186,10 @@ export const api = {
 
   createDeliveryOrder: (payload: CreateDeliveryOrderPayload) =>
     postLocal<OrderResponse>('/api/orders/delivery', payload),
-  initiateEsewa: (orderIds: string[]) =>
+  getOrder: (id: string) => 
+    get<OrderDetail>(`/api/orders/${id}`),
+  initiateEsewa: (orderIds: string) =>
     postLocal<EsewaInitiateResponse>('/api/payments/esewa/initiate', { orderIds }),
-  initiateKhalti: (orderIds: string[]) =>
+  initiateKhalti: (orderIds: string) =>
     postLocal<KhaltiInitiateResponse>('/api/payments/khalti/initiate', { orderIds }),
 };

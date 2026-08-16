@@ -1,16 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useFoodCart } from "../../context/FoodCartContext";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function CartCheckoutPage() {
   const router = useRouter();
-  const { deliveryInfo, setDeliveryInfo, itemTotal, deliveryFee, totalAmount } = useFoodCart();
+  const { status, data: session } = useSession();
+  const { deliveryInfo, setDeliveryInfo, itemTotal, deliveryFee, totalAmount, selectedCount } = useFoodCart();
   const [isDesktop, setIsDesktop] = useState(false);
-  
- 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const hasAutofilled = useRef(false);
 
   useEffect(() => {
     const check = () => setIsDesktop(window.innerWidth >= 768);
@@ -19,9 +20,41 @@ export default function CartCheckoutPage() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  // Logged-out users can't check out — send them to log in and come straight back here after.
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace(`/login?callbackUrl=${encodeURIComponent("/cart/checkout")}`);
+    }
+  }, [status, router]);
+
+  // Autofill from the session once, without stomping on anything the user's already typed
+  // (e.g. if they navigate back here after partially filling the form).
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.user || hasAutofilled.current) return;
+    hasAutofilled.current = true;
+
+    const updates: Partial<typeof deliveryInfo> = {};
+    if (!deliveryInfo.firstName && session.user.name) {
+      updates.firstName = session.user.name;
+    }
+    if (!deliveryInfo.phone && session.user.phone) {
+      updates.phone = session.user.phone;
+    }
+    // Best-effort only — the User model stores one combined `address` string,
+    // there's no separate region/city on the backend to prefill those two.
+    if (!deliveryInfo.address && session.user.address) {
+      updates.address = session.user.address;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      setDeliveryInfo(updates);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, session]);
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!deliveryInfo.firstName?.trim()) {
       newErrors.firstName = "First name is required";
     }
@@ -39,7 +72,7 @@ export default function CartCheckoutPage() {
     if (!deliveryInfo.address?.trim()) {
       newErrors.address = "Address is required";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -51,17 +84,14 @@ export default function CartCheckoutPage() {
     }
   };
 
-  // Only allow digits in phone input
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, ""); // strip all non-digits
+    const value = e.target.value.replace(/\D/g, "");
     setDeliveryInfo({ phone: value });
-    // Clear error when user starts typing
     if (errors.phone) {
       setErrors((prev) => ({ ...prev, phone: "" }));
     }
   };
 
-  // Prevent typing letters in phone field
   const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const allowedKeys = [
       "Backspace", "Delete", "Tab", "Escape", "Enter",
@@ -74,7 +104,6 @@ export default function CartCheckoutPage() {
     }
   };
 
-  // Clear error when user types in other fields
   const handleChange = (field: string, value: string) => {
     setDeliveryInfo({ [field]: value });
     if (errors[field]) {
@@ -108,6 +137,15 @@ export default function CartCheckoutPage() {
     display: "block",
     minHeight: 16,
   };
+
+  // Avoid flashing the form before the redirect decision lands.
+  if (status === "loading" || status === "unauthenticated") {
+    return (
+      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "system-ui, sans-serif", color: "#666" }}>
+        {status === "loading" ? "Loading…" : "Redirecting to login…"}
+      </div>
+    );
+  }
 
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", background: "#f9fafb", minHeight: "100vh" }}>
@@ -273,7 +311,7 @@ export default function CartCheckoutPage() {
 
             <h3 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 12px" }}>Order details</h3>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 14, color: "#444" }}>
-              <span>Item Total (3 items)</span>
+              <span>Item Total ({selectedCount} {selectedCount === 1 ? "item" : "items"})</span>
               <span>Rs. {itemTotal}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14, fontSize: 14, color: "#444" }}>

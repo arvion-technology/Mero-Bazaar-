@@ -110,6 +110,7 @@ export default function FoodDetailPage() {
 
     addItem({
       id: item.id,
+      listingId: item.id,
       name: item.title,
       description: item.description || item.foodType || "",
       variant: item.priceUnit || "",
