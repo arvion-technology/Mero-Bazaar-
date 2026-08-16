@@ -1,19 +1,20 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import SellerCard from "@/components/SellerCard";
+import { MOCK_PRODUCTS } from "@/lib/data/buy-mock";
+import type { BuyProduct } from "@/types/buy";
 import {
   FiArrowLeft,
   FiMapPin,
   FiHeart,
   FiShare2,
   FiShoppingCart,
-  FiMessageCircle,
   FiCheckCircle,
   FiStar,
-  FiChevronRight,
   FiClock,
   FiShield,
   FiTruck,
@@ -26,7 +27,6 @@ import {
   FiCalendar,
 } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
-import { MOCK_PRODUCTS } from "../page";
 
 /* ─────────── TOAST TYPE ─────────── */
 interface Toast {
@@ -115,22 +115,6 @@ html, body { overflow-x: hidden; }
 .bd-btn-share { width: 48px; height: 48px; border-radius: 9px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #e5e7eb; background: #f9fafb; color: #374151; cursor: pointer; transition: all 0.15s; }
 .bd-btn-share:hover { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
 
-/* ─── SELLER CLICKABLE STYLES ─── */
-.bd-seller-panel { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-.bd-seller-title { font-size: 12px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
-.bd-seller-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.bd-seller-clickable { display: flex; align-items: center; gap: 12px; flex: 1; cursor: pointer; padding: 6px; margin: -6px; border-radius: 10px; transition: background 0.15s; }
-.bd-seller-clickable:hover { background: #f9fafb; }
-.bd-seller-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #f43f5e, #e11d48); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 800; flex-shrink: 0; }
-.bd-seller-name { font-size: 14px; font-weight: 800; color: #111; }
-.bd-seller-phone { font-size: 12px; color: #6b7280; margin-top: 2px; }
-.bd-seller-chat-btn { display: flex; align-items: center; gap: 6px; background: #e11d48; color: #fff; font-size: 12.5px; font-weight: 800; border: none; padding: 9px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background 0.15s; }
-.bd-seller-chat-btn:hover { background: #be123c; }
-.bd-seller-stats { display: flex; gap: 16px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6; }
-.bd-seller-stat { text-align: center; flex: 1; }
-.bd-seller-stat-num { font-size: 18px; font-weight: 800; color: #111; }
-.bd-seller-stat-label { font-size: 11px; color: #6b7280; margin-top: 2px; }
-
 .bd-tips { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; }
 .bd-tips-title { font-size: 12px; font-weight: 800; color: #1d4ed8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
 .bd-tip-item { display: flex; align-items: flex-start; gap: 6px; font-size: 11.5px; color: #1e40af; margin-bottom: 5px; line-height: 1.5; }
@@ -183,7 +167,6 @@ html, body { overflow-x: hidden; }
 /* ─────────── COMPONENT ─────────── */
 export default function BuyDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params?.id as string;
 
   const product = MOCK_PRODUCTS.find((p) => p.id === id);
@@ -239,17 +222,6 @@ export default function BuyDetailPage() {
       navigator.clipboard.writeText(window.location.href);
       showToast("Link copied to clipboard!", "info");
     }
-  };
-
-  const chatSeller = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    showToast("Chat feature coming soon!", "info");
-  };
-
-  /* ─── SELLER PROFILE NAVIGATION ─── */
-  const goToSellerProfile = () => {
-    if (!product) return;
-    router.push(`/sellers/${product.seller.id}`);
   };
 
   /* ─── SIMILAR ITEMS ─── */
@@ -346,6 +318,7 @@ export default function BuyDetailPage() {
               </Link>
 
               <div className="bd-grid">
+                {/* LEFT COLUMN */}
                 <div>
                   <div className="bd-img-section">
                     <div className="bd-main-img-wrap">
@@ -425,6 +398,7 @@ export default function BuyDetailPage() {
                   )}
                 </div>
 
+                {/* RIGHT COLUMN */}
                 <div className="bd-right">
                   <div className="bd-panel">
                     <h1 className="bd-name">{product.title}</h1>
@@ -512,40 +486,13 @@ export default function BuyDetailPage() {
                     </div>
                   </div>
 
-                  {/* ─── CLICKABLE SELLER PANEL ─── */}
-                  <div className="bd-seller-panel">
-                    <p className="bd-seller-title">Seller Information</p>
-                    <div className="bd-seller-row">
-                      <div 
-                        className="bd-seller-clickable" 
-                        onClick={goToSellerProfile}
-                        title="View seller profile"
-                      >
-                        <div className="bd-seller-avatar">{(product.seller.name ?? "S")[0]}</div>
-                        <div>
-                          <p className="bd-seller-name">{product.seller.name}</p>
-                          <p className="bd-seller-phone">{product.seller.phone}</p>
-                        </div>
-                      </div>
-                      <button className="bd-seller-chat-btn" onClick={(e) => chatSeller(e)}>
-                        <FiMessageCircle size={13} /> Chat
-                      </button>
-                    </div>
-                    <div className="bd-seller-stats">
-                      <div className="bd-seller-stat">
-                        <div className="bd-seller-stat-num">{product.seller.listings}</div>
-                        <div className="bd-seller-stat-label">Listings</div>
-                      </div>
-                      <div className="bd-seller-stat">
-                        <div className="bd-seller-stat-num">98%</div>
-                        <div className="bd-seller-stat-label">Response</div>
-                      </div>
-                      <div className="bd-seller-stat">
-                        <div className="bd-seller-stat-num">&lt;1h</div>
-                        <div className="bd-seller-stat-label">Avg. Reply</div>
-                      </div>
-                    </div>
-                  </div>
+                  {/* ─── REUSABLE SELLER CARD ─── */}
+                  <SellerCard
+                    seller={product.seller}
+                    reviews={product.reviews}
+                    listingId={product.id}
+                    sellerId={product.seller.id}
+                  />
                 </div>
               </div>
 

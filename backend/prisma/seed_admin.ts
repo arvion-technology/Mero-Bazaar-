@@ -6,6 +6,9 @@ const prisma = new PrismaClient();
 async function main() {
   const email = process.env.ADMIN_EMAIL ?? "admin@hamromarketplace.com";
   const plainPassword = process.env.ADMIN_PASSWORD;
+ if (!plainPassword) {
+    throw new Error("ADMIN_PASSWORD is not set in .env — cannot seed admin user.");
+  }
   const hash = await bcrypt.hash(plainPassword, 10);
 
   const admin = await prisma.user.upsert({
