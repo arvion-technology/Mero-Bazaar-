@@ -8,6 +8,7 @@ import type { AgricultureListing } from "../app/types/agriculture";
 import type { FoodsListing } from "../app/types/foods";
 import type { MedicalListing } from "@/app/types/medical";
 import type { BeautyListing } from "@/app/types/beauty";
+import { getSession } from "next-auth/react";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -50,13 +51,14 @@ export interface KhaltiInitiateResponse {
   paymentUrl: string;
 }
 
-function getToken() {
-  return typeof window !== "undefined" ? localStorage.getItem("token") : null;
+async function getToken() {
+  const session = await getSession();
+  return (session?.accessToken as string | undefined) ?? null;
 }
 
 async function get<T>(path: string, params?: URLSearchParams): Promise<T> {
   const url = params ? `${BASE}${path}?${params}` : `${BASE}${path}`;
-  const token = getToken();
+  const token = await getToken();
   const res = await fetch(url, {
     next: { revalidate: 60 },
     headers: {
@@ -68,7 +70,7 @@ async function get<T>(path: string, params?: URLSearchParams): Promise<T> {
 }
 
 async function post<T>(path: string, body: unknown): Promise<T> {
-  const token = getToken();
+  const token = await getToken();
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
     headers: {
@@ -83,7 +85,7 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 }
 
 async function postLocal<T>(path: string, body: unknown): Promise<T> {
-  const token = getToken();
+  const token = await getToken();
   const res = await fetch(path, {
     method: "POST",
     headers: {
@@ -98,7 +100,7 @@ async function postLocal<T>(path: string, body: unknown): Promise<T> {
 }
 
 async function patch<T>(path: string, body: unknown): Promise<T> {
-  const token = getToken();
+  const token = await getToken();
   const res = await fetch(`${BASE}${path}`, {
     method: "PATCH",
     headers: {
@@ -113,7 +115,7 @@ async function patch<T>(path: string, body: unknown): Promise<T> {
 }
 
 async function del<T>(path: string): Promise<T> {
-  const token = getToken();
+  const token = await getToken();
   const res = await fetch(`${BASE}${path}`, {
     method: "DELETE",
     headers: {
@@ -188,8 +190,8 @@ export const api = {
     postLocal<OrderResponse>('/api/orders/delivery', payload),
   getOrder: (id: string) => 
     get<OrderDetail>(`/api/orders/${id}`),
-  initiateEsewa: (orderIds: string) =>
-    postLocal<EsewaInitiateResponse>('/api/payments/esewa/initiate', { orderIds }),
-  initiateKhalti: (orderIds: string) =>
-    postLocal<KhaltiInitiateResponse>('/api/payments/khalti/initiate', { orderIds }),
+  initiateEsewa: (orderId: string) =>
+    postLocal<EsewaInitiateResponse>('/api/payments/esewa/initiate', { orderId }),
+  initiateKhalti: (orderId: string) =>
+    postLocal<KhaltiInitiateResponse>('/api/payments/khalti/initiate', { orderId }),
 };
