@@ -486,9 +486,16 @@ export default function BuyDetailPage() {
                     </div>
                   </div>
 
-                  {/* ─── REUSABLE SELLER CARD ─── */}
+               {/* ─── REUSABLE SELLER CARD ─── */}
                   <SellerCard
-                    seller={product.seller}
+                    seller={{
+                      ...product.seller,
+                      avatar: product.seller.avatar ?? "/default-avatar.png",
+                      isPro: product.seller.isPro ?? false,
+                      isTrusted: product.seller.isTrusted ?? false,
+                      responseRate: product.seller.responseRate ?? "N/A",
+                      avgResponseTime: product.seller.avgResponseTime ?? "N/A",
+                    }}
                     reviews={product.reviews}
                     listingId={product.id}
                     sellerId={product.seller.id}
