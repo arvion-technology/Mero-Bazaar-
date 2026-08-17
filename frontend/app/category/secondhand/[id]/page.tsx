@@ -7,6 +7,8 @@ import Footer from "@/components/Footer";
 import SellerCard from "@/components/SellerCard";
 import { fetchListing, fetchRelatedListings } from "../../../../lib/fetcher";
 import type { SecondhandDetail, RelatedListing } from "@/app/types/listing"; // fixed: SecondhandDetail, not ListingDetail
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 import {
   FiArrowLeft,
   FiMapPin,
@@ -31,6 +33,27 @@ export default function SecondhandDetailPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [isFav, setIsFav] = useState(false);
+  const { data: session } = useSession();
+    const [favLoading, setFavLoading] = useState(false);
+      const [copied, setCopied]   = useState(false);
+
+  useEffect(() => {
+    if (!session?.accessToken || !id) return;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/check/${id}`, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setIsFav(data.favorited);
+        }
+      })
+      .catch(() => {});
+  }, [id, session?.accessToken]);
+
 
   useEffect(() => {
     if (!id) return;
@@ -115,7 +138,60 @@ export default function SecondhandDetailPage() {
     "Fair": { bg: "#fff8e1", color: "#f57f17", border: "#ffe082" },
     "For Parts": { bg: "#ffebee", color: "#c62828", border: "#ffcdd2" },
   };
+const handleToggleFavorite = async () => {
+  if (!session?.accessToken) {
+    toast.error("Please log in to save listings");
+    return;
+  }
 
+  setFavLoading(true);
+
+  const previousState = isFav;
+  setIsFav(!previousState);
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        body: JSON.stringify({
+          listingId: id,
+        }),
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to update wishlist");
+    }
+
+    const data = await res.json();
+
+    setIsFav(data.favorited);
+
+    toast.success(
+      data.favorited
+        ? "Added to wishlist"
+        : "Removed from wishlist"
+    );
+  } catch (error) {
+    console.error(error);
+    setIsFav(previousState);
+    toast.error("Something went wrong, please try again");
+  } finally {
+    setFavLoading(false);
+  }
+};
+ const handleShare = () => {
+    navigator.clipboard?.writeText(window.location.href).catch(() => {});
+    setCopied(true);
+    toast.success("Link copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
+  
   return (
     <>
       <style>{`
@@ -300,13 +376,16 @@ export default function SecondhandDetailPage() {
               <div className="sh-title-row">
                 <h1 className="sh-title">{item.title}</h1>
                 <div className="sh-action-btns">
-                  <button className="sh-action-btn" aria-label="Share listing">
-                    <FiShare2 size={16} color="#71717a" />
-                  </button>
+                   <button className="cd-share-btn" onClick={handleShare}>
+                  <FiShare2 size={14} color="#555" />
+                  {copied ? "Copied!" : "Share"} 
+                </button>
                   <button
-                    className={`sh-action-btn${isFav ? " fav-active" : ""}`}
-                    aria-label="Save to wishlist"
-                    onClick={() => setIsFav((v) => !v)}
+                     className={`ld-action-btn${isFav ? " fav-active" : ""}`}
+                      aria-label="Save to wishlist"
+                      onClick={handleToggleFavorite}
+                      disabled={favLoading}
+                    
                   >
                     {isFav ? <FaHeart size={16} color="#ef4444" /> : <FiHeart size={16} color="#71717a" />}
                   </button>

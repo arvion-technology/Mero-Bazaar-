@@ -8,10 +8,18 @@ import { api } from "@/lib/api";
 import { toFoodsCard, toFoodsDetail } from "@/lib/adapters/foodsAdapter";
 import type { FoodsListing, FoodsCard } from "@/app/types/foods";
 import type { FoodDetail } from "@/app/types/listing";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 import {
-  FiMapPin, FiMessageSquare, FiArrowLeft,
-  FiPhone, FiShare2, FiCheckCircle,
-  FiStar, FiClock,
+  FiMapPin,
+  FiMessageSquare,
+  FiArrowLeft,
+  FiPhone,
+  FiShare2,
+  FiCheckCircle,
+  FiStar,
+  FiClock,
+  FiHeart
 } from "react-icons/fi";
 import { FaHeart, FaUtensils } from "react-icons/fa";
 import SellerCard from "@/components/SellerCard";
@@ -19,7 +27,10 @@ import { useFoodCart } from "../../../context/FoodCartContext";
 
 const RELATED_LIMIT = 3;
 
-const FOOD_TYPE_BADGE_STYLE: Record<string, { background: string; color: string }> = {
+const FOOD_TYPE_BADGE_STYLE: Record<
+  string,
+  { background: string; color: string }
+> = {
   Tiffin: { background: "#e11d48", color: "#fff" },
   Bakery: { background: "#b45309", color: "#fff" },
   Dairy: { background: "#f59e0b", color: "#fff" },
@@ -49,6 +60,26 @@ export default function FoodDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [isFav, setIsFav] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
+  const { data: session } = useSession();
+  const [favLoading, setFavLoading] = useState(false);
+    const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!session?.accessToken || !id) return;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/check/${id}`, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setIsFav(data.favorited);
+        }
+      })
+      .catch(() => {});
+  }, [id, session?.accessToken]);
 
   useEffect(() => {
     if (!id) return;
@@ -66,7 +97,9 @@ export default function FoodDetailPage() {
         const all = await api.getFoods();
         if (cancelled) return;
         const rel = all
-          .filter((l) => l.id !== raw.id && l.foods?.foodType === raw.foods?.foodType)
+          .filter(
+            (l) => l.id !== raw.id && l.foods?.foodType === raw.foods?.foodType,
+          )
           .slice(0, RELATED_LIMIT)
           .map(toFoodsCard);
         setRelated(rel);
@@ -77,7 +110,9 @@ export default function FoodDetailPage() {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const renderStars = (rating: number, reviewCount: number) => {
@@ -89,12 +124,33 @@ export default function FoodDetailPage() {
           <FiStar
             key={i}
             size={14}
-            fill={i < fullStars ? "#f59e0b" : i === fullStars && hasHalf ? "#f59e0b" : "none"}
-            color={i < fullStars || (i === fullStars && hasHalf) ? "#f59e0b" : "#d1d5db"}
+            fill={
+              i < fullStars
+                ? "#f59e0b"
+                : i === fullStars && hasHalf
+                  ? "#f59e0b"
+                  : "none"
+            }
+            color={
+              i < fullStars || (i === fullStars && hasHalf)
+                ? "#f59e0b"
+                : "#d1d5db"
+            }
           />
         ))}
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#111", marginLeft: 6 }}>{rating.toFixed(1)}</span>
-        <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: 3 }}>({reviewCount} Reviews)</span>
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: "#111",
+            marginLeft: 6,
+          }}
+        >
+          {rating.toFixed(1)}
+        </span>
+        <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: 3 }}>
+          ({reviewCount} Reviews)
+        </span>
       </div>
     );
   };
@@ -124,7 +180,16 @@ export default function FoodDetailPage() {
   if (loading) {
     return (
       <>
-        <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", color: "#6b7280" }}>
+        <div
+          style={{
+            minHeight: "60vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: "'Inter', sans-serif",
+            color: "#6b7280",
+          }}
+        >
           Loading restaurant details…
         </div>
         <Footer />
@@ -151,7 +216,9 @@ export default function FoodDetailPage() {
           }
         `}</style>
         <div className="fd-404">
-          <div style={{ fontSize: 56, color: "#16a34a" }}><FaUtensils /></div>
+          <div style={{ fontSize: 56, color: "#16a34a" }}>
+            <FaUtensils />
+          </div>
           <h1>Restaurant Not Found</h1>
           <p>The restaurant you are looking for does not exist.</p>
           <Link href="/category/food" className="fd-back-btn">
@@ -163,7 +230,61 @@ export default function FoodDetailPage() {
     );
   }
 
-  const badgeStyle = FOOD_TYPE_BADGE_STYLE[item.foodType] ?? { background: "#6b7280", color: "#fff" };
+  const badgeStyle = FOOD_TYPE_BADGE_STYLE[item.foodType] ?? {
+    background: "#6b7280",
+    color: "#fff",
+  };
+  const handleToggleFavorite = async () => {
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
+    }
+
+    setFavLoading(true);
+
+    const previousState = isFav;
+    setIsFav(!previousState);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      const data = await res.json();
+
+      setIsFav(data.favorited);
+
+      toast.success(
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
+      );
+    } catch (error) {
+      console.error(error);
+      setIsFav(previousState);
+      toast.error("Something went wrong, please try again");
+    } finally {
+      setFavLoading(false);
+    }
+  };
+  const handleShare = () => {
+    navigator.clipboard?.writeText(window.location.href).catch(() => {});
+    setCopied(true);
+    toast.success("Link copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <>
@@ -355,7 +476,6 @@ export default function FoodDetailPage() {
       `}</style>
 
       <div className="fd-wrap">
-
         <div className="fd-breadcrumb-bar">
           <div className="fd-breadcrumb-inner">
             <Link href="/">Home</Link>
@@ -372,23 +492,26 @@ export default function FoodDetailPage() {
           </Link>
 
           <div className="fd-grid">
-
             {/* ── LEFT: IMAGE ── */}
             <div>
               <div className="fd-img-section">
                 <div className="fd-main-img-wrap">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.images[activeImg]} alt={item.title} className="fd-main-img" />
+                  <img
+                    src={item.images[activeImg]}
+                    alt={item.title}
+                    className="fd-main-img"
+                  />
 
-                  <span className="fd-img-cat-badge" style={badgeStyle}>{item.foodType}</span>
-
-                  <button className="fd-img-fav-btn" onClick={() => setIsFav(!isFav)}>
-                    <FaHeart size={16} color={isFav ? "#ef4444" : "#d1d5db"} />
-                  </button>
+                  <span className="fd-img-cat-badge" style={badgeStyle}>
+                    {item.foodType}
+                  </span>
 
                   <span className="fd-posted-tag">
                     <FiClock size={10} style={{ marginRight: 4 }} />
-                    {item.postedDaysAgo === 0 ? "Today" : `${item.postedDaysAgo}d ago`}
+                    {item.postedDaysAgo === 0
+                      ? "Today"
+                      : `${item.postedDaysAgo}d ago`}
                   </span>
                 </div>
 
@@ -411,22 +534,62 @@ export default function FoodDetailPage() {
             {/* ── RIGHT: DETAILS ── */}
             <div className="fd-right">
               <div className="fd-panel">
-                <h1 className="fd-name">{item.title}</h1>
+                <div className="jd-title-row">
+                  <h1 className="jd-title">{item.title}</h1>
+                  <div className="jd-action-btns">
+                    <button className="ld-action-btn" aria-label="Share listing" onClick={handleShare}>
+            <span className="ld-tooltip">{copied ? "Copied!" : "Share"}</span>
+            <FiShare2 size={15} color="#555" />
+          </button>
+                    <button
+                      className={`ld-action-btn${isFav ? " fav-active" : ""}`}
+                      aria-label="Save to wishlist"
+                      onClick={handleToggleFavorite}
+                      disabled={favLoading}
+                    >
+                      {isFav ? (
+                        <FaHeart size={15} color="#E74C3C" />
+                      ) : (
+                        <FiHeart size={15} color="#999" />
+                      )}
+                    {/* </button>
+                    {/* <button
+                      className="jd-action-btn"
+                      aria-label="Share listing"
+                      title="Share"
+                      onClick={() =>
+                        navigator.clipboard
+                          ?.writeText(window.location.href)
+                          .catch(() => {})
+                      }
+                    > */}
+                      <FiShare2 size={15} color="#666" />
+                    </button> */
+                  </div>
+                </div>
                 <p className="fd-cuisine">
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                    }}
+                  >
                     <FaUtensils size={11} color="#9ca3af" />
                     {item.foodType} · {item.priceUnit}
                   </span>
                 </p>
                 <p className="fd-price">{item.price}</p>
                 <div className="fd-price-divider" />
-
-                {item.description && <p className="fd-desc">{item.description}</p>}
-
+                {item.description && (
+                  <p className="fd-desc">{item.description}</p>
+                )}
                 <div className="fd-details-grid">
                   <div className="fd-detail-item">
                     <p className="fd-detail-label">Negotiable</p>
-                    <p className="fd-detail-val">{item.negotiable ? "Yes" : "No"}</p>
+                    <p className="fd-detail-val">
+                      {item.negotiable ? "Yes" : "No"}
+                    </p>
                   </div>
                   <div className="fd-detail-item">
                     <p className="fd-detail-label">Price Unit</p>
@@ -435,16 +598,20 @@ export default function FoodDetailPage() {
                   <div className="fd-detail-item">
                     <p className="fd-detail-label">Posted</p>
                     <p className="fd-detail-val">
-                      {item.postedDaysAgo === 0 ? "Today" : `${item.postedDaysAgo} day${item.postedDaysAgo > 1 ? "s" : ""} ago`}
+                      {item.postedDaysAgo === 0
+                        ? "Today"
+                        : `${item.postedDaysAgo} day${item.postedDaysAgo > 1 ? "s" : ""} ago`}
                     </p>
                   </div>
                 </div>
-
-                <div className={`fd-avail ${item.status === "ACTIVE" ? "active" : "inactive"}`}>
-                  {item.status === "ACTIVE" && <span className="fd-avail-dot" />}
+                <div
+                  className={`fd-avail ${item.status === "ACTIVE" ? "active" : "inactive"}`}
+                >
+                  {item.status === "ACTIVE" && (
+                    <span className="fd-avail-dot" />
+                  )}
                   {STATUS_LABEL[item.status]}
                 </div>
-
                 {/* ── ORDER NOW → ADD TO CART & GO ── */}
                 <div className="fd-actions">
                   <button className="fd-btn-order" onClick={handleOrderNow}>
@@ -454,7 +621,10 @@ export default function FoodDetailPage() {
                     className="fd-btn-share"
                     onClick={() => {
                       if (navigator.share) {
-                        navigator.share({ title: item.title, url: window.location.href });
+                        navigator.share({
+                          title: item.title,
+                          url: window.location.href,
+                        });
                       }
                     }}
                   >
@@ -476,7 +646,15 @@ export default function FoodDetailPage() {
                   href={item.googleMapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#16a34a", fontWeight: 700, textDecoration: "none" }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 12.5,
+                    color: "#16a34a",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                  }}
                 >
                   <FiMapPin size={14} /> View on Google Maps
                 </Link>
@@ -487,10 +665,16 @@ export default function FoodDetailPage() {
           {/* ── RELATED LISTINGS ── */}
           {related.length > 0 && (
             <div className="fd-related">
-              <p className="fd-related-title">Similar {item.foodType} Listings</p>
+              <p className="fd-related-title">
+                Similar {item.foodType} Listings
+              </p>
               <div className="fd-related-grid">
                 {related.map((r) => (
-                  <Link key={r.id} href={`/category/food/${r.id}`} className="fd-rel-card">
+                  <Link
+                    key={r.id}
+                    href={`/category/food/${r.id}`}
+                    className="fd-rel-card"
+                  >
                     <div className="fd-rel-img-wrap">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={r.thumb} alt={r.title} className="fd-rel-img" />
@@ -498,7 +682,11 @@ export default function FoodDetailPage() {
                     <div className="fd-rel-body">
                       <p className="fd-rel-name">{r.title}</p>
                       <p className="fd-rel-price">{r.price}</p>
-                      <p className="fd-rel-posted">{r.postedDaysAgo === 0 ? "Today" : `${r.postedDaysAgo}d ago`}</p>
+                      <p className="fd-rel-posted">
+                        {r.postedDaysAgo === 0
+                          ? "Today"
+                          : `${r.postedDaysAgo}d ago`}
+                      </p>
                     </div>
                   </Link>
                 ))}

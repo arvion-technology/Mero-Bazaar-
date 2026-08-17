@@ -4,11 +4,31 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
-import { FaStar, FaRegStar, FaHeart, FaStethoscope, FaIdCard, FaCalendarCheck } from "react-icons/fa";
-import { FiShare2, FiHeart, FiMapPin, FiClock, FiBriefcase, FiCheckCircle, FiMail, FiMessageSquare, FiChevronRight } from "react-icons/fi";
+import {
+  FaStar,
+  FaRegStar,
+  FaHeart,
+  FaStethoscope,
+  FaIdCard,
+  FaCalendarCheck,
+} from "react-icons/fa";
+import {
+  FiShare2,
+  FiHeart,
+  FiMapPin,
+  FiClock,
+  FiBriefcase,
+  FiCheckCircle,
+  FiMail,
+  FiMessageSquare,
+  FiChevronRight,
+  FiActivity,
+} from "react-icons/fi";
 import { api } from "@/lib/api";
 import { toMedicalDetail } from "@/lib/adapters/medicalAdapter";
 import type { MedicalDetail } from "@/app/types/listing";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 
 function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
   return (
@@ -18,7 +38,7 @@ function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
           <FaStar key={i} size={size} color="#F5A623" />
         ) : (
           <FaRegStar key={i} size={size} color="#F5A623" />
-        )
+        ),
       )}
     </span>
   );
@@ -30,8 +50,8 @@ export default function MedicalDetailPage() {
     typeof params?.id === "string"
       ? params.id
       : Array.isArray(params?.id)
-      ? params.id[0]
-      : "";
+        ? params.id[0]
+        : "";
 
   const [listing, setListing] = useState<MedicalDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +62,25 @@ export default function MedicalDetailPage() {
   const [showFull, setShowFull] = useState(false);
   const [callRevealed, setCallRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { data: session } = useSession();
+  const [favLoading, setFavLoading] = useState(false);
+
+  useEffect(() => {
+    if (!session?.accessToken || !id) return;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/check/${id}`, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setIsFav(data.favorited);
+        }
+      })
+      .catch(() => {});
+  }, [id, session?.accessToken]);
 
   useEffect(() => {
     if (!id) return;
@@ -54,7 +93,9 @@ export default function MedicalDetailPage() {
       })
       .catch((err) => {
         if (!cancelled)
-          setError(err instanceof Error ? err.message : "Failed to load listing");
+          setError(
+            err instanceof Error ? err.message : "Failed to load listing",
+          );
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -67,7 +108,58 @@ export default function MedicalDetailPage() {
   const handleShare = () => {
     navigator.clipboard?.writeText(window.location.href).catch(() => {});
     setCopied(true);
+    toast.success("Link copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
+  };
+  const handleToggleFavorite = async () => {
+    if (!session?.accessToken) {
+      toast.error("Please log in to save jobs");
+      return;
+    }
+
+    setFavLoading(true);
+
+    const previousState = isFav;
+
+    // Optimistic UI
+    setIsFav(!previousState);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      const data = await res.json();
+
+      setIsFav(data.favorited);
+
+      toast.success(
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
+      );
+    } catch (error) {
+      console.error(error);
+
+      // API fail भयो भने पुरानो state मा फर्काउने
+      setIsFav(previousState);
+
+      toast.error("Something went wrong, please try again");
+    } finally {
+      setFavLoading(false);
+    }
   };
 
   if (loading) {
@@ -469,8 +561,10 @@ export default function MedicalDetailPage() {
                   {copied ? "Copied!" : "Share"}
                 </button>
                 <button
-                  className={`md2-save-btn${isFav ? " on" : ""}`}
-                  onClick={() => setIsFav((v) => !v)}
+                  className={`ld-action-btn${isFav ? " fav-active" : ""}`}
+                  aria-label="Save to wishlist"
+                  onClick={handleToggleFavorite}
+                  disabled={favLoading}
                 >
                   {isFav ? (
                     <FaHeart size={13} color="#e74c3c" />
@@ -523,8 +617,12 @@ export default function MedicalDetailPage() {
 
               <div className="md2-chips-row">
                 <div className="md2-chip">
-                  <div className="md2-chip-icon">🏅</div>
-                  <span className="md2-chip-val">{listing.experience || "N/A"}</span>
+                  <div className="md2-chip-icon">
+                    <FiActivity size={16} />
+                  </div>{" "}
+                  <span className="md2-chip-val">
+                    {listing.experience || "N/A"}
+                  </span>
                   <span className="md2-chip-label">Experience</span>
                 </div>
                 <div className="md2-chip">
@@ -548,9 +646,7 @@ export default function MedicalDetailPage() {
                     <FaCalendarCheck size={14} color="#0d9488" />
                   </div>
                   <span className="md2-chip-val">
-                    {listing.sameDayBooking
-                      ? "Same-day OK"
-                      : "Advance booking"}
+                    {listing.sameDayBooking ? "Same-day OK" : "Advance booking"}
                   </span>
                   <span className="md2-chip-label">Booking</span>
                 </div>
@@ -629,9 +725,7 @@ export default function MedicalDetailPage() {
                 <div className="md2-ci-row">
                   <span className="md2-ci-label">Online Appointments</span>
                   <span className="md2-ci-val">
-                    {listing.onlineAppointments
-                      ? "Available"
-                      : "Not available"}
+                    {listing.onlineAppointments ? "Available" : "Not available"}
                   </span>
                 </div>
               </div>
@@ -643,7 +737,7 @@ export default function MedicalDetailPage() {
                 <iframe
                   className="md2-map-iframe"
                   src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                    listing.clinicAddress + ", " + listing.city
+                    listing.clinicAddress + ", " + listing.city,
                   )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                   allowFullScreen
                   loading="lazy"
@@ -709,11 +803,7 @@ export default function MedicalDetailPage() {
                 </div>
               )}
               <button className="md2-send-msg">
-                <FiMail
-                  size={14}
-                  color="#555"
-                  style={{ marginRight: "5px" }}
-                />
+                <FiMail size={14} color="#555" style={{ marginRight: "5px" }} />
                 Send Message
               </button>
             </div>

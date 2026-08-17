@@ -8,6 +8,8 @@ import { FaHeart, FaBriefcase } from "react-icons/fa";
 import { JOB_TYPES, CITIES, SKILLS, JobCard } from "../../types/jobs";
 import { toContractType, toJobCard } from "@/lib/adapter";
 import { api } from "@/lib/api";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
@@ -28,6 +30,7 @@ export default function JobsPage() {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [jobs, setJobs] = useState<JobCard[]>([]);
   const [loading, setLoading] = useState(false);
+  const { data: session } = useSession();
 
   const EXTRA_SKILLS_THRESHOLD = 2;
 
@@ -42,11 +45,88 @@ export default function JobsPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const toggleFav = (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setFavorites((p) => ({ ...p, [id]: !p[id] }));
-  };
+  useEffect(() => {
+    if (!session?.accessToken) return;
+
+    (async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
+          headers: { Authorization: `Bearer ${session.accessToken}` },
+        });
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const favMap: Record<string, boolean> = {};
+        data.forEach((item: { listingId: string }) => {
+          favMap[item.listingId] = true;
+        });
+        setFavorites(favMap);
+      } catch {
+        // silently ignore
+      }
+    })();
+  }, [session?.accessToken]);
+
+  const toggleFav = async (id: string, e: React.MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (!session?.accessToken) {
+    toast.error("Please log in to save listings");
+    return;
+  }
+
+  const previousState = !!favorites[id];
+
+  // Instant UI update
+  setFavorites((p) => ({
+    ...p,
+    [id]: !previousState,
+  }));
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        body: JSON.stringify({
+          listingId: id,
+        }),
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to update wishlist");
+    }
+
+    const data = await res.json();
+
+    setFavorites((p) => ({
+      ...p,
+      [id]: data.favorited,
+    }));
+
+    toast.success(
+      data.favorited
+        ? "Added to wishlist"
+        : "Removed from wishlist"
+    );
+  } catch (error) {
+    console.error("Wishlist error:", error);
+
+    // Rollback UI if API fails
+    setFavorites((p) => ({
+      ...p,
+      [id]: previousState,
+    }));
+
+    toast.error("Something went wrong. Please try again.");
+  }
+};
 
   const shareJob = async (
     job: JobCard,

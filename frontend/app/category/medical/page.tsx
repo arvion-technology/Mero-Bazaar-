@@ -17,7 +17,6 @@ import {
   FiAlertTriangle,
   FiInbox,
   FiShare2,
-
 } from "react-icons/fi";
 import {
   FaStethoscope,
@@ -31,14 +30,25 @@ import {
   FaBrain,
   FaHeadSideCough,
   FaNotesMedical,
+  FaHeart,
 } from "react-icons/fa";
 import { api } from "@/lib/api";
 import { resolveImage } from "@/lib/adapters/shared";
 import { SERVICE_TYPE_LABEL } from "@/lib/adapters/medicalAdapter";
 import type { MedicalListing } from "@/app/types/medical";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 
 const SPECIALTIES = Object.values(SERVICE_TYPE_LABEL);
-const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Biratnagar", "Butwal"];
+const CITIES = [
+  "Kathmandu",
+  "Lalitpur",
+  "Bhaktapur",
+  "Pokhara",
+  "Chitwan",
+  "Biratnagar",
+  "Butwal",
+];
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
   { value: "fee_low", label: "Fee: Low to High" },
@@ -47,17 +57,17 @@ const SORT_OPTIONS = [
 
 /* ---------- Specialty → Icon mapping ---------- */
 const SPECIALTY_ICONS: Record<string, React.ElementType> = {
-  "All": FaStethoscope,
+  All: FaStethoscope,
   "General Medicine": FaUserMd,
   "Dental Care": FaTooth,
-  "Cardiology": FaHeartbeat,
-  "Dermatology": FaSun,
-  "Pediatrics": FaBaby,
-  "Orthopedics": FaBone,
-  "Gynecology": FaFemale,
-  "Neurology": FaBrain,
-  "ENT": FaHeadSideCough,
-  "Other": FaNotesMedical,
+  Cardiology: FaHeartbeat,
+  Dermatology: FaSun,
+  Pediatrics: FaBaby,
+  Orthopedics: FaBone,
+  Gynecology: FaFemale,
+  Neurology: FaBrain,
+  ENT: FaHeadSideCough,
+  Other: FaNotesMedical,
 };
 
 export default function MedicalPage() {
@@ -74,6 +84,7 @@ export default function MedicalPage() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
+  const { data: session } = useSession();
 
   useEffect(() => {
     let cancelled = false;
@@ -84,7 +95,10 @@ export default function MedicalPage() {
         if (!cancelled) setListings(data);
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load listings");
+        if (!cancelled)
+          setError(
+            err instanceof Error ? err.message : "Failed to load listings",
+          );
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -94,22 +108,96 @@ export default function MedicalPage() {
     };
   }, []);
 
-  const toggleFav = (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setFavorites((p) => ({ ...p, [id]: !p[id] }));
-  };
-  const shareMedical = async (
-    listing: MedicalListing,
-    e: React.MouseEvent
-  ) => {
+  useEffect(() => {
+    if (!session?.accessToken) return;
+
+    (async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
+          headers: { Authorization: `Bearer ${session.accessToken}` },
+        });
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const favMap: Record<string, boolean> = {};
+        data.forEach((item: { listingId: string }) => {
+          favMap[item.listingId] = true;
+        });
+        setFavorites(favMap);
+      } catch {
+        // silently ignore
+      }
+    })();
+  }, [session?.accessToken]);
+
+
+  const toggleFav = async (id: string, e: React.MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (!session?.accessToken) {
+    toast.error("Please log in to save listings");
+    return;
+  }
+
+  const previousState = !!favorites[id];
+
+  // Instant UI update
+  setFavorites((p) => ({
+    ...p,
+    [id]: !previousState,
+  }));
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        body: JSON.stringify({
+          listingId: id,
+        }),
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to update wishlist");
+    }
+
+    const data = await res.json();
+
+    setFavorites((p) => ({
+      ...p,
+      [id]: data.favorited,
+    }));
+
+    toast.success(
+      data.favorited
+        ? "Added to wishlist"
+        : "Removed from wishlist"
+    );
+  } catch (error) {
+    console.error("Wishlist error:", error);
+
+    // Rollback UI if API fails
+    setFavorites((p) => ({
+      ...p,
+      [id]: previousState,
+    }));
+
+    toast.error("Something went wrong. Please try again.");
+  }
+};
+  const shareMedical = async (listing: MedicalListing, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     const doctorName = listing.medical.doctorName;
 
-    const medicalUrl =
-      `${window.location.origin}/category/medical/${listing.id}`;
+    const medicalUrl = `${window.location.origin}/category/medical/${listing.id}`;
 
     const shareData = {
       title: `${doctorName} - HamroNepal Bazaar`,
@@ -132,16 +220,10 @@ export default function MedicalPage() {
       }
 
       // Final fallback
-      window.prompt(
-        "Copy medical profile link:",
-        medicalUrl
-      );
+      window.prompt("Copy medical profile link:", medicalUrl);
     } catch (error) {
       // User cancelled share dialog
-      if (
-        error instanceof DOMException &&
-        error.name === "AbortError"
-      ) {
+      if (error instanceof DOMException && error.name === "AbortError") {
         return;
       }
 
@@ -164,14 +246,18 @@ export default function MedicalPage() {
         l.medical.doctorName.toLowerCase().includes(search.toLowerCase()) ||
         specialtyLabel.toLowerCase().includes(search.toLowerCase()) ||
         l.medical.city.toLowerCase().includes(search.toLowerCase());
-      const matchSpecialty = activeSpecialty === "All" || specialtyLabel === activeSpecialty;
-      const matchCity = !city || l.medical.city.toLowerCase() === city.toLowerCase();
+      const matchSpecialty =
+        activeSpecialty === "All" || specialtyLabel === activeSpecialty;
+      const matchCity =
+        !city || l.medical.city.toLowerCase() === city.toLowerCase();
       const matchAvail = !availableOnly || l.medical.sameDayBooking;
       return matchSearch && matchSpecialty && matchCity && matchAvail;
     })
     .sort((a, b) => {
-      if (sort === "fee_low") return a.medical.appointmentFee - b.medical.appointmentFee;
-      if (sort === "fee_high") return b.medical.appointmentFee - a.medical.appointmentFee;
+      if (sort === "fee_low")
+        return a.medical.appointmentFee - b.medical.appointmentFee;
+      if (sort === "fee_high")
+        return b.medical.appointmentFee - a.medical.appointmentFee;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
@@ -521,7 +607,8 @@ export default function MedicalPage() {
               Nepal&apos;s #1 Healthcare Directory
             </div>
             <h1 className="mp-hero-title">
-              Find The Best<br />
+              Find The Best
+              <br />
               <span>Healthcare Services</span>
             </h1>
             <p className="mp-hero-sub">Trusted doctors and clinics near you</p>
@@ -560,21 +647,42 @@ export default function MedicalPage() {
 
         <div className="mp-body">
           <div className="mp-mobile-filter-bar">
-            <button className="mp-mobile-filter-btn" onClick={() => setShowMobileFilters(true)}>
+            <button
+              className="mp-mobile-filter-btn"
+              onClick={() => setShowMobileFilters(true)}
+            >
               <FiFilter size={16} />
-              Filters {activeFiltersCount > 0 && <span className="mp-mobile-filter-badge">{activeFiltersCount}</span>}
+              Filters{" "}
+              {activeFiltersCount > 0 && (
+                <span className="mp-mobile-filter-badge">
+                  {activeFiltersCount}
+                </span>
+              )}
             </button>
           </div>
 
           <div className="mp-layout">
-            <aside className={`mp-sidebar ${showMobileFilters ? "show-mobile" : ""}`}>
+            <aside
+              className={`mp-sidebar ${showMobileFilters ? "show-mobile" : ""}`}
+            >
               <div className="msf-head">
                 <p className="msf-head-title">Filters</p>
-                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                  <button className="msf-reset" onClick={reset}>Reset All</button>
+                <div
+                  style={{ display: "flex", gap: "10px", alignItems: "center" }}
+                >
+                  <button className="msf-reset" onClick={reset}>
+                    Reset All
+                  </button>
                   <button
                     onClick={() => setShowMobileFilters(false)}
-                    style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "4px",
+                    }}
                   >
                     <FiX size={18} color="#666" />
                   </button>
@@ -584,10 +692,16 @@ export default function MedicalPage() {
               <div className="msf-section">
                 <p className="msf-label">Location / City</p>
                 <div className="msf-select-wrap">
-                  <select className="msf-select" value={city} onChange={(e) => setCity(e.target.value)}>
+                  <select
+                    className="msf-select"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  >
                     <option value="">Select City</option>
                     {CITIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
                     ))}
                   </select>
                   <FiChevronDown size={14} color="#888" />
@@ -597,10 +711,16 @@ export default function MedicalPage() {
               <div className="msf-section">
                 <p className="msf-label">Specialization</p>
                 <div className="msf-select-wrap">
-                  <select className="msf-select" value={activeSpecialty} onChange={(e) => setActiveSpecialty(e.target.value)}>
+                  <select
+                    className="msf-select"
+                    value={activeSpecialty}
+                    onChange={(e) => setActiveSpecialty(e.target.value)}
+                  >
                     <option value="All">All Specialization</option>
                     {SPECIALTIES.map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
                     ))}
                   </select>
                   <FiChevronDown size={14} color="#888" />
@@ -622,7 +742,10 @@ export default function MedicalPage() {
                 </div>
               </div>
 
-              <button className="msf-apply" onClick={() => setShowMobileFilters(false)}>
+              <button
+                className="msf-apply"
+                onClick={() => setShowMobileFilters(false)}
+              >
                 Apply Filters
               </button>
             </aside>
@@ -637,17 +760,26 @@ export default function MedicalPage() {
                     <div className="mp-active-filters">
                       {city && (
                         <span className="mp-active-tag">
-                          {city} <button onClick={() => setCity("")}><FiX /></button>
+                          {city}{" "}
+                          <button onClick={() => setCity("")}>
+                            <FiX />
+                          </button>
                         </span>
                       )}
                       {activeSpecialty !== "All" && (
                         <span className="mp-active-tag">
-                          {activeSpecialty} <button onClick={() => setActiveSpecialty("All")}><FiX /></button>
+                          {activeSpecialty}{" "}
+                          <button onClick={() => setActiveSpecialty("All")}>
+                            <FiX />
+                          </button>
                         </span>
                       )}
                       {availableOnly && (
                         <span className="mp-active-tag">
-                          Same-day <button onClick={() => setAvailableOnly(false)}><FiX /></button>
+                          Same-day{" "}
+                          <button onClick={() => setAvailableOnly(false)}>
+                            <FiX />
+                          </button>
                         </span>
                       )}
                     </div>
@@ -655,8 +787,11 @@ export default function MedicalPage() {
                 </div>
 
                 <div className="mp-sort-dropdown" ref={sortRef}>
-                  <button className="mp-sort-trigger" onClick={() => setSortOpen(!sortOpen)}>
-                    {SORT_OPTIONS.find(o => o.value === sort)?.label}
+                  <button
+                    className="mp-sort-trigger"
+                    onClick={() => setSortOpen(!sortOpen)}
+                  >
+                    {SORT_OPTIONS.find((o) => o.value === sort)?.label}
                     <FiChevronDown size={14} color="#555" />
                   </button>
                   {sortOpen && (
@@ -665,7 +800,10 @@ export default function MedicalPage() {
                         <button
                           key={opt.value}
                           className={`mp-sort-item${sort === opt.value ? " active" : ""}`}
-                          onClick={() => { setSort(opt.value as typeof sort); setSortOpen(false); }}
+                          onClick={() => {
+                            setSort(opt.value as typeof sort);
+                            setSortOpen(false);
+                          }}
                         >
                           {opt.label}
                           {sort === opt.value && <FiCheck size={14} />}
@@ -679,18 +817,24 @@ export default function MedicalPage() {
               <div className="mp-grid">
                 {loading ? (
                   <div className="mp-empty">
-                    <div className="mp-empty-icon"><FiClock size={48} color="#0d9488" /></div>
+                    <div className="mp-empty-icon">
+                      <FiClock size={48} color="#0d9488" />
+                    </div>
                     <p>Loading listings…</p>
                   </div>
                 ) : error ? (
                   <div className="mp-empty">
-                    <div className="mp-empty-icon"><FiAlertTriangle size={48} color="#e74c3c" /></div>
+                    <div className="mp-empty-icon">
+                      <FiAlertTriangle size={48} color="#e74c3c" />
+                    </div>
                     <p>Couldn&apos;t load listings</p>
                     <span>{error}</span>
                   </div>
                 ) : displayed.length === 0 ? (
                   <div className="mp-empty">
-                    <div className="mp-empty-icon"><FiInbox size={48} color="#0d9488" /></div>
+                    <div className="mp-empty-icon">
+                      <FiInbox size={48} color="#0d9488" />
+                    </div>
                     <p>No results found</p>
                     <span>Try adjusting your filters or search query</span>
                   </div>
@@ -699,12 +843,23 @@ export default function MedicalPage() {
                     const isFav = !!favorites[l.id];
                     const m = l.medical;
                     const specialtyLabel = SERVICE_TYPE_LABEL[m.serviceType];
-                    const thumb = l.images?.[0] ? resolveImage(l.images[0]) : "/placeholder-avatar.png";
+                    const thumb = l.images?.[0]
+                      ? resolveImage(l.images[0])
+                      : "/placeholder-avatar.png";
                     return (
-                      <Link key={l.id} href={`/category/medical/${l.id}`} className="mp-card" style={{ textDecoration: "none", color: "inherit" }}>
+                      <Link
+                        key={l.id}
+                        href={`/category/medical/${l.id}`}
+                        className="mp-card"
+                        style={{ textDecoration: "none", color: "inherit" }}
+                      >
                         <div className="mp-card-header">
                           <div className="mp-img-wrap">
-                            <img src={thumb} alt={m.doctorName} className="mp-img" />
+                            <img
+                              src={thumb}
+                              alt={m.doctorName}
+                              className="mp-img"
+                            />
 
                             {/* Favorite */}
                             <button
@@ -714,10 +869,10 @@ export default function MedicalPage() {
                               title="Save doctor"
                               onClick={(e) => toggleFav(l.id, e)}
                             >
-                              {isFav ? (
-                                <FaHeartbeat size={14} color="#e74c3c" />
+                               {isFav ? (
+                                <FaHeart size={13} color="#b91c1c" />
                               ) : (
-                                <FiHeart size={14} color="#9ca3af" />
+                                <FiHeart size={13} color="#999" />
                               )}
                             </button>
 
@@ -731,16 +886,21 @@ export default function MedicalPage() {
                             >
                               <FiShare2 size={14} />
                             </button>
-
                           </div>
                           <div className="mp-info">
-                            <span className="mp-specialty-badge">{specialtyLabel}</span>
+                            <span className="mp-specialty-badge">
+                              {specialtyLabel}
+                            </span>
                             <h3 className="mp-title">{m.doctorName}</h3>
                             <div className="mp-badges">
                               {m.verificationStatus === "VERIFIED" && (
-                                <span className="mp-badge-verified"><FiCheck size={10} strokeWidth={3} /> Verified</span>
+                                <span className="mp-badge-verified">
+                                  <FiCheck size={10} strokeWidth={3} /> Verified
+                                </span>
                               )}
-                              <span className="mp-badge-nmc">NMC NO. {m.nmcLicenseNumber}</span>
+                              <span className="mp-badge-nmc">
+                                NMC NO. {m.nmcLicenseNumber}
+                              </span>
                             </div>
                             <div className="mp-rating-row">
                               {m.experience && (
@@ -755,13 +915,17 @@ export default function MedicalPage() {
                         <div className="mp-details">
                           <div className="mp-detail-item">
                             <FiMapPin size={14} />
-                            <span>{m.clinicAddress}, {m.city}</span>
+                            <span>
+                              {m.clinicAddress}, {m.city}
+                            </span>
                           </div>
                           {m.languages?.length > 0 && (
                             <div className="mp-detail-item">
                               <div className="mp-languages">
                                 {m.languages.map((lang) => (
-                                  <span key={lang} className="mp-lang-tag">{lang}</span>
+                                  <span key={lang} className="mp-lang-tag">
+                                    {lang}
+                                  </span>
                                 ))}
                               </div>
                             </div>
@@ -774,7 +938,9 @@ export default function MedicalPage() {
                           <div className="mp-footer-row">
                             <div>
                               <p className="mp-price-label">Consultation Fee</p>
-                              <p className="mp-price-val">NPR {m.appointmentFee.toLocaleString("en-IN")}</p>
+                              <p className="mp-price-val">
+                                NPR {m.appointmentFee.toLocaleString("en-IN")}
+                              </p>
                             </div>
                             <div className="mp-status-badges">
                               {m.sameDayBooking && (
@@ -782,7 +948,11 @@ export default function MedicalPage() {
                                   <FiCheck size={10} strokeWidth={3} /> Same-Day
                                 </span>
                               )}
-                              {m.homeVisitAvailable && <span className="mp-status-badge mp-status-home">Home Visit</span>}
+                              {m.homeVisitAvailable && (
+                                <span className="mp-status-badge mp-status-home">
+                                  Home Visit
+                                </span>
+                              )}
                             </div>
                           </div>
 

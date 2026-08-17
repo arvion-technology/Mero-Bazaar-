@@ -5,23 +5,37 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
 import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
-import { FiShare2, FiHeart, FiMapPin, FiClock, FiCheckCircle, FiChevronRight, FiTool, FiShield, FiZap } from "react-icons/fi";
+import {
+  FiShare2,
+  FiHeart,
+  FiMapPin,
+  FiClock,
+  FiCheckCircle,
+  FiChevronRight,
+  FiTool,
+  FiShield,
+  FiZap,
+} from "react-icons/fi";
 import { api } from "@/lib/api";
 import { toTradesDetail, toTradesCard } from "@/lib/adapters/tradesAdapter";
 import type { TradesDetail } from "@/app/types/listing";
 import type { TradesCard } from "@/app/types/trades";
 import SellerCard from "@/components/SellerCard";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 
 const DEFAULT_LAT = 27.7172;
-const DEFAULT_LNG = 85.3240;
+const DEFAULT_LNG = 85.324;
 
 function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
   return (
     <span style={{ display: "inline-flex", gap: 1 }}>
       {[1, 2, 3, 4, 5].map((i) =>
-        i <= Math.round(rating)
-          ? <FaStar key={i} size={size} color="#F5A623" />
-          : <FaRegStar key={i} size={size} color="#F5A623" />
+        i <= Math.round(rating) ? (
+          <FaStar key={i} size={size} color="#F5A623" />
+        ) : (
+          <FaRegStar key={i} size={size} color="#F5A623" />
+        ),
       )}
     </span>
   );
@@ -29,7 +43,12 @@ function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
 
 export default function TradeDetailPage() {
   const params = useParams();
-  const id = typeof params?.id === "string" ? params.id : Array.isArray(params?.id) ? params.id[0] : "";
+  const id =
+    typeof params?.id === "string"
+      ? params.id
+      : Array.isArray(params?.id)
+        ? params.id[0]
+        : "";
 
   const [listing, setListing] = useState<TradesDetail | null>(null);
   const [similar, setSimilar] = useState<TradesCard[]>([]);
@@ -39,7 +58,24 @@ export default function TradeDetailPage() {
   const [isFav, setIsFav] = useState(false);
   const [showFull, setShowFull] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { data: session } = useSession();
+  const [favLoading, setFavLoading] = useState(false);
+  useEffect(() => {
+    if (!session?.accessToken || !id) return;
 
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/check/${id}`, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setIsFav(data.favorited);
+        }
+      })
+      .catch(() => {});
+  }, [id, session?.accessToken]);
   // const [leadMessage, setLeadMessage] = useState("");
   // const [leadPhone, setLeadPhone] = useState("");
   // const [sendingLead, setSendingLead] = useState(false);
@@ -58,24 +94,29 @@ export default function TradeDetailPage() {
         const detail = toTradesDetail(raw);
         setListing(detail);
 
-        return api.getTrades(new URLSearchParams({ city: detail.city })).then((rawList) => {
-          if (cancelled) return;
-          const cards = rawList
-            .filter((l) => l.id !== id)
-            .map((l) => {
-              try {
-                return toTradesCard(l);
-              } catch {
-                return null;
-              }
-            })
-            .filter((c): c is TradesCard => c !== null)
-            .slice(0, 5);
-          setSimilar(cards);
-        });
+        return api
+          .getTrades(new URLSearchParams({ city: detail.city }))
+          .then((rawList) => {
+            if (cancelled) return;
+            const cards = rawList
+              .filter((l) => l.id !== id)
+              .map((l) => {
+                try {
+                  return toTradesCard(l);
+                } catch {
+                  return null;
+                }
+              })
+              .filter((c): c is TradesCard => c !== null)
+              .slice(0, 5);
+            setSimilar(cards);
+          });
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load listing");
+        if (!cancelled)
+          setError(
+            err instanceof Error ? err.message : "Failed to load listing",
+          );
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -86,11 +127,12 @@ export default function TradeDetailPage() {
     };
   }, [id]);
 
-  const handleShare = useCallback(() => {
+  const handleShare = () => {
     navigator.clipboard?.writeText(window.location.href).catch(() => {});
     setCopied(true);
+    toast.success("Link copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
-  }, []);
+  };
 
   // const handleSendLead = async () => {
   //   if (!listing || !leadMessage.trim()) return;
@@ -108,13 +150,19 @@ export default function TradeDetailPage() {
   // };
 
   if (loading) {
-    return <div style={{ padding: 60, textAlign: "center", color: "#888" }}>Loading listing…</div>;
+    return (
+      <div style={{ padding: 60, textAlign: "center", color: "#888" }}>
+        Loading listing…
+      </div>
+    );
   }
 
   if (error || !listing) {
     return (
       <div style={{ padding: 60, textAlign: "center", color: "#888" }}>
-        <p style={{ fontWeight: 600, color: "#555" }}>Couldn&apos;t load this listing</p>
+        <p style={{ fontWeight: 600, color: "#555" }}>
+          Couldn&apos;t load this listing
+        </p>
         <span>{error ?? "Listing not found"}</span>
       </div>
     );
@@ -122,6 +170,51 @@ export default function TradeDetailPage() {
 
   const lat = listing.latitude ?? DEFAULT_LAT;
   const lng = listing.longitude ?? DEFAULT_LNG;
+  const handleToggleFavorite = async () => {
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
+    }
+
+    setFavLoading(true);
+
+    const previousState = isFav;
+    setIsFav(!previousState);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      const data = await res.json();
+
+      setIsFav(data.favorited);
+
+      toast.success(
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
+      );
+    } catch (error) {
+      console.error(error);
+      setIsFav(previousState);
+      toast.error("Something went wrong, please try again");
+    } finally {
+      setFavLoading(false);
+    }
+  };
 
   return (
     <>
@@ -321,14 +414,25 @@ export default function TradeDetailPage() {
         <div className="cd-topbar">
           <div className="cd-topbar-inner">
             <nav className="cd-breadcrumb" aria-label="Breadcrumb">
-              <Link href="/" className="cd-bc-link">Home</Link>
+              <Link href="/" className="cd-bc-link">
+                Home
+              </Link>
               {listing.breadcrumbs.map((crumb, i) => (
-                <span key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span
+                  key={i}
+                  style={{ display: "flex", alignItems: "center", gap: 4 }}
+                >
                   <span className="cd-bc-sep">›</span>
-                  {i === listing.breadcrumbs.length - 1
-                    ? <span className="cd-bc-cur">{crumb}</span>
-                    : <Link href="/category/trade-and-homerepair" className="cd-bc-link">{crumb}</Link>
-                  }
+                  {i === listing.breadcrumbs.length - 1 ? (
+                    <span className="cd-bc-cur">{crumb}</span>
+                  ) : (
+                    <Link
+                      href="/category/trade-and-homerepair"
+                      className="cd-bc-link"
+                    >
+                      {crumb}
+                    </Link>
+                  )}
                 </span>
               ))}
             </nav>
@@ -341,26 +445,38 @@ export default function TradeDetailPage() {
               <div className="cd-title-row">
                 <h1 className="cd-title">{listing.title}</h1>
                 <div className="cd-title-actions">
-              <div className="cd-badge-row">
-                {listing.isVerified && (
-                  <span className="cd-badge-verified">
-                    <FiCheckCircle size={9} color="#1a7a43" style={{ marginRight: 3 }} />
-                    Verified
-                  </span>
-                )}
-                {listing.warrantyGiven && (
-                  <span className="cd-badge-warranty">
-                    <FiShield size={9} color="#1d4ed8" style={{ marginRight: 3 }} />
-                    Warranty
-                  </span>
-                )}
-                {listing.emergencyAvailable && (
-                  <span className="cd-badge-emergency">
-                    <FiZap size={9} color="#b07000" style={{ marginRight: 3 }} />
-                    Emergency
-                  </span>
-                )}
-              </div>
+                  <div className="cd-badge-row">
+                    {listing.isVerified && (
+                      <span className="cd-badge-verified">
+                        <FiCheckCircle
+                          size={9}
+                          color="#1a7a43"
+                          style={{ marginRight: 3 }}
+                        />
+                        Verified
+                      </span>
+                    )}
+                    {listing.warrantyGiven && (
+                      <span className="cd-badge-warranty">
+                        <FiShield
+                          size={9}
+                          color="#1d4ed8"
+                          style={{ marginRight: 3 }}
+                        />
+                        Warranty
+                      </span>
+                    )}
+                    {listing.emergencyAvailable && (
+                      <span className="cd-badge-emergency">
+                        <FiZap
+                          size={9}
+                          color="#b07000"
+                          style={{ marginRight: 3 }}
+                        />
+                        Emergency
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -373,32 +489,53 @@ export default function TradeDetailPage() {
                 </span>
                 <span className="cd-meta-item">
                   <FiClock size={12} color="#bbb" style={{ marginRight: 3 }} />
-                  Posted {listing.postedDaysAgo} day{listing.postedDaysAgo !== 1 ? "s" : ""} ago
+                  Posted {listing.postedDaysAgo} day
+                  {listing.postedDaysAgo !== 1 ? "s" : ""} ago
                 </span>
-                  <button className="cd-share-btn" onClick={handleShare}>
-                    <FiShare2 size={14} color="#555" />
-                    {copied ? "Copied!" : "Share"}
-                  </button>
-                  <button className={`cd-save-btn${isFav ? " on" : ""}`} onClick={() => setIsFav((v) => !v)}>
-                    {isFav ? <FaHeart size={14} color="#e74c3c" /> : <FiHeart size={14} color="#888" />}
-                    Save
-                  </button>
+                <button className="cd-share-btn" onClick={handleShare}>
+                  <FiShare2 size={14} color="#555" />
+                  {copied ? "Copied!" : "Share"} 
+                </button>
+                <button
+                  className={`ld-action-btn${isFav ? " fav-active" : ""}`}
+                  aria-label="Save to wishlist"
+                  onClick={handleToggleFavorite}
+                  disabled={favLoading}
+                >
+                  {" "}
+                  {isFav ? (
+                    <FaHeart size={14} color="#e74c3c" />
+                  ) : (
+                    <FiHeart size={14} color="#888" />
+                  )}
+                  Save
+                </button>
               </div>
 
               <div className="cd-chips-row">
                 <div className="cd-chip">
-                  <div className="cd-chip-icon"><FiTool size={14} color="#b45309" /></div>
-                  <span className="cd-chip-val">{listing.serviceAreaKm} km</span>
+                  <div className="cd-chip-icon">
+                    <FiTool size={14} color="#b45309" />
+                  </div>
+                  <span className="cd-chip-val">
+                    {listing.serviceAreaKm} km
+                  </span>
                   <span className="cd-chip-label">Service Area</span>
                 </div>
                 <div className="cd-chip">
-                  <div className="cd-chip-icon"><FiClock size={14} color="#b45309" /></div>
+                  <div className="cd-chip-icon">
+                    <FiClock size={14} color="#b45309" />
+                  </div>
                   <span className="cd-chip-val">{listing.avgResponseTime}</span>
                   <span className="cd-chip-label">Avg Response</span>
                 </div>
                 <div className="cd-chip">
-                  <div className="cd-chip-icon"><FiShield size={14} color="#b45309" /></div>
-                  <span className="cd-chip-val">{listing.warrantyGiven ? "Yes" : "No"}</span>
+                  <div className="cd-chip-icon">
+                    <FiShield size={14} color="#b45309" />
+                  </div>
+                  <span className="cd-chip-val">
+                    {listing.warrantyGiven ? "Yes" : "No"}
+                  </span>
                   <span className="cd-chip-label">Warranty</span>
                 </div>
               </div>
@@ -406,9 +543,14 @@ export default function TradeDetailPage() {
 
             <div className="cd-desc-card">
               <h2 className="cd-sec-title">Description</h2>
-              <p className={`cd-desc-text${!showFull ? " clip" : ""}`}>{listing.description}</p>
+              <p className={`cd-desc-text${!showFull ? " clip" : ""}`}>
+                {listing.description}
+              </p>
               {listing.description.length > 200 && (
-                <button className="cd-see-more" onClick={() => setShowFull((v) => !v)}>
+                <button
+                  className="cd-see-more"
+                  onClick={() => setShowFull((v) => !v)}
+                >
                   {showFull ? "See Less" : "See More"}
                 </button>
               )}
@@ -419,7 +561,9 @@ export default function TradeDetailPage() {
                 <h2 className="cd-sec-title">Skills & Services</h2>
                 <div className="cd-skills-row">
                   {listing.skillTags.map((tag) => (
-                    <span key={tag} className="cd-skill-tag">{tag}</span>
+                    <span key={tag} className="cd-skill-tag">
+                      {tag}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -434,7 +578,7 @@ export default function TradeDetailPage() {
                 listingId={listing.id}
                 sellerId={listing.sellerId}
               />
-          </div>
+            </div>
 
             {/* <div className="cd-lead-card">
               <p className="cd-company-card-title" style={{ marginBottom: 10 }}>Request a Quote</p>
@@ -475,20 +619,31 @@ export default function TradeDetailPage() {
           <div className="cd-similar">
             <div className="cd-similar-hdr">
               <h2 className="cd-similar-title">Similar Trades</h2>
-              <Link href="/category/trade-and-homerepair" className="cd-similar-all">
+              <Link
+                href="/category/trade-and-homerepair"
+                className="cd-similar-all"
+              >
                 View All
                 <FiChevronRight size={12} color="#C0392B" />
               </Link>
             </div>
             <div className="cd-similar-row">
               {similar.map((sim) => (
-                <Link key={sim.id} href={`/category/trade-and-homerepair/${sim.id}`} className="cd-sim-card">
+                <Link
+                  key={sim.id}
+                  href={`/category/trade-and-homerepair/${sim.id}`}
+                  className="cd-sim-card"
+                >
                   <div className="cd-sim-icon">
                     <FiTool size={16} color="#b45309" />
                   </div>
                   <p className="cd-sim-title">{sim.title}</p>
                   <p className="cd-sim-loc">
-                    <FiMapPin size={8} color="#bbb" style={{ marginRight: 3 }} />
+                    <FiMapPin
+                      size={8}
+                      color="#bbb"
+                      style={{ marginRight: 3 }}
+                    />
                     {sim.location}
                   </p>
                 </Link>
@@ -496,11 +651,10 @@ export default function TradeDetailPage() {
             </div>
           </div>
         )}
-
-        </div>
-        <div className="cd-footer-wrap">
-          <Footer />
-        </div>
+      </div>
+      <div className="cd-footer-wrap">
+        <Footer />
+      </div>
     </>
   );
 }

@@ -164,11 +164,66 @@ export default function VehiclesPage() {
     return badges;
   };
 
-  const toggleFav = (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setFavorites((p) => ({ ...p, [id]: !p[id] }));
-  };
+  const toggleFav = async (id: string, e: React.MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (!session?.accessToken) {
+    toast.error("Please log in to save listings");
+    return;
+  }
+
+  const previousState = !!favorites[id];
+
+  // Instant UI update
+  setFavorites((p) => ({
+    ...p,
+    [id]: !previousState,
+  }));
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        body: JSON.stringify({
+          listingId: id,
+        }),
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to update wishlist");
+    }
+
+    const data = await res.json();
+
+    setFavorites((p) => ({
+      ...p,
+      [id]: data.favorited,
+    }));
+
+    toast.success(
+      data.favorited
+        ? "Added to wishlist"
+        : "Removed from wishlist"
+    );
+  } catch (error) {
+    console.error("Wishlist error:", error);
+
+    // Rollback UI if API fails
+    setFavorites((p) => ({
+      ...p,
+      [id]: previousState,
+    }));
+
+    toast.error("Something went wrong. Please try again.");
+  }
+};
   
   const shareVehicle = async (
     vehicle: Vehicle,
