@@ -473,6 +473,60 @@ export default function PropertyPage() {
         .pp-results-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
         .pp-results-count { font-size: 14px; color: #888; font-weight: 500; }
         .pp-results-count strong { color: #333; font-weight: 700; }
+
+            /* ── CUSTOM SORT DROPDOWN ── */
+        .pp-sort-wrap { position: relative; }
+        .pp-sort-btn {
+          padding: 9px 12px 9px 14px;
+          border: 1.5px solid #e0e4f0;
+          border-radius: 10px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #333;
+          background: #fff;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-family: inherit;
+          box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+          transition: border-color 0.2s;
+          white-space: nowrap;
+        }
+        .pp-sort-btn:hover { border-color: #b91c1c; }
+        .pp-sort-btn.open { border-color: #b91c1c; }
+        .pp-sort-dropdown {
+          position: absolute;
+          top: calc(100% + 6px);
+          right: 0;
+          background: #fff;
+          border: 1.5px solid #e0e4f0;
+          border-radius: 12px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+          z-index: 100;
+          min-width: 190px;
+          overflow: hidden;
+          animation: sortPop 0.18s ease;
+        }
+        @keyframes sortPop {
+          from { opacity: 0; transform: translateY(-4px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .pp-sort-option {
+          padding: 11px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #333;
+          cursor: pointer;
+          transition: background 0.12s;
+          white-space: nowrap;
+        }
+          .pp-sort-option:hover { background: #f8fafc; }
+        .pp-sort-option.active {
+          background: #e0f2fe;
+          color: #0369a1;
+        }
+
         .pp-sort-select { padding: 8px 32px 8px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; font-weight: 600; color: #333; background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center; appearance: none; outline: none; cursor: pointer; font-family: inherit; }
         .pp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
         .pp-card { background: #fff; border-radius: 16px; border: 1px solid #e8e8e8; overflow: hidden; text-decoration: none; display: flex; flex-direction: column; transition: box-shadow 0.22s ease; box-shadow: 0 2px 12px rgba(0,0,0,0.04); cursor: pointer; position: relative; }
@@ -697,7 +751,7 @@ export default function PropertyPage() {
                 </span>
 
                 {/* ── CUSTOM DROPDOWN (fixes overflow) ── */}
-                <div className="pp-sort-dropdown" ref={sortRef}>
+                <div className="pp-sort-wrap" ref={sortRef}>
                   <button
                     className="pp-sort-btn"
                     onClick={() => setIsSortOpen((v) => !v)}

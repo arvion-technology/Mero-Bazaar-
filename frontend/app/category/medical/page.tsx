@@ -76,7 +76,9 @@ export default function MedicalPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<"newest" | "fee_low" | "fee_high">("newest");
+  const [sort, setSort] = useState("newest");
+    const [isSortOpen, setIsSortOpen] = useState(false);
+
   const [activeSpecialty, setActiveSpecialty] = useState("All");
   const [city, setCity] = useState("");
   const [availableOnly, setAvailableOnly] = useState(false);
@@ -267,6 +269,13 @@ export default function MedicalPage() {
     availableOnly ? "available" : null,
   ].filter(Boolean).length;
 
+  const sortLabel: Record<string, string> = {
+    newest: "Newest",
+    featured: "Featured",
+    rating: "Top Rated",
+  };
+  const activeSortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Newest";
+
   return (
     <>
       <style>{`
@@ -414,30 +423,59 @@ export default function MedicalPage() {
         .mp-results-count { font-size: 14px; color: #666; font-weight: 500; }
         .mp-results-count strong { color: #111; font-weight: 800; }
 
-        .mp-sort-dropdown { position: relative; display: inline-block; }
-        .mp-sort-trigger {
-          padding: 9px 36px 9px 14px; border: 1.5px solid #e0e4f0; border-radius: 10px;
-          font-size: 13px; font-weight: 600; color: #333; background: #fff;
-          font-family: inherit; box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-          cursor: pointer; display: flex; align-items: center; gap: 8px; min-width: 150px;
-          position: relative;
+/* ── CUSTOM SORT DROPDOWN ── */
+        .mp-sort-wrap { position: relative; }
+        .mp-sort-btn {
+          padding: 9px 12px 9px 14px;
+          border: 1.5px solid #e0e4f0;
+          border-radius: 10px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #333;
+          background: #fff;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-family: inherit;
+          box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+          transition: border-color 0.2s;
+          white-space: nowrap;
         }
-        .mp-sort-trigger > svg { position: absolute; right: 12px; }
-        .mp-sort-menu {
-          position: absolute; top: calc(100% + 6px); right: 0;
-          background: #fff; border: 1.5px solid #e0e4f0; border-radius: 10px;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 100;
-          min-width: 180px; overflow: hidden; display: flex; flex-direction: column;
+        .mp-sort-btn:hover { border-color: #b91c1c; }
+        .mp-sort-btn.open { border-color: #b91c1c; }
+        .mp-sort-dropdown {
+          position: absolute;
+          top: calc(100% + 6px);
+          right: 0;
+          background: #fff;
+          border: 1.5px solid #e0e4f0;
+          border-radius: 12px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+          z-index: 100;
+          min-width: 190px;
+          overflow: hidden;
+          animation: sortPop 0.18s ease;
         }
-        .mp-sort-item {
-          padding: 10px 14px; text-align: left; background: #fff; border: none;
-          border-bottom: 1px solid #f2f4f8; font-size: 13px; font-weight: 600;
-          color: #333; cursor: pointer; display: flex; align-items: center;
-          justify-content: space-between; font-family: inherit; transition: background 0.15s;
+        @keyframes sortPop {
+          from { opacity: 0; transform: translateY(-4px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
-        .mp-sort-item:last-child { border-bottom: none; }
-        .mp-sort-item:hover { background: #f0fdfa; }
-        .mp-sort-item.active { background: #f0fdfa; color: #0d9488; }
+        .mp-sort-option {
+          padding: 11px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #333;
+          cursor: pointer;
+          transition: background 0.12s;
+          white-space: nowrap;
+        }
+          .mp-sort-option:hover { background: #f8fafc; }
+        .mp-sort-option.active {
+          background: #e0f2fe;
+          color: #0369a1; }
+
+        
 
         .mp-active-filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
         .mp-active-tag {
@@ -785,30 +823,42 @@ export default function MedicalPage() {
                     </div>
                   )}
                 </div>
+                
+                <span className="mp-results-count">
+                  <strong>{displayed.length}</strong> results found
+                </span>
 
-                <div className="mp-sort-dropdown" ref={sortRef}>
+                {/* ── CUSTOM DROPDOWN (fixes overflow) ── */}
+                <div className="mp-sort-wrap" ref={sortRef}>
                   <button
-                    className="mp-sort-trigger"
-                    onClick={() => setSortOpen(!sortOpen)}
+                    className="mp-sort-btn"
+                    onClick={() => setIsSortOpen((v) => !v)}
                   >
-                    {SORT_OPTIONS.find((o) => o.value === sort)?.label}
-                    <FiChevronDown size={14} color="#555" />
+                    {sortLabel[sort]}
+                    <FiChevronDown
+                      size={14}
+                      style={{
+                        transform: isSortOpen ? "rotate(180deg)" : "none",
+                        transition: "transform 0.2s",
+                      }}
+                    />
                   </button>
-                  {sortOpen && (
+                  {isSortOpen && (
                     <div className="mp-sort-menu">
-                      {SORT_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          className={`mp-sort-item${sort === opt.value ? " active" : ""}`}
-                          onClick={() => {
-                            setSort(opt.value as typeof sort);
-                            setSortOpen(false);
-                          }}
-                        >
-                          {opt.label}
-                          {sort === opt.value && <FiCheck size={14} />}
-                        </button>
-                      ))}
+                      {(["newest", "featured", "rating"] as const).map(
+                        (key) => (
+                          <div
+                            key={key}
+                            className={`mp-sort-option${sort === key ? " active" : ""}`}
+                            onClick={() => {
+                              setSort(key);
+                              setIsSortOpen(false);
+                            }}
+                          >
+                            {sortLabel[key]}
+                          </div>
+                        ),
+                      )}
                     </div>
                   )}
                 </div>
@@ -964,7 +1014,7 @@ export default function MedicalPage() {
                       </Link>
                     );
                   })
-                )}
+                )}              
               </div>
             </div>
           </div>
@@ -972,6 +1022,7 @@ export default function MedicalPage() {
 
         <Footer />
       </div>
+      
     </>
   );
 }

@@ -53,7 +53,9 @@ export default function TradeAndHomeRepairPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<"newest" | "rating">("newest");
+  const [sort, setSort] = useState("newest");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+
   const [activeTag, setActiveTag] = useState("All");
   const [city, setCity] = useState("");
   const [emergencyOnly, setEmergencyOnly] = useState(false);
@@ -277,6 +279,11 @@ export default function TradeAndHomeRepairPage() {
     }
     return sorted;
   }, [listings, search, activeTag, city, emergencyOnly, sort]);
+  const sortLabel: Record<string, string> = {
+    newest: "Newest",
+    featured: "Featured",
+    rating: "Top Rated",
+  };
 
   return (
     <>
@@ -436,35 +443,58 @@ export default function TradeAndHomeRepairPage() {
         }
         .th-results-count { font-size: 14px; color: #666; font-weight: 500; }
 
-        /* ── CUSTOM DROPDOWN ── */
-        .th-sort-dropdown { position: relative; z-index: 50; }
-        .th-sort-trigger {
-          display: flex; align-items: center; gap: 8px;
-          padding: 9px 14px; border: 1.5px solid #e0e4f0; border-radius: 10px;
-          font-size: 13px; font-weight: 600; color: #333;
-          background: #fff; cursor: pointer; font-family: inherit;
-          box-shadow: 0 1px 6px rgba(0,0,0,0.06); transition: border-color 0.2s;
-          min-width: 130px; justify-content: space-between;
+       /* ── CUSTOM SORT DROPDOWN ── */
+        .th-sort-wrap { position: relative; }
+        .th-sort-btn {
+          padding: 9px 12px 9px 14px;
+          border: 1.5px solid #e0e4f0;
+          border-radius: 10px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #333;
+          background: #fff;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-family: inherit;
+          box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+          transition: border-color 0.2s;
+          white-space: nowrap;
         }
-        .th-sort-trigger:hover { border-color: #b45309; }
-        .th-sort-trigger.open { border-color: #b45309; }
-        .th-sort-menu {
-          position: absolute; top: calc(100% + 6px); right: 0;
-          background: #fff; border: 1.5px solid #e0e4f0; border-radius: 12px;
-          box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-          min-width: 160px; overflow: hidden;
-          animation: th-dropdown-in 0.18s ease;
+        .th-sort-btn:hover { border-color: #b91c1c; }
+        .th-sort-btn.open { border-color: #b91c1c; }
+        .th-sort-dropdown {
+          position: absolute;
+          top: calc(100% + 6px);
+          right: 0;
+          background: #fff;
+          border: 1.5px solid #e0e4f0;
+          border-radius: 12px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+          z-index: 100;
+          min-width: 190px;
+          overflow: hidden;
+          animation: sortPop 0.18s ease;
         }
-        @keyframes th-dropdown-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-        .th-sort-item {
-          display: flex; align-items: center; justify-content: space-between;
-          width: 100%; padding: 10px 14px;
-          font-size: 13px; font-weight: 600; color: #444;
-          background: none; border: none; cursor: pointer; font-family: inherit;
-          transition: background 0.15s; text-align: left;
+        @keyframes sortPop {
+          from { opacity: 0; transform: translateY(-4px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
-        .th-sort-item:hover { background: #fef3c7; color: #b45309; }
-        .th-sort-item.active { color: #b45309; font-weight: 700; }
+        .th-sort-option {
+          padding: 11px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #333;
+          cursor: pointer;
+          transition: background 0.12s;
+          white-space: nowrap;
+        }
+        .th-sort-option:hover { background: #f8fafc; }
+        .vp-sort-option.active {
+          background: #e0f2fe;
+          color: #0369a1;
+        }
 
         /* ── GRID ── */
         .th-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
@@ -689,31 +719,37 @@ export default function TradeAndHomeRepairPage() {
                 </span>
 
                 {/* ---------- custom sort dropdown ---------- */}
-                <div className="th-sort-dropdown" ref={sortRef}>
+                {/* ── CUSTOM DROPDOWN (fixes overflow) ── */}
+                <div className="th-sort-wrap" ref={sortRef}>
                   <button
-                    className={`th-sort-trigger${sortOpen ? " open" : ""}`}
-                    onClick={() => setSortOpen(!sortOpen)}
+                    className="th-sort-btn"
+                    onClick={() => setIsSortOpen((v) => !v)}
                   >
-                    {SORT_OPTIONS.find((o) => o.value === sort)?.label}
-                    <FiChevronDown size={14} color="#555" />
+                    {sortLabel[sort]}
+                    <FiChevronDown
+                      size={14}
+                      style={{
+                        transform: isSortOpen ? "rotate(180deg)" : "none",
+                        transition: "transform 0.2s",
+                      }}
+                    />
                   </button>
-                  {sortOpen && (
+                  {isSortOpen && (
                     <div className="th-sort-menu">
-                      {SORT_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          className={`th-sort-item${
-                            sort === opt.value ? " active" : ""
-                          }`}
-                          onClick={() => {
-                            setSort(opt.value as typeof sort);
-                            setSortOpen(false);
-                          }}
-                        >
-                          {opt.label}
-                          {sort === opt.value && <FiCheck size={14} />}
-                        </button>
-                      ))}
+                      {(["newest", "featured", "rating"] as const).map(
+                        (key) => (
+                          <div
+                            key={key}
+                            className={`th-sort-option${sort === key ? " active" : ""}`}
+                            onClick={() => {
+                              setSort(key);
+                              setIsSortOpen(false);
+                            }}
+                          >
+                            {sortLabel[key]}
+                          </div>
+                        ),
+                      )}
                     </div>
                   )}
                 </div>

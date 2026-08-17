@@ -136,8 +136,9 @@ export default function BrowseCategories() {
         /* Grid — 3 columns matching screenshot */
         .bc-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(4, 1fr);
           gap: 12px;
+          width:100%
         }
 
         /* Card — horizontal layout like the screenshot */
@@ -224,7 +225,7 @@ export default function BrowseCategories() {
 
           {/* Category Grid */}
           <div className="bc-grid">
-            {categories.slice(0, 3).map((cat) => (
+            {categories.slice(0, 4).map((cat) => (
               <Link key={cat.id} href={cat.href} className="bc-card">
                 <div
                   className="bc-icon-wrap"
