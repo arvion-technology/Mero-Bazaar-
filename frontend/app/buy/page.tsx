@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { MOCK_PRODUCTS } from "@/lib/data/buy-mock";
-import type { BuyProduct } from "@/types/buy";
+import type { BuyProduct } from "../types/buy";
 import {
   FiSearch,
   FiChevronDown,
