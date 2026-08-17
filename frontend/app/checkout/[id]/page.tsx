@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
 import { useFoodCart } from "../../context/FoodCartContext";
 import { popNextOrder, hasMoreInQueue, clearCheckoutQueue } from "@/lib/checkoutQueue";
-import type { OrderDetail } from "@/app/types/";
+import type { OrderDetail } from "@/app/types/orders";
 
 export default function CheckoutPage() {
   const { id: orderId } = useParams<{ id: string }>();

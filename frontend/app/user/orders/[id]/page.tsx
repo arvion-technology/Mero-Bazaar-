@@ -532,7 +532,7 @@ const ALL_ORDERS = [
     },
     deliveryRoute: {
       pickup: { label: "Pickup Location (Vendor)", name: "Audio Zone Nepal", address: "Jawalakhel, Lalitpur", province: "Bagmati Province, Nepal" },
-      dropoff: { label: "Delivery Location (Customer)", name: "Pulchowk, Lalitpur", address: "Pulchowk, Lalitpur", province: "Bagmati Province, Nepal" },
+      dropoff: { label: "Delivery tLocation (Customer)", name: "Pulchowk, Lalitpur", address: "Pulchowk, Lalitpur", province: "Bagmati Province, Nepal" },
     },
   },
 ];
