@@ -181,8 +181,7 @@ export default function PropertyPage() {
   const [filterPrice, setFilterPrice] = useState("");
   const [filterFurnished, setFilterFurnished] = useState(false);
   const [filterUnfurnished, setFilterUnfurnished] = useState(false);
-    const { data: session } = useSession();
-
+  const { data: session } = useSession();
 
   useEffect(() => {
     let cancelled = false;
@@ -214,44 +213,47 @@ export default function PropertyPage() {
   }, []);
 
   useEffect(() => {
-      if (!session?.accessToken) return;
-  
-      (async () => {
-        try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
+    if (!session?.accessToken) return;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`,
+          {
             headers: { Authorization: `Bearer ${session.accessToken}` },
-          });
-          if (!res.ok) return;
-  
-          const data = await res.json();
-          const favMap: Record<string, boolean> = {};
-          data.forEach((item: { listingId: string }) => {
-            favMap[item.listingId] = true;
-          });
-          setFavorites(favMap);
-        } catch {
-          // silently ignore
-        }
-      })();
-    }, [session?.accessToken]);
-  
-    const toggleFav = async (id: string, e: React.MouseEvent) => {
+          },
+        );
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const favMap: Record<string, boolean> = {};
+        data.forEach((item: { listingId: string }) => {
+          favMap[item.listingId] = true;
+        });
+        setFavorites(favMap);
+      } catch {
+        // silently ignore
+      }
+    })();
+  }, [session?.accessToken]);
+
+  const toggleFav = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-  
+
     if (!session?.accessToken) {
       toast.error("Please log in to save listings");
       return;
     }
-  
+
     const previousState = !!favorites[id];
-  
+
     // Instant UI update
     setFavorites((p) => ({
       ...p,
       [id]: !previousState,
     }));
-  
+
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
@@ -264,34 +266,32 @@ export default function PropertyPage() {
           body: JSON.stringify({
             listingId: id,
           }),
-        }
+        },
       );
-  
+
       if (!res.ok) {
         throw new Error("Failed to update wishlist");
       }
-  
+
       const data = await res.json();
-  
+
       setFavorites((p) => ({
         ...p,
         [id]: data.favorited,
       }));
-  
+
       toast.success(
-        data.favorited
-          ? "Added to wishlist"
-          : "Removed from wishlist"
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
       );
     } catch (error) {
       console.error("Wishlist error:", error);
-  
+
       // Rollback UI if API fails
       setFavorites((p) => ({
         ...p,
         [id]: previousState,
       }));
-  
+
       toast.error("Something went wrong. Please try again.");
     }
   };
@@ -326,6 +326,7 @@ export default function PropertyPage() {
       }
 
       console.error("Property share failed:", error);
+      toast.error("Unable to share property");
     }
   };
 

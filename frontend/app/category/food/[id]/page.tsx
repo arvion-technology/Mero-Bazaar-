@@ -19,7 +19,7 @@ import {
   FiCheckCircle,
   FiStar,
   FiClock,
-  FiHeart
+  FiHeart,
 } from "react-icons/fi";
 import { FaHeart, FaUtensils } from "react-icons/fa";
 import SellerCard from "@/components/SellerCard";
@@ -62,7 +62,7 @@ export default function FoodDetailPage() {
   const [activeImg, setActiveImg] = useState(0);
   const { data: session } = useSession();
   const [favLoading, setFavLoading] = useState(false);
-    const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!session?.accessToken || !id) return;
@@ -536,36 +536,6 @@ export default function FoodDetailPage() {
               <div className="fd-panel">
                 <div className="jd-title-row">
                   <h1 className="jd-title">{item.title}</h1>
-                  <div className="jd-action-btns">
-                    <button className="ld-action-btn" aria-label="Share listing" onClick={handleShare}>
-            <span className="ld-tooltip">{copied ? "Copied!" : "Share"}</span>
-            <FiShare2 size={15} color="#555" />
-          </button>
-                    <button
-                      className={`ld-action-btn${isFav ? " fav-active" : ""}`}
-                      aria-label="Save to wishlist"
-                      onClick={handleToggleFavorite}
-                      disabled={favLoading}
-                    >
-                      {isFav ? (
-                        <FaHeart size={15} color="#E74C3C" />
-                      ) : (
-                        <FiHeart size={15} color="#999" />
-                      )}
-                    {/* </button>
-                    {/* <button
-                      className="jd-action-btn"
-                      aria-label="Share listing"
-                      title="Share"
-                      onClick={() =>
-                        navigator.clipboard
-                          ?.writeText(window.location.href)
-                          .catch(() => {})
-                      }
-                    > */}
-                      <FiShare2 size={15} color="#666" />
-                    </button> */
-                  </div>
                 </div>
                 <p className="fd-cuisine">
                   <span
@@ -678,6 +648,28 @@ export default function FoodDetailPage() {
                     <div className="fd-rel-img-wrap">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={r.thumb} alt={r.title} className="fd-rel-img" />
+                      <button
+                        type="button"
+                        className="fd-img-fav-btn"
+                        aria-label={
+                          isFav ? "Remove from wishlist" : "Save to wishlist"
+                        }
+                        title={
+                          isFav ? "Remove from wishlist" : "Save to wishlist"
+                        }
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleToggleFavorite();
+                        }}
+                        disabled={favLoading}
+                      >
+                        {isFav ? (
+                          <FaHeart size={17} color="#E74C3C" />
+                        ) : (
+                          <FiHeart size={17} color="#666" />
+                        )}
+                      </button>
                     </div>
                     <div className="fd-rel-body">
                       <p className="fd-rel-name">{r.title}</p>

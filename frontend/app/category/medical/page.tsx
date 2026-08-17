@@ -77,7 +77,7 @@ export default function MedicalPage() {
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
-    const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
 
   const [activeSpecialty, setActiveSpecialty] = useState("All");
   const [city, setCity] = useState("");
@@ -115,9 +115,12 @@ export default function MedicalPage() {
 
     (async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
-          headers: { Authorization: `Bearer ${session.accessToken}` },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`,
+          {
+            headers: { Authorization: `Bearer ${session.accessToken}` },
+          },
+        );
         if (!res.ok) return;
 
         const data = await res.json();
@@ -132,67 +135,64 @@ export default function MedicalPage() {
     })();
   }, [session?.accessToken]);
 
-
   const toggleFav = async (id: string, e: React.MouseEvent) => {
-  e.preventDefault();
-  e.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
 
-  if (!session?.accessToken) {
-    toast.error("Please log in to save listings");
-    return;
-  }
-
-  const previousState = !!favorites[id];
-
-  // Instant UI update
-  setFavorites((p) => ({
-    ...p,
-    [id]: !previousState,
-  }));
-
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
-        },
-        body: JSON.stringify({
-          listingId: id,
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error("Failed to update wishlist");
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
     }
 
-    const data = await res.json();
+    const previousState = !!favorites[id];
 
+    // Instant UI update
     setFavorites((p) => ({
       ...p,
-      [id]: data.favorited,
+      [id]: !previousState,
     }));
 
-    toast.success(
-      data.favorited
-        ? "Added to wishlist"
-        : "Removed from wishlist"
-    );
-  } catch (error) {
-    console.error("Wishlist error:", error);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
 
-    // Rollback UI if API fails
-    setFavorites((p) => ({
-      ...p,
-      [id]: previousState,
-    }));
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
 
-    toast.error("Something went wrong. Please try again.");
-  }
-};
+      const data = await res.json();
+
+      setFavorites((p) => ({
+        ...p,
+        [id]: data.favorited,
+      }));
+
+      toast.success(
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
+      );
+    } catch (error) {
+      console.error("Wishlist error:", error);
+
+      // Rollback UI if API fails
+      setFavorites((p) => ({
+        ...p,
+        [id]: previousState,
+      }));
+
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
   const shareMedical = async (listing: MedicalListing, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -230,6 +230,7 @@ export default function MedicalPage() {
       }
 
       console.error("Medical share failed:", error);
+      toast.error("Unable to medical ");
     }
   };
 
@@ -274,7 +275,8 @@ export default function MedicalPage() {
     featured: "Featured",
     rating: "Top Rated",
   };
-  const activeSortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Newest";
+  const activeSortLabel =
+    SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Newest";
 
   return (
     <>
@@ -823,7 +825,7 @@ export default function MedicalPage() {
                     </div>
                   )}
                 </div>
-                
+
                 <span className="mp-results-count">
                   <strong>{displayed.length}</strong> results found
                 </span>
@@ -919,7 +921,7 @@ export default function MedicalPage() {
                               title="Save doctor"
                               onClick={(e) => toggleFav(l.id, e)}
                             >
-                               {isFav ? (
+                              {isFav ? (
                                 <FaHeart size={13} color="#b91c1c" />
                               ) : (
                                 <FiHeart size={13} color="#999" />
@@ -1014,7 +1016,7 @@ export default function MedicalPage() {
                       </Link>
                     );
                   })
-                )}              
+                )}
               </div>
             </div>
           </div>
@@ -1022,7 +1024,6 @@ export default function MedicalPage() {
 
         <Footer />
       </div>
-      
     </>
   );
 }

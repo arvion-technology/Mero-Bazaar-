@@ -237,7 +237,7 @@ export default function VehiclesPage() {
 
     const shareData = {
       title: displayTitle(vehicle),
-      text: `Check out this vehicle on HamroCart: ${displayTitle(vehicle)}`,
+      text: `Check out this vehicle on HamroNepal Bazaar: ${displayTitle(vehicle)}`,
       url: vehicleUrl,
     };
 

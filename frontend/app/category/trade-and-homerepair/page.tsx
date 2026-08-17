@@ -227,6 +227,7 @@ export default function TradeAndHomeRepairPage() {
       }
 
       console.error("Trade share failed:", error);
+      toast.error("Unable to share trade");
     }
   };
   const reset = () => {
@@ -491,7 +492,7 @@ export default function TradeAndHomeRepairPage() {
           white-space: nowrap;
         }
         .th-sort-option:hover { background: #f8fafc; }
-        .vp-sort-option.active {
+        .th-sort-option.active {
           background: #e0f2fe;
           color: #0369a1;
         }
@@ -809,6 +810,7 @@ export default function TradeAndHomeRepairPage() {
                             </button>
 
                             {/* Share */}
+                            {/* Share */}
                             <button
                               type="button"
                               className="th-share"
@@ -816,7 +818,7 @@ export default function TradeAndHomeRepairPage() {
                               title="Share service"
                               onClick={(e) => shareTrade(l, e)}
                             >
-                              <FiShare2 size={15} />
+                              <FiShare2 size={14} />
                             </button>
                           </div>
 
