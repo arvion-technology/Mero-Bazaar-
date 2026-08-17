@@ -4,6 +4,7 @@ import React, { createContext, useContext, useMemo, useState, useCallback } from
 
 export type CartItem = {
   id: string;
+  listingId: string;
   name: string;
   description?: string;
   variant?: string;
@@ -54,42 +55,13 @@ const defaultDelivery: DeliveryInfo = {
   address: "",
 };
 
-const demoItems: CartItem[] = [
-  {
-    id: "1",
-    name: "Chicken Chowmein",
-    description: "Spicy",
-    variant: "Standard",
-    price: 280,
-    quantity: 1,
-    image: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=200&h=200&fit=crop",
-  },
-  {
-    id: "2",
-    name: "Steamed Chicken Momo",
-    description: "10 Psc",
-    variant: "With Soup",
-    price: 220,
-    quantity: 1,
-    image: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=200&h=200&fit=crop",
-  },
-  {
-    id: "3",
-    name: "Coca-Cola",
-    description: "500ml",
-    price: 80,
-    quantity: 1,
-    image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200&h=200&fit=crop",
-  },
-];
-
 const FoodCartContext = createContext<FoodCartContextType | null>(null);
 
 export function FoodCartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(demoItems);
-  const [selectedIds, setSelectedIds] = useState<string[]>(demoItems.map((i) => i.id));
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [deliveryInfo, setDeliveryInfoState] = useState<DeliveryInfo>(defaultDelivery);
-  const [paymentMethod, setPaymentMethod] = useState<"esewa" | "khalti" | "connectips" | null>("esewa");
+  const [paymentMethod, setPaymentMethod] = useState<"esewa" | "khalti" | "connectips" | null>(null);
 
   const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {

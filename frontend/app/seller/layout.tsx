@@ -6,12 +6,14 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   FiGrid, FiShoppingCart, FiBox, FiCreditCard, FiBarChart2,
-  FiMessageSquare, FiSettings, FiSearch, FiBell, FiChevronDown,
+  FiMessageSquare, FiSettings, FiSearch, FiChevronDown,
   FiMenu, FiX, FiLogOut, FiUser, FiMoreHorizontal,
 } from "react-icons/fi";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { KycStatusProvider } from "../../components/kycstatusContext";
+import { SidebarBadgesProvider, useSidebarBadges } from "../../components/SidebarBadgesContext";
+import SellerNotificationBell from "../../components/SellerNotificationBell";
 
 const SITE_PRIMARY = "#C0392B";
 const PRIMARY = "#0f172a";
@@ -53,9 +55,7 @@ function SellerShell({ children }: { children: React.ReactNode }) {
   const [openNavDropdown, setOpenNavDropdown] = useState<string | null>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const navDropdownRef = useRef<HTMLDivElement>(null);
-  const [unreadLeads, setUnreadLeads] = useState<number | null>(null);
-  const [notifCount, setNotifCount] = useState<number | null>(null);
-  const [pendingOrders, setPendingOrders] = useState<number | null>(null);
+  const { unreadLeads, pendingOrders } = useSidebarBadges();
 
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -79,39 +79,6 @@ function SellerShell({ children }: { children: React.ReactNode }) {
     return () => { document.body.style.overflow = ""; };
   }, [sidebarOpen]);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/leads/mine/unread-count")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled && data) setUnreadLeads(data.count);
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/user/notifications/unread-count")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled && data) setNotifCount(data.count);
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/orders/seller/unread-count")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled && data) setPendingOrders(data.count);
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
-  
   const pageHeadings: Record<string, { title: string; subtitle: string }> = {
     "/seller/dashboard": {
       title: "Dashboard",
@@ -1547,10 +1514,7 @@ function SellerShell({ children }: { children: React.ReactNode }) {
                 <FiSearch size={16} />
                 <input type="text" placeholder="Search orders, products..." onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)} />
               </div>
-              <button type="button" className="dash-icon-btn">
-                <FiBell size={18} />
-                {notifCount !== null && notifCount > 0 && <span className="dash-badge">{notifCount}</span>}
-              </button>
+              <SellerNotificationBell />
               <div className="dash-profile-wrap" ref={profileDropdownRef}>
                 <button type="button" className="dash-profile-btn" onClick={() => setShowProfileDropdown((p) => !p)}>
                   <div className="dash-profile-btn-avatar">
@@ -1589,7 +1553,9 @@ function SellerShell({ children }: { children: React.ReactNode }) {
 export default function SellerLayout({ children }: { children: React.ReactNode }) {
   return (
     <KycStatusProvider>
-      <SellerShell>{children}</SellerShell>
+      <SidebarBadgesProvider>
+        <SellerShell>{children}</SellerShell>
+      </SidebarBadgesProvider>
     </KycStatusProvider>
   );
 }

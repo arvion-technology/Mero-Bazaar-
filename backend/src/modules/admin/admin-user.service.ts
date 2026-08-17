@@ -1,10 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { UserRole, VerificationStatus } from "@prisma/client";
 import { PrismaService } from 'src/database/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AdminUserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+) {}
 
   async listUsers(role?: UserRole, kycStatus?: VerificationStatus | 'NOT_SUBMITTED') {
     const users = await this.prisma.user.findMany({
@@ -65,10 +69,21 @@ export class AdminUserService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id: userId },
       data: { isActive },
       select: { id: true, isActive: true },
     });
+
+    if (!isActive) {
+      await this.notificationsService.notifyAllAdmins({
+        category: 'SYSTEM',
+        type: 'USER_DEACTIVATED',
+        title: 'User deactivated',
+        description: `${user.name ?? user.email} was deactivated.`,
+      });
+    }
+
+    return updated;
   }
 }

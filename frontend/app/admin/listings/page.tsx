@@ -7,6 +7,7 @@ import Link from "next/link";
 import type { ListingCategory, ListingStatus, AdminListingRecord } from "@/app/types/admin-listing";
 import { getListingStatusBadge, formatCategory } from "@/app/types/admin-listing_mappers";
 import { resolveImages } from "@/lib/adapters/shared";
+import AdminNotificationBell from "@/components/admin/AdminNotificationBell";
 
 const PRIMARY = "#0f172a";
 const SITE_PRIMARY = "#C0392B";
@@ -163,7 +164,7 @@ export default function AdminListingsPage() {
               <h1 className="admin-topbar-title">Listings</h1>
             </div>
             <div className="admin-topbar-right">
-              <button type="button" className="admin-icon-btn"><FiBell size={20} /><span className="admin-badge">1</span></button>
+              <AdminNotificationBell bg={BG} />
               <div className="admin-avatar-wrap">
                 <button type="button" className="admin-avatar-btn" onClick={() => setShowAvatarDropdown((v) => !v)}>
                   <div className="admin-avatar-circle">

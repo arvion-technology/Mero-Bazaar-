@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ListingCategory, ListingStatus } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const DETAIL_SELECT = {
   id: true,
@@ -26,9 +27,31 @@ const DETAIL_SELECT = {
   beauty: true,
 } as const;
 
+const STATUS_MESSAGES: Record<ListingStatus, { title: string; description: (name: string) => string }> = {
+  ACTIVE: {
+    title: 'Listing approved',
+    description: (name) => `"${name}" is now live and visible to buyers.`,
+  },
+  RESERVED: {
+    title: 'Listing reserved',
+    description: (name) => `"${name}" was marked as reserved.`,
+  },
+  SOLD: {
+    title: 'Listing marked sold',
+    description: (name) => `"${name}" was marked as sold.`,
+  },
+  EXPIRED: {
+    title: 'Listing taken down',
+    description: (name) => `"${name}" was removed or expired. Contact support if this looks wrong.`,
+  },
+};
+
 @Injectable()
 export class AdminListingService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async listListings(category?: ListingCategory, status?: ListingStatus) {
     return this.prisma.listing.findMany({
@@ -63,11 +86,23 @@ export class AdminListingService {
     const listing = await this.prisma.listing.findUnique({ where: { id } });
     if (!listing) throw new NotFoundException('Listing not found.');
 
-    return this.prisma.listing.update({
+    const updated = await this.prisma.listing.update({
       where: { id },
       data: { status },
       select: { id: true, status: true },
     });
+
+    const msg = STATUS_MESSAGES[status];
+    if (msg) {
+      await this.notificationsService.create(listing.userId, {
+        category: 'LISTINGS',
+        type: `LISTING_${status}`,
+        title: msg.title,
+        description: msg.description(listing.title),
+      });
+    }
+
+    return updated;
   }
 
   async updateListing(id: string, body: Record<string, any>) {
@@ -87,11 +122,25 @@ export class AdminListingService {
       data[categoryKey] = { update: categoryData };
     }
 
-    return this.prisma.listing.update({
+    const updated = await this.prisma.listing.update({
       where: { id },
       data,
       select: DETAIL_SELECT,
     });
+
+    if (status !== undefined && status !== listing.status) {
+      const msg = STATUS_MESSAGES[status as ListingStatus];
+      if (msg) {
+        await this.notificationsService.create(listing.userId, {
+          category: 'LISTINGS',
+          type: `LISTING_${status}`,
+          title: msg.title,
+          description: msg.description(listing.title),
+        });
+      }
+    }
+
+    return updated;
   }
 
   async deleteListing(id: string) {
@@ -99,6 +148,21 @@ export class AdminListingService {
     if (!listing) throw new NotFoundException('Listing not found.');
 
     await this.prisma.listing.delete({ where: { id } });
+
+    await this.notificationsService.notifyAllAdmins({
+      category: 'SYSTEM',
+      type: 'LISTING_DELETED',
+      title: 'Listing deleted',
+      description: `"${listing.title}" was removed.`,
+    });
+
+    await this.notificationsService.create(listing.userId, {
+      category: 'LISTINGS',
+      type: 'LISTING_DELETED',
+      title: 'Listing removed',
+      description: `Your listing "${listing.title}" was removed by an admin.`,
+    });
+
     return { id, deleted: true };
   }
 }

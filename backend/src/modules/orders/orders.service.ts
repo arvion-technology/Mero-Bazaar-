@@ -1,13 +1,17 @@
 import { Injectable, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { OrderType, OrderStatus, ListingStatus, PaymentMethod } from '@prisma/client';
+import { OrderType, OrderStatus, ListingStatus, PaymentMethod, DisputeStatus } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const RESERVATION_MINUTES = 15;
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   // Vehicle / SecondHand / Rental deposit / Livestock
     async reserveListing(listingId: string, buyerId: string) {
@@ -29,7 +33,7 @@ export class OrdersService {
         chargeNow = listing.vehicle.reservationFee;
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const order = await this.prisma.$transaction(async (tx) => {
         const lock = await tx.listing.updateMany({
         where: { id: listingId, status: ListingStatus.ACTIVE },
         data: { status: ListingStatus.RESERVED },
@@ -52,6 +56,15 @@ export class OrdersService {
         },
         });
     });
+
+    await this.notificationsService.create(listing.userId, {
+      category: 'ORDERS',
+      type: 'NEW_RESERVATION',
+      title: 'New reservation',
+      description: `Someone reserved "${listing.title}"`,
+    });
+
+    return order;
     }
 
   async createDeliveryOrder(
@@ -68,7 +81,7 @@ export class OrdersService {
     const price = listing.price;
     const totalPrice = price * quantity;
 
-    return this.prisma.order.create({
+    const order = await this.prisma.order.create({
       data: {
         listingId,
         userId: buyerId,
@@ -81,6 +94,15 @@ export class OrdersService {
         status: OrderStatus.PENDING,
       },
     });
+
+    await this.notificationsService.create(listing.userId, {
+      category: 'ORDERS',
+      type: 'NEW_ORDER',
+      title: 'New order received',
+      description: `New order for "${listing.title}" (x${quantity})`,
+    });
+
+    return order;
   }
 
   async confirmPayment(orderId: string, paymentRef: string, buyerId: string, paymentMethod: PaymentMethod ) {
@@ -91,8 +113,8 @@ export class OrdersService {
       throw new ConflictException(`Order is already ${order.status.toLowerCase()}.`);
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.order.update({
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.order.update({
         where: { id: orderId },
         data: { status: OrderStatus.CONFIRMED, paymentRef, paymentMethod },
       });
@@ -104,19 +126,28 @@ export class OrdersService {
         });
       }
 
-      return updated;
+      return result;
     });
+
+    await this.notificationsService.create(order.listing.userId, {
+      category: 'ORDERS',
+      type: 'ORDER_PAID',
+      title: 'Payment received',
+      description: `Payment confirmed for "${order.listing.title}"`,
+    });
+
+    return updated;
   }
 
   async cancelReservation(orderId: string, buyerId: string) {
-  const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+  const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: { listing: true } });
   if (!order) throw new NotFoundException('Order not found.');
   if (order.userId !== buyerId) throw new ForbiddenException('Not your order.');
   if (order.status !== 'PENDING') {
     throw new ConflictException(`Cannot cancel an order that is already ${order.status.toLowerCase()}.`);
   }
 
-  return this.prisma.$transaction(async (tx) => {
+  await this.prisma.$transaction(async (tx) => {
     await tx.order.update({
       where: { id: orderId },
       data: { status: 'CANCELLED', cancelReason: 'buyer_cancelled' },
@@ -128,7 +159,44 @@ export class OrdersService {
       });
     }
   });
+
+  await this.notificationsService.create(order.listing.userId, {
+    category: 'ORDERS',
+    type: 'ORDER_CANCELLED',
+    title: 'Order cancelled',
+    description: `Buyer cancelled their reservation for "${order.listing.title}"`,
+  });
 }
+
+  async raiseDispute(orderId: string, userId: string, reason: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { listing: { select: { title: true } } },
+    });
+    if (!order) throw new NotFoundException('Order not found.');
+    if (order.userId !== userId) throw new ForbiddenException('Not your order.');
+
+    if (order.disputeStatus !== 'NONE') {
+      throw new ConflictException(`Dispute already ${order.disputeStatus.toLowerCase()} for this order.`);
+    }
+
+    const updated = await this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        disputeStatus: DisputeStatus.OPEN,
+        disputeReason: reason,
+      },
+    });
+
+    await this.notificationsService.notifyAllAdmins({
+      category: 'SYSTEM',
+      type: 'DISPUTE_OPENED',
+      title: 'Payment dispute opened',
+      description: `A dispute was opened on order for "${order.listing.title}".`,
+    });
+
+    return updated;
+  }
 
   async getMyOrders(buyerId: string) {
     return this.prisma.order.findMany({

@@ -4,6 +4,7 @@ import { CreateReservationDto } from './dto/create_reservation.dto';
 import { CreateDeliveryOrderDto } from './dto/create_delivery_order.dto';
 import { ConfirmPaymentDto } from './dto/confirm_payment.dto';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
+import { RaiseDisputeDto } from './dto/raise_dispute.dto';
 
 @Controller('orders')
 @UseGuards(JwtAuthGuard)
@@ -60,5 +61,10 @@ export class OrdersController {
   @Get('seller/stats')
   getSellerStats(@Req() req) {
     return this.ordersService.getSellerOrderStats(req.user.id);
+  }
+
+  @Post(':id/dispute')
+  raiseDispute(@Param('id') id: string, @Body() dto: RaiseDisputeDto, @Req() req) {
+    return this.ordersService.raiseDispute(id, req.user.id, dto.reason);
   }
 }

@@ -8,11 +8,13 @@ import { AdminReportController } from './admin-report.controller';
 import { AdminPaymentController } from './admin-payment.controller';
 import { AdminReportService } from './admin-report.service';
 import { AdminPaymentService } from './admin-payment.service';
-
+import { AdminFlagController } from './admin_flag.controller';
+import { AdminFlagService } from './admin_flag.service';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [AdminUserController, AdminListingController, AdminReportController, AdminPaymentController],
-  providers: [AdminUserService, AdminListingService, AdminReportService, AdminPaymentService],
+  imports: [PrismaModule, NotificationsModule],
+  controllers: [AdminUserController, AdminListingController, AdminReportController, AdminPaymentController, AdminFlagController],
+  providers: [AdminUserService, AdminListingService, AdminReportService, AdminPaymentService, AdminFlagService],
 })
 export class AdminModule {}

@@ -9,6 +9,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import KYCDetailsContent from "@/components/KYCDetailsContent";
 import type { VendorKycDetail, MappedKycDetail } from "@/app/types/kyc";
 import { mapKycDetail } from "@/app/types/kyc_mappers";
+import AdminNotificationBell from "@/components/admin/AdminNotificationBell";
 
 const SITE_PRIMARY = "#C0392B";
 const BG = "#f8f5f5";
@@ -80,7 +81,7 @@ export default function VerifiedKYCDetailPage() {
                 <h1 className="admin-topbar-title">KYC Not Found</h1>
               </div>
               <div className="admin-topbar-right">
-                <button type="button" className="admin-icon-btn"><FiBell size={20} /><span className="admin-badge">1</span></button>
+                <AdminNotificationBell bg={BG} />
               </div>
             </div>
             <div style={{ padding: "32px" }}><h2>KYC record not found</h2></div>
@@ -110,7 +111,7 @@ export default function VerifiedKYCDetailPage() {
               </div>
             </div>
             <div className="admin-topbar-right">
-              <button type="button" className="admin-icon-btn"><FiBell size={20} /><span className="admin-badge">1</span></button>
+              <AdminNotificationBell bg={BG} />
             </div>
           </div>
 

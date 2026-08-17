@@ -11,6 +11,45 @@ import type { BeautyListing } from "@/app/types/beauty";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
+export interface CreateDeliveryOrderPayload {
+  listingId: string;
+  quantity: number;
+  deliveryDate: string;
+  deliveryAddress: string;
+}
+
+export interface OrderResponse {
+  id: string;
+  totalPrice: number;
+  status: string;
+  [key: string]: unknown;
+}
+
+export interface OrderDetail {
+  id: string;
+  status: string;
+  totalPrice: number;
+  paymentMethod: string | null;
+  paymentRef: string | null;
+  quantity: number;
+  createdAt: string;
+  listing: {
+    id: string;
+    title: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+export interface EsewaInitiateResponse {
+  gatewayUrl: string;
+  fields: Record<string, string>;
+}
+
+export interface KhaltiInitiateResponse {
+  paymentUrl: string;
+}
+
 function getToken() {
   return typeof window !== "undefined" ? localStorage.getItem("token") : null;
 }
@@ -30,7 +69,7 @@ async function get<T>(path: string, params?: URLSearchParams): Promise<T> {
 
 async function post<T>(path: string, body: unknown): Promise<T> {
   const token = getToken();
-  const res = await fetch(`${BASE}${path}`, {  
+  const res = await fetch(`${BASE}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -39,7 +78,22 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || `Api error ${res.status}`); 
+  if (!res.ok) throw new Error(data.message || `Api error ${res.status}`);
+  return data;
+}
+
+async function postLocal<T>(path: string, body: unknown): Promise<T> {
+  const token = getToken();
+  const res = await fetch(path, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || `Api error ${res.status}`);
   return data;
 }
 
@@ -77,7 +131,7 @@ export const api = {
 
   getListings: () => get<DBListing[]>('/listings'),
   getVehicles: () => get<Vehicle[]>('/vehicles'),
-  
+
   getJobs:     (params?: URLSearchParams) => get<JobListing[]>('/api/jobs', params),
   getJob:      (id: string) => get<JobListing>(`/api/jobs/${id}`),
 
@@ -129,4 +183,13 @@ export const api = {
     get<BeautyListing[]>('/api/beauty', params),
   getBeautyListing: (id: string) =>
     get<BeautyListing>(`/api/beauty/${id}`),
+
+  createDeliveryOrder: (payload: CreateDeliveryOrderPayload) =>
+    postLocal<OrderResponse>('/api/orders/delivery', payload),
+  getOrder: (id: string) => 
+    get<OrderDetail>(`/api/orders/${id}`),
+  initiateEsewa: (orderIds: string) =>
+    postLocal<EsewaInitiateResponse>('/api/payments/esewa/initiate', { orderIds }),
+  initiateKhalti: (orderIds: string) =>
+    postLocal<KhaltiInitiateResponse>('/api/payments/khalti/initiate', { orderIds }),
 };
