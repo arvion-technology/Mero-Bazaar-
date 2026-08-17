@@ -3,11 +3,16 @@ export interface BuySeller {
   name: string;
   avatar: string | null;
   phone: string;
-  memberSince: string;      
+  memberSince: string;
   rating: number;
   reviewCount: number;
   isVerified: boolean;
-  totalListing: number;     }
+  isPro?: boolean;
+  isTrusted?: boolean;
+  responseRate?: string;
+  avgResponseTime?: string;
+  totalListing: number;
+}
 
 export interface BuyReview {
   reviewerName: string;
