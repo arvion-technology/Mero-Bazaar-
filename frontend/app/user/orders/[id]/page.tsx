@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { toast } from "react-toastify";
 import { MdVerified } from "react-icons/md";
-import { OrderDetail as ApiOrderDetail } from "@/lib/api";
+import type { OrderDetail as ApiOrderDetail } from "@/app/types/orders";
 import {
   FiGrid, FiShoppingBag, FiHeart, FiBell, FiHelpCircle, FiSettings,
   FiTrash2, FiAlertTriangle, FiLogOut, FiUser, FiChevronDown,
