@@ -46,4 +46,11 @@ export class LeadsController {
     const sellerId = (req.user as { id: string }).id;
     return this.leadsService.findForSeller(sellerId, { status });
   }
+
+  @Get('mine/sent')
+  @UseGuards(JwtAuthGuard)
+  findSent(@Req() req: Request) {
+    const userId = (req.user as { id: string }).id;
+    return this.leadsService.findSentByUser(userId);
+  }
 }

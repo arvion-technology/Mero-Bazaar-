@@ -153,4 +153,26 @@ export class LeadsService {
     });
     return { count };
   }
+
+    async findSentByUser(userId: string) {
+    return this.prisma.lead.findMany({
+      where: { userId },
+      include: {
+        listing: {
+          select: {
+            id: true,
+            title: true,
+            user: {
+              select: {
+                name: true,
+                phone: true,
+                vendorKyc: { select: { contactNumber: true, status: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

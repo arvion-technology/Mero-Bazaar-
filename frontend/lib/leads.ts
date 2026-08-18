@@ -81,3 +81,34 @@ export function adaptLeadToClientMessage(lead: LeadWithRelations): ClientMessage
     unread: lead.status === "PENDING",
   };
 }
+
+export type LeadSent = {
+  id: string;
+  listingId: string;
+  leadType: LeadType;
+  status: LeadStatus;
+  message: string | null;
+  createdAt: string | Date;
+  listing: {
+    id: string;
+    title: string;
+    user: {
+      name: string | null;
+      phone: string | null;
+      vendorKyc: { contactNumber: string; status: string } | null;
+    } | null;
+  };
+};
+
+export function adaptLeadSentToContact(lead: LeadSent): ClientMessage {
+  const sellerName = lead.listing?.user?.name || "Unknown seller";
+  return {
+    id: lead.id,
+    initials: getInitials(sellerName),
+    name: sellerName,
+    msg: lead.message?.trim() || `Re: ${lead.listing?.title ?? "listing"}`,
+    time: formatTime(lead.createdAt),
+    color: colorForId(lead.listingId || lead.id),
+    unread: false,
+  };
+}
