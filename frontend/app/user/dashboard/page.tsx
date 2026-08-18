@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { OrderDetail as ApiOrderDetail } from "@/lib/api";
+import type { OrderDetail as ApiOrderDetail } from "@/app/types/orders";
 import { adaptLeadSentToContact, ClientMessage, LeadSent } from "@/lib/leads";
 import {
   FiGrid, FiShoppingBag, FiHeart, FiBell, FiHelpCircle, FiSettings,
