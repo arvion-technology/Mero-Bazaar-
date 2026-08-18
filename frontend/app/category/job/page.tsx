@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiPhone, FiMessageSquare, FiChevronDown, FiBookmark, FiTarget, FiLoader, FiBriefcase, FiShare2, } from "react-icons/fi";
+import { FiSearch, FiMapPin, FiPhone, FiMessageSquare, FiChevronDown, FiTarget, FiLoader, FiBriefcase, FiShare2, FiHeart } from "react-icons/fi";
 import { FaHeart, FaBriefcase } from "react-icons/fa";
 import { JOB_TYPES, CITIES, SKILLS, JobCard } from "../../types/jobs";
 import { toContractType, toJobCard } from "@/lib/adapter";
@@ -514,7 +514,7 @@ export default function JobsPage() {
                           {isFav ? (
                             <FaHeart size={16} color="#ff3b30" />
                           ) : (
-                            <FiBookmark size={16} color="#000" />
+                            <FiHeart size={16} color="#000" />
                           )}
                         </button>
 

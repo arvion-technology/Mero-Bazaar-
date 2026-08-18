@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { api } from "@/lib/api";
@@ -83,6 +83,11 @@ const DAYS_OF_WEEK: WeekDay[] = [
   "SAT",
   "SUN",
 ];
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest" },
+  { value: "price_asc", label: "Price: Low → High" },
+  { value: "price_desc", label: "Price: High → Low" },
+];
 
 const parsePrice = (priceStr: string): number => {
   const match = priceStr.replace(/,/g, "").match(/\d+/);
@@ -95,15 +100,16 @@ export default function FoodDeliveryPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<"newest" | "price-low">("newest");
+  const [sort, setSort] = useState("newest");
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
   const [selectedFoodTypes, setSelectedFoodTypes] = useState<FoodType[]>([]);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>(
     [],
   );
   const [selectedDays, setSelectedDays] = useState<WeekDay[]>([]);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
-    const { data: session } = useSession();
-
+  const { data: session } = useSession();
 
   useEffect(() => {
     let cancelled = false;
@@ -140,88 +146,89 @@ export default function FoodDeliveryPage() {
       prev.includes(day) ? prev.filter((x) => x !== day) : [...prev, day],
     );
 
- useEffect(() => {
-     if (!session?.accessToken) return;
- 
-     (async () => {
-       try {
-         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
-           headers: { Authorization: `Bearer ${session.accessToken}` },
-         });
-         if (!res.ok) return;
- 
-         const data = await res.json();
-         const favMap: Record<string, boolean> = {};
-         data.forEach((item: { listingId: string }) => {
-           favMap[item.listingId] = true;
-         });
-         setFavorites(favMap);
-       } catch {
-         // silently ignore
-       }
-     })();
-   }, [session?.accessToken]);
- 
-   const toggleFav = async (id: string, e: React.MouseEvent) => {
-   e.preventDefault();
-   e.stopPropagation();
- 
-   if (!session?.accessToken) {
-     toast.error("Please log in to save listings");
-     return;
-   }
- 
-   const previousState = !!favorites[id];
- 
-   // Instant UI update
-   setFavorites((p) => ({
-     ...p,
-     [id]: !previousState,
-   }));
- 
-   try {
-     const res = await fetch(
-       `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
-       {
-         method: "POST",
-         headers: {
-           "Content-Type": "application/json",
-           Authorization: `Bearer ${session.accessToken}`,
-         },
-         body: JSON.stringify({
-           listingId: id,
-         }),
-       }
-     );
- 
-     if (!res.ok) {
-       throw new Error("Failed to update wishlist");
-     }
- 
-     const data = await res.json();
- 
-     setFavorites((p) => ({
-       ...p,
-       [id]: data.favorited,
-     }));
- 
-     toast.success(
-       data.favorited
-         ? "Added to wishlist"
-         : "Removed from wishlist"
-     );
-   } catch (error) {
-     console.error("Wishlist error:", error);
- 
-     // Rollback UI if API fails
-     setFavorites((p) => ({
-       ...p,
-       [id]: previousState,
-     }));
- 
-     toast.error("Something went wrong. Please try again.");
-   }
- };
+  useEffect(() => {
+    if (!session?.accessToken) return;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`,
+          {
+            headers: { Authorization: `Bearer ${session.accessToken}` },
+          },
+        );
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const favMap: Record<string, boolean> = {};
+        data.forEach((item: { listingId: string }) => {
+          favMap[item.listingId] = true;
+        });
+        setFavorites(favMap);
+      } catch {
+        // silently ignore
+      }
+    })();
+  }, [session?.accessToken]);
+
+  const toggleFav = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
+    }
+
+    const previousState = !!favorites[id];
+
+    // Instant UI update
+    setFavorites((p) => ({
+      ...p,
+      [id]: !previousState,
+    }));
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      const data = await res.json();
+
+      setFavorites((p) => ({
+        ...p,
+        [id]: data.favorited,
+      }));
+
+      toast.success(
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
+      );
+    } catch (error) {
+      console.error("Wishlist error:", error);
+
+      // Rollback UI if API fails
+      setFavorites((p) => ({
+        ...p,
+        [id]: previousState,
+      }));
+
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
   const shareFood = async (item: FoodsCard, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -307,6 +314,8 @@ export default function FoodDeliveryPage() {
   });
 
   const cards: FoodsCard[] = sortedRaw.map(toFoodsCard);
+  const activeSortLabel =
+    SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Newest";
 
   return (
     <>
@@ -504,44 +513,59 @@ export default function FoodDeliveryPage() {
         .fd-count { font-size: 15px; color: #6b7280; font-weight: 600; }
         .fd-count strong { color: #111; font-weight: 800; }
 
-        /* CUSTOM SORT DROPDOWN */
-        .fd-sort-wrap {
-          position: relative;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
+        /* ── CUSTOM SORT DROPDOWN ── */
+        .fd-sort-wrap { position: relative; }
+        .fd-sort-btn {
+          padding: 9px 12px 9px 14px;
+          border: 1.5px solid #e0e4f0;
+          border-radius: 10px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #333;
           background: #fff;
-          min-width: 140px;
-          max-width: 100%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-family: inherit;
+          box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+          transition: border-color 0.2s;
+          white-space: nowrap;
         }
-        .fd-sort-trigger {
-          display: flex; align-items: center; justify-content: space-between;
-          width: 100%; padding: 8px 12px;
-          border: none; border-radius: 6px;
-          font-size: 13px; font-weight: 600;
-          color: #333; background: transparent;
-          cursor: pointer; font-family: inherit;
-        }
-        .fd-sort-menu {
-          position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-          background: #fff; border: 1px solid #e5e7eb;
-          border-radius: 6px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-          z-index: 20;
+        .fd-sort-btn:hover { border-color: #b91c1c; }
+        .fd-sort-btn.open { border-color: #b91c1c; }
+        .fd-sort-dropdown {
+          position: absolute;
+          top: calc(100% + 6px);
+          right: 0;
+          background: #fff;
+          border: 1.5px solid #e0e4f0;
+          border-radius: 12px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+          z-index: 100;
+          min-width: 190px;
           overflow: hidden;
+          animation: sortPop 0.18s ease;
         }
-        .fd-sort-item {
-          padding: 9px 12px;
-          font-size: 13px; font-weight: 500;
-          color: #374151;
+        @keyframes sortPop {
+          from { opacity: 0; transform: translateY(-4px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .fd-sort-option {
+          padding: 11px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #333;
           cursor: pointer;
           transition: background 0.12s;
+          white-space: nowrap;
         }
-        .fd-sort-item:hover { background: #f3f4f6; }
-        .fd-sort-item.active {
-          background: #fff1f2;
-          color: #e11d48;
-          font-weight: 700;
+          .fd-sort-option:hover { background: #f8fafc; }
+        .fd-sort-option.active {
+          background: #e0f2fe;
+          color: #0369a1;
         }
+
 
         /* CARD GRID */
         .fd-grid {
@@ -842,28 +866,37 @@ export default function FoodDeliveryPage() {
               <span className="fd-count">
                 <strong>{cards.length}</strong> Restaurants found
               </span>
-              <div className="fd-sort-wrap">
-                <select
-                  className="fd-sort"
-                  value={sort}
-                  onChange={(e) =>
-                    setSort(e.target.value as "newest" | "price-low")
-                  }
+              <div className="fd-sort-wrap" ref={sortRef}>
+                <button
+                  className={`fd-sort-btn${sortOpen ? " open" : ""}`}
+                  onClick={() => setSortOpen((p) => !p)}
                 >
-                  <option value="newest">Newest</option>
-                  <option value="price-low">Price: Low to High</option>
-                </select>
-                <FiChevronDown
-                  size={12}
-                  style={{
-                    position: "absolute",
-                    right: 8,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    pointerEvents: "none",
-                    color: "#666",
-                  }}
-                />
+                  {activeSortLabel}
+                  <FiChevronDown
+                    size={14}
+                    style={{
+                      transform: sortOpen ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s",
+                    }}
+                  />
+                </button>
+
+                {sortOpen && (
+                  <div className="fd-sort-dropdown">
+                    {SORT_OPTIONS.map((opt) => (
+                      <div
+                        key={opt.value}
+                        className={`fd-sort-option${sort === opt.value ? " active" : ""}`}
+                        onClick={() => {
+                          setSort(opt.value);
+                          setSortOpen(false);
+                        }}
+                      >
+                        {opt.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
