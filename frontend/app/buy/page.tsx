@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { MOCK_PRODUCTS } from "@/lib/data/buy-mock";
 import type { BuyProduct } from "../types/buy";
 import {
   FiSearch,
@@ -13,6 +12,7 @@ import {
   FiRotateCcw,
   FiShoppingCart,
   FiCheckCircle,
+  FiShoppingBag,
 } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 
@@ -43,7 +43,7 @@ const MAX_PRICE = 1000000;
 interface Toast {
   id: number;
   message: string;
-  type: "success" | "info";
+  type: "success" | "info" | "error";
 }
 
 /* ─────────── STYLES ─────────── */
@@ -55,6 +55,7 @@ const pageStyles = `
 .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
 .toast-item { display: flex; align-items: center; gap: 10px; padding: 12px 18px; background: #fff; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #10b981; font-size: 13px; font-weight: 600; color: #111827; animation: toastSlide 0.35s cubic-bezier(0.32, 0.72, 0, 1); pointer-events: auto; min-width: 260px; max-width: 360px; }
 .toast-item.info { border-left-color: #3b82f6; }
+.toast-item.error { border-left-color: #ef4444; }
 .toast-item.exit { animation: toastFade 0.25s ease forwards; }
 @keyframes toastSlide { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes toastFade { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
@@ -145,10 +146,22 @@ const pageStyles = `
 .buy-btn-buy:hover { background: #be123c; box-shadow: 0 4px 12px rgba(225,29,72,0.35); }
 .buy-btn:active { transform: scale(0.97); }
 
-.buy-empty, .buy-state { text-align: center; padding: 70px 24px; background: #fff; border-radius: 10px; border: 1px solid #e5e7eb; }
-.buy-empty p, .buy-state p { font-weight: 700; font-size: 16px; color: #111827; margin: 0 0 4px; }
-.buy-empty span, .buy-state span { font-size: 13px; color: #6b7280; }
-.buy-empty-btn { margin-top: 14px; padding: 9px 22px; background: #e11d48; color: #fff; font-weight: 700; font-size: 13px; border: none; border-radius: 7px; cursor: pointer; font-family: inherit; }
+/* ─── EMPTY STATE (exactly like pic) ─── */
+.buy-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 100px 24px; background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; }
+.buy-empty-icon { color: #d1d5db; margin-bottom: 20px; }
+.buy-empty h3 { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 8px; }
+.buy-empty p { font-size: 15px; color: #9ca3af; margin: 0 0 24px; }
+.buy-empty-btn { padding: 12px 32px; background: #e11d48; color: #fff; font-weight: 700; font-size: 15px; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; transition: background 0.15s, transform 0.15s; }
+.buy-empty-btn:hover { background: #be123c; transform: translateY(-1px); }
+.buy-empty-btn:active { transform: scale(0.97); }
+
+.buy-skeleton-card { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; display: flex; flex-direction: column; }
+.buy-skeleton-img { width: 100%; aspect-ratio: 4/3; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 200% 100%; animation: skeletonPulse 1.2s infinite; }
+.buy-skeleton-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.buy-skeleton-line { height: 14px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 200% 100%; animation: skeletonPulse 1.2s infinite; border-radius: 4px; }
+.buy-skeleton-line.short { width: 60%; }
+.buy-skeleton-line.xshort { width: 40%; height: 10px; }
+@keyframes skeletonPulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 @media (max-width: 1100px) {
   .buy-hero-images { display: none; }
@@ -167,12 +180,13 @@ const pageStyles = `
   .buy-search-input { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
   .buy-search-btn { width: 100%; border-radius: 8px; height: 44px; }
   .toast-item { min-width: auto; max-width: calc(100vw - 24px); font-size: 12px; padding: 10px 14px; }
+  .buy-empty { padding: 70px 20px; }
 }
 `;
 
 /* ─────────── COMPONENT ─────────── */
 export default function BuyPage() {
-  const [products] = useState(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<BuyProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -194,10 +208,24 @@ export default function BuyPage() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastIdRef = useRef(0);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 400);
-    return () => clearTimeout(timer);
+  /* ─── FETCH PRODUCTS ─── */
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/products");
+      if (!res.ok) throw new Error("Failed to fetch products");
+      const data: BuyProduct[] = await res.json();
+      setProducts(data);
+    } catch (err) {
+      showToast("Failed to load products", "error");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -210,7 +238,7 @@ export default function BuyPage() {
   }, []);
 
   /* ─── TOAST HELPERS ─── */
-  const showToast = (message: string, type: "success" | "info" = "success") => {
+  const showToast = (message: string, type: "success" | "info" | "error" = "success") => {
     const id = ++toastIdRef.current;
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
@@ -292,6 +320,14 @@ export default function BuyPage() {
 
   const pricePercent = (maxPrice / MAX_PRICE) * 100;
 
+  const getToastColor = (type: string) => {
+    switch (type) {
+      case "info": return "#3b82f6";
+      case "error": return "#ef4444";
+      default: return "#10b981";
+    }
+  };
+
   return (
     <>
       <style>{pageStyles}</style>
@@ -300,7 +336,7 @@ export default function BuyPage() {
       <div className="toast-container">
         {toasts.map((t) => (
           <div key={t.id} className={`toast-item ${t.type}`}>
-            <FiCheckCircle size={16} color={t.type === "info" ? "#3b82f6" : "#10b981"} />
+            <FiCheckCircle size={16} color={getToastColor(t.type)} />
             <span>{t.message}</span>
           </div>
         ))}
@@ -415,9 +451,23 @@ export default function BuyPage() {
           {/* Main Content */}
           <div className="buy-main">
             {loading ? (
-              <div className="buy-state">
-                <p>Loading items...</p>
-              </div>
+              <>
+                <div className="buy-results-header">
+                  <span className="buy-count">Loading...</span>
+                </div>
+                <div className="buy-grid">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="buy-skeleton-card">
+                      <div className="buy-skeleton-img" />
+                      <div className="buy-skeleton-body">
+                        <div className="buy-skeleton-line" />
+                        <div className="buy-skeleton-line short" />
+                        <div className="buy-skeleton-line xshort" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : (
               <>
                 <div className="buy-results-header">
@@ -448,11 +498,12 @@ export default function BuyPage() {
 
                 {sortedDisplayed.length === 0 ? (
                   <div className="buy-empty">
-                    <FiSearch size={44} style={{ color: '#d1d5db', marginBottom: 14 }} />
-                    <p>No items found</p>
-                    <span>Try adjusting your filters or search term</span>
-                    <br />
-                    <button className="buy-empty-btn" onClick={reset}>Reset Filters</button>
+                    <FiShoppingBag size={56} className="buy-empty-icon" strokeWidth={1} />
+                    <h3>No listings found</h3>
+                    <p>Try adjusting your filters or search term</p>
+                    <button className="buy-empty-btn" onClick={reset}>
+                      Reset Filters
+                    </button>
                   </div>
                 ) : (
                   <div className="buy-grid">
