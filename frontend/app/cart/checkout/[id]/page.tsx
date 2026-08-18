@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
-import { api, OrderDetail } from "@/lib/api";
+import { api } from "@/lib/api";
+import type { OrderDetail } from "@/app/types/orders";
 import { useFoodCart } from "../../../context/FoodCartContext";
 import { popNextOrder, hasMoreInQueue, clearCheckoutQueue } from "@/lib/checkoutQueue";
 
