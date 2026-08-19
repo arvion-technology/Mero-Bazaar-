@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { adaptLeadSentToContact, ClientMessage, LeadSent } from "@/lib/leads";
 import {
   FiGrid,
   FiShoppingBag,
@@ -28,18 +29,17 @@ import {
 
 const PRIMARY = "#C0392B";
 
-// ── Mock contact data ──
-const ALL_CONTACTS = [
-  { initials: "RS", name: "Ramesh Store", phone: "+977 9867892321", lastMessage: "Hi, is this item still available?", time: "10:30 AM", color: "#4f46e5", today: true },
-  { initials: "PS", name: "Prakash Suppliers", phone: "+977 9856743215", lastMessage: "We can offer a 10% discount for bulk orders.", time: "09:15 AM", color: "#10b981", today: true },
-  { initials: "SK", name: "Sneha Kadka", phone: "+977 9841234567", lastMessage: "The product was delivered. Thank you!", time: "Yesterday", color: "#f59e0b", today: false },
-  { initials: "MK", name: "Mohan Kapoor", phone: "+977 9812345678", lastMessage: "Can we schedule a pickup tomorrow?", time: "Yesterday", color: "#8b5cf6", today: false },
-  { initials: "BT", name: "Binod Traders", phone: "+977 9823456789", lastMessage: "Payment received. Order is being processed.", time: "Jun 24", color: "#06b6d4", today: false },
-  { initials: "SR", name: "Sunita Rai", phone: "+977 9834567890", lastMessage: "Do you deliver to Pokhara?", time: "Jun 23", color: "#ec4899", today: false },
-  { initials: "NE", name: "Nepal Electronics", phone: "+977 9845678901", lastMessage: "We have the item in stock. Ready to ship.", time: "Jun 21", color: "#ef4444", today: false },
-  { initials: "AG", name: "Anil Ghimire", phone: "+977 9856789012", lastMessage: "Thank you for your purchase!", time: "Jun 20", color: "#f97316", today: false },
-  { initials: "PM", name: "Priya Motors", phone: "+977 9867890123", lastMessage: "The vehicle inspection is scheduled for Monday.", time: "Jun 18", color: "#14b8a6", today: false },
-];
+type ContactRow = ClientMessage & { phone: string; today: boolean };
+
+function adaptLeadSentToContactRow(lead: LeadSent): ContactRow {
+  const base = adaptLeadSentToContact(lead);
+  const phone =
+    lead.listing?.user?.vendorKyc?.contactNumber ||
+    lead.listing?.user?.phone ||
+    "";
+  const today = new Date(lead.createdAt).toDateString() === new Date().toDateString();
+  return { ...base, phone, today };
+}
 
 export default function UserContacts() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -52,12 +52,16 @@ export default function UserContacts() {
   const [notifSeen, setNotifSeen] = useState(false);
   const [search, setSearch] = useState("");
 
+  const [contacts, setContacts] = useState<ContactRow[]>([]);
+  const [contactsLoading, setContactsLoading] = useState(true);
+  const [contactsError, setContactsError] = useState(false);
+
   const { data: session } = useSession();
+  const token = session?.accessToken;
   const router = useRouter();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const notifDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Notification logic (same as Navbar)
   const notifications: string[] = session
     ? ([
         !session.user?.phone && "Add your phone number",
@@ -69,6 +73,7 @@ export default function UserContacts() {
   const sidebarItems = [
     { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/user/dashboard" },
     { id: "orders", icon: FiShoppingBag, label: "My Orders", href: "/user/orders" },
+    { id: "contacts", icon: FiUser, label: "Contacts", href: "/user/contacts" },
     { id: "wishlist", icon: FiHeart, label: "Wishlist", href: "/user/wishlist" },
     { id: "notification", icon: FiBell, label: "Notifications", href: "/user/notifications" },
     { id: "help", icon: FiHelpCircle, label: "Help & Support", href: "/user/help" },
@@ -78,6 +83,36 @@ export default function UserContacts() {
   const userInitials = session?.user?.name
     ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "U";
+
+  // Recent Contacts
+  useEffect(() => {
+    if (!token) return;
+    (async () => {
+      try {
+        const res = await fetch("/api/leads/mine/sent", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error();
+        const data: LeadSent[] = await res.json();
+        const rows = data.map(adaptLeadSentToContactRow);
+        rows.sort(
+          (a, b) =>
+            new Date(
+              (data.find((d) => d.id === b.id)?.createdAt) ?? 0
+            ).getTime() -
+            new Date(
+              (data.find((d) => d.id === a.id)?.createdAt) ?? 0
+            ).getTime()
+        );
+        setContacts(rows);
+      } catch {
+        setContacts([]);
+        setContactsError(true);
+      } finally {
+        setContactsLoading(false);
+      }
+    })();
+  }, [token]);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -122,11 +157,11 @@ export default function UserContacts() {
   }
 
   // Filtered contacts
-  const filtered = ALL_CONTACTS.filter((c) =>
+  const filtered = contacts.filter((c) =>
     search === "" ||
     c.name.toLowerCase().includes(search.toLowerCase()) ||
     c.phone.includes(search) ||
-    c.lastMessage.toLowerCase().includes(search.toLowerCase())
+    c.msg.toLowerCase().includes(search.toLowerCase())
   );
 
   const todayContacts = filtered.filter((c) => c.today);
@@ -224,11 +259,12 @@ export default function UserContacts() {
 
         .contact-avatar { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; flex-shrink: 0; }
         .contact-info { flex: 1; min-width: 0; }
-        .contact-name { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 3px; }
+        .contact-name { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
         .contact-msg { font-size: 13px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .contact-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
         .contact-time { font-size: 11px; color: #94a3b8; font-weight: 500; display: flex; align-items: center; gap: 3px; }
         .contact-phone { font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 4px; }
+        .contact-unread-dot { width: 7px; height: 7px; border-radius: 50%; background: #6366f1; flex-shrink: 0; }
 
         .contacts-empty { padding: 60px 20px; text-align: center; color: #94a3b8; }
         .contacts-empty h3 { font-size: 16px; font-weight: 600; color: #64748b; margin-bottom: 6px; }
@@ -317,14 +353,19 @@ export default function UserContacts() {
 
           <div className="ud-nav-section">
             <div className="ud-nav-label">Menu</div>
-            {sidebarItems.slice(0, 4).map((item) => (
-              <Link key={item.id} href={item.href} className="ud-nav-item" onClick={() => setSidebarOpen(false)}>
+            {sidebarItems.slice(0, 5).map((item) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={`ud-nav-item ${item.id === "contacts" ? "active" : ""}`}
+                onClick={() => setSidebarOpen(false)}
+              >
                 <span className="ud-nav-icon"><item.icon size={18} /></span>
                 <span className="ud-nav-text">{item.label}</span>
               </Link>
             ))}
             <div className="ud-nav-label" style={{ marginTop: 16 }}>Account</div>
-            {sidebarItems.slice(4).map((item) => (
+            {sidebarItems.slice(5).map((item) => (
               <Link key={item.id} href={item.href} className="ud-nav-item" onClick={() => setSidebarOpen(false)}>
                 <span className="ud-nav-icon"><item.icon size={18} /></span>
                 <span className="ud-nav-text">{item.label}</span>
@@ -335,7 +376,6 @@ export default function UserContacts() {
               <span className="ud-nav-text">Delete Account</span>
             </button>
           </div>
-          {/* Sidebar footer intentionally left empty */}
         </aside>
 
         {/* ── Main Area ── */}
@@ -424,12 +464,24 @@ export default function UserContacts() {
               />
             </div>
 
-            {filtered.length === 0 ? (
+            {contactsLoading ? (
+              <div className="contacts-card">
+                <div className="contacts-empty">
+                  <p>Loading contacts…</p>
+                </div>
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="contacts-card">
                 <div className="contacts-empty">
                   <FiMessageSquare size={40} style={{ margin: "0 auto 16px", opacity: 0.4, display: "block" }} />
-                  <h3>No contacts found</h3>
-                  <p>Try a different search term.</p>
+                  <h3>{contactsError ? "Couldn't load contacts" : "No contacts found"}</h3>
+                  <p>
+                    {contactsError
+                      ? "Something went wrong. Please try again later."
+                      : search
+                      ? "Try a different search term."
+                      : "You haven't contacted any sellers yet."}
+                  </p>
                 </div>
               </div>
             ) : (
@@ -439,23 +491,28 @@ export default function UserContacts() {
                     <div className="contacts-group-label">Today</div>
                     <div className="contacts-card" style={{ marginBottom: 20 }}>
                       {todayContacts.map((contact) => (
-                        <div key={contact.name} className="contact-row">
+                        <div key={contact.id} className="contact-row">
                           <div className="contact-avatar" style={{ background: contact.color }}>
                             {contact.initials}
                           </div>
                           <div className="contact-info">
-                            <div className="contact-name">{contact.name}</div>
-                            <div className="contact-msg">{contact.lastMessage}</div>
+                            <div className="contact-name">
+                              {contact.name}
+                              {contact.unread && <span className="contact-unread-dot" />}
+                            </div>
+                            <div className="contact-msg">{contact.msg}</div>
                           </div>
                           <div className="contact-right">
                             <div className="contact-time">
                               <FiClock size={11} />
                               {contact.time}
                             </div>
-                            <div className="contact-phone">
-                              <FiPhone size={11} />
-                              {contact.phone}
-                            </div>
+                            {contact.phone && (
+                              <div className="contact-phone">
+                                <FiPhone size={11} />
+                                {contact.phone}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -468,23 +525,28 @@ export default function UserContacts() {
                     <div className="contacts-group-label">Earlier</div>
                     <div className="contacts-card">
                       {olderContacts.map((contact) => (
-                        <div key={contact.name} className="contact-row">
+                        <div key={contact.id} className="contact-row">
                           <div className="contact-avatar" style={{ background: contact.color }}>
                             {contact.initials}
                           </div>
                           <div className="contact-info">
-                            <div className="contact-name">{contact.name}</div>
-                            <div className="contact-msg">{contact.lastMessage}</div>
+                            <div className="contact-name">
+                              {contact.name}
+                              {contact.unread && <span className="contact-unread-dot" />}
+                            </div>
+                            <div className="contact-msg">{contact.msg}</div>
                           </div>
                           <div className="contact-right">
                             <div className="contact-time">
                               <FiClock size={11} />
                               {contact.time}
                             </div>
-                            <div className="contact-phone">
-                              <FiPhone size={11} />
-                              {contact.phone}
-                            </div>
+                            {contact.phone && (
+                              <div className="contact-phone">
+                                <FiPhone size={11} />
+                                {contact.phone}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}

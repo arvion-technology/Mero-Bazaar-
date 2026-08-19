@@ -9,38 +9,9 @@ import type { FoodsListing } from "../app/types/foods";
 import type { MedicalListing } from "@/app/types/medical";
 import type { BeautyListing } from "@/app/types/beauty";
 import { getSession } from "next-auth/react";
+import type { OrderDetail, CreateDeliveryOrderPayload, OrderResponse } from "@/app/types/orders";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-
-export interface CreateDeliveryOrderPayload {
-  listingId: string;
-  quantity: number;
-  deliveryDate: string;
-  deliveryAddress: string;
-}
-
-export interface OrderResponse {
-  id: string;
-  totalPrice: number;
-  status: string;
-  [key: string]: unknown;
-}
-
-export interface OrderDetail {
-  id: string;
-  status: string;
-  totalPrice: number;
-  paymentMethod: string | null;
-  paymentRef: string | null;
-  quantity: number;
-  createdAt: string;
-  listing: {
-    id: string;
-    title: string;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-}
 
 export interface EsewaInitiateResponse {
   gatewayUrl: string;
