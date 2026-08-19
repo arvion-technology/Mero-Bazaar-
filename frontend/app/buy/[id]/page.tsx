@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import SellerCard from "@/components/SellerCard";
-import type { BuyProduct } from "@/app/types/buy";
+import type { BuyCard, BuyProduct } from "@/app/types/buy";
 import {
   FiArrowLeft,
   FiMapPin,
@@ -193,7 +193,7 @@ export default function BuyDetailPage() {
   const id = params?.id as string;
 
   const [product, setProduct] = useState<BuyProduct | null>(null);
-  const [similarItems, setSimilarItems] = useState<BuyProduct[]>([]);
+  const [similarItems, setSimilarItems] = useState<BuyCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
