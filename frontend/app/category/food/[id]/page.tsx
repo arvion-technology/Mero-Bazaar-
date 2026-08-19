@@ -497,12 +497,33 @@ export default function FoodDetailPage() {
             <div>
               <div className="fd-img-section">
                 <div className="fd-main-img-wrap">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={item.images[activeImg]}
                     alt={item.title}
                     className="fd-main-img"
                   />
+                  <button
+                        type="button"
+                        className="fd-img-fav-btn"
+                        aria-label={
+                          isFav ? "Remove from wishlist" : "Save to wishlist"
+                        }
+                        title={
+                          isFav ? "Remove from wishlist" : "Save to wishlist"
+                        }
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleToggleFavorite();
+                        }}
+                        disabled={favLoading}
+                      >
+                        {isFav ? (
+                          <FaHeart size={17} color="#E74C3C" />
+                        ) : (
+                          <FiHeart size={17} color="#666" />
+                        )}
+                      </button>
 
                   <span className="fd-img-cat-badge" style={badgeStyle}>
                     {item.foodType}
@@ -649,29 +670,7 @@ export default function FoodDetailPage() {
                     <div className="fd-rel-img-wrap">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={r.thumb} alt={r.title} className="fd-rel-img" />
-                      <button
-                        type="button"
-                        className="fd-img-fav-btn"
-                        aria-label={
-                          isFav ? "Remove from wishlist" : "Save to wishlist"
-                        }
-                        title={
-                          isFav ? "Remove from wishlist" : "Save to wishlist"
-                        }
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleToggleFavorite();
-                        }}
-                        disabled={favLoading}
-                      >
-                        {isFav ? (
-                          <FaHeart size={17} color="#E74C3C" />
-                        ) : (
-                          <FiHeart size={17} color="#666" />
-                        )}
-                      </button>
-                    </div>
+                                          </div>
                     <div className="fd-rel-body">
                       <p className="fd-rel-name">{r.title}</p>
                       <p className="fd-rel-price">{r.price}</p>

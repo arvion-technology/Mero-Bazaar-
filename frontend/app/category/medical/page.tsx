@@ -515,19 +515,62 @@ export default function MedicalPage() {
         .mp-card:hover .mp-img-wrap { border-color: #ccfbf1; }
         .mp-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-        .mp-heart {
-          position: absolute; bottom: 0; right: 0;
-          width: 28px; height: 28px; border-radius: 50%;
-          background: #fff; border: 1px solid #e4e8f0; cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          z-index: 4; padding: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-          transition: transform 0.18s, background 0.18s;
-        }
-        .mp-heart:hover { transform: scale(1.15); background: #f0fdfa; }
-        .mp-heart,.mp-share { width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 1px solid #e4e8f0; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10); transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;}
-        .mp-heart:hover,.mp-share:hover {  transform: scale(1.12); background: #f0fdfa;}
-        .mp-share {  color: #64748b;}
-        .mp-share:hover {  color: #0d9488;}
+       .mp-heart {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+  padding: 0;
+  z-index: 5;
+
+  transition: transform 0.18s, background 0.18s;
+}
+
+.mp-share {
+  position: absolute;
+  top: 12px;
+  right: 60px;
+
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #64748b;
+
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+  padding: 0;
+  z-index: 5;
+
+  transition: transform 0.18s, background 0.18s, color 0.18s;
+}
+
+.mp-share:hover {
+  transform: scale(1.08);
+  background: #fff;
+  color: #b91c1c;
+}
+}
         .mp-info { flex: 1; min-width: 0; }
         .mp-specialty-badge {
           font-size: 10.5px; font-weight: 700; color: #0d9488; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: inline-block;
@@ -905,6 +948,31 @@ export default function MedicalPage() {
                         className="mp-card"
                         style={{ textDecoration: "none", color: "inherit" }}
                       >
+                         {/* Favorite */} 
+                            <button 
+                              type="button" 
+                              className="mp-heart" 
+                              aria-label="Save doctor" 
+                              title="Save doctor" 
+                              onClick={(e) => toggleFav(l.id, e)} 
+                            > 
+                              {isFav ? ( 
+                                <FaHeart size={13} color="#b91c1c" /> 
+                              ) : ( 
+                                <FiHeart size={13} color="#999" /> 
+                              )} 
+                            </button> 
+ 
+                            {/* Share */} 
+                            <button 
+                              type="button" 
+                              className="mp-share" 
+                              aria-label={`Share ${m.doctorName}`} 
+                              title="Share doctor" 
+                              onClick={(e) => shareMedical(l, e)} 
+                            > 
+                              <FiShare2 size={14} /> 
+                            </button> 
                         <div className="mp-card-header">
                           <div className="mp-img-wrap">
                             <img
@@ -912,33 +980,7 @@ export default function MedicalPage() {
                               alt={m.doctorName}
                               className="mp-img"
                             />
-
-                            {/* Favorite */}
-                            <button
-                              type="button"
-                              className="mp-heart"
-                              aria-label="Save doctor"
-                              title="Save doctor"
-                              onClick={(e) => toggleFav(l.id, e)}
-                            >
-                              {isFav ? (
-                                <FaHeart size={13} color="#b91c1c" />
-                              ) : (
-                                <FiHeart size={13} color="#999" />
-                              )}
-                            </button>
-
-                            {/* Share */}
-                            <button
-                              type="button"
-                              className="mp-share"
-                              aria-label={`Share ${m.doctorName}`}
-                              title="Share doctor"
-                              onClick={(e) => shareMedical(l, e)}
-                            >
-                              <FiShare2 size={14} />
-                            </button>
-                          </div>
+                              </div>
                           <div className="mp-info">
                             <span className="mp-specialty-badge">
                               {specialtyLabel}

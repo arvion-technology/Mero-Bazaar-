@@ -255,6 +255,45 @@ export default function AgriDetailPage() {
           padding: 4px 10px; border-radius: 5px;
           text-transform: uppercase; letter-spacing: 0.4px;
         }
+          /* SAVE / HEART ON MAIN IMAGE */
+.ald-action-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.94);
+  border: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  cursor: pointer;
+  z-index: 5;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.ald-action-btn:hover {
+  transform: scale(1.12);
+  background: #fff;
+}
+
+.ald-action-btn.fav-active {
+  background: #fff1f2;
+}
+
+.ald-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
         .ald-img-fav-btn {
           position: absolute; top: 12px; left: 12px;
           width: 36px; height: 36px; border-radius: 50%;
@@ -369,6 +408,7 @@ export default function AgriDetailPage() {
           border: 1.5px solid #e5e7eb; background: #f9fafb;
           color: #374151; cursor: pointer; transition: all 0.15s;
         }
+        .ald-btn-phone:hover { background: #d1fae5; border-color: #4ade80; color: #15803d; }
         .ald-btn-share:hover { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
 
         .ald-seller-panel {
@@ -448,6 +488,18 @@ export default function AgriDetailPage() {
                     alt={detail.title}
                     className="ald-main-img"
                   />
+                  <button
+                    className={`ald-action-btn${isFav ? " fav-active" : ""}`}
+                    aria-label="Save to wishlist"
+                    onClick={handleToggleFavorite}
+                    disabled={favLoading}
+                  >
+                    {isFav ? (
+                      <FaHeart size={15} color="#E74C3C" />
+                    ) : (
+                      <FiHeart size={15} color="#999" />
+                    )}
+                  </button>
                   <span className="ald-img-cat-badge" style={badgeStyle}>
                     #{detail.listingType}
                   </span>
@@ -511,32 +563,7 @@ export default function AgriDetailPage() {
               <div className="ald-panel">
                 <div className="jd-title-row">
                   <h1 className="jd-title">{detail.title}</h1>
-                  <div className="jd-action-btns">
-                    <button
-                      className={`ld-action-btn${isFav ? " fav-active" : ""}`}
-                      aria-label="Save to wishlist"
-                      onClick={handleToggleFavorite}
-                      disabled={favLoading}
-                    >
-                      {isFav ? (
-                        <FaHeart size={15} color="#E74C3C" />
-                      ) : (
-                        <FiHeart size={15} color="#999" />
-                      )}
-                    </button>
-                    <button
-                      className="jd-action-btn"
-                      aria-label="Share listing"
-                      title="Share"
-                      onClick={() =>
-                        navigator.clipboard
-                          ?.writeText(window.location.href)
-                          .catch(() => {})
-                      }
-                    >
-                      <FiShare2 size={15} color="#666" />
-                    </button>
-                  </div>
+                  <div className="jd-action-btns"></div>
                 </div>
                 <p className="ald-price">{detail.price}</p>
                 <div className="ald-price-divider" />

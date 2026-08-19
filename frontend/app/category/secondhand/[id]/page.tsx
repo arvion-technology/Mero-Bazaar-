@@ -6,6 +6,7 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import SellerCard from "@/components/SellerCard";
 import { fetchListing, fetchRelatedListings } from "../../../../lib/fetcher";
+
 import type { SecondhandDetail, RelatedListing } from "@/app/types/listing"; // fixed: SecondhandDetail, not ListingDetail
 import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
@@ -27,15 +28,14 @@ import { FaHeart, FaHandshake } from "react-icons/fa";
 export default function SecondhandDetailPage() {
   const params = useParams();
   const id = params?.id as string;
-
   const [item, setItem] = useState<SecondhandDetail | null>(null);
   const [related, setRelated] = useState<RelatedListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [isFav, setIsFav] = useState(false);
   const { data: session } = useSession();
-    const [favLoading, setFavLoading] = useState(false);
-      const [copied, setCopied]   = useState(false);
+  const [favLoading, setFavLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!session?.accessToken || !id) return;
@@ -53,7 +53,6 @@ export default function SecondhandDetailPage() {
       })
       .catch(() => {});
   }, [id, session?.accessToken]);
-
 
   useEffect(() => {
     if (!id) return;
@@ -101,7 +100,9 @@ export default function SecondhandDetailPage() {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4 text-stone-400"><FiLoader className="animate-spin" /></div>
+          <div className="text-6xl mb-4 text-stone-400">
+            <FiLoader className="animate-spin" />
+          </div>
           <p className="text-stone-500">Loading listing…</p>
         </div>
       </div>
@@ -112,9 +113,15 @@ export default function SecondhandDetailPage() {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4 text-rose-500"><FiShoppingBag /></div>
-          <h1 className="text-2xl font-bold text-stone-800 mb-2">Listing Not Found</h1>
-          <p className="text-stone-500 mb-4">The item you are looking for does not exist.</p>
+          <div className="text-6xl mb-4 text-rose-500">
+            <FiShoppingBag />
+          </div>
+          <h1 className="text-2xl font-bold text-stone-800 mb-2">
+            Listing Not Found
+          </h1>
+          <p className="text-stone-500 mb-4">
+            The item you are looking for does not exist.
+          </p>
           <Link
             href="/category/secondhand"
             className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 font-semibold"
@@ -132,66 +139,67 @@ export default function SecondhandDetailPage() {
   const cityLabel = item.city;
   const categoryLabel = item.breadcrumbs[1] ?? "";
 
-  const CONDITION_COLORS: Record<string, { bg: string; color: string; border: string }> = {
+  const CONDITION_COLORS: Record<
+    string,
+    { bg: string; color: string; border: string }
+  > = {
     "Like New": { bg: "#e8f5e9", color: "#2e7d32", border: "#c8e6c9" },
-    "Good": { bg: "#e8f5e9", color: "#1b5e20", border: "#a5d6a7" },
-    "Fair": { bg: "#fff8e1", color: "#f57f17", border: "#ffe082" },
+    Good: { bg: "#e8f5e9", color: "#1b5e20", border: "#a5d6a7" },
+    Fair: { bg: "#fff8e1", color: "#f57f17", border: "#ffe082" },
     "For Parts": { bg: "#ffebee", color: "#c62828", border: "#ffcdd2" },
   };
-const handleToggleFavorite = async () => {
-  if (!session?.accessToken) {
-    toast.error("Please log in to save listings");
-    return;
-  }
-
-  setFavLoading(true);
-
-  const previousState = isFav;
-  setIsFav(!previousState);
-
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
-        },
-        body: JSON.stringify({
-          listingId: id,
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error("Failed to update wishlist");
+  const handleToggleFavorite = async () => {
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
     }
 
-    const data = await res.json();
+    setFavLoading(true);
 
-    setIsFav(data.favorited);
+    const previousState = isFav;
+    setIsFav(!previousState);
 
-    toast.success(
-      data.favorited
-        ? "Added to wishlist"
-        : "Removed from wishlist"
-    );
-  } catch (error) {
-    console.error(error);
-    setIsFav(previousState);
-    toast.error("Something went wrong, please try again");
-  } finally {
-    setFavLoading(false);
-  }
-};
- const handleShare = () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      const data = await res.json();
+
+      setIsFav(data.favorited);
+
+      toast.success(
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
+      );
+    } catch (error) {
+      console.error(error);
+      setIsFav(previousState);
+      toast.error("Something went wrong, please try again");
+    } finally {
+      setFavLoading(false);
+    }
+  };
+  const handleShare = () => {
     navigator.clipboard?.writeText(window.location.href).catch(() => {});
     setCopied(true);
     toast.success("Link copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
   };
-  
+
   return (
     <>
       <style>{`
@@ -245,13 +253,18 @@ const handleToggleFavorite = async () => {
         }
         .sh-title { font-size: 24px; font-weight: 800; color: #18181b; line-height: 1.3; margin: 0; }
         .sh-action-btns { display: flex; gap: 10px; flex-shrink: 0; }
-        .sh-action-btn {
-          width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #e4e4e7;
-          background: #fff; cursor: pointer; display: flex; align-items: center;
-          justify-content: center; transition: all 0.2s;
-        }
-        .sh-action-btn:hover { background: #fafafa; border-color: #a1a1aa; transform: scale(1.08); }
-        .sh-action-btn.fav-active { border-color: #ef4444; background: #fef2f2; }
+       
+        .sh-tooltip {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
         .sh-price {
           font-size: 28px; font-weight: 900; color: #e11d48;
@@ -292,6 +305,53 @@ const handleToggleFavorite = async () => {
         }
         .sh-section-title { font-size: 16px; font-weight: 800; color: #18181b; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
         .sh-desc-text { font-size: 14.5px; color: #3f3f46; line-height: 1.8; margin: 0; }
+       /* SAVE / HEART ON MAIN IMAGE */
+.sh-action-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.94);
+  border: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  cursor: pointer;
+  z-index: 5;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.sh-action-btn:hover {
+  transform: scale(1.12);
+  background: #fff;
+}
+
+.sh-action-btn.fav-active {
+  background: #fff1f2;
+}
+
+.sh-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+  .sh-btn-share {
+          width: 48px; height: 48px; border-radius: 9px;
+          display: flex; align-items: center; justify-content: center;
+          border: 1.5px solid #e5e7eb; background: #f9fafb;
+          color: #374151; cursor: pointer; transition: all 0.15s;
+        }
+        .sh-btn-phone:hover { background: #d1fae5; border-color: #4ade80; color: #15803d; }
+        .sh-btn-share:hover { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
 
         .sh-safety-card {
           background: #fffbeb; border: 1px solid #fde68a; border-radius: 16px;
@@ -341,9 +401,13 @@ const handleToggleFavorite = async () => {
       <div className="sh-page">
         <nav className="sh-breadcrumb" aria-label="Breadcrumb">
           <div className="sh-breadcrumb-inner">
-            <Link href="/" className="sh-bc-link">Home</Link>
+            <Link href="/" className="sh-bc-link">
+              Home
+            </Link>
             <span className="sh-bc-sep">›</span>
-            <Link href="/category/secondhand" className="sh-bc-link">Secondhand</Link>
+            <Link href="/category/secondhand" className="sh-bc-link">
+              Secondhand
+            </Link>
             <span className="sh-bc-sep">›</span>
             <span className="sh-bc-current">{item.title}</span>
           </div>
@@ -354,7 +418,23 @@ const handleToggleFavorite = async () => {
             <div className="sh-img-card">
               <div className="sh-main-img-wrap">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.images[0]} alt={item.title} className="sh-main-img" />
+                <img
+                  src={item.images[0]}
+                  alt={item.title}
+                  className="sh-main-img"
+                />
+                 <button
+                      className={`sh-action-btn${isFav ? " fav-active" : ""}`}
+                      aria-label="Save to wishlist"
+                      onClick={handleToggleFavorite}
+                      disabled={favLoading}
+                    >
+                      {isFav ? (
+                        <FaHeart size={15} color="#E74C3C" />
+                      ) : (
+                        <FiHeart size={15} color="#999" />
+                      )}
+                    </button>
               </div>
             </div>
 
@@ -364,9 +444,11 @@ const handleToggleFavorite = async () => {
                 <span
                   className="sh-badge"
                   style={{
-                    background: CONDITION_COLORS[conditionLabel]?.bg || "#fafafa",
+                    background:
+                      CONDITION_COLORS[conditionLabel]?.bg || "#fafafa",
                     color: CONDITION_COLORS[conditionLabel]?.color || "#18181b",
-                    borderColor: CONDITION_COLORS[conditionLabel]?.border || "#eaeaea",
+                    borderColor:
+                      CONDITION_COLORS[conditionLabel]?.border || "#eaeaea",
                   }}
                 >
                   {conditionLabel}
@@ -375,26 +457,28 @@ const handleToggleFavorite = async () => {
 
               <div className="sh-title-row">
                 <h1 className="sh-title">{item.title}</h1>
-                <div className="sh-action-btns">
-                   <button className="cd-share-btn" onClick={handleShare}>
-                  <FiShare2 size={14} color="#555" />
-                  {copied ? "Copied!" : "Share"} 
-                </button>
+                <div>
                   <button
-                     className={`ld-action-btn${isFav ? " fav-active" : ""}`}
-                      aria-label="Save to wishlist"
-                      onClick={handleToggleFavorite}
-                      disabled={favLoading}
-                    
+                    className="sh-btn-share"
+                    onClick={() => {
+                      if (navigator.share)
+                        navigator.share({
+                          title: item.title,
+                          url: window.location.href,
+                        });
+                    }}
                   >
-                    {isFav ? <FaHeart size={16} color="#ef4444" /> : <FiHeart size={16} color="#71717a" />}
+                    <FiShare2 size={16} />
                   </button>
                 </div>
+               
               </div>
 
               <div className="sh-price">
                 {item.price}
-                {item.negotiable && <span className="sh-price-tag">Open to Offers</span>}
+                {item.negotiable && (
+                  <span className="sh-price-tag">Open to Offers</span>
+                )}
               </div>
 
               <div className="sh-loc-row">
@@ -404,29 +488,44 @@ const handleToggleFavorite = async () => {
                 </span>
                 <span className="sh-meta-item">
                   <FiClock size={14} color="#71717a" />
-                  Posted {item.postedDaysAgo === 0 ? "Today" : item.postedDaysAgo === 1 ? "1 day ago" : `${item.postedDaysAgo} days ago`}
+                  Posted{" "}
+                  {item.postedDaysAgo === 0
+                    ? "Today"
+                    : item.postedDaysAgo === 1
+                      ? "1 day ago"
+                      : `${item.postedDaysAgo} days ago`}
                 </span>
               </div>
 
               <h2 className="sh-features-title">Specifications</h2>
               <div className="sh-features">
                 <div className="sh-feat">
-                  <div className="sh-feat-icon"><FiTag size={20} /></div>
+                  <div className="sh-feat-icon">
+                    <FiTag size={20} />
+                  </div>
                   <span className="sh-feat-val">{categoryLabel}</span>
                   <span className="sh-feat-label">Category</span>
                 </div>
                 <div className="sh-feat">
-                  <div className="sh-feat-icon"><FiAward size={20} /></div>
+                  <div className="sh-feat-icon">
+                    <FiAward size={20} />
+                  </div>
                   <span className="sh-feat-val">{conditionLabel}</span>
                   <span className="sh-feat-label">Condition</span>
                 </div>
                 <div className="sh-feat">
-                  <div className="sh-feat-icon"><FaHandshake size={20} /></div>
-                  <span className="sh-feat-val">{item.negotiable ? "Negotiable" : "Fixed Price"}</span>
+                  <div className="sh-feat-icon">
+                    <FaHandshake size={20} />
+                  </div>
+                  <span className="sh-feat-val">
+                    {item.negotiable ? "Negotiable" : "Fixed Price"}
+                  </span>
                   <span className="sh-feat-label">Pricing Type</span>
                 </div>
                 <div className="sh-feat">
-                  <div className="sh-feat-icon"><FiMapPin size={20} /></div>
+                  <div className="sh-feat-icon">
+                    <FiMapPin size={20} />
+                  </div>
                   <span className="sh-feat-val">{cityLabel}</span>
                   <span className="sh-feat-label">City</span>
                 </div>
@@ -444,14 +543,29 @@ const handleToggleFavorite = async () => {
             <div className="sh-safety-card">
               <FiShield size={24} className="sh-safety-icon" />
               <div>
-                <h3 className="sh-safety-title">Safety Guidelines for Buyers</h3>
+                <h3 className="sh-safety-title">
+                  Safety Guidelines for Buyers
+                </h3>
                 <ul className="sh-safety-list">
-                  <li>Meet the seller in a public, secure location like a mall or cafe.</li>
-                  <li>Always verify and inspect the condition of the item before making any payment.</li>
-                  <li>Never transfer money online (eSewa, Khalti, IPS) as advance deposits before seeing the item.</li>
-                  <li>Beware of listings offering price quotes that are unrealistically low.</li>
+                  <li>
+                    Meet the seller in a public, secure location like a mall or
+                    cafe.
+                  </li>
+                  <li>
+                    Always verify and inspect the condition of the item before
+                    making any payment.
+                  </li>
+                  <li>
+                    Never transfer money online (eSewa, Khalti, IPS) as advance
+                    deposits before seeing the item.
+                  </li>
+                  <li>
+                    Beware of listings offering price quotes that are
+                    unrealistically low.
+                  </li>
                 </ul>
               </div>
+              
             </div>
           </div>
 
@@ -470,10 +584,18 @@ const handleToggleFavorite = async () => {
             <h2 className="sh-related-title">More Secondhand Deals</h2>
             <div className="sh-related-grid">
               {related.map((rel) => (
-                <Link href={`/category/secondhand/${rel.id}`} key={rel.id} className="sh-rel-card">
+                <Link
+                  href={`/category/secondhand/${rel.id}`}
+                  key={rel.id}
+                  className="sh-rel-card"
+                >
                   <div className="sh-rel-img-wrap">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={rel.image} alt={rel.title} className="sh-rel-img" />
+                    <img
+                      src={rel.image}
+                      alt={rel.title}
+                      className="sh-rel-img"
+                    />
                   </div>
                   <div className="sh-rel-body">
                     <p className="sh-rel-name">{rel.title}</p>

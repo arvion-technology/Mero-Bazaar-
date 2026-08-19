@@ -297,21 +297,65 @@ export default function MedicalDetailPage() {
           background: #dff5e9; color: #1a7a43; font-size: 11px; font-weight: 700;
           padding: 3px 10px; border-radius: 5px; border: 1px solid #b2e0c2;
         }
-        .md2-badge-spacer { flex: 1; }
-        .md2-share-btn, .md2-save-btn {
-          display: inline-flex; align-items: center; gap: 5px;
-          font-size: 12.5px; font-weight: 600; color: #444;
-          background: none; border: none; cursor: pointer; font-family: inherit;
-          padding: 4px 6px; border-radius: 6px; transition: background 0.15s;
-        }
-        .md2-share-btn:hover, .md2-save-btn:hover { background: #f5f5f5; }
-        .md2-save-btn.on { color: #e74c3c; }
+        .md2-badge-spacer { flex: 1; }      
 
         .md2-info-card {
           background: #fff; border-radius: 14px; padding: 18px 20px 20px;
           box-shadow: 0 2px 12px rgba(0,0,0,0.07); border: 1px solid #e8e8e8;
         }
+           .md2-title-row {
+          display: flex; align-items: flex-start; justify-content: space-between;
+          gap: 10px; margin-bottom: 4px;
+        }
         .md2-title { font-size: 20px; font-weight: 850; color: #1a1a1a; margin: 0 0 4px; }
+        .md2-action-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  opacity: 1;
+  visibility: visible;
+}
+
+.md2-action-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid #e0e0e0;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.md2-action-btn:hover {
+  background: #f5f5f5;
+  border-color: #ccc;
+  transform: scale(1.08);
+}
+
+.md2-action-btn:focus {
+  outline: none;
+}
+
+.md2-action-btn.fav-active {
+  border-color: #e74c3c;
+  background: #fff5f5;
+}
+ 
         .md2-fee { font-size: 22px; font-weight: 900; color: #0d9488; margin: 4px 0 8px; }
         .md2-meta-row {
           display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
@@ -555,29 +599,39 @@ export default function MedicalDetailPage() {
                     Verified Listing
                   </span>
                 )}
-                <div className="md2-badge-spacer" />
-                <button className="md2-share-btn" onClick={handleShare}>
-                  <FiShare2 size={13} color="#555" />
-                  {copied ? "Copied!" : "Share"}
-                </button>
-                <button
-                  className={`ld-action-btn${isFav ? " fav-active" : ""}`}
-                  aria-label="Save to wishlist"
-                  onClick={handleToggleFavorite}
-                  disabled={favLoading}
-                >
-                  {isFav ? (
-                    <FaHeart size={13} color="#e74c3c" />
-                  ) : (
-                    <FiHeart size={13} color="#888" />
-                  )}
-                  Save
-                </button>
               </div>
-            </div>
 
-            <div className="md2-info-card">
-              <h1 className="md2-title">{listing.doctorName}</h1>
+              <div className="md2-info-card">
+                                <div className="md2-title-row">
+
+                <h1 className="md2-title">{listing.doctorName}</h1>
+                <div className="md2-action-btns">
+                  <button
+                    className="md2-action-btn"
+                    aria-label="Share listing"
+                    onClick={handleShare}
+                  >
+                    <span className="md2-tooltip">
+                      {copied ? "Copied!" : " "}
+                      
+                    </span>
+                    <FiShare2 size={15} color="#555" />
+                  </button>
+                  <button
+                    className={`md2-action-btn${isFav ? " fav-active" : ""}`}
+                    aria-label="Save to wishlist"
+                    onClick={handleToggleFavorite}
+                    disabled={favLoading}
+                  >
+                      {isFav ? (
+                      <FaHeart size={15} color="#e74c3c" />
+                    ) : (
+                      <FiHeart size={15} color="#888" />
+                    )}
+                  </button>
+                </div>
+                </div>
+              </div>
               <div className="md2-fee">{listing.price}</div>
 
               <div className="md2-meta-row">

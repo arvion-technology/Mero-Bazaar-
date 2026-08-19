@@ -609,9 +609,12 @@ export default function FoodDeliveryPage() {
           background: rgba(255,255,255,0.94);  border: none;  display: flex;
           align-items: center;  justify-content: center;  cursor: pointer;  padding: 0;
           box-shadow: 0 1px 6px rgba(0,0,0,0.15);  transition:transform 0.15s, background 0.15s, color 0.15s;}
-        .fd-card-share:hover {transform: scale(1.15); background: #fff;}
-        .fd-card-share { color: #64748b;}
-        .fd-card-share:hover {color: #e11d48;}
+        
+.fd-card-fav:hover { transform: scale(1.15); }
+        .fd-card-share { position: absolute; top: 9px; right: 50px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;  color: #64748b;  box-shadow: 0 2px 10px rgba(0,0,0,0.16);  transition: transform 0.18s, background 0.18s;  padding: 0;  z-index: 3;}
+
+        .fd-card-share:hover {transform: scale(1.18);  background: #fff;  color: #b91c1c;}
+
 
         .fd-card-badges {
           position: absolute; top: 8px; left: 8px;

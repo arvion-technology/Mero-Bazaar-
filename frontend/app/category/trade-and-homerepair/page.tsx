@@ -528,10 +528,37 @@ export default function TradeAndHomeRepairPage() {
           position: absolute; top: 9px; left: 9px;
           display: flex; flex-direction: column; gap: 4px;
         }
-          .th-heart,.th-share { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); border: none; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center;box-shadow: 0 2px 10px rgba(0,0,0,0.16); transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;}
-          .th-heart:hover,.th-share:hover { transform: scale(1.15); background: #fff;}
-          .th-share {  color: #777;}
-          .th-share:hover {  color: #b45309;}
+         .th-share {
+  position: absolute;
+  top: 9px;
+  right: 52px;
+
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.94);
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #64748b;
+
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+  padding: 0;
+  z-index: 5;
+
+  transition: transform 0.18s, background 0.18s, color 0.18s;
+}
+
+.th-share:hover {
+  transform: scale(1.08);
+  background: #fff;
+  color: #b45309;
+}
         .th-badge-verified {
           display: inline-flex; align-items: center; gap: 4px;
           background: #fef3c7; color: #b45309; border: 1px solid #fcd34d;
@@ -791,9 +818,7 @@ export default function TradeAndHomeRepairPage() {
                       >
                         <div className="th-card-body">
                           <div className="th-card-top-row">
-                            <span className="th-card-icon">
-                              {iconForTag(l.skillTags[0] ?? "")}
-                            </span>
+                            
                             {/* Favorite */}
                             <button
                               type="button"
@@ -809,8 +834,7 @@ export default function TradeAndHomeRepairPage() {
                               )}
                             </button>
 
-                            {/* Share */}
-                            {/* Share */}
+                           {/* Share */}
                             <button
                               type="button"
                               className="th-share"
@@ -821,7 +845,10 @@ export default function TradeAndHomeRepairPage() {
                               <FiShare2 size={14} />
                             </button>
                           </div>
-
+                          
+                          <span className="th-card-icon">
+                              {iconForTag(l.skillTags[0] ?? "")}
+                            </span>   
                           <p className="th-card-name">{l.title}</p>
                           {l.skillTags[0] && (
                             <p className="th-card-cat">{l.skillTags[0]}</p>

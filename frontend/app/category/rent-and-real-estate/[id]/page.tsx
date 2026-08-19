@@ -444,17 +444,17 @@ export default function PropertyDetailPage() {
                 <h1 className="pd-title">{detail.title}</h1>
                 <div className="pd-action-btns">
                   <button
-                    className="ld-action-btn"
+                    className="pd-action-btn"
                     aria-label="Share listing"
                     onClick={handleShare}
                   >
-                    <span className="ld-tooltip">
-                      {copied ? "Copied!" : "Share"}
+                    <span className="pd-tooltip"> 
+                       {copied ? "Copied!" : " "} 
                     </span>
                     <FiShare2 size={15} color="#555" />
                   </button>
                   <button
-                    className={`ld-action-btn${isFav ? " fav-active" : ""}`}
+                    className={`pd-action-btn${isFav ? " fav-active" : ""}`}
                     aria-label="Save to wishlist"
                     onClick={handleToggleFavorite}
                     disabled={favLoading}

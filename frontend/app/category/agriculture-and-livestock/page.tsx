@@ -89,8 +89,7 @@ export default function AgriculturePage() {
   const [showMore, setShowMore] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
-    const { data: session } = useSession();
-  
+  const { data: session } = useSession();
 
   useEffect(() => {
     let cancelled = false;
@@ -126,44 +125,47 @@ export default function AgriculturePage() {
   }, []);
 
   useEffect(() => {
-      if (!session?.accessToken) return;
-  
-      (async () => {
-        try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
+    if (!session?.accessToken) return;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`,
+          {
             headers: { Authorization: `Bearer ${session.accessToken}` },
-          });
-          if (!res.ok) return;
-  
-          const data = await res.json();
-          const favMap: Record<string, boolean> = {};
-          data.forEach((item: { listingId: string }) => {
-            favMap[item.listingId] = true;
-          });
-          setFavorites(favMap);
-        } catch {
-          // silently ignore
-        }
-      })();
-    }, [session?.accessToken]);
-  
-    const toggleFav = async (id: string, e: React.MouseEvent) => {
+          },
+        );
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const favMap: Record<string, boolean> = {};
+        data.forEach((item: { listingId: string }) => {
+          favMap[item.listingId] = true;
+        });
+        setFavorites(favMap);
+      } catch {
+        // silently ignore
+      }
+    })();
+  }, [session?.accessToken]);
+
+  const toggleFav = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-  
+
     if (!session?.accessToken) {
       toast.error("Please log in to save listings");
       return;
     }
-  
+
     const previousState = !!favorites[id];
-  
+
     // Instant UI update
     setFavorites((p) => ({
       ...p,
       [id]: !previousState,
     }));
-  
+
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
@@ -176,34 +178,32 @@ export default function AgriculturePage() {
           body: JSON.stringify({
             listingId: id,
           }),
-        }
+        },
       );
-  
+
       if (!res.ok) {
         throw new Error("Failed to update wishlist");
       }
-  
+
       const data = await res.json();
-  
+
       setFavorites((p) => ({
         ...p,
         [id]: data.favorited,
       }));
-  
+
       toast.success(
-        data.favorited
-          ? "Added to wishlist"
-          : "Removed from wishlist"
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
       );
     } catch (error) {
       console.error("Wishlist error:", error);
-  
+
       // Rollback UI if API fails
       setFavorites((p) => ({
         ...p,
         [id]: previousState,
       }));
-  
+
       toast.error("Something went wrong. Please try again.");
     }
   };
@@ -361,8 +361,19 @@ export default function AgriculturePage() {
         .al-card-img-wrap { position: relative; width: 100%; aspect-ratio: 4/3; overflow: hidden; background: #e5e7eb; }
         .al-card-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
         .al-card:hover .al-card-img { transform: scale(1.06); }
-        .al-card-cat-badge { position: absolute; top: 8px; right: 8px; font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .al-card-fav { position: absolute; top: 8px; left: 8px; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.92); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 6px rgba(0,0,0,0.15); transition: transform 0.15s; padding: 0; z-index: 2; }
+.al-card-cat-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: auto;
+
+  font-size: 9px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}        .al-card-fav { position: absolute; top: 8px; left: 8px; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.92); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 6px rgba(0,0,0,0.15); transition: transform 0.15s; padding: 0; z-index: 2; }
         .al-card-fav:hover { transform: scale(1.15); }
         .al-card-body { padding: 12px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
         .al-card-title { font-size: 15px; font-weight: 800; color: #111; margin: 0; }
@@ -394,8 +405,22 @@ export default function AgriculturePage() {
         .al-cat-card { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 14px; border: 1.5px solid #e4e8f0; background: #fafbff; cursor: pointer; transition: all 0.18s; min-width: 140px; font-family: inherit; text-align: left; }
         .al-cat-card:hover { border-color: #15803d; background: #f0fdf4; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(21,128,61,0.12); }
         .al-cat-card.active { border-color: #15803d; background: #dcfce7; box-shadow: 0 4px 16px rgba(21,128,61,0.2); }
-        .al-cat-share { width: 42px; border: 1.5px solid #e4e8f0; border-left: 1px solid #dce1ea; border-radius: 0 14px 14px 0; background: #fafbff; color: #64748b; display: flex; align-items: center;justify-content: center; cursor: pointer; padding: 0; transition: all 0.18s;}
-        .al-cat-share:hover {border-color: #15803d; background: #f0fdf4;color: #15803d;}
+        
+        .al-heart {
+          position: absolute; top: 9px; right: 9px;
+          width: 32px; height: 32px; border-radius: 50%;
+          background: rgba(255,255,255,0.94); border: none; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.16);
+          transition: transform 0.18s; z-index: 3;
+          padding: 0;
+        }
+        .al-heart:hover { transform: scale(1.18); background: #fff; }
+         
+        .al-share { position: absolute; top: 9px; right: 50px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;  color: #64748b;  box-shadow: 0 2px 10px rgba(0,0,0,0.16);  transition: transform 0.18s, background 0.18s;  padding: 0;  z-index: 3;}
+
+        .al-share:hover {transform: scale(1.18);  background: #fff;  color: #b91c1c;}
+
         .al-cat-card.active + .al-cat-share {border-color: #15803d;  background: #dcfce7;  color: #15803d;}
         .al-cat-icon { font-size: 22px; display: flex; align-items: center; }
         .al-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; white-space: nowrap; }
@@ -474,17 +499,6 @@ export default function AgriculturePage() {
                         listings
                       </span>
                     </span>
-                  </button>
-
-                  {/* Share */}
-                  <button
-                    type="button"
-                    className="al-cat-share"
-                    onClick={(e) => shareCategory(cat.name, e)}
-                    aria-label={`Share ${cat.name}`}
-                    title={`Share ${cat.name}`}
-                  >
-                    <FiShare2 size={17} />
                   </button>
                 </div>
               ))}
@@ -721,14 +735,29 @@ export default function AgriculturePage() {
                           #{item.listingType}
                         </span>
                         <button
-                          className="al-card-fav"
+                          type="button"
+                          className="al-heart"
+                          aria-label="Save rent and real state"
+                          title="Save property"
                           onClick={(e) => toggleFav(item.id, e)}
                         >
                           {isFav ? (
-                            <FaHeart size={12} color="#ef4444" />
+                            <FaHeart size={16} color="#E74C3C" />
                           ) : (
-                            <FiHeart size={12} color="#9ca3af" />
+                            <FiHeart size={16} color="#999" />
                           )}
+                        </button>
+
+                        {/* Share */}
+                        {/* Share */}
+                        <button
+                          type="button"
+                          className="al-share"
+                          aria-label={`Share ${item.title}`}
+                          title="Share listing"
+                          onClick={(e) => shareCategory(item.listingType, e)}
+                        >
+                          <FiShare2 size={16} />
                         </button>
                       </Link>
                       <div className="al-card-body">

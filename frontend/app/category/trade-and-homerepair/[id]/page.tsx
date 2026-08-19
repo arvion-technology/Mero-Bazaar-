@@ -258,15 +258,18 @@ export default function TradeDetailPage() {
         .cd-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
         .cd-title { font-size: 20px; font-weight: 800; color: #1a1a1a; margin: 0 0 4px; }
         .cd-title-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-        .cd-share-btn, .cd-save-btn {
-          display: inline-flex; align-items: center; gap: 5px;
-          font-size: 12.5px; font-weight: 600; color: #444;
-          background: none; border: none; cursor: pointer; font-family: inherit;
-          padding: 6px 8px; border-radius: 6px; transition: background 0.15s;
-        }
-        .cd-share-btn { margin-left: auto; }  
-        .cd-share-btn:hover, .cd-save-btn:hover { background: #f5f5f5; }
-        .cd-save-btn.on { color: #e74c3c; }
+        .cd-action-btn, .cd-share-btn { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #e0e0e0; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s, border-color 0.2s, transform 0.2s; }
+        .cd-action-btn:hover { background: #f5f5f5; border-color: #ccc; transform: scale(1.1); }
+        .cd-action-btn.fav-active { border-color: #e74c3c; background: #fff5f5; }
+        // .cd-share-btn, .cd-save-btn {
+        //   display: inline-flex; align-items: center; gap: 5px;
+        //   font-size: 12.5px; font-weight: 600; color: #444;
+        //   background: none; border: none; cursor: pointer; font-family: inherit;
+        //   padding: 6px 8px; border-radius: 6px; transition: background 0.15s;
+        // }
+        // .cd-share-btn { margin-left: auto; }  
+        // .cd-share-btn:hover, .cd-save-btn:hover { background: #f5f5f5; }
+        // .cd-save-btn.on { color: #e74c3c; }
 
         .cd-badge-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; }
         .cd-badge-verified {
@@ -494,21 +497,20 @@ export default function TradeDetailPage() {
                 </span>
                 <button className="cd-share-btn" onClick={handleShare}>
                   <FiShare2 size={14} color="#555" />
-                  {copied ? "Copied!" : "Share"} 
+                  {copied ? "Copied!" : " "} 
                 </button>
                 <button
-                  className={`ld-action-btn${isFav ? " fav-active" : ""}`}
+                  className={`cd-action-btn${isFav ? " fav-active" : ""}`}
                   aria-label="Save to wishlist"
                   onClick={handleToggleFavorite}
                   disabled={favLoading}
                 >
-                  {" "}
-                  {isFav ? (
+                    {isFav ? (
                     <FaHeart size={14} color="#e74c3c" />
                   ) : (
                     <FiHeart size={14} color="#888" />
                   )}
-                  Save
+                  
                 </button>
               </div>
 

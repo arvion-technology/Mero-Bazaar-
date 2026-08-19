@@ -539,12 +539,20 @@ export default function PropertyPage() {
         .pp-badge-rent { background: #e8f5e9; color: #2e7d32; }
         .pp-badge-sale { background: #fff3e0; color: #e65100; }
         .pp-badge-furnished { position: absolute; top: 12px; right: 12px; background: #e8f5e9; color: #2e7d32; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
-        .pp-heart { position: absolute; bottom: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 4; padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.15); transition: transform 0.18s; }
-        .pp-heart:hover { transform: scale(1.15); }
-        .pp-heart,.pp-share { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.95); border: none; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.15); transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;}
-        .pp-heart:hover,.pp-share:hover { transform: scale(1.15); background: #fff;}
-        .pp-share { color: #666;}
-        .pp-share:hover {  color: #e74c3c;}
+        .pp-heart {
+          position: absolute; top: 9px; right: 9px;
+          width: 32px; height: 32px; border-radius: 50%;
+          background: rgba(255,255,255,0.94); border: none; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.16);
+          transition: transform 0.18s; z-index: 3;
+          padding: 0;
+        }
+        .pp-heart:hover { transform: scale(1.18); background: #fff; }
+         
+        .pp-share { position: absolute; top: 9px; right: 50px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;  color: #64748b;  box-shadow: 0 2px 10px rgba(0,0,0,0.16);  transition: transform 0.18s, background 0.18s;  padding: 0;  z-index: 3;}
+
+        .pp-share:hover {transform: scale(1.18);  background: #fff;  color: #b91c1c;}
         .pp-card-body { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 6px; }
         .pp-card-title { font-size: 17px; font-weight: 700; color: #1a1a1a; margin: 0; }
         .pp-card-price { font-size: 15px; font-weight: 700; color: #e74c3c; margin: 0; }
@@ -837,8 +845,8 @@ export default function PropertyPage() {
                           <button
                             type="button"
                             className="pp-heart"
-                            aria-label="Save property"
-                            title="Save property"
+                            aria-label="Save rent and real state"
+                            title="Save rent and real state"
                             onClick={(e) => toggleFav(l.id, e)}
                           >
                             {isFav ? (

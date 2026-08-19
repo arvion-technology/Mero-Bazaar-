@@ -376,15 +376,49 @@ export default function BeautyDetailPage() {
           padding: 3px 8px; border-radius: 5px;
           text-transform: uppercase; letter-spacing: 0.4px;
         }
-        .bd-img-fav-btn {
-          position: absolute; top: 10px; left: 10px;
-          width: 32px; height: 32px; border-radius: 50%;
-          background: rgba(255,255,255,0.92); border: none;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-          transition: transform 0.15s; padding: 0;
-        }
-        .bd-img-fav-btn:hover { transform: scale(1.12); }
+        /* SAVE / HEART BUTTON ON IMAGE */
+.bd-action-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.95);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  margin: 0;
+
+  cursor: pointer;
+  z-index: 20;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.bd-action-btn:hover {
+  transform: scale(1.12);
+  background: #fff;
+}
+
+.bd-action-btn.fav-active {
+  background: #fff1f2;
+}
+
+.bd-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
         .bd-posted-tag {
           position: absolute; bottom: 10px; left: 10px;
@@ -531,13 +565,34 @@ export default function BeautyDetailPage() {
         }
         .bd-btn-phone:hover { background: #fce7f3; border-color: #fbcfe8; color: #be185d; }
         .bd-btn-share {
-          width: 48px; height: 48px; border-radius: 9px;
-          display: flex; align-items: center; justify-content: center;
-          border: 1.5px solid #e5e7eb; background: #f9fafb;
-          color: #374151; cursor: pointer; transition: all 0.15s;
-        }
-        .bd-btn-share:hover { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
+  width: 48px;
+  height: 48px;
+  border-radius: 9px;
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1.5px solid #e5e7eb;
+  background: #f9fafb;
+  color: #374151;
+
+  cursor: pointer;
+  padding: 0;
+
+  transition: all 0.15s ease;
+}
+
+.bd-btn-share:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.bd-btn-share:active {
+  transform: scale(0.96);
+}
         /* Provider Panel */
         .bd-provider-panel {
           background: #fff; border-radius: 12px;
@@ -646,6 +701,18 @@ export default function BeautyDetailPage() {
                     alt={item.title}
                     className="bd-main-img"
                   />
+                  <button
+                      className={`bd-action-btn${isFav ? " fav-active" : ""}`}
+                      aria-label="Save to wishlist"
+                      onClick={handleToggleFavorite}
+                      disabled={favLoading}
+                    >
+                      {isFav ? (
+                        <FaHeart size={15} color="#E74C3C" />
+                      ) : (
+                        <FiHeart size={15} color="#999" />
+                      )}
+                    </button>
 
                   <span className="bd-img-cat-badge" style={badgeStyle}>
                     {item.serviceType}
@@ -728,34 +795,8 @@ export default function BeautyDetailPage() {
 
             <div className="bd-right">
               <div className="bd-panel">
-                <div className="jd-title-row">
-                  <h1 className="jd-title">{item.title}</h1>
-                  <div className="jd-action-btns">
-                    <button
-                      className={`ld-action-btn${isFav ? " fav-active" : ""}`}
-                      aria-label="Save to wishlist"
-                      onClick={handleToggleFavorite}
-                      disabled={favLoading}
-                    >
-                      {isFav ? (
-                        <FaHeart size={15} color="#E74C3C" />
-                      ) : (
-                        <FiHeart size={15} color="#999" />
-                      )}
-                    </button>
-                    <button
-                      className="jd-action-btn"
-                      aria-label="Share listing"
-                      title="Share"
-                      onClick={() =>
-                        navigator.clipboard
-                          ?.writeText(window.location.href)
-                          .catch(() => {})
-                      }
-                    >
-                      <FiShare2 size={15} color="#666" />
-                    </button>
-                  </div>
+                <div className="bd-title-row">
+                  <h1 className="bd-title">{item.title}</h1>
                 </div>
                 <p className="bd-category">
                   <span

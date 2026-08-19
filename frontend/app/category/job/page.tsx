@@ -311,12 +311,60 @@ export default function JobsPage() {
         .jp-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
         .jp-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; gap: 16px; }
         .jp-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
-        .jp-card-save,.jp-card-share {width: 34px; height: 34px; border: 1px solid #e2e8f0; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
-          transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);}
-        .jp-card-save:hover,
-        .jp-card-share:hover { transform: scale(1.12); background: #fff5f4; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);}
-        .jp-card-share { color: #555;}
-        .jp-card-share:hover { color: #e05c3a;}        
+        .jp-card-save {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+  transition: transform 0.18s, background 0.18s;
+  padding: 0;
+  z-index: 3;
+}
+
+.jp-card-save:hover {
+  transform: scale(1.08);
+  background: #fff;
+}
+
+.jp-card-share {
+  position: absolute;
+  top: 9px;
+  right: 58px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #64748b;
+
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+  transition: transform 0.18s, background 0.18s, color 0.18s;
+  padding: 0;
+  z-index: 3;
+}
+
+.jp-card-share:hover {
+  transform: scale(1.08);
+  background: #fff;
+  color: #b91c1c;
+}       
         .jp-card-body-row { display: flex; align-items: flex-start; gap: 16px; }
         .jp-thumb { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid #e2e8f0; background: #f7fafc; }
         .jp-card-main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
@@ -491,7 +539,7 @@ export default function JobsPage() {
               ) : (
                 <div className="jp-list">
                   {sortedJobs.map((j) => {
-                    const isFav = !!favorites[j.id];
+                    const isFav = !!favorites[j.id]; 
                     const typeClass =
                       j.type.toLowerCase().includes("part") ? "part"
                         : j.type.toLowerCase().includes("gig") ? "gig"
@@ -502,7 +550,7 @@ export default function JobsPage() {
 
                     return (
                       <Link key={j.id} href={`/category/job/${j.id}`} className="jp-card" style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", gap: "16px" }}>
-
+                     
                         {/* Favorite / Wishlist */}
                         <button
                           type="button"
