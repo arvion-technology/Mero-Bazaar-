@@ -5,10 +5,11 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { json, urlencoded } from 'express';
 
-async function bootstrap() {
-  console.log('JWT_SECRET:', process.env.JWT_SECRET);
-  console.log('ENV FILE LOADED:', !!process.env.JWT_SECRET);
-  
+async function bootstrap() { 
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    throw new Error('JWT_SECRET is missing or two short (need 32+ chars of entropy). Refusing to start.');
+  }
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.enableCors({
@@ -37,6 +38,5 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3001;
   await app.listen(port);
   console.log(`NestJS running on http://localhost:${port}`);
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads' });
 }
 bootstrap();
