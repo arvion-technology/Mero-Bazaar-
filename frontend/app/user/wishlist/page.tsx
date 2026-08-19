@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useFoodCart } from "../../context/FoodCartContext";
 import {
   FiGrid,
   FiShoppingBag,
@@ -84,6 +85,7 @@ export default function UserWishlist() {
   const [notifSeen, setNotifSeen] = useState(false);
   const notifDropdownRef = useRef<HTMLDivElement>(null);
   const token = session?.accessToken;
+  const { addItem } = useFoodCart();
 
   function activityLabel(type: string) {
   switch (type) {
@@ -1550,11 +1552,39 @@ export default function UserWishlist() {
                         <span className="ud-wishlist-date">{item.addedDate}</span>
                       </div>
                       <div className="ud-wishlist-actions">
-                        <button type="button" className="ud-btn ud-btn-primary">
-                          <FiShoppingCart size={14} />
+                        <button type="button" className="ud-btn ud-btn-primary" 
+                          onClick={() => {
+                          addItem({
+                            id: item.listingId,
+                            listingId: item.listingId,
+                            name: item.name,
+                            description: item.category,
+                            variant: "",
+                            price: item.price,
+                            quantity: 1,
+                            image: item.image,
+                          });
+                          router.push("/cart");
+                        }}
+                      >
+                        <FiShoppingCart size={14} />
                           Add to Cart
                         </button>
-                        <button type="button" className="ud-btn ud-btn-ghost">
+                        <button type="button" className="ud-btn ud-btn-ghost" 
+                          onClick={() => {
+                          addItem({
+                            id: item.listingId,
+                            listingId: item.listingId,
+                            name: item.name,
+                            description: item.category,
+                            variant: "",
+                            price: item.price,
+                            quantity: 1,
+                            image: item.image,
+                          });
+                          router.push("/cart");
+                        }}
+                      >
                           <FiShoppingBag size={14} />
                           Buy Now
                         </button>
