@@ -212,7 +212,7 @@ export default function BuyPage() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/products");
+      const res = await fetch("/api/listings");
       if (!res.ok) throw new Error("Failed to fetch products");
       const data: BuyProduct[] = await res.json();
       setProducts(data);

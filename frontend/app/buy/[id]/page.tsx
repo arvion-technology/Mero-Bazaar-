@@ -28,6 +28,9 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
+import { toBuyDetail, toBuyCard } from "@/lib/buyAdapter";
+import type { RawListing } from "@/lib/buyAdapter";
+
 
 /* ─────────── TOAST TYPE ─────────── */
 interface Toast {
@@ -200,35 +203,36 @@ export default function BuyDetailPage() {
   const toastIdRef = useRef(0);
 
   /* ─── FETCH PRODUCT ─── */
-  const fetchProduct = useCallback(async () => {
-    if (!id) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/products/${id}`);
-      if (!res.ok) {
-        if (res.status === 404) {
-          setProduct(null);
-          setLoading(false);
-          return;
-        }
-        throw new Error("Failed to fetch product");
+const fetchProduct = useCallback(async () => {
+  if (!id) return;
+  setLoading(true);
+  setError(null);
+  try {
+    const res = await fetch(`/api/listings/${id}`);
+    if (!res.ok) {
+      if (res.status === 404) {
+        setProduct(null);
+        setLoading(false);
+        return;
       }
-      const data: BuyProduct = await res.json();
-      setProduct(data);
-
-      const similarRes = await fetch(`/api/products?category=${data.category}&limit=3&exclude=${id}`);
-      if (similarRes.ok) {
-        const similarData: BuyProduct[] = await similarRes.json();
-        setSimilarItems(similarData);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-      showToast("Failed to load product", "error");
-    } finally {
-      setLoading(false);
+      throw new Error("Failed to fetch product");
     }
-  }, [id]);
+    const raw: RawListing = await res.json();
+    const detail = toBuyDetail(raw);
+    setProduct(detail);
+
+    const similarRes = await fetch(`/api/listings/related?category=${detail.category}&limit=3&exclude=${id}`);
+    if (similarRes.ok) {
+      const rawSimilar: RawListing[] = await similarRes.json();
+      setSimilarItems(rawSimilar.map(toBuyCard));
+    }
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Something went wrong");
+    showToast("Failed to load product", "error");
+  } finally {
+    setLoading(false);
+  }
+}, [id]);
 
   useEffect(() => {
     fetchProduct();
