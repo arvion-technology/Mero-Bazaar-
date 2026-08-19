@@ -590,7 +590,6 @@ export default function UserDashboard() {
           <main className="ud-main">
             <div className="ud-welcome-section">
               <h2 className="ud-welcome-title">Welcome back, {session?.user?.name?.split(" ")[0] || "there"}! 👋</h2>
-              <p className="ud-welcome-sub">Here&apos;s what&apos;s happening with your account today.</p>
             </div>
 
             <div className="ud-stats">

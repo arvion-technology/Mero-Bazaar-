@@ -1486,11 +1486,6 @@ useEffect(() => {
 
           {/* ── Notifications Content ── */}
           <main className="ud-main">
-            <div className="ud-page-header">
-              <h2 className="ud-page-title">Notifications</h2>
-              <p className="ud-page-sub">Stay update with the latest activities and alerts.</p>
-            </div>
-
             {/* Tabs + Mark All */}
             <div className="ud-tabs-row">
               <div className="ud-tabs">

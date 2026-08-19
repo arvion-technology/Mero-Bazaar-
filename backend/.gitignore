@@ -85,3 +85,6 @@ frontend/pnpm-debug.log*
 
 # TypeScript build cache
 *.tsbuildinfo"uploads/" 
+
+#testing and fixing
+forge-test.js
