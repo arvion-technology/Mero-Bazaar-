@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import SellerCard from "@/components/SellerCard";
-import { MOCK_PRODUCTS } from "@/lib/data/buy-mock";
-import type { BuyProduct } from "@/app/types/buy";
+import type { BuyCard, BuyProduct } from "@/app/types/buy";
 import {
   FiArrowLeft,
   FiMapPin,
@@ -25,14 +24,19 @@ import {
   FiTag,
   FiPhone,
   FiCalendar,
+  FiAlertCircle,
+  FiRefreshCw,
 } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
+import { toBuyDetail, toBuyCard } from "@/lib/buyAdapter";
+import type { RawListing } from "@/lib/buyAdapter";
+
 
 /* ─────────── TOAST TYPE ─────────── */
 interface Toast {
   id: number;
   message: string;
-  type: "success" | "info";
+  type: "success" | "info" | "error";
 }
 
 /* ─────────── STYLES ─────────── */
@@ -45,6 +49,7 @@ html, body { overflow-x: hidden; }
 .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
 .toast-item { display: flex; align-items: center; gap: 10px; padding: 12px 18px; background: #fff; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #10b981; font-size: 13px; font-weight: 600; color: #111827; animation: toastSlide 0.35s cubic-bezier(0.32, 0.72, 0, 1); pointer-events: auto; min-width: 260px; max-width: 360px; }
 .toast-item.info { border-left-color: #3b82f6; }
+.toast-item.error { border-left-color: #ef4444; }
 @keyframes toastSlide { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
 
 .bd-breadcrumb-bar { background: #fff; border-bottom: 1px solid #e5e7eb; }
@@ -142,12 +147,30 @@ html, body { overflow-x: hidden; }
 .bd-rel-loc { font-size: 11px; color: #9ca3af; display: flex; align-items: center; gap: 3px; margin-top: 3px; }
 .bd-rel-rating { display: flex; align-items: center; gap: 2px; margin-top: 4px; }
 
-.bd-loading { min-height: 60vh; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #6b7280; font-weight: 600; }
-
+/* ─── 404 STATE ─── */
 .bd-404 { min-height: 80vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; background: #f5f5f5; flex-direction: column; text-align: center; padding: 40px 20px; }
-.bd-404 h1 { font-size: 22px; font-weight: 800; color: #111; margin: 12px 0 6px; }
-.bd-404 p { font-size: 14px; color: #888; margin: 0 0 18px; }
-.bd-back-btn { display: inline-flex; align-items: center; gap: 6px; background: #e11d48; color: #fff; font-weight: 700; font-size: 13px; padding: 10px 22px; border-radius: 8px; text-decoration: none; }
+.bd-404-icon { color: #d1d5db; margin-bottom: 16px; }
+.bd-404 h1 { font-size: 20px; font-weight: 800; color: #111; margin: 0 0 6px; }
+.bd-404 p { font-size: 14px; color: #9ca3af; margin: 0 0 20px; }
+.bd-back-btn { display: inline-flex; align-items: center; gap: 6px; background: #e11d48; color: #fff; font-weight: 700; font-size: 14px; padding: 11px 28px; border-radius: 8px; text-decoration: none; transition: background 0.15s, transform 0.15s; }
+.bd-back-btn:hover { background: #be123c; transform: translateY(-1px); }
+.bd-back-btn:active { transform: scale(0.97); }
+
+/* ─── ERROR STATE ─── */
+.bd-error { min-height: 60vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; background: #f5f5f5; flex-direction: column; text-align: center; padding: 40px 20px; }
+.bd-error-icon { color: #ef4444; margin-bottom: 16px; }
+.bd-error h1 { font-size: 20px; font-weight: 800; color: #111; margin: 0 0 6px; }
+.bd-error p { font-size: 14px; color: #9ca3af; margin: 0 0 20px; }
+.bd-error-btn { display: inline-flex; align-items: center; gap: 6px; background: #e11d48; color: #fff; font-weight: 700; font-size: 14px; padding: 11px 28px; border-radius: 8px; border: none; cursor: pointer; font-family: inherit; transition: background 0.15s, transform 0.15s; }
+.bd-error-btn:hover { background: #be123c; transform: translateY(-1px); }
+.bd-error-btn:active { transform: scale(0.97); }
+
+.bd-skeleton-main { width: 100%; height: 420px; background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%); background-size: 200% 100%; animation: skeletonPulse 1.2s infinite; border-radius: 12px; }
+.bd-skeleton-line { height: 16px; background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%); background-size: 200% 100%; animation: skeletonPulse 1.2s infinite; border-radius: 4px; margin-bottom: 10px; }
+.bd-skeleton-line.short { width: 50%; }
+.bd-skeleton-line.xshort { width: 30%; }
+.bd-skeleton-panel { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 20px; }
+@keyframes skeletonPulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 @media (max-width: 900px) {
   .bd-grid { grid-template-columns: 1fr; }
@@ -169,21 +192,54 @@ export default function BuyDetailPage() {
   const params = useParams();
   const id = params?.id as string;
 
-  const product = MOCK_PRODUCTS.find((p) => p.id === id);
+  const [product, setProduct] = useState<BuyProduct | null>(null);
+  const [similarItems, setSimilarItems] = useState<BuyCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [activeImg, setActiveImg] = useState(0);
   const [isFav, setIsFav] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastIdRef = useRef(0);
-  const [loading, setLoading] = useState(true);
+
+  /* ─── FETCH PRODUCT ─── */
+const fetchProduct = useCallback(async () => {
+  if (!id) return;
+  setLoading(true);
+  setError(null);
+  try {
+    const res = await fetch(`/api/listings/${id}`);
+    if (!res.ok) {
+      if (res.status === 404) {
+        setProduct(null);
+        setLoading(false);
+        return;
+      }
+      throw new Error("Failed to fetch product");
+    }
+    const raw: RawListing = await res.json();
+    const detail = toBuyDetail(raw);
+    setProduct(detail);
+
+    const similarRes = await fetch(`/api/listings/related?category=${detail.category}&limit=3&exclude=${id}`);
+    if (similarRes.ok) {
+      const rawSimilar: RawListing[] = await similarRes.json();
+      setSimilarItems(rawSimilar.map(toBuyCard));
+    }
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Something went wrong");
+    showToast("Failed to load product", "error");
+  } finally {
+    setLoading(false);
+  }
+}, [id]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 300);
-    return () => clearTimeout(timer);
-  }, []);
+    fetchProduct();
+  }, [fetchProduct]);
 
   /* ─── TOAST HELPERS ─── */
-  const showToast = (message: string, type: "success" | "info" = "success") => {
+  const showToast = (message: string, type: "success" | "info" | "error" = "success") => {
     const id = ++toastIdRef.current;
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
@@ -224,11 +280,6 @@ export default function BuyDetailPage() {
     }
   };
 
-  /* ─── SIMILAR ITEMS ─── */
-  const similarItems = product
-    ? MOCK_PRODUCTS.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 3)
-    : [];
-
   /* ─── BREADCRUMB ─── */
   const categoryLabel =
     product?.category
@@ -261,12 +312,21 @@ export default function BuyDetailPage() {
     );
   };
 
-  if (!product && !loading) {
+  const getToastColor = (type: string) => {
+    switch (type) {
+      case "info": return "#3b82f6";
+      case "error": return "#ef4444";
+      default: return "#10b981";
+    }
+  };
+
+  /* ─── 404 STATE ─── */
+  if (!loading && !product && !error) {
     return (
       <>
         <style>{pageStyles}</style>
         <div className="bd-404">
-          <FiFrown size={56} color="#e11d48" />
+          <FiFrown size={56} className="bd-404-icon" />
           <h1>Product Not Found</h1>
           <p>The item you are looking for does not exist.</p>
           <Link href="/buy" className="bd-back-btn">
@@ -288,7 +348,7 @@ export default function BuyDetailPage() {
       <div className="toast-container">
         {toasts.map((t) => (
           <div key={t.id} className={`toast-item ${t.type}`}>
-            <FiCheckCircle size={16} color={t.type === "info" ? "#3b82f6" : "#10b981"} />
+            <FiCheckCircle size={16} color={getToastColor(t.type)} />
             <span>{t.message}</span>
           </div>
         ))}
@@ -302,15 +362,47 @@ export default function BuyDetailPage() {
             <span>/</span>
             <Link href="/buy">Buy</Link>
             <span>/</span>
-            <Link href={`/buy?category=${product?.category}`}>{categoryLabel}</Link>
-            <span>/</span>
-            <span className="active">{product?.title}</span>
+            {product && (
+              <>
+                <Link href={`/buy?category=${product.category}`}>{categoryLabel}</Link>
+                <span>/</span>
+              </>
+            )}
+            <span className="active">{product?.title ?? "Loading..."}</span>
           </div>
         </div>
 
-        {loading || !product ? (
-          <div className="bd-loading">Loading product details...</div>
-        ) : (
+        {loading ? (
+          <div className="bd-body">
+            <div className="bd-grid">
+              <div>
+                <div className="bd-skeleton-main" />
+                <div style={{ marginTop: 16 }}>
+                  <div className="bd-skeleton-line" />
+                  <div className="bd-skeleton-line short" />
+                  <div className="bd-skeleton-line xshort" />
+                </div>
+              </div>
+              <div className="bd-skeleton-panel">
+                <div className="bd-skeleton-line" />
+                <div className="bd-skeleton-line short" />
+                <div className="bd-skeleton-line xshort" />
+                <div className="bd-skeleton-line" style={{ marginTop: 20 }} />
+                <div className="bd-skeleton-line short" />
+              </div>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="bd-error">
+            <FiAlertCircle size={56} className="bd-error-icon" />
+            <h1>Error loading product</h1>
+            <p>{error}</p>
+            <button className="bd-error-btn" onClick={fetchProduct}>
+              <FiRefreshCw size={14} />
+              Try Again
+            </button>
+          </div>
+        ) : product ? (
           <>
             <div className="bd-body">
               <Link href="/buy" className="bd-back">
@@ -486,7 +578,6 @@ export default function BuyDetailPage() {
                     </div>
                   </div>
 
-               {/* ─── REUSABLE SELLER CARD ─── */}
                   <SellerCard
                     seller={{
                       ...product.seller,
@@ -537,7 +628,7 @@ export default function BuyDetailPage() {
 
             <Footer />
           </>
-        )}
+        ) : null}
       </div>
     </>
   );

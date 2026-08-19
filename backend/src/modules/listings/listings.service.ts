@@ -31,35 +31,46 @@ export class ListingsService {
         vehicle: true,
         job: true,
         medical: true,
+        trades: true,
+        rental: true,
+        agriculture: true,
+        secondhand: true,
+        foods: true,
+        beauty: true,
       },
     });
   }
 
   async findOne(id: string) {
-    const listing = await this.prisma.listing.findUnique({
-      where: { id },
-      include: {
-        vehicle: true,
-        job: true,
-        medical: true,
-        secondhand: true,
-        reviews: true,
-        user: {
-          select: {
-            name: true,
-            image: true,
-            phone: true,
-            createdAt: true,
-            vendorProfile: {
-              select: { isVerified: true },
-            },
-            _count: {
-              select: { listings: true },
-            },
+  const listing = await this.prisma.listing.findUnique({
+    where: { id },
+    include: {
+      vehicle: true,
+      job: true,
+      medical: true,
+      trades: true,
+      rental: true,
+      agriculture: true,
+      secondhand: true,
+      foods: true,
+      beauty: true,
+      reviews: true,
+      user: {
+        select: {
+          name: true,
+          image: true,
+          phone: true,
+          createdAt: true,
+          vendorProfile: {
+            select: { isVerified: true },
+          },
+          _count: {
+            select: { listings: true },
           },
         },
       },
-    });
+    },
+  });
 
     if (!listing) return null;
 
@@ -168,6 +179,17 @@ async getRelated(category: ListingCategory, exclude: string, limit: number) {
     where: {
       category,
       id: exclude ? { not: exclude } : undefined,
+    },
+    include: {
+      vehicle: true,
+      job: true,
+      medical: true,
+      trades: true,
+      rental: true,
+      agriculture: true,
+      secondhand: true,
+      foods: true,
+      beauty: true,
     },
     take: limit,
     orderBy: {
