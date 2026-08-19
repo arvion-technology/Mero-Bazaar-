@@ -1487,7 +1487,6 @@ export default function UserWishlist() {
           {/* Main Content */}
           <main className="ud-main">
             <div className="ud-welcome-section">
-              <h2 className="ud-welcome-title">My Wishlist</h2>
               <p className="ud-welcome-sub">
                 {wishlistItems.length} {wishlistItems.length === 1 ? "item" : "items"} saved for later
               </p>

@@ -564,7 +564,6 @@ export default function UserOrders() {
               <span className="ud-nav-text">Delete Account</span>
             </button>
           </div>
-          {/* Sidebar footer intentionally left empty */}
         </aside>
 
         {/* ── Main Area ── */}
@@ -632,15 +631,6 @@ export default function UserOrders() {
 
           {/* Main Content */}
           <main className="ud-main">
-            <div style={{ marginBottom: "24px" }}>
-              <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#1e293b", letterSpacing: "-0.4px", marginBottom: "4px" }}>
-                Order History
-              </h2>
-              <p style={{ fontSize: "14px", color: "#64748b" }}>
-                View and track all your past and current orders.
-              </p>
-            </div>
-
             {/* Toolbar: search + filters */}
             <div className="orders-toolbar">
               <div className="orders-search-wrap">

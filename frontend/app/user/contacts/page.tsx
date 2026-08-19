@@ -443,15 +443,6 @@ export default function UserContacts() {
 
           {/* Main Content */}
           <main className="ud-main">
-            <div style={{ marginBottom: "24px" }}>
-              <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#1e293b", letterSpacing: "-0.4px", marginBottom: "4px" }}>
-                Recent Contacts
-              </h2>
-              <p style={{ fontSize: "14px", color: "#64748b" }}>
-                Your recent conversations and contacts from the marketplace.
-              </p>
-            </div>
-
             {/* Search */}
             <div className="contacts-search-wrap">
               <FiSearch size={15} className="contacts-search-icon" />
