@@ -117,6 +117,8 @@ export class UserController {
     return this.userService.updateProfileImage(req.user.id, file);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
