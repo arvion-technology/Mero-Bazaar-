@@ -2,19 +2,19 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 
 @Injectable()
 export class InternalAuthGuard implements CanActivate {
-  private readonly secrect: string;
+  private readonly secret: string;
 
   constructor(){
-    const secrect = process.env.INTERNAL_API_SECRECT;
-    if (!secrect) {
-        throw  new Error('INTERNAL_API_SECRECT is not configured.');
+    const secret = process.env.INTERNAL_API_SECRET;
+    if (!secret) {
+      throw  new Error('INTERNAL_API_SECRET is not configured.');
     }
-    this.secrect = secrect;
+    this.secret = secret;
   }
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest(); 
-    const provided = req.headers['x-internal-secrect'];
-    if (!provided || provided !== this.secrect) {
+    const provided = req.headers['x-internal-secret'];
+    if (!provided || provided !== this.secret) {
       throw new UnauthorizedException('Invalid internal request');
     }
     return true;
