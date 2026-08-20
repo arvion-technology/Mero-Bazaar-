@@ -184,6 +184,19 @@ export default function JobDetailPage() {
     }
   };
 
+  // Build a complete seller object that SellerCard expects,
+  // filling missing fields with sensible defaults.
+  const sellerForCard = {
+    ...(job.postedBy as any),
+    isPro: (job.postedBy as any)?.isPro ?? false,
+    isTrusted: (job.postedBy as any)?.isTrusted ?? false,
+    memberSince: (job.postedBy as any)?.memberSince ?? "N/A",
+    totalListing: (job.postedBy as any)?.totalListing ?? 0,
+    responseRate: (job.postedBy as any)?.responseRate ?? "N/A",
+    avgResponseTime: (job.postedBy as any)?.avgResponseTime ?? "N/A",
+    phone: (job.postedBy as any)?.phone ?? "N/A",
+  };
+
   return (
     <>
       <ToastContainer
@@ -632,10 +645,10 @@ export default function JobDetailPage() {
                 )}
               </div>
 
-              {/* SELLER CARD — same wrapper classes as Trade page */}
+              {/* SELLER CARD */}
               <div className="cd-seller-card">
                 <SellerCard
-                  seller={job.postedBy}
+                  seller={sellerForCard}
                   reviews={(job as any).reviews ?? []}
                   listingId={job.id}
                   sellerId={(job.postedBy as any)?.id || job.id}
