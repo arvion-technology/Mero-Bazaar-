@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateBeautyAppointmentDto } from './dto/create_beauty_appointment.dto';
 import { AppointmentStatus } from '@prisma/client';
@@ -7,7 +7,7 @@ import { AppointmentStatus } from '@prisma/client';
 export class BeautyAppointmentsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateBeautyAppointmentDto) {
+  async create(dto: CreateBeautyAppointmentDto, customerId: string) {
     const listing = await this.prisma.listing.findUnique({
       where: { id: dto.listingId },
       include: { beauty: true },
@@ -35,7 +35,7 @@ export class BeautyAppointmentsService {
           beautyId: beauty.id,
           slotId: dto.slotId,
           listingId: dto.listingId,
-          customerId: null, //hardcoded until auth model is ready
+          customerId,
           customerName: dto.customerName,
           startTime: new Date(`1970-01-01T${slot.startTime}:00`),
           endTime: new Date(`1970-01-01T${slot.endTime}:00`),
@@ -60,13 +60,25 @@ export class BeautyAppointmentsService {
     });
   }
 
-  async findByBeauty(listingId: string) {
+  async findMine(customerId: string) {
+    return this.prisma.beautyAppointment.findMany({
+      where: { customerId },
+      include: { slot: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findByBeauty(listingId: string, userId: string, role: string) {
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
       include: { beauty: true },
     });
 
     if (!listing?.beauty) throw new NotFoundException('Beauty service not found');
+
+    if (role !== 'ADMIN' && listing.userId !== userId) {
+      throw new ForbiddenException('You do not have access to these appointments');
+    }
 
     return this.prisma.beautyAppointment.findMany({
       where: { beautyId: listing.beauty.id },
@@ -75,19 +87,45 @@ export class BeautyAppointmentsService {
     });
   }
 
-  async findOne(id: string) {
+  private async findWithOwnerContext(id: string) {
     const appointment = await this.prisma.beautyAppointment.findUnique({
       where: { id },
-      include: { slot: true },
+      include: {
+        slot: true,
+        beauty: { include: { listing: true } },
+      },
     });
 
     if (!appointment) throw new NotFoundException('Appointment not found');
-
     return appointment;
   }
 
-  async updateStatus(id: string, status: AppointmentStatus) {
-    const appointment = await this.findOne(id);
+  private assertCanAccess(
+    appointment: { customerId: string | null; beauty: { listing: { userId: string } | null } | null },
+    userId: string,
+    role: string,
+  ) {
+    const isCustomer = appointment.customerId === userId;
+    const isProvider = appointment.beauty?.listing?.userId === userId;
+
+    if (role !== 'ADMIN' && !isCustomer && !isProvider) {
+      throw new ForbiddenException('You do not have access to this appointment');
+    }
+  }
+
+  async findOne(id: string, userId: string, role: string) {
+    const appointment = await this.findWithOwnerContext(id);
+    this.assertCanAccess(appointment, userId, role);
+    return appointment;
+  }
+
+  async updateStatus(id: string, status: AppointmentStatus, userId: string, role: string) {
+    const appointment = await this.findWithOwnerContext(id);
+    const isProvider = appointment.beauty?.listing?.userId === userId;
+
+    if (role !== 'ADMIN' && !isProvider) {
+      throw new ForbiddenException('Only the provider or an admin can update appointment status');
+    }
 
     const allowedTransitions: Record<AppointmentStatus, AppointmentStatus[]> = {
       PENDING: [AppointmentStatus.CONFIRMED, AppointmentStatus.CANCELLED],
@@ -119,8 +157,9 @@ export class BeautyAppointmentsService {
     });
   }
 
-  async cancel(appointmentId: string) {
-    const appointment = await this.findOne(appointmentId);
+  async cancel(appointmentId: string, userId: string, role: string) {
+    const appointment = await this.findWithOwnerContext(appointmentId);
+    this.assertCanAccess(appointment, userId, role);
 
     if (appointment.status === AppointmentStatus.CANCELLED) {
       throw new BadRequestException('Appointment is already cancelled');
