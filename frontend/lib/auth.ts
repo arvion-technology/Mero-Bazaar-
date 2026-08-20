@@ -41,12 +41,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         const data = await res.json();
-        console.log("========== OTP AUTHORIZE ==========");
+        console.log(" OTP AUTHORIZE ");
         console.log("Status:", res.status);
         console.log("Response:", data);
 
-        // Backend can return { requiresTwoFactor: true, tempToken } instead of a user.
-        // Stash it in a cookie so the register/login page can pick it up and prompt for the OTP.
         if (res.ok && data?.requiresTwoFactor) {
           const cookieStore = await cookies();
           cookieStore.set(
@@ -70,8 +68,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
 
-    // Second step of the 2FA challenge: submits { tempToken, otp } from the pending_2fa cookie
-    // against POST /api/auth/2fa/verify, then hydrates the full profile.
     Credentials({
       id: "otp",
       name: "OTP",
@@ -99,7 +95,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const data = await res.json();
 
-        console.log("========== OTP VERIFY RESPONSE ==========");
+        console.log(" OTP VERIFY RESPONSE ");
         console.log("Status:", res.status);
         console.log("Response:", data);
 
@@ -147,10 +143,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   callbacks: {
-    // Runs BEFORE jwt(). This is where we block sign-in for OAuth accounts that need 2FA,
-    // since jwt() has no way to reject a session — only signIn() can return false.
     async signIn({ user, account, profile }) {
-      console.log("========== SIGNIN CALLBACK ==========");
+      console.log(" SIGNIN CALLBACK ");
       console.log("Provider:", account?.provider);
       console.log("User:", user);
       if (account && account.provider !== "credentials" && account.provider !== "otp") {
@@ -181,7 +175,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const res = await fetch(`${API_URL}/api/user/oauth-sync`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "x-internal-secret": process.env.INTERNAL_API_SECRECT!, 
+          },
           body: JSON.stringify({ email, name, image, role, userAgent, ipAddress, provider: account.provider }),
         });
         const dbUser = await res.json();
