@@ -3,13 +3,25 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { FiSearch, FiMapPin, FiPhone, FiMessageSquare, FiChevronDown, FiTarget, FiLoader, FiBriefcase, FiShare2, FiHeart } from "react-icons/fi";
+import {
+  FiSearch,
+  FiMapPin,
+  FiPhone,
+  FiMessageSquare,
+  FiChevronDown,
+  FiTarget,
+  FiLoader,
+  FiBriefcase,
+  FiShare2,
+  FiHeart,
+} from "react-icons/fi";
 import { FaHeart, FaBriefcase } from "react-icons/fa";
 import { JOB_TYPES, CITIES, SKILLS, JobCard } from "../../types/jobs";
 import { toContractType, toJobCard } from "@/lib/adapter";
 import { api } from "@/lib/api";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
@@ -50,9 +62,12 @@ export default function JobsPage() {
 
     (async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
-          headers: { Authorization: `Bearer ${session.accessToken}` },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`,
+          {
+            headers: { Authorization: `Bearer ${session.accessToken}` },
+          },
+        );
         if (!res.ok) return;
 
         const data = await res.json();
@@ -68,75 +83,73 @@ export default function JobsPage() {
   }, [session?.accessToken]);
 
   const toggleFav = async (id: string, e: React.MouseEvent) => {
-  e.preventDefault();
-  e.stopPropagation();
-
-  if (!session?.accessToken) {
-    toast.error("Please log in to save listings");
-    return;
-  }
-
-  const previousState = !!favorites[id];
-
-  // Instant UI update
-  setFavorites((p) => ({
-    ...p,
-    [id]: !previousState,
-  }));
-
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
-        },
-        body: JSON.stringify({
-          listingId: id,
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error("Failed to update wishlist");
-    }
-
-    const data = await res.json();
-
-    setFavorites((p) => ({
-      ...p,
-      [id]: data.favorited,
-    }));
-
-    toast.success(
-      data.favorited
-        ? "Added to wishlist"
-        : "Removed from wishlist"
-    );
-  } catch (error) {
-    console.error("Wishlist error:", error);
-
-    // Rollback UI if API fails
-    setFavorites((p) => ({
-      ...p,
-      [id]: previousState,
-    }));
-
-    toast.error("Something went wrong. Please try again.");
-  }
-};
-
-  const shareJob = async (
-    job: JobCard,
-    e: React.MouseEvent
-  ) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const jobUrl =
-      `${window.location.origin}/category/job/${job.id}`;
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
+    }
+
+    const previousState = !!favorites[id];
+
+    // Instant heart UI change
+    setFavorites((prev) => ({
+      ...prev,
+      [id]: !previousState,
+    }));
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      const data = await res.json();
+
+      // Use actual backend state
+      setFavorites((prev) => ({
+        ...prev,
+        [id]: data.favorited,
+      }));
+
+      // Toast EVERY time heart changes
+      if (data.favorited) {
+        toast.success("Added to wishlist");
+      } else {
+        toast.info("Removed from wishlist");
+      }
+    } catch (error) {
+      console.error("Wishlist error:", error);
+
+      // Rollback heart
+      setFavorites((prev) => ({
+        ...prev,
+        [id]: previousState,
+      }));
+
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
+
+  const shareJob = async (job: JobCard, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const jobUrl = `${window.location.origin}/category/job/${job.id}`;
 
     const shareData = {
       title: job.title,
@@ -162,10 +175,7 @@ export default function JobsPage() {
       window.prompt("Copy this job link:", jobUrl);
     } catch (error) {
       // User cancelled share popup
-      if (
-        error instanceof DOMException &&
-        error.name === "AbortError"
-      ) {
+      if (error instanceof DOMException && error.name === "AbortError") {
         return;
       }
 
@@ -175,7 +185,7 @@ export default function JobsPage() {
 
   const toggleType = (t: string) =>
     setSelectedTypes((prev) =>
-      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
+      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t],
     );
 
   // Debounce search input
@@ -195,13 +205,16 @@ export default function JobsPage() {
         if (skill) params.set("skill", skill);
         if (minSalary) params.set("minSalary", minSalary);
         selectedTypes.forEach((t) =>
-          params.append("contractType", toContractType(t))
+          params.append("contractType", toContractType(t)),
         );
 
         console.log("Sending params:", params.toString());
         const data = await api.getJobs(params);
         const mapped = data.map(toJobCard);
-        console.log("Job IDs:", mapped.map(j => j.id));
+        console.log(
+          "Job IDs:",
+          mapped.map((j) => j.id),
+        );
         setJobs(mapped);
       } catch (err) {
         console.error(err);
@@ -220,8 +233,10 @@ export default function JobsPage() {
   };
 
   const sortedJobs = [...jobs].sort((a, b) => {
-    if (sort === "salary-high") return parseSalaryNum(b.salary) - parseSalaryNum(a.salary);
-    if (sort === "salary-low") return parseSalaryNum(a.salary) - parseSalaryNum(b.salary);
+    if (sort === "salary-high")
+      return parseSalaryNum(b.salary) - parseSalaryNum(a.salary);
+    if (sort === "salary-low")
+      return parseSalaryNum(a.salary) - parseSalaryNum(b.salary);
     return 0; // newest (default from API)
   });
 
@@ -233,6 +248,13 @@ export default function JobsPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         .jp-wrap { background: #f4f5f7; min-height: 100vh; font-family: 'Inter', -apple-system, sans-serif; }
         .jp-hero { position: relative; height: 250px; overflow: hidden; display: flex; align-items: center; }
@@ -311,12 +333,60 @@ export default function JobsPage() {
         .jp-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
         .jp-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; gap: 16px; }
         .jp-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
-        .jp-card-save,.jp-card-share {width: 34px; height: 34px; border: 1px solid #e2e8f0; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
-          transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);}
-        .jp-card-save:hover,
-        .jp-card-share:hover { transform: scale(1.12); background: #fff5f4; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);}
-        .jp-card-share { color: #555;}
-        .jp-card-share:hover { color: #e05c3a;}        
+        .jp-card-save {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+  transition: transform 0.18s, background 0.18s;
+  padding: 0;
+  z-index: 3;
+}
+
+.jp-card-save:hover {
+  transform: scale(1.08);
+  background: #fff;
+}
+
+.jp-card-share {
+  position: absolute;
+  top: 9px;
+  right: 58px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #64748b;
+
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+  transition: transform 0.18s, background 0.18s, color 0.18s;
+  padding: 0;
+  z-index: 3;
+}
+
+.jp-card-share:hover {
+  transform: scale(1.08);
+  background: #fff;
+  color: #b91c1c;
+}       
         .jp-card-body-row { display: flex; align-items: flex-start; gap: 16px; }
         .jp-thumb { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid #e2e8f0; background: #f7fafc; }
         .jp-card-main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
@@ -353,7 +423,6 @@ export default function JobsPage() {
       `}</style>
 
       <div className="jp-wrap">
-
         {/* HERO */}
         <section className="jp-hero">
           <div className="jp-hero-bg" />
@@ -381,7 +450,6 @@ export default function JobsPage() {
         {/* BODY */}
         <div className="jp-body">
           <div className="jp-layout">
-
             {/* SIDEBAR */}
             <aside className="jp-sidebar">
               <div className="jsb-head">
@@ -392,7 +460,10 @@ export default function JobsPage() {
                 <p className="jsb-title">Job Type</p>
                 <div className="jsb-rows">
                   {JOB_TYPES.map((t) => (
-                    <label key={t} className={`jsb-row${selectedTypes.includes(t) ? " checked" : ""}`}>
+                    <label
+                      key={t}
+                      className={`jsb-row${selectedTypes.includes(t) ? " checked" : ""}`}
+                    >
                       <input
                         type="checkbox"
                         checked={selectedTypes.includes(t)}
@@ -405,16 +476,32 @@ export default function JobsPage() {
               </div>
               <div className="jsb-section">
                 <p className="jsb-title">City</p>
-                <select className="jsb-select" value={city} onChange={(e) => setCity(e.target.value)}>
+                <select
+                  className="jsb-select"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                >
                   <option value="">Select city</option>
-                  {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {CITIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="jsb-section">
                 <p className="jsb-title">Skill / Keyword</p>
-                <select className="jsb-select" value={skill} onChange={(e) => setSkill(e.target.value)}>
+                <select
+                  className="jsb-select"
+                  value={skill}
+                  onChange={(e) => setSkill(e.target.value)}
+                >
                   <option value="">Select skill</option>
-                  {SKILLS.map((s) => <option key={s} value={s}>{s}</option>)}
+                  {SKILLS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="jsb-section">
@@ -428,7 +515,14 @@ export default function JobsPage() {
                     onChange={(e) => setMinSalary(e.target.value)}
                   />
                   <div className="jsb-salary-wrap" style={{ flex: "0 0 auto" }}>
-                    <select className="jsb-select" style={{ width: "auto", paddingRight: 28, paddingLeft: 8 }}>
+                    <select
+                      className="jsb-select"
+                      style={{
+                        width: "auto",
+                        paddingRight: 28,
+                        paddingLeft: 8,
+                      }}
+                    >
                       <option>/month</option>
                     </select>
                     <FiChevronDown size={11} className="jsb-salary-chevron" />
@@ -442,16 +536,23 @@ export default function JobsPage() {
             <div className="jp-right">
               <div className="jp-results-bar">
                 <span className="jp-count">
-                  <strong>{loading ? "…" : sortedJobs.length}</strong> results found
+                  <strong>{loading ? "…" : sortedJobs.length}</strong> results
+                  found
                 </span>
 
                 {/* ── CUSTOM SORT DROPDOWN (fixes overflow) ── */}
                 <div className="jp-sort-dropdown" ref={sortRef}>
-                  <button className="jp-sort-btn" onClick={() => setIsSortOpen((v) => !v)}>
+                  <button
+                    className="jp-sort-btn"
+                    onClick={() => setIsSortOpen((v) => !v)}
+                  >
                     {sortLabel[sort]}
                     <FiChevronDown
                       size={14}
-                      style={{ transform: isSortOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                      style={{
+                        transform: isSortOpen ? "rotate(180deg)" : "none",
+                        transition: "transform 0.2s",
+                      }}
                     />
                   </button>
                   {isSortOpen && (
@@ -492,17 +593,32 @@ export default function JobsPage() {
                 <div className="jp-list">
                   {sortedJobs.map((j) => {
                     const isFav = !!favorites[j.id];
-                    const typeClass =
-                      j.type.toLowerCase().includes("part") ? "part"
-                        : j.type.toLowerCase().includes("gig") ? "gig"
-                          : j.type.toLowerCase().includes("labour") ? "construction"
-                            : "";
-                    const visibleSkills = j.skills.slice(0, EXTRA_SKILLS_THRESHOLD);
+                    const typeClass = j.type.toLowerCase().includes("part")
+                      ? "part"
+                      : j.type.toLowerCase().includes("gig")
+                        ? "gig"
+                        : j.type.toLowerCase().includes("labour")
+                          ? "construction"
+                          : "";
+                    const visibleSkills = j.skills.slice(
+                      0,
+                      EXTRA_SKILLS_THRESHOLD,
+                    );
                     const extraCount = j.skills.length - EXTRA_SKILLS_THRESHOLD;
 
                     return (
-                      <Link key={j.id} href={`/category/job/${j.id}`} className="jp-card" style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", gap: "16px" }}>
-
+                      <Link
+                        key={j.id}
+                        href={`/category/job/${j.id}`}
+                        className="jp-card"
+                        style={{
+                          textDecoration: "none",
+                          color: "inherit",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "16px",
+                        }}
+                      >
                         {/* Favorite / Wishlist */}
                         <button
                           type="button"
@@ -529,10 +645,9 @@ export default function JobsPage() {
                           <FiShare2 size={16} />
                         </button>
 
-
                         <div className="jp-card-body-row">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={j.thumb} alt={j.company} className="jp-thumb" />
+                          {/* <img src={j.thumb} alt={j.company} className="jp-thumb" /> */}
                           <div className="jp-card-main-content">
                             <p className="jp-card-title">{j.title}</p>
                             <p className="jp-card-company">{j.company}</p>
@@ -542,23 +657,35 @@ export default function JobsPage() {
                                 <FiMapPin size={12} color="#777" />
                                 {j.location}
                               </span>
-                              <span className={`jp-type-badge ${typeClass}`}>{j.type}</span>
+                              <span className={`jp-type-badge ${typeClass}`}>
+                                {j.type}
+                              </span>
                             </div>
                             <div className="jp-skills">
                               {visibleSkills.map((sk) => (
-                                <span key={sk} className="jp-skill">{sk}</span>
+                                <span key={sk} className="jp-skill">
+                                  {sk}
+                                </span>
                               ))}
                               {extraCount > 0 && (
-                                <span className="jp-skill-more">+{extraCount}</span>
+                                <span className="jp-skill-more">
+                                  +{extraCount}
+                                </span>
                               )}
                             </div>
                           </div>
                         </div>
                         <div className="jp-card-actions">
-                          <Link href={`/category/job/${j.id}`} className="jp-btn jp-btn-apply">
+                          <Link
+                            href={`/category/job/${j.id}`}
+                            className="jp-btn jp-btn-apply"
+                          >
                             <FiTarget size={14} /> Apply
                           </Link>
-                          <a href="tel:+977-9800000000" className="jp-btn jp-btn-call">
+                          <a
+                            href="tel:+977-9800000000"
+                            className="jp-btn jp-btn-call"
+                          >
                             <FiPhone size={14} /> Call
                           </a>
                           <button className="jp-btn jp-btn-chat">

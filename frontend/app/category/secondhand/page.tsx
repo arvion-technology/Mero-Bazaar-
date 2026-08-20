@@ -5,7 +5,8 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import { api } from "@/lib/api";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import type {
   SecondhandListing,
   SecondHandCategory,
@@ -146,8 +147,7 @@ export default function SecondhandPage() {
   const [priceRange, setPriceRange] = useState<number>(10000);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
-    const { data: session } = useSession();
-
+  const { data: session } = useSession();
 
   async function loadListings() {
     setLoading(true);
@@ -188,88 +188,89 @@ export default function SecondhandPage() {
     };
   }, []);
 
- useEffect(() => {
-     if (!session?.accessToken) return;
- 
-     (async () => {
-       try {
-         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
-           headers: { Authorization: `Bearer ${session.accessToken}` },
-         });
-         if (!res.ok) return;
- 
-         const data = await res.json();
-         const favMap: Record<string, boolean> = {};
-         data.forEach((item: { listingId: string }) => {
-           favMap[item.listingId] = true;
-         });
-         setFavorites(favMap);
-       } catch {
-         // silently ignore
-       }
-     })();
-   }, [session?.accessToken]);
- 
-   const toggleFav = async (id: string, e: React.MouseEvent) => {
-   e.preventDefault();
-   e.stopPropagation();
- 
-   if (!session?.accessToken) {
-     toast.error("Please log in to save listings");
-     return;
-   }
- 
-   const previousState = !!favorites[id];
- 
-   // Instant UI update
-   setFavorites((p) => ({
-     ...p,
-     [id]: !previousState,
-   }));
- 
-   try {
-     const res = await fetch(
-       `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
-       {
-         method: "POST",
-         headers: {
-           "Content-Type": "application/json",
-           Authorization: `Bearer ${session.accessToken}`,
-         },
-         body: JSON.stringify({
-           listingId: id,
-         }),
-       }
-     );
- 
-     if (!res.ok) {
-       throw new Error("Failed to update wishlist");
-     }
- 
-     const data = await res.json();
- 
-     setFavorites((p) => ({
-       ...p,
-       [id]: data.favorited,
-     }));
- 
-     toast.success(
-       data.favorited
-         ? "Added to wishlist"
-         : "Removed from wishlist"
-     );
-   } catch (error) {
-     console.error("Wishlist error:", error);
- 
-     // Rollback UI if API fails
-     setFavorites((p) => ({
-       ...p,
-       [id]: previousState,
-     }));
- 
-     toast.error("Something went wrong. Please try again.");
-   }
- };
+  useEffect(() => {
+    if (!session?.accessToken) return;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`,
+          {
+            headers: { Authorization: `Bearer ${session.accessToken}` },
+          },
+        );
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const favMap: Record<string, boolean> = {};
+        data.forEach((item: { listingId: string }) => {
+          favMap[item.listingId] = true;
+        });
+        setFavorites(favMap);
+      } catch {
+        // silently ignore
+      }
+    })();
+  }, [session?.accessToken]);
+
+  const toggleFav = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
+    }
+
+    const previousState = !!favorites[id];
+
+    // Instant UI update
+    setFavorites((p) => ({
+      ...p,
+      [id]: !previousState,
+    }));
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      const data = await res.json();
+
+      setFavorites((p) => ({
+        ...p,
+        [id]: data.favorited,
+      }));
+
+      toast.success(
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
+      );
+    } catch (error) {
+      console.error("Wishlist error:", error);
+
+      // Rollback UI if API fails
+      setFavorites((p) => ({
+        ...p,
+        [id]: previousState,
+      }));
+
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
   const shareSecondhand = async (
     item: SecondhandListing,
     e: React.MouseEvent,
@@ -386,6 +387,13 @@ export default function SecondhandPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
@@ -667,14 +675,10 @@ export default function SecondhandPage() {
           transition: transform 0.15s; padding: 0; z-index: 2;
         }
         .sh-card-fav:hover { transform: scale(1.15); }
-        .sh-card-share { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.94);
-         border: none; display: flex; align-items: center; 
-         justify-content: center; cursor: pointer; padding: 0; 
-         box-shadow: 0 1px 6px rgba(0,0,0,0.15);  transition:   
-         transform 0.15s,    background 0.15s,    color 0.15s;}
-        .sh-card-share:hover {  transform: scale(1.15);  background: #fff;}
-        .sh-card-share { color: #64748b;}
-        .sh-card-share:hover { color: #e11d48;}
+        .sh-card-share { position: absolute; top: 9px; right: 50px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;  color: #64748b;  box-shadow: 0 2px 10px rgba(0,0,0,0.16);  transition: transform 0.18s, background 0.18s;  padding: 0;  z-index: 3;}
+
+        .sh-card-share:hover {transform: scale(1.18);  background: #fff;  color: #b91c1c;}
+
         .sh-carousel-btn {
           position: absolute; top: 50%; transform: translateY(-50%);
           width: 26px; height: 26px; border-radius: 50%;

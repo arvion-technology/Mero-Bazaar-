@@ -23,8 +23,8 @@ import { toJobDetail, toJobCard } from "@/lib/adapter";
 import type { JobDetail } from "@/app/types/listing";
 import type { JobCard, JobListing } from "../../../types/jobs";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 function StarRating({ rating }: { rating: number }) {
   return (
     <span style={{ display: "flex", gap: "2px" }}>
@@ -213,6 +213,13 @@ export default function JobDetailPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
@@ -262,16 +269,54 @@ export default function JobDetailPage() {
           font-size: 20px; font-weight: 800; color: #1a1a1a;
           line-height: 1.3; margin: 0; flex: 1;
         }
-        .jd-action-btns { display: flex; gap: 8px; flex-shrink: 0; margin-top: 2px; }
-        .jd-action-btn {
-          width: 34px; height: 34px; border-radius: 50%;
-          border: 1.5px solid #e0e0e0; background: #fff; cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          transition: background 0.2s, border-color 0.2s, transform 0.15s;
-        }
-        .jd-action-btn:hover { background: #f5f5f5; border-color: #ccc; transform: scale(1.1); }
-        .jd-action-btn.fav-active { border-color: #e74c3c; background: #fff5f5; }
+          .jd-action-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  opacity: 1;
+  visibility: visible;
+}
 
+.jd-action-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid #e0e0e0;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.jd-action-btn:hover {
+  background: #f5f5f5;
+  border-color: #ccc;
+  transform: scale(1.08);
+}
+
+.jd-action-btn:focus {
+  outline: none;
+}
+
+.jd-action-btn.fav-active {
+  border-color: #e74c3c;
+  background: #fff5f5;
+}
+  
         .jd-salary { font-size: 22px; font-weight: 900; color: #1a1a1a; margin: 6px 0 2px; }
         .jd-meta-row {
           display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
@@ -540,17 +585,19 @@ export default function JobDetailPage() {
                   <h1 className="jd-title">{job.title}</h1>
                   <div className="jd-action-btns">
                     <button
-                      className="ld-action-btn"
-                      aria-label="Share listing"
-                      onClick={handleShare}
+                      className="jd-action-btn"
+                      onClick={() => {
+                        if (navigator.share)
+                          navigator.share({
+                            title: job.title,
+                            url: window.location.href,
+                          });
+                      }}
                     >
-                      <span className="ld-tooltip">
-                        {copied ? "Copied!" : "Share"}
-                      </span>
-                      <FiShare2 size={15} color="#555" />
+                      <FiShare2 size={16} />
                     </button>
                     <button
-                      className={`ld-action-btn${isFav ? " fav-active" : ""}`}
+                      className={`jd-action-btn${isFav ? " fav-active" : ""}`}
                       aria-label="Save to wishlist"
                       onClick={handleToggleFavorite}
                       disabled={favLoading}
@@ -561,18 +608,6 @@ export default function JobDetailPage() {
                         <FiHeart size={15} color="#999" />
                       )}
                     </button>
-                    {/* <button
-                      className="jd-action-btn"
-                      aria-label="Share job"
-                      title="Share"
-                      onClick={() =>
-                        navigator.clipboard
-                          ?.writeText(window.location.href)
-                          .catch(() => {})
-                      }
-                    >
-                      <FiShare2 size={15} color="#666" />
-                    </button> */}
                   </div>
                 </div>
 

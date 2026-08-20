@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   FiSearch,
   FiChevronDown,
@@ -102,8 +103,7 @@ export default function BeautyWellnessPage() {
   const [homeVisit, setHomeVisit] = useState(false);
   const [bridalPackage, setBridalPackage] = useState(false);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
-    const { data: session } = useSession();
-
+  const { data: session } = useSession();
 
   useEffect(() => {
     let cancelled = false;
@@ -150,44 +150,47 @@ export default function BeautyWellnessPage() {
     );
 
   useEffect(() => {
-      if (!session?.accessToken) return;
-  
-      (async () => {
-        try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
+    if (!session?.accessToken) return;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`,
+          {
             headers: { Authorization: `Bearer ${session.accessToken}` },
-          });
-          if (!res.ok) return;
-  
-          const data = await res.json();
-          const favMap: Record<string, boolean> = {};
-          data.forEach((item: { listingId: string }) => {
-            favMap[item.listingId] = true;
-          });
-          setFavorites(favMap);
-        } catch {
-          // silently ignore
-        }
-      })();
-    }, [session?.accessToken]);
-  
-    const toggleFav = async (id: string, e: React.MouseEvent) => {
+          },
+        );
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const favMap: Record<string, boolean> = {};
+        data.forEach((item: { listingId: string }) => {
+          favMap[item.listingId] = true;
+        });
+        setFavorites(favMap);
+      } catch {
+        // silently ignore
+      }
+    })();
+  }, [session?.accessToken]);
+
+  const toggleFav = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-  
+
     if (!session?.accessToken) {
       toast.error("Please log in to save listings");
       return;
     }
-  
+
     const previousState = !!favorites[id];
-  
+
     // Instant UI update
     setFavorites((p) => ({
       ...p,
       [id]: !previousState,
     }));
-  
+
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
@@ -200,34 +203,32 @@ export default function BeautyWellnessPage() {
           body: JSON.stringify({
             listingId: id,
           }),
-        }
+        },
       );
-  
+
       if (!res.ok) {
         throw new Error("Failed to update wishlist");
       }
-  
+
       const data = await res.json();
-  
+
       setFavorites((p) => ({
         ...p,
         [id]: data.favorited,
       }));
-  
+
       toast.success(
-        data.favorited
-          ? "Added to wishlist"
-          : "Removed from wishlist"
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
       );
     } catch (error) {
       console.error("Wishlist error:", error);
-  
+
       // Rollback UI if API fails
       setFavorites((p) => ({
         ...p,
         [id]: previousState,
       }));
-  
+
       toast.error("Something went wrong. Please try again.");
     }
   };
@@ -360,6 +361,13 @@ export default function BeautyWellnessPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
@@ -428,16 +436,58 @@ export default function BeautyWellnessPage() {
         .bw-card-img-wrap { position: relative; width: 100%; aspect-ratio: 4/3; overflow: hidden; background: #e5e7eb; }
         .bw-card-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
         .bw-card:hover .bw-card-img { transform: scale(1.06); }
-        .bw-card-fav { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.92); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 6px rgba(0,0,0,0.15); transition: transform 0.15s; padding: 0; z-index: 2; }
-        .bw-card-fav:hover { transform: scale(1.15); }
-        .bw-card-share { width: 30px; height: 30px; border-radius: 50%;
-         background: rgba(255,255,255,0.94); border: none; display: flex;
-         align-items: center; justify-content: center; cursor: pointer;
-         padding: 0; box-shadow: 0 1px 6px rgba(0,0,0,0.15); transition:
-         transform 0.15s, background 0.15s, color 0.15s;}
-         .bw-card-share:hover { transform: scale(1.15); background: #fff;}
-         .bw-card-share { color: #64748b;}
-         .bw-card-share:hover { color: #e11d48;}
+     /* SAVE / FAVORITE */
+.bw-card-fav {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.15s ease, background 0.15s ease;
+  z-index: 4;
+}
+
+.bw-card-fav:hover {
+  transform: scale(1.15);
+  background: #fff;
+}
+
+
+/* SHARE */
+.bw-card-share {
+  position: absolute;
+  top: 8px;
+  right: 44px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  color: #64748b;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+  z-index: 4;
+}
+
+.bw-card-share:hover {
+  transform: scale(1.15);
+  background: #fff;
+  color: #e11d48;
+}
         .bw-card-home-badge { position: absolute; bottom: 8px; left: 8px; background: rgba(225,29,72,0.9); color: #fff; font-size: 9px; font-weight: 700; border-radius: 5px; padding: 3px 7px; display: flex; align-items: center; gap: 3px; }
         .bw-card-body { padding: 14px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
         .bw-card-name { font-size: 15px; font-weight: 800; color: #111; margin: 0; }
@@ -743,7 +793,16 @@ export default function BeautyWellnessPage() {
                               alt={item.title}
                               className="bw-card-img"
                             />
-
+                            {/* Share */}
+                            <button
+                              type="button"
+                              className="bw-card-share"
+                              onClick={(e) => shareBeauty(item, e)}
+                              aria-label={`Share ${item.title}`}
+                              title="Share"
+                            >
+                              <FiShare2 size={13} />
+                            </button>
                             {/* Favorite */}
                             <button
                               type="button"
@@ -757,17 +816,6 @@ export default function BeautyWellnessPage() {
                               ) : (
                                 <FiHeart size={12} color="#9ca3af" />
                               )}
-                            </button>
-
-                            {/* Share */}
-                            <button
-                              type="button"
-                              className="bw-card-share"
-                              onClick={(e) => shareBeauty(item, e)}
-                              aria-label={`Share ${item.title}`}
-                              title="Share"
-                            >
-                              <FiShare2 size={13} />
                             </button>
 
                             {item.homeVisit && (
