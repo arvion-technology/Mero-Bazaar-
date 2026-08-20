@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { WeekDay } from '@prisma/client';
 import { UpdateMedicalSlotDto } from './dto/update_medical_slots.dto';
@@ -26,8 +26,29 @@ export class MedicalSlotsService {
     return listing.medical;
   }
 
-  async create(dto: CreateMedicalSlotDto) {
-    const medical = await this.resolveMedicalByListingId(dto.medicalId);
+  private async resolveListingWithMedical(listingId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      include: { medical: true },
+    });
+
+    if (!listing?.medical) {
+      throw new NotFoundException('Medical service not found');
+    }
+
+    return listing;
+  }
+
+  private assertOwnerOrAdmin(listingUserId: string, userId: string, role: string) {
+    if (role !== 'ADMIN' && listingUserId !== userId) {
+      throw new ForbiddenException('You do not own this medical listing');
+    }
+  }
+
+  async create(dto: CreateMedicalSlotDto, userId: string, role: string) {
+    const listing = await this.resolveListingWithMedical(dto.medicalId);
+    this.assertOwnerOrAdmin(listing.userId, userId, role);
+    const medical = listing.medical!;
 
     if (this.toMinutes(dto.startTime) >= this.toMinutes(dto.endTime)) {
       throw new BadRequestException('startTime must be before endTime');
@@ -114,6 +135,7 @@ export class MedicalSlotsService {
       },
     });
   }
+
   async findOne(id: string) {
     const slot = await this.prisma.medicalSlot.findUnique({ where: { id } });
 
@@ -122,8 +144,19 @@ export class MedicalSlotsService {
     return slot;
   }
 
-  async update(id: string, dto: UpdateMedicalSlotDto) {
-    const slot = await this.findOne(id);
+  private async findOneWithOwner(id: string) {
+    const slot = await this.prisma.medicalSlot.findUnique({
+      where: { id },
+      include: { medical: { include: { listing: true } } },
+    });
+
+    if (!slot) throw new NotFoundException('Slot not found');
+    return slot;
+  }
+
+  async update(id: string, dto: UpdateMedicalSlotDto, userId: string, role: string) {
+    const slot = await this.findOneWithOwner(id);
+    this.assertOwnerOrAdmin(slot.medical.listing.userId, userId, role);
 
     if (slot.isBooked) {
       throw new BadRequestException('Cannot update a booked slot');
@@ -139,8 +172,9 @@ export class MedicalSlotsService {
     });
   }
 
-  async remove(id: string) {
-    const slot = await this.findOne(id);
+  async remove(id: string, userId: string, role: string) {
+    const slot = await this.findOneWithOwner(id);
+    this.assertOwnerOrAdmin(slot.medical.listing.userId, userId, role);
 
     if (slot.isBooked) {
       throw new BadRequestException('Cannot delete a booked slot');
