@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   FiSearch,
   FiMapPin,
@@ -430,6 +431,13 @@ export default function PropertyPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         .pp { background: #f0e6f6; min-height: 100vh; font-family: 'Inter', sans-serif; }
@@ -538,7 +546,7 @@ export default function PropertyPage() {
         .pp-badge { font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
         .pp-badge-rent { background: #e8f5e9; color: #2e7d32; }
         .pp-badge-sale { background: #fff3e0; color: #e65100; }
-        .pp-badge-furnished { position: absolute; top: 12px; right: 12px; background: #e8f5e9; color: #2e7d32; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
+        .pp-badge-furnished { position: absolute; top: 168px; right:12px; background: #e8f5e9; color: #2e7d32; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
         .pp-heart {
           position: absolute; top: 9px; right: 9px;
           width: 32px; height: 32px; border-radius: 50%;

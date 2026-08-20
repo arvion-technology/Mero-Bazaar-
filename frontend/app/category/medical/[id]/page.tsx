@@ -28,8 +28,8 @@ import { api } from "@/lib/api";
 import { toMedicalDetail } from "@/lib/adapters/medicalAdapter";
 import type { MedicalDetail } from "@/app/types/listing";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
   return (
     <span style={{ display: "inline-flex", gap: 1 }}>
@@ -210,7 +210,15 @@ export default function MedicalDetailPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
+      
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
         * { box-sizing: border-box; }
@@ -602,34 +610,34 @@ export default function MedicalDetailPage() {
               </div>
 
               <div className="md2-info-card">
-                                <div className="md2-title-row">
-
-                <h1 className="md2-title">{listing.doctorName}</h1>
-                <div className="md2-action-btns">
-                  <button
-                    className="md2-action-btn"
-                    aria-label="Share listing"
-                    onClick={handleShare}
-                  >
-                    <span className="md2-tooltip">
-                      {copied ? "Copied!" : " "}
-                      
-                    </span>
-                    <FiShare2 size={15} color="#555" />
-                  </button>
-                  <button
-                    className={`md2-action-btn${isFav ? " fav-active" : ""}`}
-                    aria-label="Save to wishlist"
-                    onClick={handleToggleFavorite}
-                    disabled={favLoading}
-                  >
+                <div className="md2-title-row">
+                  <h1 className="md2-title">{listing.doctorName}</h1>
+                  <div className="md2-action-btns">
+                    <button
+                      className="md2-action-btn"
+                      onClick={() => {
+                        if (navigator.share)
+                          navigator.share({
+                            title: listing.title,
+                            url: window.location.href,
+                          });
+                      }}
+                    >
+                      <FiShare2 size={16} />
+                    </button>
+                    <button
+                      className={`md2-action-btn${isFav ? " fav-active" : ""}`}
+                      aria-label="Save to wishlist"
+                      onClick={handleToggleFavorite}
+                      disabled={favLoading}
+                    >
                       {isFav ? (
-                      <FaHeart size={15} color="#e74c3c" />
-                    ) : (
-                      <FiHeart size={15} color="#888" />
-                    )}
-                  </button>
-                </div>
+                        <FaHeart size={15} color="#e74c3c" />
+                      ) : (
+                        <FiHeart size={15} color="#888" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="md2-fee">{listing.price}</div>

@@ -23,8 +23,8 @@ import { toJobDetail, toJobCard } from "@/lib/adapter";
 import type { JobDetail } from "@/app/types/listing";
 import type { JobCard, JobListing } from "../../../types/jobs";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 function StarRating({ rating }: { rating: number }) {
   return (
     <span style={{ display: "flex", gap: "2px" }}>
@@ -186,7 +186,7 @@ export default function JobDetailPage() {
             listingId: id,
           }),
         },
-      ); 
+      );
 
       if (!res.ok) {
         throw new Error("Failed to update wishlist");
@@ -213,6 +213,13 @@ export default function JobDetailPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
@@ -579,13 +586,15 @@ export default function JobDetailPage() {
                   <div className="jd-action-btns">
                     <button
                       className="jd-action-btn"
-                      aria-label="Share listing"
-                      onClick={handleShare}
+                      onClick={() => {
+                        if (navigator.share)
+                          navigator.share({
+                            title: job.title,
+                            url: window.location.href,
+                          });
+                      }}
                     >
-                      <span className="jd-tooltip">
-                        {copied ? "Copied!" : " "}
-                      </span>
-                      <FiShare2 size={15} color="#555" />
+                      <FiShare2 size={16} />
                     </button>
                     <button
                       className={`jd-action-btn${isFav ? " fav-active" : ""}`}

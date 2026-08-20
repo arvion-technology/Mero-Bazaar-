@@ -20,8 +20,8 @@ import type { RealEstateDetail } from "@/app/types/listing";
 import { toRentalDetail } from "@/lib/adapters/realEstateAdapter";
 import SellerCard from "@/components/SellerCard";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 function prefixImage(path: string): string {
@@ -254,6 +254,13 @@ export default function PropertyDetailPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         .pd-page { background: #f5f6f8; min-height: 100vh; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; padding-bottom: 60px; }
         .pd-breadcrumb { background: #fff; border-bottom: 1px solid #ececec; padding: 12px 0; }
@@ -445,13 +452,15 @@ export default function PropertyDetailPage() {
                 <div className="pd-action-btns">
                   <button
                     className="pd-action-btn"
-                    aria-label="Share listing"
-                    onClick={handleShare}
+                    onClick={() => {
+                      if (navigator.share)
+                        navigator.share({
+                          title: detail.title,
+                          url: window.location.href,
+                        });
+                    }}
                   >
-                    <span className="pd-tooltip"> 
-                       {copied ? "Copied!" : " "} 
-                    </span>
-                    <FiShare2 size={15} color="#555" />
+                    <FiShare2 size={16} />
                   </button>
                   <button
                     className={`pd-action-btn${isFav ? " fav-active" : ""}`}

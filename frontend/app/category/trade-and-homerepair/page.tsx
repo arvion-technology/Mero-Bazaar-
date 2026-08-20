@@ -27,8 +27,8 @@ import { api } from "@/lib/api";
 import { toTradesCard } from "@/lib/adapters/tradesAdapter";
 import type { TradesCard, TradesListing } from "@/app/types/trades";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const TAG_ICON_MATCHERS: Array<[RegExp, React.ReactNode]> = [
   [/plumb/i, <MdPlumbing size={22} color="#b45309" />],
   [/electric|wiring/i, <MdElectricalServices size={22} color="#b45309" />],
@@ -288,6 +288,13 @@ export default function TradeAndHomeRepairPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
@@ -796,7 +803,7 @@ export default function TradeAndHomeRepairPage() {
                     <div className="th-empty-icon">
                       <FiAlertTriangle size={40} color="#ccc" />
                     </div>
-                    <p>Couldn&apos;t load listings</p>
+                    <p>Couldn&a post load listings</p>
                     <span>{error}</span>
                   </div>
                 ) : displayed.length === 0 ? (
@@ -818,7 +825,6 @@ export default function TradeAndHomeRepairPage() {
                       >
                         <div className="th-card-body">
                           <div className="th-card-top-row">
-                            
                             {/* Favorite */}
                             <button
                               type="button"
@@ -834,7 +840,7 @@ export default function TradeAndHomeRepairPage() {
                               )}
                             </button>
 
-                           {/* Share */}
+                            {/* Share */}
                             <button
                               type="button"
                               className="th-share"
@@ -845,10 +851,10 @@ export default function TradeAndHomeRepairPage() {
                               <FiShare2 size={14} />
                             </button>
                           </div>
-                          
-                          <span className="th-card-icon">
+
+                          {/* <span className="th-card-icon">
                               {iconForTag(l.skillTags[0] ?? "")}
-                            </span>   
+                            </span>    */}
                           <p className="th-card-name">{l.title}</p>
                           {l.skillTags[0] && (
                             <p className="th-card-cat">{l.skillTags[0]}</p>

@@ -9,14 +9,13 @@ import {
   FiMapPin,
   FiChevronDown,
   FiShare2,
-
 } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 import { IoSpeedometerOutline } from "react-icons/io5";
 import { BsCalendar3, BsShieldCheck } from "react-icons/bs";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 type Badge = { label: string; color: string; bg: string };
 type Vehicle = {
   id: string;
@@ -108,9 +107,12 @@ export default function VehiclesPage() {
 
     (async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {
-          headers: { Authorization: `Bearer ${session.accessToken}` },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`,
+          {
+            headers: { Authorization: `Bearer ${session.accessToken}` },
+          },
+        );
         if (!res.ok) return;
 
         const data = await res.json();
@@ -138,7 +140,6 @@ export default function VehiclesPage() {
         setConditions(json.filters?.conditions || []);
         setFuelTypes(json.filters?.fuelTypes || []);
         setCategories(["All Vehicles", ...(json.filters?.categories || [])]);
-
       } catch (err) {
         console.error(err);
         setError(true);
@@ -150,7 +151,10 @@ export default function VehiclesPage() {
 
   const generateBadges = (v: Vehicle) => {
     const vehicle = v.vehicle;
-    const badges: { label: string; type: "green" | "blue" | "orange" | "gray" }[] = [];
+    const badges: {
+      label: string;
+      type: "green" | "blue" | "orange" | "gray";
+    }[] = [];
 
     if (vehicle?.bluebook_status === "verified") {
       badges.push({ label: "Bluebook Verified", type: "green" });
@@ -165,75 +169,69 @@ export default function VehiclesPage() {
   };
 
   const toggleFav = async (id: string, e: React.MouseEvent) => {
-  e.preventDefault();
-  e.stopPropagation();
-
-  if (!session?.accessToken) {
-    toast.error("Please log in to save listings");
-    return;
-  }
-
-  const previousState = !!favorites[id];
-
-  // Instant UI update
-  setFavorites((p) => ({
-    ...p,
-    [id]: !previousState,
-  }));
-
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
-        },
-        body: JSON.stringify({
-          listingId: id,
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error("Failed to update wishlist");
-    }
-
-    const data = await res.json();
-
-    setFavorites((p) => ({
-      ...p,
-      [id]: data.favorited,
-    }));
-
-    toast.success(
-      data.favorited
-        ? "Added to wishlist"
-        : "Removed from wishlist"
-    );
-  } catch (error) {
-    console.error("Wishlist error:", error);
-
-    // Rollback UI if API fails
-    setFavorites((p) => ({
-      ...p,
-      [id]: previousState,
-    }));
-
-    toast.error("Something went wrong. Please try again.");
-  }
-};
-  
-  const shareVehicle = async (
-    vehicle: Vehicle,
-    e: React.MouseEvent
-  ) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const vehicleUrl =
-      `${window.location.origin}/category/vehicles/${vehicle.id}`;
+    if (!session?.accessToken) {
+      toast.error("Please log in to save listings");
+      return;
+    }
+
+    const previousState = !!favorites[id];
+
+    // Instant UI update
+    setFavorites((p) => ({
+      ...p,
+      [id]: !previousState,
+    }));
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            listingId: id,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      const data = await res.json();
+
+      setFavorites((p) => ({
+        ...p,
+        [id]: data.favorited,
+      }));
+
+      toast.success(
+        data.favorited ? "Added to wishlist" : "Removed from wishlist",
+      );
+    } catch (error) {
+      console.error("Wishlist error:", error);
+
+      // Rollback UI if API fails
+      setFavorites((p) => ({
+        ...p,
+        [id]: previousState,
+      }));
+
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
+
+  const shareVehicle = async (vehicle: Vehicle, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const vehicleUrl = `${window.location.origin}/category/vehicles/${vehicle.id}`;
 
     const shareData = {
       title: displayTitle(vehicle),
@@ -258,10 +256,7 @@ export default function VehiclesPage() {
       // Final fallback
       window.prompt("Copy vehicle link:", vehicleUrl);
     } catch (error) {
-      if (
-        error instanceof DOMException &&
-        error.name === "AbortError"
-      ) {
+      if (error instanceof DOMException && error.name === "AbortError") {
         return;
       }
 
@@ -286,23 +281,38 @@ export default function VehiclesPage() {
     .filter((v) => {
       const s = search.toLowerCase();
       const vehicle = v.vehicle;
-      if (s && !v.title.toLowerCase().includes(s) && !vehicle.brand.toLowerCase().includes(s))
+      if (
+        s &&
+        !v.title.toLowerCase().includes(s) &&
+        !vehicle.brand.toLowerCase().includes(s)
+      )
         return false;
-      if (activeCat !== "All Vehicles" && vehicle.type !== activeCat.toLowerCase()) return false;
-      if (selectedBrands.length && !selectedBrands.includes(vehicle.brand)) return false;
+      if (
+        activeCat !== "All Vehicles" &&
+        vehicle.type !== activeCat.toLowerCase()
+      )
+        return false;
+      if (selectedBrands.length && !selectedBrands.includes(vehicle.brand))
+        return false;
       if (
         selectedConditions.length &&
-        !selectedConditions.map((c) => c.toLowerCase()).includes(vehicle.condition.toLowerCase())
+        !selectedConditions
+          .map((c) => c.toLowerCase())
+          .includes(vehicle.condition.toLowerCase())
       )
         return false;
       if (
         selectedFuels.length &&
-        !selectedFuels.map((f) => f.toLowerCase()).includes(vehicle.fuel_type.toLowerCase())
+        !selectedFuels
+          .map((f) => f.toLowerCase())
+          .includes(vehicle.fuel_type.toLowerCase())
       )
         return false;
 
       const price =
-        typeof v.price === "number" ? v.price : parseInt(String(v.price).replace(/[^\d]/g, ""));
+        typeof v.price === "number"
+          ? v.price
+          : parseInt(String(v.price).replace(/[^\d]/g, ""));
 
       if (selectedPriceRanges.length) {
         const match = selectedPriceRanges.some((lbl) => {
@@ -321,10 +331,18 @@ export default function VehiclesPage() {
       return 0;
     });
 
-  const activeSortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Newest";
+  const activeSortLabel =
+    SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Newest";
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
@@ -648,7 +666,6 @@ export default function VehiclesPage() {
       `}</style>
 
       <div className="vp-wrap">
-
         {/* ── HERO ── */}
         <section className="vp-hero">
           <div className="vp-hero-bg" />
@@ -657,7 +674,10 @@ export default function VehiclesPage() {
           <div className="vp-hero-inner">
             <div className="vp-breadcrumb">
               <span>Home</span>
-              <FiChevronDown size={10} style={{ transform: "rotate(-90deg)" }} />
+              <FiChevronDown
+                size={10}
+                style={{ transform: "rotate(-90deg)" }}
+              />
               <span className="active">Vehicles</span>
             </div>
             <h1>Vehicles in Nepal</h1>
@@ -692,12 +712,13 @@ export default function VehiclesPage() {
         {/* ── BODY ── */}
         <div className="vp-body">
           <div className="vp-layout">
-
             {/* ── SIDEBAR ── */}
             <aside className="vp-sidebar">
               <div className="vsb-head">
                 <span className="vsb-head-title">Filters</span>
-                <button className="vsb-reset" onClick={resetFilters}>Reset All</button>
+                <button className="vsb-reset" onClick={resetFilters}>
+                  Reset All
+                </button>
               </div>
 
               {/* Brand */}
@@ -708,7 +729,9 @@ export default function VehiclesPage() {
                     <button
                       key={b}
                       className={`vsb-chip${selectedBrands.includes(b) ? " active" : ""}`}
-                      onClick={() => toggle(selectedBrands, b, setSelectedBrands)}
+                      onClick={() =>
+                        toggle(selectedBrands, b, setSelectedBrands)
+                      }
                     >
                       {b}
                     </button>
@@ -724,7 +747,13 @@ export default function VehiclesPage() {
                     <button
                       key={r.label}
                       className={`vsb-price-chip${selectedPriceRanges.includes(r.label) ? " active" : ""}`}
-                      onClick={() => toggle(selectedPriceRanges, r.label, setSelectedPriceRanges)}
+                      onClick={() =>
+                        toggle(
+                          selectedPriceRanges,
+                          r.label,
+                          setSelectedPriceRanges,
+                        )
+                      }
                     >
                       {r.label}
                     </button>
@@ -748,7 +777,9 @@ export default function VehiclesPage() {
                     <button
                       key={c}
                       className={`vsb-chip${selectedConditions.includes(c) ? " active" : ""}`}
-                      onClick={() => toggle(selectedConditions, c, setSelectedConditions)}
+                      onClick={() =>
+                        toggle(selectedConditions, c, setSelectedConditions)
+                      }
                     >
                       {c}
                     </button>
@@ -833,12 +864,20 @@ export default function VehiclesPage() {
                       const vehicle = v.vehicle;
 
                       return (
-                        <Link key={v.id} href={`/category/vehicles/${v.id}`} className="vp-card">
+                        <Link
+                          key={v.id}
+                          href={`/category/vehicles/${v.id}`}
+                          className="vp-card"
+                        >
                           {/* Image */}
                           <div className="vp-card-img-wrap">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                              src={v.images?.[0] ? `${IMG_BASE}${v.images[0]}` : "/placeholder.png"}
+                              src={
+                                v.images?.[0]
+                                  ? `${IMG_BASE}${v.images[0]}`
+                                  : "/placeholder.png"
+                              }
                               alt={v.title}
                               className="vp-card-img"
                             />
@@ -877,7 +916,8 @@ export default function VehiclesPage() {
                             {/* Meta */}
                             <div className="vp-card-meta">
                               <span>
-                                <IoSpeedometerOutline size={12} /> {vehicle.km_driven}
+                                <IoSpeedometerOutline size={12} />{" "}
+                                {vehicle.km_driven}
                               </span>
                               <span className="vp-card-meta-sep" />
                               <span>
@@ -888,11 +928,12 @@ export default function VehiclesPage() {
                                 style={{ cursor: "pointer", color: "#2563eb" }}
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  if (v.latitude == null || v.longitude == null) return;
+                                  if (v.latitude == null || v.longitude == null)
+                                    return;
 
                                   window.open(
                                     `https://www.google.com/maps?q=${v.latitude},${v.longitude}`,
-                                    "_blank"
+                                    "_blank",
                                   );
                                 }}
                               >
@@ -937,7 +978,10 @@ export default function VehiclesPage() {
                                       border: style.border,
                                     }}
                                   >
-                                    <BsShieldCheck size={9} style={{ marginRight: "3px" }} />
+                                    <BsShieldCheck
+                                      size={9}
+                                      style={{ marginRight: "3px" }}
+                                    />
                                     {b.label}
                                   </span>
                                 );

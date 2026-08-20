@@ -24,8 +24,8 @@ import { toBeautyCard, toBeautyDetail } from "@/lib/adapters/beautyAdapter";
 import type { BeautyListing, BeautyCard } from "@/app/types/beauty";
 import type { BeautyDetail } from "@/app/types/listing";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const RELATED_LIMIT = 3;
 
 async function fetchBeautyListing(id: string): Promise<BeautyListing | null> {
@@ -226,6 +226,13 @@ export default function BeautyDetailPage() {
   if (item === null) {
     return (
       <>
+        <ToastContainer
+          position="top-right"
+          autoClose={2000}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+        />
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
           html, body { overflow-x: hidden; }
@@ -304,6 +311,13 @@ export default function BeautyDetailPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
@@ -702,17 +716,17 @@ export default function BeautyDetailPage() {
                     className="bd-main-img"
                   />
                   <button
-                      className={`bd-action-btn${isFav ? " fav-active" : ""}`}
-                      aria-label="Save to wishlist"
-                      onClick={handleToggleFavorite}
-                      disabled={favLoading}
-                    >
-                      {isFav ? (
-                        <FaHeart size={15} color="#E74C3C" />
-                      ) : (
-                        <FiHeart size={15} color="#999" />
-                      )}
-                    </button>
+                    className={`bd-action-btn${isFav ? " fav-active" : ""}`}
+                    aria-label="Save to wishlist"
+                    onClick={handleToggleFavorite}
+                    disabled={favLoading}
+                  >
+                    {isFav ? (
+                      <FaHeart size={15} color="#E74C3C" />
+                    ) : (
+                      <FiHeart size={15} color="#999" />
+                    )}
+                  </button>
 
                   <span className="bd-img-cat-badge" style={badgeStyle}>
                     {item.serviceType}

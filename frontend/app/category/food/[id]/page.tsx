@@ -9,7 +9,8 @@ import { toFoodsCard, toFoodsDetail } from "@/lib/adapters/foodsAdapter";
 import type { FoodsListing, FoodsCard } from "@/app/types/foods";
 import type { FoodDetail } from "@/app/types/listing";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   FiMapPin,
   FiMessageSquare,
@@ -289,6 +290,13 @@ export default function FoodDetailPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
@@ -503,27 +511,25 @@ export default function FoodDetailPage() {
                     className="fd-main-img"
                   />
                   <button
-                        type="button"
-                        className="fd-img-fav-btn"
-                        aria-label={
-                          isFav ? "Remove from wishlist" : "Save to wishlist"
-                        }
-                        title={
-                          isFav ? "Remove from wishlist" : "Save to wishlist"
-                        }
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleToggleFavorite();
-                        }}
-                        disabled={favLoading}
-                      >
-                        {isFav ? (
-                          <FaHeart size={17} color="#E74C3C" />
-                        ) : (
-                          <FiHeart size={17} color="#666" />
-                        )}
-                      </button>
+                    type="button"
+                    className="fd-img-fav-btn"
+                    aria-label={
+                      isFav ? "Remove from wishlist" : "Save to wishlist"
+                    }
+                    title={isFav ? "Remove from wishlist" : "Save to wishlist"}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleToggleFavorite();
+                    }}
+                    disabled={favLoading}
+                  >
+                    {isFav ? (
+                      <FaHeart size={17} color="#E74C3C" />
+                    ) : (
+                      <FiHeart size={17} color="#666" />
+                    )}
+                  </button>
 
                   <span className="fd-img-cat-badge" style={badgeStyle}>
                     {item.foodType}
@@ -670,7 +676,7 @@ export default function FoodDetailPage() {
                     <div className="fd-rel-img-wrap">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={r.thumb} alt={r.title} className="fd-rel-img" />
-                                          </div>
+                    </div>
                     <div className="fd-rel-body">
                       <p className="fd-rel-name">{r.title}</p>
                       <p className="fd-rel-price">{r.price}</p>

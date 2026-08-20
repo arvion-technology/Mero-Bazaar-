@@ -37,8 +37,8 @@ import { resolveImage } from "@/lib/adapters/shared";
 import { SERVICE_TYPE_LABEL } from "@/lib/adapters/medicalAdapter";
 import type { MedicalListing } from "@/app/types/medical";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const SPECIALTIES = Object.values(SERVICE_TYPE_LABEL);
 const CITIES = [
   "Kathmandu",
@@ -280,6 +280,13 @@ export default function MedicalPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
@@ -948,31 +955,31 @@ export default function MedicalPage() {
                         className="mp-card"
                         style={{ textDecoration: "none", color: "inherit" }}
                       >
-                         {/* Favorite */} 
-                            <button 
-                              type="button" 
-                              className="mp-heart" 
-                              aria-label="Save doctor" 
-                              title="Save doctor" 
-                              onClick={(e) => toggleFav(l.id, e)} 
-                            > 
-                              {isFav ? ( 
-                                <FaHeart size={13} color="#b91c1c" /> 
-                              ) : ( 
-                                <FiHeart size={13} color="#999" /> 
-                              )} 
-                            </button> 
- 
-                            {/* Share */} 
-                            <button 
-                              type="button" 
-                              className="mp-share" 
-                              aria-label={`Share ${m.doctorName}`} 
-                              title="Share doctor" 
-                              onClick={(e) => shareMedical(l, e)} 
-                            > 
-                              <FiShare2 size={14} /> 
-                            </button> 
+                        {/* Favorite */}
+                        <button
+                          type="button"
+                          className="mp-heart"
+                          aria-label="Save doctor"
+                          title="Save doctor"
+                          onClick={(e) => toggleFav(l.id, e)}
+                        >
+                          {isFav ? (
+                            <FaHeart size={13} color="#b91c1c" />
+                          ) : (
+                            <FiHeart size={13} color="#999" />
+                          )}
+                        </button>
+
+                        {/* Share */}
+                        <button
+                          type="button"
+                          className="mp-share"
+                          aria-label={`Share ${m.doctorName}`}
+                          title="Share doctor"
+                          onClick={(e) => shareMedical(l, e)}
+                        >
+                          <FiShare2 size={14} />
+                        </button>
                         <div className="mp-card-header">
                           <div className="mp-img-wrap">
                             <img
@@ -980,7 +987,7 @@ export default function MedicalPage() {
                               alt={m.doctorName}
                               className="mp-img"
                             />
-                              </div>
+                          </div>
                           <div className="mp-info">
                             <span className="mp-specialty-badge">
                               {specialtyLabel}

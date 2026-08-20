@@ -16,8 +16,8 @@ import { MdVerified } from "react-icons/md";
 import { TbManualGearbox } from "react-icons/tb";
 import type { ListingDetail } from "../../../../../types/listing";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 type Props = Pick<
   ListingDetail,
   | "title"
@@ -109,6 +109,13 @@ export default function ListingInfo({
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>
         {`.ld-action-btns {
   opacity: 0;
@@ -137,11 +144,15 @@ export default function ListingInfo({
           <div className="ld-action-btns">
             <button
               className="ld-action-btn"
-              aria-label="Share listing"
-              onClick={handleShare}
+              onClick={() => {
+                if (navigator.share)
+                  navigator.share({
+                    title: title,
+                    url: window.location.href,
+                  });
+              }}
             >
-              <span className="ld-tooltip">{copied ? "Copied!" : "Share"}</span>
-              <FiShare2 size={15} color="#555" />
+              <FiShare2 size={16} />
             </button>
             <button
               className={`ld-action-btn${isFav ? " fav-active" : ""}`}

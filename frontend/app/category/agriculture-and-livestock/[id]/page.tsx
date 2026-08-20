@@ -24,8 +24,8 @@ import type { AgricultureListing } from "@/app/types/agriculture";
 import type { AgricultureDetail } from "@/app/types/listing";
 import SellerCard from "@/components/SellerCard";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 export default function AgriDetailPage() {
   const params = useParams();
   const id = params?.id as string;
@@ -188,6 +188,13 @@ export default function AgriDetailPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
@@ -409,7 +416,7 @@ export default function AgriDetailPage() {
           color: #374151; cursor: pointer; transition: all 0.15s;
         }
         .ald-btn-phone:hover { background: #d1fae5; border-color: #4ade80; color: #15803d; }
-        .ald-btn-share:hover { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
+        .-btn-share:hover { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
 
         .ald-seller-panel {
           background: #fff; border-radius: 12px;

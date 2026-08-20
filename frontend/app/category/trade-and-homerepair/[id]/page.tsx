@@ -22,8 +22,8 @@ import type { TradesDetail } from "@/app/types/listing";
 import type { TradesCard } from "@/app/types/trades";
 import SellerCard from "@/components/SellerCard";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const DEFAULT_LAT = 27.7172;
 const DEFAULT_LNG = 85.324;
 
@@ -218,6 +218,13 @@ export default function TradeDetailPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
@@ -261,15 +268,7 @@ export default function TradeDetailPage() {
         .cd-action-btn, .cd-share-btn { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #e0e0e0; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s, border-color 0.2s, transform 0.2s; }
         .cd-action-btn:hover { background: #f5f5f5; border-color: #ccc; transform: scale(1.1); }
         .cd-action-btn.fav-active { border-color: #e74c3c; background: #fff5f5; }
-        // .cd-share-btn, .cd-save-btn {
-        //   display: inline-flex; align-items: center; gap: 5px;
-        //   font-size: 12.5px; font-weight: 600; color: #444;
-        //   background: none; border: none; cursor: pointer; font-family: inherit;
-        //   padding: 6px 8px; border-radius: 6px; transition: background 0.15s;
-        // }
-        // .cd-share-btn { margin-left: auto; }  
-        // .cd-share-btn:hover, .cd-save-btn:hover { background: #f5f5f5; }
-        // .cd-save-btn.on { color: #e74c3c; }
+       
 
         .cd-badge-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; }
         .cd-badge-verified {
@@ -495,9 +494,17 @@ export default function TradeDetailPage() {
                   Posted {listing.postedDaysAgo} day
                   {listing.postedDaysAgo !== 1 ? "s" : ""} ago
                 </span>
-                <button className="cd-share-btn" onClick={handleShare}>
-                  <FiShare2 size={14} color="#555" />
-                  {copied ? "Copied!" : " "} 
+                <button
+                  className="cd-share-btn"
+                  onClick={() => {
+                    if (navigator.share)
+                      navigator.share({
+                        title: listing.title,
+                        url: window.location.href,
+                      });
+                  }}
+                >
+                  <FiShare2 size={16} />
                 </button>
                 <button
                   className={`cd-action-btn${isFav ? " fav-active" : ""}`}
@@ -505,12 +512,11 @@ export default function TradeDetailPage() {
                   onClick={handleToggleFavorite}
                   disabled={favLoading}
                 >
-                    {isFav ? (
+                  {isFav ? (
                     <FaHeart size={14} color="#e74c3c" />
                   ) : (
                     <FiHeart size={14} color="#888" />
                   )}
-                  
                 </button>
               </div>
 

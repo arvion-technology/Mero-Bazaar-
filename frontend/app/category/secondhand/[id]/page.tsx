@@ -9,7 +9,8 @@ import { fetchListing, fetchRelatedListings } from "../../../../lib/fetcher";
 
 import type { SecondhandDetail, RelatedListing } from "@/app/types/listing"; // fixed: SecondhandDetail, not ListingDetail
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   FiArrowLeft,
   FiMapPin,
@@ -202,6 +203,13 @@ export default function SecondhandDetailPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
       <style>{`
         html, body { overflow-x: hidden; }
         .sh-page {
@@ -423,18 +431,18 @@ export default function SecondhandDetailPage() {
                   alt={item.title}
                   className="sh-main-img"
                 />
-                 <button
-                      className={`sh-action-btn${isFav ? " fav-active" : ""}`}
-                      aria-label="Save to wishlist"
-                      onClick={handleToggleFavorite}
-                      disabled={favLoading}
-                    >
-                      {isFav ? (
-                        <FaHeart size={15} color="#E74C3C" />
-                      ) : (
-                        <FiHeart size={15} color="#999" />
-                      )}
-                    </button>
+                <button
+                  className={`sh-action-btn${isFav ? " fav-active" : ""}`}
+                  aria-label="Save to wishlist"
+                  onClick={handleToggleFavorite}
+                  disabled={favLoading}
+                >
+                  {isFav ? (
+                    <FaHeart size={15} color="#E74C3C" />
+                  ) : (
+                    <FiHeart size={15} color="#999" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -471,7 +479,6 @@ export default function SecondhandDetailPage() {
                     <FiShare2 size={16} />
                   </button>
                 </div>
-               
               </div>
 
               <div className="sh-price">
@@ -565,7 +572,6 @@ export default function SecondhandDetailPage() {
                   </li>
                 </ul>
               </div>
-              
             </div>
           </div>
 
