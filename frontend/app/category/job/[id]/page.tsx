@@ -9,35 +9,19 @@ import {
   FiShare2,
   FiMapPin,
   FiBriefcase,
-  FiClock,
-  FiMessageSquare,
   FiCalendar,
   FiSend,
-  FiPlusSquare,
   FiCheck,
-  FiUser,
 } from "react-icons/fi";
-import { FaStar, FaRegStar, FaHeart } from "react-icons/fa";
+import { FaHeart } from "react-icons/fa";
 import { api } from "@/lib/api";
 import { toJobDetail, toJobCard } from "@/lib/adapter";
 import type { JobDetail } from "@/app/types/listing";
 import type { JobCard, JobListing } from "../../../types/jobs";
+import SellerCard from "@/components/SellerCard";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <span style={{ display: "flex", gap: "2px" }}>
-      {[1, 2, 3, 4, 5].map((i) =>
-        i <= Math.round(rating) ? (
-          <FaStar key={i} size={13} color="#F39C12" />
-        ) : (
-          <FaRegStar key={i} size={13} color="#F39C12" />
-        ),
-      )}
-    </span>
-  );
-}
 
 export default function JobDetailPage() {
   const params = useParams();
@@ -58,10 +42,8 @@ export default function JobDetailPage() {
   const [isFav, setIsFav] = useState(false);
   const [showFull, setShowFull] = useState(false);
   const [applied, setApplied] = useState(false);
-  const [msgSent, setMsgSent] = useState(false);
   const { data: session } = useSession();
   const [favLoading, setFavLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!session?.accessToken || !id) return;
@@ -155,9 +137,7 @@ export default function JobDetailPage() {
 
   const handleShare = () => {
     navigator.clipboard?.writeText(window.location.href).catch(() => {});
-    setCopied(true);
     toast.success("Link copied to clipboard");
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleToggleFavorite = async () => {
@@ -167,10 +147,7 @@ export default function JobDetailPage() {
     }
 
     setFavLoading(true);
-
     const previousState = isFav;
-
-    // Optimistic UI
     setIsFav(!previousState);
 
     try {
@@ -193,7 +170,6 @@ export default function JobDetailPage() {
       }
 
       const data = await res.json();
-
       setIsFav(data.favorited);
 
       toast.success(
@@ -201,14 +177,24 @@ export default function JobDetailPage() {
       );
     } catch (error) {
       console.error(error);
-
-      // API fail भयो भने पुरानो state मा फर्काउने
       setIsFav(previousState);
-
       toast.error("Something went wrong, please try again");
     } finally {
       setFavLoading(false);
     }
+  };
+
+  // Build a complete seller object that SellerCard expects,
+  // filling missing fields with sensible defaults.
+  const sellerForCard = {
+    ...(job.postedBy as any),
+    isPro: (job.postedBy as any)?.isPro ?? false,
+    isTrusted: (job.postedBy as any)?.isTrusted ?? false,
+    memberSince: (job.postedBy as any)?.memberSince ?? "N/A",
+    totalListing: (job.postedBy as any)?.totalListing ?? 0,
+    responseRate: (job.postedBy as any)?.responseRate ?? "N/A",
+    avgResponseTime: (job.postedBy as any)?.avgResponseTime ?? "N/A",
+    phone: (job.postedBy as any)?.phone ?? "N/A",
   };
 
   return (
@@ -245,7 +231,7 @@ export default function JobDetailPage() {
         .jd-bc-sep { color: #ccc; font-size: 11px; }
         .jd-bc-current { color: #555; font-weight: 500; }
         .jd-job-id { font-size: 12px; color: #999; font-weight: 500; }
-        .jd-report { font-size: 12px; color: #e74c3c; font-weight: 600; text-decoration: none; transition: opacity 0.18s; }
+        .jd-report { font-size: 12px; color: #e74c3c; font-weight: 600; text-decoration: none; transition: opacity 0.18s; cursor: pointer; }
         .jd-report:hover { opacity: 0.75; text-decoration: underline; }
 
         /* LAYOUT */
@@ -269,54 +255,42 @@ export default function JobDetailPage() {
           font-size: 20px; font-weight: 800; color: #1a1a1a;
           line-height: 1.3; margin: 0; flex: 1;
         }
-          .jd-action-btns {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  margin-top: 2px;
-  opacity: 1;
-  visibility: visible;
-}
-
-.jd-action-btn {
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border-radius: 50%;
-  border: 1.5px solid #e0e0e0;
-  background: #fff;
-  color: #555;
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  appearance: none;
-  -webkit-appearance: none;
-
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.15s ease;
-}
-
-.jd-action-btn:hover {
-  background: #f5f5f5;
-  border-color: #ccc;
-  transform: scale(1.08);
-}
-
-.jd-action-btn:focus {
-  outline: none;
-}
-
-.jd-action-btn.fav-active {
-  border-color: #e74c3c;
-  background: #fff5f5;
-}
-  
+        .jd-action-btns {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+        .jd-action-btn {
+          width: 34px;
+          height: 34px;
+          padding: 0;
+          border-radius: 50%;
+          border: 1.5px solid #e0e0e0;
+          background: #fff;
+          color: #555;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          appearance: none;
+          -webkit-appearance: none;
+          transition:
+            background 0.2s ease,
+            border-color 0.2s ease,
+            transform 0.15s ease;
+        }
+        .jd-action-btn:hover {
+          background: #f5f5f5;
+          border-color: #ccc;
+          transform: scale(1.08);
+        }
+        .jd-action-btn:focus { outline: none; }
+        .jd-action-btn.fav-active {
+          border-color: #e74c3c;
+          background: #fff5f5;
+        }
         .jd-salary { font-size: 22px; font-weight: 900; color: #1a1a1a; margin: 6px 0 2px; }
         .jd-meta-row {
           display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
@@ -427,52 +401,6 @@ export default function JobDetailPage() {
           align-self: start;
         }
 
-        /* COMPANY CARD */
-        .jd-company-card {
-          background: #fff; border-radius: 16px;
-          padding: 20px 18px; box-shadow: 0 2px 14px rgba(0,0,0,0.08);
-        }
-        .jd-company-card-title {
-          font-size: 14px; font-weight: 800; color: #1a1a1a;
-          margin: 0 0 14px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;
-        }
-        .jd-company-logo {
-          width: 56px; height: 56px; border-radius: 12px;
-          background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-          border: 1.5px solid #a5b4fc; flex-shrink: 0;
-          display: flex; align-items: center; justify-content: center;
-        }
-        .jd-company-logo-text {
-          font-size: 11px; font-weight: 800; color: #4f46e5;
-          text-align: center; line-height: 1.2; letter-spacing: 0.5px;
-        }
-        .jd-company-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-        .jd-company-name { font-size: 16px; font-weight: 800; color: #1a1a1a; margin: 0 0 4px; }
-        .jd-rating-row { display: flex; align-items: center; gap: 5px; }
-        .jd-rating-num { font-size: 13px; font-weight: 700; color: #1a1a1a; }
-        .jd-reviews { font-size: 11.5px; color: #888; }
-
-        .jd-company-info { border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; margin-bottom: 14px; }
-        .jd-ci-row {
-          display: flex; align-items: flex-start; justify-content: space-between;
-          padding: 9px 0; border-bottom: 1px solid #f8f8f8;
-          font-size: 12.5px; gap: 6px;
-        }
-        .jd-ci-row:last-child { border-bottom: none; }
-        .jd-ci-label { color: #777; font-weight: 500; flex-shrink: 0; }
-        .jd-ci-val { color: #1a1a1a; font-weight: 600; text-align: right; word-break: break-word; }
-        .jd-ci-val a { color: #1a5fd4; text-decoration: none; }
-        .jd-ci-val a:hover { text-decoration: underline; }
-
-        .jd-btn-profile {
-          width: 100%; padding: 11px;
-          background: #fff; color: #1a5fd4; font-size: 13.5px; font-weight: 700;
-          border: 1.5px solid #1a5fd4; border-radius: 10px; cursor: pointer;
-          font-family: inherit; transition: background 0.18s;
-          display: flex; align-items: center; justify-content: center; gap: 6px;
-        }
-        .jd-btn-profile:hover { background: #eef2ff; }
-
         /* MAP CARD */
         .jd-map-card {
           background: #fff; border-radius: 16px;
@@ -492,43 +420,23 @@ export default function JobDetailPage() {
         .jd-map-link:hover { opacity: 0.75; }
         .jd-map-unavailable { padding: 16px 18px; font-size: 13px; color: #888; }
 
-        /* POSTED BY CARD */
-        .jd-postedby-card {
-          background: #fff; border-radius: 16px;
-          padding: 18px; box-shadow: 0 2px 14px rgba(0,0,0,0.08);
+        /* ── SELLER / COMPANY CARD (from Trade page) ── */
+        .cd-seller-card { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border: 1px solid #e8e8e8; overflow: hidden; }
+        .cd-company-card { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border: 1px solid #e8e8e8; }
+        .cd-company-card-title { font-size: 13px; font-weight: 800; color: #1a1a1a; margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
+        .cd-company-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .cd-company-logo { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 1px solid #eee; background: #f8f8f8; flex-shrink: 0; display: block; }
+        .cd-company-name { font-size: 15px; font-weight: 800; color: #1a1a1a; margin: 0 0 3px; }
+        .cd-company-rating { display: flex; align-items: center; gap: 5px; }
+        .cd-company-rnum { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+        .cd-company-rcount { font-size: 11.5px; color: #888; }
+        .cd-ci-row {
+          display: flex; align-items: flex-start; justify-content: space-between;
+          padding: 7px 0; border-bottom: 1px solid #f8f8f8; font-size: 12px; gap: 8px;
         }
-        .jd-postedby-title {
-          font-size: 14px; font-weight: 800; color: #1a1a1a;
-          margin: 0 0 14px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;
-        }
-        .jd-poster-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .jd-poster-avatar-wrap { position: relative; flex-shrink: 0; }
-        .jd-poster-avatar {
-          width: 52px; height: 52px; border-radius: 50%;
-          background: #eef2ff; border: 2.5px solid #fff;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.14);
-          display: flex; align-items: center; justify-content: center;
-        }
-        .jd-poster-online {
-          position: absolute; bottom: 2px; right: 2px;
-          width: 11px; height: 11px; border-radius: 50%;
-          background: #27ae60; border: 2px solid #fff;
-        }
-        .jd-poster-name { font-size: 15px; font-weight: 800; color: #1a1a1a; margin: 0 0 3px; }
-        .jd-poster-badge {
-          display: inline-flex; align-items: center; gap: 4px;
-          background: #eafaf1; color: #1e8449; font-size: 10.5px; font-weight: 700;
-          padding: 2px 8px; border-radius: 20px; border: 1px solid #a9dfbf;
-        }
-        .jd-btn-msg {
-          width: 100%; padding: 11px;
-          background: #fff; color: #555; font-size: 13.5px; font-weight: 700;
-          border: 1.5px solid #e0e0e0; border-radius: 10px; cursor: pointer;
-          font-family: inherit; transition: background 0.18s, border-color 0.18s;
-          display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 2px;
-        }
-        .jd-btn-msg:hover { background: #f5f5f5; border-color: #ccc; }
-        .jd-btn-msg.sent { background: #eafaf1; border-color: #a9dfbf; color: #1e8449; }
+        .cd-ci-row:last-child { border-bottom: none; }
+        .cd-ci-label { color: #888; font-weight: 500; flex-shrink: 0; }
+        .cd-ci-val { color: #1a1a1a; font-weight: 600; text-align: right; word-break: break-all; }
 
         /* RESPONSIVE */
         @media (max-width: 900px) {
@@ -567,9 +475,12 @@ export default function JobDetailPage() {
             </nav>
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
               <span className="jd-job-id">Job ID: {job.jobId}</span>
-              <a href="#" className="jd-report">
+              <span
+                className="jd-report"
+                onClick={() => toast.info("Report feature coming soon")}
+              >
                 Report This Job
-              </a>
+              </span>
             </div>
           </div>
         </div>
@@ -613,7 +524,6 @@ export default function JobDetailPage() {
 
                 <p className="jd-salary">{job.salary}</p>
 
-                {/* CTA + SPECS  */}
                 <div
                   style={{
                     display: "flex",
@@ -735,52 +645,14 @@ export default function JobDetailPage() {
                 )}
               </div>
 
-              {/* POSTED BY CARD */}
-              <div className="jd-postedby-card">
-                <p className="jd-postedby-title">Posted By</p>
-                <div className="jd-poster-top">
-                  <div className="jd-poster-avatar-wrap">
-                    <div className="jd-poster-avatar">
-                      <FiUser size={22} color="#1a5fd4" />
-                    </div>
-                    <span className="jd-poster-online" />
-                  </div>
-                  <div>
-                    <p className="jd-poster-name">{job.postedBy.name}</p>
-                    <div
-                      className="jd-rating-row"
-                      style={{ marginBottom: "5px" }}
-                    >
-                      <span className="jd-rating-num">
-                        {job.postedBy.rating}
-                      </span>
-                      <StarRating rating={job.postedBy.rating} />
-                      <span className="jd-reviews">
-                        ({job.postedBy.reviewCount} Reviews)
-                      </span>
-                    </div>
-                    {job.postedBy.isVerified && (
-                      <span className="jd-poster-badge">
-                        <FiCheck size={9} color="#1e8449" />
-                        Verified employer
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <button
-                  className={`jd-btn-msg${msgSent ? " sent" : ""}`}
-                  onClick={() => setMsgSent(!msgSent)}
-                >
-                  {msgSent ? (
-                    <>
-                      <FiCheck size={14} color="#1e8449" /> Message Sent!
-                    </>
-                  ) : (
-                    <>
-                      <FiMessageSquare size={14} color="#555" /> Send Message
-                    </>
-                  )}
-                </button>
+              {/* SELLER CARD */}
+              <div className="cd-seller-card">
+                <SellerCard
+                  seller={sellerForCard}
+                  reviews={(job as any).reviews ?? []}
+                  listingId={job.id}
+                  sellerId={(job.postedBy as any)?.id || job.id}
+                />
               </div>
             </div>
           </div>

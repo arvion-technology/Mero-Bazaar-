@@ -24,6 +24,7 @@ import SellerCard from "@/components/SellerCard";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 const DEFAULT_LAT = 27.7172;
 const DEFAULT_LNG = 85.324;
 
@@ -60,6 +61,7 @@ export default function TradeDetailPage() {
   const [copied, setCopied] = useState(false);
   const { data: session } = useSession();
   const [favLoading, setFavLoading] = useState(false);
+
   useEffect(() => {
     if (!session?.accessToken || !id) return;
 
@@ -76,10 +78,6 @@ export default function TradeDetailPage() {
       })
       .catch(() => {});
   }, [id, session?.accessToken]);
-  // const [leadMessage, setLeadMessage] = useState("");
-  // const [leadPhone, setLeadPhone] = useState("");
-  // const [sendingLead, setSendingLead] = useState(false);
-  // const [leadSent, setLeadSent] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -134,42 +132,6 @@ export default function TradeDetailPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // const handleSendLead = async () => {
-  //   if (!listing || !leadMessage.trim()) return;
-  //   setSendingLead(true);
-  //   try {
-  //     await api.createTradeLead(listing.id, { message: leadMessage, phone: leadPhone || undefined });
-  //     setLeadSent(true);
-  //     setLeadMessage("");
-  //     setLeadPhone("");
-  //   } catch {
-  //     alert("Couldn't send your request. Please try again.");
-  //   } finally {
-  //     setSendingLead(false);
-  //   }
-  // };
-
-  if (loading) {
-    return (
-      <div style={{ padding: 60, textAlign: "center", color: "#888" }}>
-        Loading listing…
-      </div>
-    );
-  }
-
-  if (error || !listing) {
-    return (
-      <div style={{ padding: 60, textAlign: "center", color: "#888" }}>
-        <p style={{ fontWeight: 600, color: "#555" }}>
-          Couldn&apos;t load this listing
-        </p>
-        <span>{error ?? "Listing not found"}</span>
-      </div>
-    );
-  }
-
-  const lat = listing.latitude ?? DEFAULT_LAT;
-  const lng = listing.longitude ?? DEFAULT_LNG;
   const handleToggleFavorite = async () => {
     if (!session?.accessToken) {
       toast.error("Please log in to save listings");
@@ -215,6 +177,28 @@ export default function TradeDetailPage() {
       setFavLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div style={{ padding: 60, textAlign: "center", color: "#888" }}>
+        Loading listing…
+      </div>
+    );
+  }
+
+  if (error || !listing) {
+    return (
+      <div style={{ padding: 60, textAlign: "center", color: "#888" }}>
+        <p style={{ fontWeight: 600, color: "#555" }}>
+          Couldn&apos;t load this listing
+        </p>
+        <span>{error ?? "Listing not found"}</span>
+      </div>
+    );
+  }
+
+  const lat = listing.latitude ?? DEFAULT_LAT;
+  const lng = listing.longitude ?? DEFAULT_LNG;
 
   return (
     <>
@@ -268,7 +252,6 @@ export default function TradeDetailPage() {
         .cd-action-btn, .cd-share-btn { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #e0e0e0; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s, border-color 0.2s, transform 0.2s; }
         .cd-action-btn:hover { background: #f5f5f5; border-color: #ccc; transform: scale(1.1); }
         .cd-action-btn.fav-active { border-color: #e74c3c; background: #fff5f5; }
-       
 
         .cd-badge-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; }
         .cd-badge-verified {
@@ -441,227 +424,197 @@ export default function TradeDetailPage() {
           </div>
         </div>
 
-        <div className="cd-wrap">
-          <div className="cd-left">
-            <div className="cd-info-card">
-              <div className="cd-title-row">
-                <h1 className="cd-title">{listing.title}</h1>
-                <div className="cd-title-actions">
-                  <div className="cd-badge-row">
-                    {listing.isVerified && (
-                      <span className="cd-badge-verified">
-                        <FiCheckCircle
-                          size={9}
-                          color="#1a7a43"
-                          style={{ marginRight: 3 }}
-                        />
-                        Verified
-                      </span>
-                    )}
-                    {listing.warrantyGiven && (
-                      <span className="cd-badge-warranty">
-                        <FiShield
-                          size={9}
-                          color="#1d4ed8"
-                          style={{ marginRight: 3 }}
-                        />
-                        Warranty
-                      </span>
-                    )}
-                    {listing.emergencyAvailable && (
-                      <span className="cd-badge-emergency">
-                        <FiZap
-                          size={9}
-                          color="#b07000"
-                          style={{ marginRight: 3 }}
-                        />
-                        Emergency
-                      </span>
-                    )}
+        <main className="cd-main">
+          <div className="cd-wrap">
+            <div className="cd-left">
+              <div className="cd-info-card">
+                <div className="cd-title-row">
+                  <h1 className="cd-title">{listing.title}</h1>
+                  <div className="cd-title-actions">
+                    <div className="cd-badge-row">
+                      {listing.isVerified && (
+                        <span className="cd-badge-verified">
+                          <FiCheckCircle
+                            size={9}
+                            color="#1a7a43"
+                            style={{ marginRight: 3 }}
+                          />
+                          Verified
+                        </span>
+                      )}
+                      {listing.warrantyGiven && (
+                        <span className="cd-badge-warranty">
+                          <FiShield
+                            size={9}
+                            color="#1d4ed8"
+                            style={{ marginRight: 3 }}
+                          />
+                          Warranty
+                        </span>
+                      )}
+                      {listing.emergencyAvailable && (
+                        <span className="cd-badge-emergency">
+                          <FiZap
+                            size={9}
+                            color="#b07000"
+                            style={{ marginRight: 3 }}
+                          />
+                          Emergency
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="cd-price">{listing.calloutCharge}</div>
+                <div className="cd-price">{listing.calloutCharge}</div>
 
-              <div className="cd-meta-row">
-                <span className="cd-meta-item">
-                  <FiMapPin size={11} color="#888" style={{ marginRight: 3 }} />
-                  {listing.location}
-                </span>
-                <span className="cd-meta-item">
-                  <FiClock size={12} color="#bbb" style={{ marginRight: 3 }} />
-                  Posted {listing.postedDaysAgo} day
-                  {listing.postedDaysAgo !== 1 ? "s" : ""} ago
-                </span>
-                <button
-                  className="cd-share-btn"
-                  onClick={() => {
-                    if (navigator.share)
-                      navigator.share({
-                        title: listing.title,
-                        url: window.location.href,
-                      });
-                  }}
-                >
-                  <FiShare2 size={16} />
-                </button>
-                <button
-                  className={`cd-action-btn${isFav ? " fav-active" : ""}`}
-                  aria-label="Save to wishlist"
-                  onClick={handleToggleFavorite}
-                  disabled={favLoading}
-                >
-                  {isFav ? (
-                    <FaHeart size={14} color="#e74c3c" />
-                  ) : (
-                    <FiHeart size={14} color="#888" />
-                  )}
-                </button>
-              </div>
-
-              <div className="cd-chips-row">
-                <div className="cd-chip">
-                  <div className="cd-chip-icon">
-                    <FiTool size={14} color="#b45309" />
-                  </div>
-                  <span className="cd-chip-val">
-                    {listing.serviceAreaKm} km
+                <div className="cd-meta-row">
+                  <span className="cd-meta-item">
+                    <FiMapPin size={11} color="#888" style={{ marginRight: 3 }} />
+                    {listing.location}
                   </span>
-                  <span className="cd-chip-label">Service Area</span>
-                </div>
-                <div className="cd-chip">
-                  <div className="cd-chip-icon">
-                    <FiClock size={14} color="#b45309" />
-                  </div>
-                  <span className="cd-chip-val">{listing.avgResponseTime}</span>
-                  <span className="cd-chip-label">Avg Response</span>
-                </div>
-                <div className="cd-chip">
-                  <div className="cd-chip-icon">
-                    <FiShield size={14} color="#b45309" />
-                  </div>
-                  <span className="cd-chip-val">
-                    {listing.warrantyGiven ? "Yes" : "No"}
+                  <span className="cd-meta-item">
+                    <FiClock size={12} color="#bbb" style={{ marginRight: 3 }} />
+                    Posted {listing.postedDaysAgo} day
+                    {listing.postedDaysAgo !== 1 ? "s" : ""} ago
                   </span>
-                  <span className="cd-chip-label">Warranty</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="cd-desc-card">
-              <h2 className="cd-sec-title">Description</h2>
-              <p className={`cd-desc-text${!showFull ? " clip" : ""}`}>
-                {listing.description}
-              </p>
-              {listing.description.length > 200 && (
-                <button
-                  className="cd-see-more"
-                  onClick={() => setShowFull((v) => !v)}
-                >
-                  {showFull ? "See Less" : "See More"}
-                </button>
-              )}
-            </div>
-
-            {listing.skillTags.length > 0 && (
-              <div className="cd-desc-card">
-                <h2 className="cd-sec-title">Skills & Services</h2>
-                <div className="cd-skills-row">
-                  {listing.skillTags.map((tag) => (
-                    <span key={tag} className="cd-skill-tag">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="cd-right">
-            <div className="cd-seller-card">
-              <SellerCard
-                seller={listing.seller}
-                reviews={listing.reviews}
-                listingId={listing.id}
-                sellerId={listing.sellerId}
-              />
-            </div>
-
-            {/* <div className="cd-lead-card">
-              <p className="cd-company-card-title" style={{ marginBottom: 10 }}>Request a Quote</p>
-              {leadSent ? (
-                <p style={{ fontSize: 13, color: "#0b8a6b", fontWeight: 600 }}>
-                  <FiCheckCircle size={14} style={{ marginRight: 4 }} />
-                  Your request has been sent.
-                </p>
-              ) : (
-                <>
-                  <textarea
-                    className="cd-lead-textarea"
-                    placeholder="Describe what you need help with…"
-                    value={leadMessage}
-                    onChange={(e) => setLeadMessage(e.target.value)}
-                  />
-                  <input
-                    className="cd-lead-input"
-                    placeholder="Your phone number (optional)"
-                    value={leadPhone}
-                    onChange={(e) => setLeadPhone(e.target.value)}
-                  />
                   <button
-                    className="cd-lead-submit"
-                    onClick={handleSendLead}
-                    disabled={sendingLead || !leadMessage.trim()}
+                    className="cd-share-btn"
+                    onClick={() => {
+                      if (navigator.share)
+                        navigator.share({
+                          title: listing.title,
+                          url: window.location.href,
+                        });
+                    }}
                   >
-                    <FiMessageSquare size={13} style={{ marginRight: 6 }} />
-                    {sendingLead ? "Sending…" : "Send Request"}
+                    <FiShare2 size={16} />
                   </button>
-                </>
-              )}
-            </div> */}
-          </div>
-        </div>
+                  <button
+                    className={`cd-action-btn${isFav ? " fav-active" : ""}`}
+                    aria-label="Save to wishlist"
+                    onClick={handleToggleFavorite}
+                    disabled={favLoading}
+                  >
+                    {isFav ? (
+                      <FaHeart size={14} color="#e74c3c" />
+                    ) : (
+                      <FiHeart size={14} color="#888" />
+                    )}
+                  </button>
+                </div>
 
-        {similar.length > 0 && (
-          <div className="cd-similar">
-            <div className="cd-similar-hdr">
-              <h2 className="cd-similar-title">Similar Trades</h2>
-              <Link
-                href="/category/trade-and-homerepair"
-                className="cd-similar-all"
-              >
-                View All
-                <FiChevronRight size={12} color="#C0392B" />
-              </Link>
-            </div>
-            <div className="cd-similar-row">
-              {similar.map((sim) => (
-                <Link
-                  key={sim.id}
-                  href={`/category/trade-and-homerepair/${sim.id}`}
-                  className="cd-sim-card"
-                >
-                  <div className="cd-sim-icon">
-                    <FiTool size={16} color="#b45309" />
+                <div className="cd-chips-row">
+                  <div className="cd-chip">
+                    <div className="cd-chip-icon">
+                      <FiTool size={14} color="#b45309" />
+                    </div>
+                    <span className="cd-chip-val">
+                      {listing.serviceAreaKm} km
+                    </span>
+                    <span className="cd-chip-label">Service Area</span>
                   </div>
-                  <p className="cd-sim-title">{sim.title}</p>
-                  <p className="cd-sim-loc">
-                    <FiMapPin
-                      size={8}
-                      color="#bbb"
-                      style={{ marginRight: 3 }}
-                    />
-                    {sim.location}
-                  </p>
-                </Link>
-              ))}
+                  <div className="cd-chip">
+                    <div className="cd-chip-icon">
+                      <FiClock size={14} color="#b45309" />
+                    </div>
+                    <span className="cd-chip-val">{listing.avgResponseTime}</span>
+                    <span className="cd-chip-label">Avg Response</span>
+                  </div>
+                  <div className="cd-chip">
+                    <div className="cd-chip-icon">
+                      <FiShield size={14} color="#b45309" />
+                    </div>
+                    <span className="cd-chip-val">
+                      {listing.warrantyGiven ? "Yes" : "No"}
+                    </span>
+                    <span className="cd-chip-label">Warranty</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="cd-desc-card">
+                <h2 className="cd-sec-title">Description</h2>
+                <p className={`cd-desc-text${!showFull ? " clip" : ""}`}>
+                  {listing.description}
+                </p>
+                {listing.description.length > 200 && (
+                  <button
+                    className="cd-see-more"
+                    onClick={() => setShowFull((v) => !v)}
+                  >
+                    {showFull ? "See Less" : "See More"}
+                  </button>
+                )}
+              </div>
+
+              {listing.skillTags.length > 0 && (
+                <div className="cd-desc-card">
+                  <h2 className="cd-sec-title">Skills & Services</h2>
+                  <div className="cd-skills-row">
+                    {listing.skillTags.map((tag) => (
+                      <span key={tag} className="cd-skill-tag">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="cd-right">
+              <div className="cd-seller-card">
+                <SellerCard
+                  seller={listing.seller}
+                  reviews={listing.reviews}
+                  listingId={listing.id}
+                  sellerId={listing.sellerId}
+                />
+              </div>
             </div>
           </div>
-        )}
-      </div>
-      <div className="cd-footer-wrap">
-        <Footer />
+
+          {similar.length > 0 && (
+            <div className="cd-similar">
+              <div className="cd-similar-hdr">
+                <h2 className="cd-similar-title">Similar Trades</h2>
+                <Link
+                  href="/category/trade-and-homerepair"
+                  className="cd-similar-all"
+                >
+                  View All
+                  <FiChevronRight size={12} color="#C0392B" />
+                </Link>
+              </div>
+              <div className="cd-similar-row">
+                {similar.map((sim) => (
+                  <Link
+                    key={sim.id}
+                    href={`/category/trade-and-homerepair/${sim.id}`}
+                    className="cd-sim-card"
+                  >
+                    <div className="cd-sim-icon">
+                      <FiTool size={16} color="#b45309" />
+                    </div>
+                    <p className="cd-sim-title">{sim.title}</p>
+                    <p className="cd-sim-loc">
+                      <FiMapPin
+                        size={8}
+                        color="#bbb"
+                        style={{ marginRight: 3 }}
+                      />
+                      {sim.location}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </main>
+
+        <div className="cd-footer-wrap">
+          <Footer />
+        </div>
       </div>
     </>
   );
