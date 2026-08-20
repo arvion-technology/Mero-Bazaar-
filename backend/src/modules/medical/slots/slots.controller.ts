@@ -13,7 +13,7 @@ export class MedicalSlotsController {
   create(@Body() dto: CreateMedicalSlotDto, @Request() req) {
     return this.slotsService.create(dto, req.user.id, req.user.role);
   }
-
+b
   @Get()
   findAll() {
     return this.slotsService.findAll();

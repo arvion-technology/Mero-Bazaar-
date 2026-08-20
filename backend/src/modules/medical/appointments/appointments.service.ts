@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateMedicalAppointmentDto } from './dto/create_medical_appointment.dto';
 import { AppointmentStatus } from '@prisma/client';
@@ -27,10 +27,17 @@ export class MedicalAppointmentsService {
       throw new BadRequestException('Slot does not belong to this medical service');
     }
 
-    if (slot.isBooked) throw new BadRequestException('Slot is already booked');
-
     return this.prisma.$transaction(async (tx) => {
-      const appointment = await tx.medicalAppointment.create({
+      const slotClaim = await tx.medicalSlot.updateMany({
+        where: { id: dto.slotId, isBooked: false },
+        data: { isBooked: true },
+      });
+
+      if (slotClaim.count === 0) {
+        throw new BadRequestException('Slot is already booked');
+      }
+
+      return tx.medicalAppointment.create({
         data: {
           medicalId: medical.id,
           slotId: dto.slotId,
@@ -43,13 +50,6 @@ export class MedicalAppointmentsService {
           status: AppointmentStatus.PENDING,
         },
       });
-
-      await tx.medicalSlot.update({
-        where: { id: dto.slotId },
-        data: { isBooked: true },
-      });
-
-      return appointment;
     });
   }
 
@@ -141,19 +141,23 @@ export class MedicalAppointmentsService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.medicalAppointment.update({
-        where: { id },
+      const result = await tx.medicalAppointment.updateMany({
+        where: { id, status: appointment.status },
         data: { status },
       });
 
+      if (result.count === 0) {
+        throw new ConflictException('Appointment status changed concurrently, please retry');
+      }
+
       if (status === AppointmentStatus.CANCELLED) {
-        await tx.medicalSlot.update({
-          where: { id: appointment.slotId },
+        await tx.medicalSlot.updateMany({
+          where: { id: appointment.slotId, isBooked: true },
           data: { isBooked: false },
         });
       }
 
-      return updated;
+      return tx.medicalAppointment.findUniqueOrThrow({ where: { id } });
     });
   }
 
@@ -161,21 +165,22 @@ export class MedicalAppointmentsService {
     const appointment = await this.findWithOwnerContext(appointmentId);
     this.assertCanAccess(appointment, userId, role);
 
-    if (appointment.status === AppointmentStatus.CANCELLED) {
-      throw new BadRequestException('Appointment is already cancelled');
-    }
-
     return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.medicalAppointment.update({
-        where: { id: appointmentId },
+      const result = await tx.medicalAppointment.updateMany({
+        where: { id: appointmentId, status: { not: AppointmentStatus.CANCELLED } },
         data: { status: AppointmentStatus.CANCELLED },
       });
 
-      await tx.medicalSlot.update({
-        where: { id: appointment.slotId },
+      if (result.count === 0) {
+        throw new BadRequestException('Appointment is already cancelled');
+      }
+
+      await tx.medicalSlot.updateMany({
+        where: { id: appointment.slotId, isBooked: true },
         data: { isBooked: false },
       });
-      return updated;
+
+      return tx.medicalAppointment.findUniqueOrThrow({ where: { id: appointmentId } });
     });
   }
 }

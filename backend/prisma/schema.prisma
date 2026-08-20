@@ -535,6 +535,7 @@ model MedicalSlot {
 
   @@index([medicalId])
   @@index([day])
+  @@unique([medicalId, day, startTime, endTime])
 }
 
 enum MedicalServiceType {
@@ -1014,6 +1015,7 @@ model BeautySlot {
 
   @@index([beautyId])
   @@index([day])
+  @@unique([beautyId, day, startTime, endTime])
 }
 
 enum BeautyServiceType {

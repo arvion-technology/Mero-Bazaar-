@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
-import { WeekDay } from '@prisma/client';
+import { Prisma, WeekDay } from '@prisma/client';
 import { UpdateMedicalSlotDto } from './dto/update_medical_slots.dto';
 import { CreateMedicalSlotDto } from './dto/create_medical_slots.dto';
 
@@ -67,14 +67,21 @@ export class MedicalSlotsService {
       throw new BadRequestException('Slot already exists for this day and time');
     }
 
-    return this.prisma.medicalSlot.create({
-      data: {
-        medicalId: medical.id,
-        day: dto.day as WeekDay,
-        startTime: dto.startTime,
-        endTime: dto.endTime,
-      },
-    });
+    try {
+      return await this.prisma.medicalSlot.create({
+        data: {
+          medicalId: medical.id,
+          day: dto.day as WeekDay,
+          startTime: dto.startTime,
+          endTime: dto.endTime,
+        },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new BadRequestException('Slot already exists for this day and time');
+      }
+      throw e;
+    }
   }
 
   async findAll() {
@@ -158,17 +165,21 @@ export class MedicalSlotsService {
     const slot = await this.findOneWithOwner(id);
     this.assertOwnerOrAdmin(slot.medical.listing.userId, userId, role);
 
-    if (slot.isBooked) {
-      throw new BadRequestException('Cannot update a booked slot');
-    }
+    return this.prisma.$transaction(async (tx) => {
+      const result = await tx.medicalSlot.updateMany({
+        where: { id, isBooked: false },
+        data: {
+          day: dto.day,
+          startTime: dto.startTime,
+          endTime: dto.endTime,
+        },
+      });
 
-    return this.prisma.medicalSlot.update({
-      where: { id },
-      data: {
-        day: dto.day,
-        startTime: dto.startTime,
-        endTime: dto.endTime,
-      },
+      if (result.count === 0) {
+        throw new BadRequestException('Cannot update a booked slot');
+      }
+
+      return tx.medicalSlot.findUniqueOrThrow({ where: { id } });
     });
   }
 
@@ -176,10 +187,14 @@ export class MedicalSlotsService {
     const slot = await this.findOneWithOwner(id);
     this.assertOwnerOrAdmin(slot.medical.listing.userId, userId, role);
 
-    if (slot.isBooked) {
+    const result = await this.prisma.medicalSlot.deleteMany({
+      where: { id, isBooked: false },
+    });
+
+    if (result.count === 0) {
       throw new BadRequestException('Cannot delete a booked slot');
     }
 
-    return this.prisma.medicalSlot.delete({ where: { id } });
+    return { id, deleted: true };
   }
 }
