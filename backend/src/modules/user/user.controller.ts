@@ -10,6 +10,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadedFile } from '@nestjs/common';
 import { profileUploadConfig } from './upload/profile_upload.config';
 import { ActivityLogService } from './activity_log.service';
+import { InternalAuthGuard } from '../auth/internal_auth.guard';
 
 @Controller('user')
 export class UserController {
@@ -18,6 +19,8 @@ export class UserController {
     private readonly activityLogService: ActivityLogService,
   ) {}
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Get()
   findAll() {
     return this.userService.findAll();
@@ -30,6 +33,7 @@ export class UserController {
     return { id: user.id, role: user.role };
   }
 
+  @UseGuards(InternalAuthGuard)
   @Post('oauth-sync')
   async oauthSync(@Body() dto: OAuthSyncDto) {
     return this.userService.findOrCreateOAuthUser(dto);
@@ -113,6 +117,8 @@ export class UserController {
     return this.userService.updateProfileImage(req.user.id, file);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);

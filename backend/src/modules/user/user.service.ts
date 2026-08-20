@@ -23,7 +23,17 @@ export class UserService {
 
   async findAll() {
     return this.prisma.user.findMany({
-      include: {
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        address: true,
+        role: true,
+        image: true,
+        isActive: true,
+        twoFactorEnabled: true,
+        createdAt: true,
         vendorProfile: true,
         doctorProfile: true,
       },
@@ -254,6 +264,11 @@ export class UserService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: { password: hash, passwordResetToken: null, passwordResetExpiry: null },
+    });
+    
+    await this.prisma.session.updateMany({
+      where: { userId: user.id, revokedAt: null },
+      data: { revokedAt: new Date() },
     });
 
     return { message: 'Password reset successfully' };
