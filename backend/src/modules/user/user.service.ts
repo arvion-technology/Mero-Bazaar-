@@ -265,6 +265,11 @@ export class UserService {
       where: { id: user.id },
       data: { password: hash, passwordResetToken: null, passwordResetExpiry: null },
     });
+    
+    await this.prisma.session.updateMany({
+      where: { userId: user.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
 
     return { message: 'Password reset successfully' };
   }
