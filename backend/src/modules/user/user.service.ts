@@ -23,7 +23,17 @@ export class UserService {
 
   async findAll() {
     return this.prisma.user.findMany({
-      include: {
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        address: true,
+        role: true,
+        image: true,
+        isActive: true,
+        twoFactorEnabled: true,
+        createdAt: true,
         vendorProfile: true,
         doctorProfile: true,
       },

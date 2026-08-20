@@ -19,6 +19,8 @@ export class UserController {
     private readonly activityLogService: ActivityLogService,
   ) {}
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Get()
   findAll() {
     return this.userService.findAll();
