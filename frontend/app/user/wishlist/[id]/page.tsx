@@ -619,7 +619,6 @@ export default function WishlistDetailPage() {
 
                   <SellerCard
                     seller={{
-                      ...product.seller,
                       name: product.seller?.name || "Seller",
                       avatar: product.seller?.avatar ?? product.seller?.image ?? "/default-avatar.png",
                       isPro: product.seller?.isPro ?? false,
