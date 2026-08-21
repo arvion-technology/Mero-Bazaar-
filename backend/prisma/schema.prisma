@@ -860,7 +860,7 @@ model Order {
   deliveryAddress String?
 
   reservedUntil   DateTime?
-  paymentRef      String?
+  paymentRef      String?  @unique
   cancelReason    String?
   paymentMethod   PaymentMethod?
 

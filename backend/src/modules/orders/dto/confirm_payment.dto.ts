@@ -1,11 +1,11 @@
-import { IsEnum, IsNotEmpty, IsString } from "class-validator";
+import { IsEnum, IsString, MinLength } from "class-validator";
 import { PaymentMethod } from "@prisma/client";
 
 export class ConfirmPaymentDto {
-  @IsString()
-  @IsNotEmpty()
-  paymentRef: string;
-
   @IsEnum(PaymentMethod)
   paymentMethod: PaymentMethod;
+
+  @IsString()
+  @MinLength(4)
+  providerTransactionId: string;
 }
