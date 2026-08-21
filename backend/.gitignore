@@ -88,3 +88,4 @@ frontend/pnpm-debug.log*
 
 #testing and fixing
 forge-test.js
+/backend/private-storage/
