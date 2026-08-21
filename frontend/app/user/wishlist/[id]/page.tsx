@@ -217,7 +217,7 @@ export default function WishlistDetailPage() {
     setError(null);
     setActiveImg(0); // reset image on new product
     try {
-      const res = await fetch(`${API_BASE}/api/listings/${id}`);
+      const res = await fetch(`${API_BASE}/api/listings/${id}`, { cache: "no-store" });
       if (!res.ok) {
         if (res.status === 404) {
           setProduct(null);
@@ -619,12 +619,12 @@ export default function WishlistDetailPage() {
 
                   <SellerCard
                     seller={{
-                      id: product.seller?.id,
+                      id: product.seller?.id ?? "",
                       name: product.seller?.name || "Seller",
                       avatar: product.seller?.avatar ?? product.seller?.image ?? "/default-avatar.png",
                       image: product.seller?.image ?? product.seller?.avatar ?? "/default-avatar.png",
-                      phone: product.seller?.phone,
-                      email: product.seller?.email,
+                      phone: product.seller?.phone ?? "",
+                      email: product.seller?.email ?? "",
                       isVerified: product.seller?.isVerified ?? false,
                       isPro: product.seller?.isPro ?? false,
                       isTrusted: product.seller?.isTrusted ?? false,
@@ -634,7 +634,7 @@ export default function WishlistDetailPage() {
                     }}
                     reviews={product.reviews ?? []}
                     listingId={product.id}
-                    sellerId={product.seller?.id}
+                    sellerId={product.seller?.id ?? ""}
                   />
                 </div>
               </div>
