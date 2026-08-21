@@ -122,8 +122,11 @@ export class AgricultureService {
 }
 
 
-  async update(id: string, dto: UpdateAgricultureDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateAgricultureDto, userId: string) {
+    const listing = await this.findOne(id);
+    if (listing.userId !== userId) {
+      throw new ForbiddenException('You do not own this listing.');
+    }
 
     return this.prisma.listing.update({
       where: { id },
@@ -162,8 +165,11 @@ export class AgricultureService {
     });
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, userId: string) {
+    const listing = await this.findOne(id);
+    if (listing.userId !== userId) {
+      throw new ForbiddenException('You do not own this listing.');
+    }
 
     return this.prisma.listing.delete({
       where: { id },

@@ -31,9 +31,9 @@ export class VendorKycService {
     await this.fileValidationService.assertRealType(file.path);
 
     const finalName = `${crypto.randomBytes(16).toString('hex')}.jpg`;
-    const finalPath = path.join('./uploads/kyc-verified', finalName);
+    const finalPath = path.join('./private-storage/kyc-verified', finalName);
 
-    await fs.mkdir('./uploads/kyc-verified', { recursive: true });
+    await fs.mkdir('./private-storage/kyc-verified', { recursive: true });
     await this.fileSanitizeService.sanitizeImage(file.path, finalPath);
     return finalName;
   }
@@ -298,7 +298,7 @@ export class VendorKycService {
 
   async streamDocument(filename: string, res: Response) {
     const safeName = path.basename(filename); 
-    const filePath = path.join(process.cwd(), 'uploads', 'kyc-verified', safeName);
+    const filePath = path.join(process.cwd(), 'private-storage', 'kyc-verified', safeName);
 
     console.log("filename:", filename);
     console.log("filePath:", filePath);

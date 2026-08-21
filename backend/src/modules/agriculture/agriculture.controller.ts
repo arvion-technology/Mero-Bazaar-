@@ -30,14 +30,14 @@ export class AgricultureController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateAgricultureDto) {
-    return this.service.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: UpdateAgricultureDto, @Request() req) {
+    return this.service.update(id, dto, req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  remove(@Param('id') id: string, @Request() req) {
+    return this.service.remove(id, req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
