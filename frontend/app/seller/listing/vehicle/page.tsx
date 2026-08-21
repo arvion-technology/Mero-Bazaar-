@@ -614,6 +614,14 @@ export default function NewListingPage() {
 
           <form onSubmit={handleSubmit} className="form-card">
             {/* Section: Basic Information */}
+             <div className="category-wrap">
+              <label className="category-label">Category</label>
+              <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
+                <FiTruck size={16} />
+                Vehicle
+                <FiChevronDown size={14} />
+              </button>
+            </div>
             <div className="section-header">
               <div className="section-icon blue">
                 <FiFileText size={18} color="#fff" />
@@ -660,14 +668,7 @@ export default function NewListingPage() {
               </div>
             </div>
 
-            <div className="category-wrap">
-              <label className="category-label">Category</label>
-              <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
-                <FiTruck size={16} />
-                Vehicle
-                <FiChevronDown size={14} />
-              </button>
-            </div>
+           
 
             <div className="divider" />
 
