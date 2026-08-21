@@ -619,14 +619,18 @@ export default function WishlistDetailPage() {
 
                   <SellerCard
                     seller={{
-                      ...product.seller,
                       name: product.seller?.name || "Seller",
                       avatar: product.seller?.avatar ?? product.seller?.image ?? "/default-avatar.png",
+                      rating: product.seller?.rating ?? 0,
+                      reviewCount: product.reviews?.length ?? 0,
+                      isVerified: product.seller?.isVerified ?? false,
                       isPro: product.seller?.isPro ?? false,
                       isTrusted: product.seller?.isTrusted ?? false,
-                      rating: product.seller?.rating ?? 0,
+                      memberSince: product.seller?.memberSince ?? "",
+                      totalListing: product.seller?.totalListings ?? 0,
                       responseRate: product.seller?.responseRate ?? "N/A",
                       avgResponseTime: product.seller?.avgResponseTime ?? "N/A",
+                      phone: product.seller?.phone ?? "",
                     }}
                     reviews={(product.reviews ?? []) as any}
                     listingId={product.id}
