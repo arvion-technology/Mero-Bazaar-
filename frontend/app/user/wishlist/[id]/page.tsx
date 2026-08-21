@@ -237,7 +237,7 @@ export default function WishlistDetailPage() {
         data.images = ["/placeholder.png"];
       }
 
-      /* Normalize seller */
+     
       const rawSeller = data.seller ?? data.user ?? data.owner ?? {};
       data.seller = {
         id: rawSeller.id ?? rawSeller._id ?? data.sellerId ?? undefined,
@@ -297,7 +297,7 @@ export default function WishlistDetailPage() {
     fetchProduct();
   }, [fetchProduct]);
 
-  /* ─── WISHLIST CHECK ─── */
+
   useEffect(() => {
     if (!session?.accessToken || !id) return;
     fetch(`${API_BASE}/api/wishlist/check/${id}`, {
@@ -381,7 +381,6 @@ export default function WishlistDetailPage() {
     }
   };
 
-  /* ─── DYNAMIC SPECS (exactly like your original detail page) ─── */
   const dynamicSpecs: Record<string, string> = {};
   const specFields = [
     "brand", "model", "year", "mileage", "color", "warranty", "delivery",
@@ -619,6 +618,7 @@ export default function WishlistDetailPage() {
 
                   <SellerCard
                     seller={{
+                      ...product.seller,
                       name: product.seller?.name || "Seller",
                       avatar: product.seller?.avatar ?? product.seller?.image ?? "/default-avatar.png",
                       isPro: product.seller?.isPro ?? false,
