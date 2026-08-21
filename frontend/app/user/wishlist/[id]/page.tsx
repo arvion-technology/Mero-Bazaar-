@@ -634,7 +634,7 @@ export default function WishlistDetailPage() {
                     }}
                     reviews={(product.reviews ?? []) as any}
                     listingId={product.id}
-                    sellerId={product.seller?.id}
+                    sellerId={product.seller?.id ?? ""}
                   />
                 </div>
               </div>
