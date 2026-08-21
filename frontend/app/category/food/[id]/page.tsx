@@ -362,10 +362,10 @@ export default function FoodDetailPage() {
         .fd-thumb:hover { opacity: 0.85; transform: translateY(-1px); }
         .fd-thumb.active { border-color: #16a34a; }
 
-        .fd-right { display: flex; flex-direction: column; gap: 16px; }
+  .fd-right { display: flex; flex-direction: column; gap: 16px; justify-content: flex-end;}
         .fd-panel {
           background: #fff; border-radius: 12px; border: 1px solid #e5e7eb;
-          padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+          padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-top:20px;
         }
 
         .fd-name { font-size: 22px; font-weight: 900; color: #111; margin: 0 0 6px; }
@@ -557,113 +557,113 @@ export default function FoodDetailPage() {
                   </div>
                 )}
               </div>
+              <div className="fd-right">
+                <div className="fd-panel">
+                  <div className="jd-title-row">
+                    <h1 className="jd-title">{item.title}</h1>
+                  </div>
+                  <p className="fd-cuisine">
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                      }}
+                    >
+                      <FaUtensils size={11} color="#9ca3af" />
+                      {item.foodType} · {item.priceUnit}
+                    </span>
+                  </p>
+                  <p className="fd-price">{item.price}</p>
+                  <div className="fd-price-divider" />
+                  {item.description && (
+                    <p className="fd-desc">{item.description}</p>
+                  )}
+                  <div className="fd-details-grid">
+                    <div className="fd-detail-item">
+                      <p className="fd-detail-label">Negotiable</p>
+                      <p className="fd-detail-val">
+                        {item.negotiable ? "Yes" : "No"}
+                      </p>
+                    </div>
+                    <div className="fd-detail-item">
+                      <p className="fd-detail-label">Price Unit</p>
+                      <p className="fd-detail-val">{item.priceUnit}</p>
+                    </div>
+                    <div className="fd-detail-item">
+                      <p className="fd-detail-label">Posted</p>
+                      <p className="fd-detail-val">
+                        {item.postedDaysAgo === 0
+                          ? "Today"
+                          : `${item.postedDaysAgo} day${item.postedDaysAgo > 1 ? "s" : ""} ago`}
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className={`fd-avail ${item.status === "ACTIVE" ? "active" : "inactive"}`}
+                  >
+                    {item.status === "ACTIVE" && (
+                      <span className="fd-avail-dot" />
+                    )}
+                    {STATUS_LABEL[item.status]}
+                  </div>
+                  {/* ── ORDER NOW → ADD TO CART & GO ── */}
+                  <div className="fd-actions">
+                    <button className="fd-btn-order" onClick={handleOrderNow}>
+                      <FiMessageSquare size={16} /> Order Now
+                    </button>
+                    <button
+                      className="fd-btn-share"
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: item.title,
+                            url: window.location.href,
+                          });
+                        }
+                      }}
+                    >
+                      <FiShare2 size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                {item.latitude != null && item.longitude != null && (
+                  <Link
+                    href={item.googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 12.5,
+                      color: "#16a34a",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                    }}
+                  >
+                    <FiMapPin size={14} /> View on Google Maps
+                  </Link>
+                )}
+              </div>
             </div>
 
             {/* ── RIGHT: DETAILS ── */}
-            <div className="fd-right">
-              <div className="fd-panel">
-                <div className="jd-title-row">
-                  <h1 className="jd-title">{item.title}</h1>
-                </div>
-                <p className="fd-cuisine">
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 5,
-                    }}
-                  >
-                    <FaUtensils size={11} color="#9ca3af" />
-                    {item.foodType} · {item.priceUnit}
-                  </span>
-                </p>
-                <p className="fd-price">{item.price}</p>
-                <div className="fd-price-divider" />
-                {item.description && (
-                  <p className="fd-desc">{item.description}</p>
-                )}
-                <div className="fd-details-grid">
-                  <div className="fd-detail-item">
-                    <p className="fd-detail-label">Negotiable</p>
-                    <p className="fd-detail-val">
-                      {item.negotiable ? "Yes" : "No"}
-                    </p>
-                  </div>
-                  <div className="fd-detail-item">
-                    <p className="fd-detail-label">Price Unit</p>
-                    <p className="fd-detail-val">{item.priceUnit}</p>
-                  </div>
-                  <div className="fd-detail-item">
-                    <p className="fd-detail-label">Posted</p>
-                    <p className="fd-detail-val">
-                      {item.postedDaysAgo === 0
-                        ? "Today"
-                        : `${item.postedDaysAgo} day${item.postedDaysAgo > 1 ? "s" : ""} ago`}
-                    </p>
-                  </div>
-                </div>
-                <div
-                  className={`fd-avail ${item.status === "ACTIVE" ? "active" : "inactive"}`}
-                >
-                  {item.status === "ACTIVE" && (
-                    <span className="fd-avail-dot" />
-                  )}
-                  {STATUS_LABEL[item.status]}
-                </div>
-                {/* ── ORDER NOW → ADD TO CART & GO ── */}
-                <div className="fd-actions">
-                  <button className="fd-btn-order" onClick={handleOrderNow}>
-                    <FiMessageSquare size={16} /> Order Now
-                  </button>
-                  <button
-                    className="fd-btn-share"
-                    onClick={() => {
-                      if (navigator.share) {
-                        navigator.share({
-                          title: item.title,
-                          url: window.location.href,
-                        });
-                      }
-                    }}
-                  >
-                    <FiShare2 size={16} />
-                  </button>
-                </div>
-              </div>
 
-              {/* Seller Panel */}
-              <SellerCard
-                seller={item.seller}
-                reviews={item.reviews}
-                listingId={item.id}
-                sellerId={item.sellerId}
-              />
-
-              {item.latitude != null && item.longitude != null && (
-                <Link
-                  href={item.googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 12.5,
-                    color: "#16a34a",
-                    fontWeight: 700,
-                    textDecoration: "none",
-                  }}
-                >
-                  <FiMapPin size={14} /> View on Google Maps
-                </Link>
-              )}
-            </div>
+            {/* Seller Panel */}
+            <SellerCard
+              seller={item.seller}
+              reviews={item.reviews}
+              listingId={item.id}
+              sellerId={item.sellerId}
+            />
           </div>
 
           {/* ── RELATED LISTINGS ── */}
           {related.length > 0 && (
             <div className="fd-related">
-              <p className="fd-related-title">
+              <p className="fd-related-title"> 
                 Similar {item.foodType} Listings
               </p>
               <div className="fd-related-grid">

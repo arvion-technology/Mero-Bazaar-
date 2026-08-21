@@ -578,15 +578,15 @@ export default function TradeDetailPage() {
             )}
           </div>
 
-          <div className="cd-right">
+          {/* <div className="cd-right"> */}
             <div className="cd-seller-card">
               <SellerCard
                 seller={listing.seller}
                 reviews={listing.reviews}
-                listingId={listing.id}
+                listingId={listing.id} 
                 sellerId={listing.sellerId}
               />
-            </div>
+            {/* </div> */}
 
             {/* <div className="cd-lead-card">
               <p className="cd-company-card-title" style={{ marginBottom: 10 }}>Request a Quote</p>
