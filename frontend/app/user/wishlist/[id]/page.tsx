@@ -1,4 +1,4 @@
-"use client";
+\"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
@@ -237,7 +237,7 @@ export default function WishlistDetailPage() {
         data.images = ["/placeholder.png"];
       }
 
-     
+      /* Normalize seller */
       const rawSeller = data.seller ?? data.user ?? data.owner ?? {};
       data.seller = {
         id: rawSeller.id ?? rawSeller._id ?? data.sellerId ?? undefined,
@@ -297,7 +297,7 @@ export default function WishlistDetailPage() {
     fetchProduct();
   }, [fetchProduct]);
 
-
+  /* ─── WISHLIST CHECK ─── */
   useEffect(() => {
     if (!session?.accessToken || !id) return;
     fetch(`${API_BASE}/api/wishlist/check/${id}`, {
@@ -381,6 +381,7 @@ export default function WishlistDetailPage() {
     }
   };
 
+  /* ─── DYNAMIC SPECS (exactly like your original detail page) ─── */
   const dynamicSpecs: Record<string, string> = {};
   const specFields = [
     "brand", "model", "year", "mileage", "color", "warranty", "delivery",
@@ -618,7 +619,6 @@ export default function WishlistDetailPage() {
 
                   <SellerCard
                     seller={{
-                      ...product.seller,
                       name: product.seller?.name || "Seller",
                       avatar: product.seller?.avatar ?? product.seller?.image ?? "/default-avatar.png",
                       isPro: product.seller?.isPro ?? false,
@@ -626,7 +626,7 @@ export default function WishlistDetailPage() {
                       rating: product.seller?.rating ?? 0,
                       responseRate: product.seller?.responseRate ?? "N/A",
                       avgResponseTime: product.seller?.avgResponseTime ?? "N/A",
-                    }}
+                    } as any}
                     reviews={product.reviews ?? []}
                     listingId={product.id}
                     sellerId={product.seller?.id}
