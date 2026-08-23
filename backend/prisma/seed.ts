@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { PrismaClient, ListingCategory, VehicleType, VehicleCondition, BluebookStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
