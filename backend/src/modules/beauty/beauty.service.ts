@@ -53,7 +53,18 @@ export class HairBeautyAndWellnessService {
       where: { category: ListingCategory.BEAUTY },
       include: {
         beauty: true,
-        user: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            isVerified: true,
+            phone: true,
+            createdAt: true,
+            vendorProfile: {
+              select: { businessName: true, rating: true },
+            },
+          },
+        },
         reviews: true,
       },
       orderBy: { createdAt: 'desc' },
@@ -65,7 +76,18 @@ export class HairBeautyAndWellnessService {
     where: { id },
     include: {
       beauty: true,
-      user: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          isVerified: true,
+          phone: true,
+          createdAt: true,
+          vendorProfile: {
+            select: { businessName: true, rating: true },
+          },
+        },
+      },
       reviews: true,
     },
   });

@@ -64,7 +64,7 @@ prisma/migrations/dev
 docker-compose.override.yml
 
 #uploads
-backend/uploads
+uploads/
 
 # Frontend (IMPORTANT FIX)
 frontend/.next/
@@ -84,7 +84,8 @@ frontend/pnpm-debug.log*
 !frontend/.env.example
 
 # TypeScript build cache
-*.tsbuildinfo"uploads/" 
+*.tsbuildinfo
 
 #testing and fixing
 forge-test.js
+/private-storage/

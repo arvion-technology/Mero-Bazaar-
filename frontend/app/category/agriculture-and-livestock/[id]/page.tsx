@@ -324,12 +324,14 @@ export default function AgriDetailPage() {
           padding: 3px 9px; display: flex; align-items: center; gap: 4px;
         }
 
-        .ald-right { display: flex; flex-direction: column; gap: 16px; }
+  .ald-right { display: flex; flex-direction: column; gap: 16px; justify-content: flex-end;}
 
         .ald-panel {
           background: #fff; border-radius: 12px;
-          border: 1px solid #e5e7eb; padding: 20px;
+          border: 1px solid #e5e7eb; 
+          padding: 20px;
           box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+          margin-top: 20px;
         }
 
         .ald-title { font-size: 22px; font-weight: 900; color: #111; margin: 0 0 4px; }
@@ -564,9 +566,6 @@ export default function AgriDetailPage() {
                   Report suspicious listings to our support team
                 </div>
               </div>
-            </div>
-
-            <div className="ald-right">
               <div className="ald-panel">
                 <div className="jd-title-row">
                   <h1 className="jd-title">{detail.title}</h1>
@@ -641,6 +640,10 @@ export default function AgriDetailPage() {
                   </button>
                 </div>
               </div>
+            </div>
+
+              
+            <div className="ald-right">
 
               <SellerCard
                 seller={detail.seller}
