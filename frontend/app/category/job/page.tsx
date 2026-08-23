@@ -17,7 +17,11 @@ import {
 } from "react-icons/fi";
 import { FaHeart, FaBriefcase } from "react-icons/fa";
 import { JOB_TYPES, CITIES, SKILLS, JobCard } from "../../types/jobs";
+<<<<<<< HEAD
 import { toContractType, toJobCard, toTypeLabel } from "@/lib/adapter";
+=======
+import { toContractType, toJobCard } from "@/lib/adapter";
+>>>>>>> origin/aashika
 import { api } from "@/lib/api";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
@@ -42,6 +46,7 @@ export default function JobsPage() {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [jobs, setJobs] = useState<JobCard[]>([]);
   const [loading, setLoading] = useState(false);
+<<<<<<< HEAD
   // Bumped by the "Apply Filters" button to re-run the fetch explicitly.
   const [filterNonce, setFilterNonce] = useState(0);
   const { data: session } = useSession();
@@ -75,6 +80,12 @@ export default function JobsPage() {
     })();
   }, []);
 
+=======
+  const { data: session } = useSession();
+
+  const EXTRA_SKILLS_THRESHOLD = 2;
+
+>>>>>>> origin/aashika
   // Close sort dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -237,8 +248,18 @@ export default function JobsPage() {
           params.append("contractType", toContractType(t)),
         );
 
+<<<<<<< HEAD
         const data = await api.getJobs(params);
         const mapped = data.map(toJobCard);
+=======
+        console.log("Sending params:", params.toString());
+        const data = await api.getJobs(params);
+        const mapped = data.map(toJobCard);
+        console.log(
+          "Job IDs:",
+          mapped.map((j) => j.id),
+        );
+>>>>>>> origin/aashika
         setJobs(mapped);
       } catch (err) {
         console.error(err);
@@ -248,7 +269,11 @@ export default function JobsPage() {
     };
 
     fetchJobs();
+<<<<<<< HEAD
   }, [debouncedSearch, city, skill, minSalary, selectedTypes, filterNonce]);
+=======
+  }, [debouncedSearch, city, skill, minSalary, selectedTypes]);
+>>>>>>> origin/aashika
 
   // Parse salary string like "NPR 30,000 - 50,000/month" or "NPR 20,000/month"
   const parseSalaryNum = (salaryStr: string): number => {
@@ -483,7 +508,11 @@ export default function JobsPage() {
               <div className="jsb-section">
                 <p className="jsb-title">Job Type</p>
                 <div className="jsb-rows">
+<<<<<<< HEAD
                   {jobTypes.map((t) => (
+=======
+                  {JOB_TYPES.map((t) => (
+>>>>>>> origin/aashika
                     <label
                       key={t}
                       className={`jsb-row${selectedTypes.includes(t) ? " checked" : ""}`}
@@ -506,7 +535,11 @@ export default function JobsPage() {
                   onChange={(e) => setCity(e.target.value)}
                 >
                   <option value="">Select city</option>
+<<<<<<< HEAD
                   {cities.map((c) => (
+=======
+                  {CITIES.map((c) => (
+>>>>>>> origin/aashika
                     <option key={c} value={c}>
                       {c}
                     </option>
@@ -521,7 +554,11 @@ export default function JobsPage() {
                   onChange={(e) => setSkill(e.target.value)}
                 >
                   <option value="">Select skill</option>
+<<<<<<< HEAD
                   {skills.map((s) => (
+=======
+                  {SKILLS.map((s) => (
+>>>>>>> origin/aashika
                     <option key={s} value={s}>
                       {s}
                     </option>
@@ -553,12 +590,16 @@ export default function JobsPage() {
                   </div>
                 </div>
               </div>
+<<<<<<< HEAD
               <button
                 className="jsb-apply"
                 onClick={() => setFilterNonce((n) => n + 1)}
               >
                 Apply Filters
               </button>
+=======
+              <button className="jsb-apply">Apply Filters</button>
+>>>>>>> origin/aashika
             </aside>
 
             {/* RIGHT */}

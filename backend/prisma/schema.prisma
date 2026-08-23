@@ -144,7 +144,10 @@ enum OtpContext {
   PASSWORD_RESET
   LOGIN
   TWO_FA_SETUP
+<<<<<<< HEAD
   REAUTH
+=======
+>>>>>>> origin/aashika
 }
 
 model DoctorProfile {
@@ -461,6 +464,10 @@ model MedicalAndDental {
   nmcLicenseNumber String
 
   verificationStatus VerificationStatus @default(PENDING)
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/aashika
   appointmentFee     Int
   homeVisitAvailable Boolean @default(false)
   onlineAppointments Boolean @default(false)
@@ -485,7 +492,10 @@ model MedicalAndDental {
   verificationDocuments VerificationDocument[]
   medicalSlots          MedicalSlot[]
 
+<<<<<<< HEAD
   @@unique([nmcLicenseNumber])
+=======
+>>>>>>> origin/aashika
   @@index([city])
   @@index([homeVisitAvailable])
   @@index([verificationStatus])
@@ -838,7 +848,10 @@ model Review {
 
   reports   Report[]
 
+<<<<<<< HEAD
   @@unique([userId, listingId])
+=======
+>>>>>>> origin/aashika
   @@index(userId)
   @@index([listingId])
 }

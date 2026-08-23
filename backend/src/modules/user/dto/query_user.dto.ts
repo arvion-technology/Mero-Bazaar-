@@ -20,4 +20,8 @@ export class UserQueryDto {
   @Type(() => Boolean)
   @IsBoolean()
   isVerified?: boolean;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

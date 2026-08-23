@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { IsOptional, IsString, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
+=======
+import { IsOptional, IsString, IsInt, Min, Max } from "class-validator";
+import { Type } from "class-transformer";
+>>>>>>> origin/aashika
 
 export class QueryReviewDto {
   @IsOptional()
@@ -36,4 +41,8 @@ export class QueryReviewDto {
   @IsOptional()
   @IsString()
   search?: string;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

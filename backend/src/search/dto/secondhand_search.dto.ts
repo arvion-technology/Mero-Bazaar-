@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Type, Transform } from 'class-transformer';
 import {
   IsOptional,
@@ -12,6 +13,11 @@ import {
   SecondHandCondition,
   ListingStatus,
 } from '@prisma/client';
+=======
+import { Type, Transform } from "class-transformer";
+import { IsOptional, IsString, IsEnum, IsBoolean, IsInt, Min } from "class-validator";
+import { SecondHandCategory, SecondHandCondition, ListingStatus } from "@prisma/client";
+>>>>>>> origin/aashika
 
 export class SecondHandSearchDto {
   @IsOptional()
@@ -50,4 +56,8 @@ export class SecondHandSearchDto {
   @IsOptional()
   @IsEnum(ListingStatus)
   status?: ListingStatus;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

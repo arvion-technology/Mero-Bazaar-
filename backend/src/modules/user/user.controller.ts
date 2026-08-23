@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   Controller,
   Delete,
@@ -12,6 +13,9 @@ import {
   NotFoundException,
   UseInterceptors,
 } from '@nestjs/common';
+=======
+import { Controller, Delete, Param, Body, Post, Get, Patch, UseGuards, Request, Query, NotFoundException, UseInterceptors } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { UpdateUserDto } from './dto/update_user.dto';
 import { Roles } from '../auth/roles.decorator';
@@ -24,8 +28,11 @@ import { UploadedFile } from '@nestjs/common';
 import { profileUploadConfig } from './upload/profile_upload.config';
 import { ActivityLogService } from './activity_log.service';
 import { InternalAuthGuard } from '../auth/internal_auth.guard';
+<<<<<<< HEAD
 import { ForgotPasswordDto } from './dto/forgot_password.dto';
 import { ResetPasswordDto } from './dto/reset_password.dto';
+=======
+>>>>>>> origin/aashika
 
 @Controller('user')
 export class UserController {
@@ -41,7 +48,10 @@ export class UserController {
     return this.userService.findAll();
   }
 
+<<<<<<< HEAD
   @UseGuards(JwtAuthGuard)
+=======
+>>>>>>> origin/aashika
   @Get('by-email')
   async getUserByEmail(@Query('email') email: string) {
     const user = await this.userService.findByEmail(email);
@@ -56,6 +66,7 @@ export class UserController {
   }
 
   @Post('forgot-password')
+<<<<<<< HEAD
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.userService.forgotPassword(dto.email);
   }
@@ -63,12 +74,26 @@ export class UserController {
   @Post('reset-password')
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.userService.resetPassword(dto.token, dto.newPassword);
+=======
+  forgotPassword(@Body() body: { email: string }) {
+    return this.userService.forgotPassword(body.email);
+  }
+
+  @Post('reset-password')
+  resetPassword(@Body() body: { token: string; newPassword: string }) {
+    console.log('reset-password hit, body:', body);
+    return this.userService.resetPassword(body.token, body.newPassword);
+>>>>>>> origin/aashika
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile/activity')
   getActivityLog(@Request() req) {
+<<<<<<< HEAD
     return this.activityLogService.list(req.user.id);
+=======
+    return  this.activityLogService.list(req.user.id);
+>>>>>>> origin/aashika
   }
 
   @UseGuards(JwtAuthGuard)
@@ -86,15 +111,20 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Patch('profile/password')
   updatePassword(@Request() req, @Body() dto: UpdatePasswordDto) {
+<<<<<<< HEAD
     return this.userService.updatePassword(
       req.user.id,
       dto,
       req.user.sessionId,
     );
+=======
+    return this.userService.updatePassword(req.user.id, dto);
+>>>>>>> origin/aashika
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('profile/phone/request')
+<<<<<<< HEAD
   requestPhoneUpdate(
     @Request() req,
     @Body('phone') phone: string,
@@ -107,6 +137,10 @@ export class UserController {
       currentPassword,
       otp,
     );
+=======
+  requestPhoneUpdate(@Request() req, @Body('phone') phone: string) {
+    return this.userService.requestPhoneUpdate(req.user.id, phone);
+>>>>>>> origin/aashika
   }
 
   @UseGuards(JwtAuthGuard)
@@ -129,27 +163,38 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Post('2fa/disable')
+<<<<<<< HEAD
   disableTwoFactor(
     @Request() req,
     @Body('currentPassword') currentPassword?: string,
     @Body('otp') otp?: string,
   ) {
     return this.userService.disableTwoFactor(req.user.id, currentPassword, otp);
+=======
+  disableTwoFactor(@Request() req) {
+    return this.userService.disableTwoFactor(req.user.id);
+>>>>>>> origin/aashika
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('profile/me')
+<<<<<<< HEAD
   removeSelf(
     @Request() req,
     @Body('currentPassword') currentPassword?: string,
     @Body('otp') otp?: string,
   ) {
     return this.userService.removeSelf(req.user.id, currentPassword, otp);
+=======
+  removeSelf(@Request() req) {
+    return this.userService.remove(req.user.id);
+>>>>>>> origin/aashika
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('profile/photo')
   @UseInterceptors(FileInterceptor('image', profileUploadConfig))
+<<<<<<< HEAD
   async uploadProfilePhoto(
     @Request() req,
     @UploadedFile() file: Express.Multer.File,
@@ -164,6 +209,10 @@ export class UserController {
       }
       throw err;
     }
+=======
+  uploadProfilePhoto(@Request() req, @UploadedFile() file: Express.Multer.File) {
+    return this.userService.updateProfileImage(req.user.id, file);
+>>>>>>> origin/aashika
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -179,4 +228,8 @@ export class UserController {
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

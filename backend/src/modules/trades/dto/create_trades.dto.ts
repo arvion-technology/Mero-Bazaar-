@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   IsString,
   IsBoolean,
@@ -8,6 +9,10 @@ import {
   ArrayNotEmpty,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+=======
+import { IsString, IsBoolean, IsOptional, IsArray, IsNumber, IsInt, ArrayNotEmpty, IsString as IsStringItem } from "class-validator";
+import { Type } from "class-transformer";
+>>>>>>> origin/aashika
 
 export class CreateTradesDto {
   @IsString()
@@ -47,4 +52,8 @@ export class CreateTradesDto {
   @Type(() => Number)
   @IsNumber()
   longitude: number;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

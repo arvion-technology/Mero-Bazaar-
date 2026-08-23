@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 ﻿"use client";
 
 import { deleteAccountWithReauth } from "@/lib/accountActions";
+=======
+"use client";
+>>>>>>> origin/aashika
 
 import { useState, useRef, useEffect,useMemo } from "react";
 import Link from "next/link";
@@ -257,7 +261,11 @@ useEffect(() => {
     setDeleting(true);
     setDeleteError("");
     try {
+<<<<<<< HEAD
       const res = await deleteAccountWithReauth(token);
+=======
+      const res = await fetch("/api/user/delete-account", { method: "DELETE" });
+>>>>>>> origin/aashika
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
@@ -298,7 +306,11 @@ useEffect(() => {
           font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Sidebar â”€â”€ */
+=======
+        /* ── Sidebar ── */
+>>>>>>> origin/aashika
         .ud-sidebar {
           width: 260px;
           background: #ffffff;
@@ -459,7 +471,11 @@ useEffect(() => {
           overflow: hidden;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Main Area â”€â”€ */
+=======
+        /* ── Main Area ── */
+>>>>>>> origin/aashika
         .ud-main-area {
           flex: 1;
           margin-left: 260px;
@@ -477,7 +493,11 @@ useEffect(() => {
           width: calc(100% - 72px);
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Top Header â”€â”€ */
+=======
+        /* ── Top Header ── */
+>>>>>>> origin/aashika
         .ud-topbar {
           background: #fff;
           border-bottom: 1px solid #e2e8f0;
@@ -578,7 +598,11 @@ useEffect(() => {
           border: 2px solid #fff;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Profile Avatar Dropdown â”€â”€ */
+=======
+        /* ── Profile Avatar Dropdown ── */
+>>>>>>> origin/aashika
         .ud-profile-wrap {
           position: relative;
         }
@@ -713,7 +737,11 @@ useEffect(() => {
           margin: 0;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Notifications Content â”€â”€ */
+=======
+        /* ── Notifications Content ── */
+>>>>>>> origin/aashika
         .ud-main {
           flex: 1;
           padding: 28px 32px;
@@ -918,7 +946,11 @@ useEffect(() => {
           color: #94a3b8;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Backdrop (mobile overlay) â”€â”€ */
+=======
+        /* ── Backdrop (mobile overlay) ── */
+>>>>>>> origin/aashika
         .ud-backdrop {
           display: none;
           position: fixed;
@@ -982,7 +1014,11 @@ useEffect(() => {
           display: flex;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Responsive â”€â”€ */
+=======
+        /* ── Responsive ── */
+>>>>>>> origin/aashika
         @media (max-width: 1023px) {
           .ud-sidebar {
             transform: translateX(-100%);
@@ -1080,7 +1116,11 @@ useEffect(() => {
           }
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Delete Account Modal â”€â”€ */
+=======
+        /* ── Delete Account Modal ── */
+>>>>>>> origin/aashika
         .ud-modal-overlay {
           position: fixed;
           inset: 0;
@@ -1196,7 +1236,11 @@ useEffect(() => {
         }
       `}</style>
 
+<<<<<<< HEAD
       {/* â”€â”€ Mobile Backdrop â”€â”€ */}
+=======
+      {/* ── Mobile Backdrop ── */}
+>>>>>>> origin/aashika
       <div
         className={`ud-backdrop ${sidebarOpen ? "active" : ""}`}
         onClick={() => setSidebarOpen(false)}
@@ -1204,7 +1248,11 @@ useEffect(() => {
       />
 
       <div className="ud-page">
+<<<<<<< HEAD
         {/* â”€â”€ Sidebar â”€â”€ */}
+=======
+        {/* ── Sidebar ── */}
+>>>>>>> origin/aashika
         <aside
           className={`ud-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}
         >
@@ -1306,7 +1354,11 @@ useEffect(() => {
           </div>
         </aside>
 
+<<<<<<< HEAD
         {/* â”€â”€ Main Area â”€â”€ */}
+=======
+        {/* ── Main Area ── */}
+>>>>>>> origin/aashika
         <div className="ud-main-area">
           {/* Top Header */}
           <header className="ud-topbar">
@@ -1422,7 +1474,11 @@ useEffect(() => {
                           textAlign: "center",
                         }}
                       >
+<<<<<<< HEAD
                         You&apos;re all caught up âœ“
+=======
+                        You&apos;re all caught up ✓
+>>>>>>> origin/aashika
                       </div>
                     )}
                   </div>
@@ -1486,7 +1542,11 @@ useEffect(() => {
             </div>
           </header>
 
+<<<<<<< HEAD
           {/* â”€â”€ Notifications Content â”€â”€ */}
+=======
+          {/* ── Notifications Content ── */}
+>>>>>>> origin/aashika
           <main className="ud-main">
             {/* Tabs + Mark All */}
             <div className="ud-tabs-row">
@@ -1551,7 +1611,11 @@ useEffect(() => {
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* â”€â”€ Delete Account Confirmation Modal â”€â”€ */}
+=======
+      {/* ── Delete Account Confirmation Modal ── */}
+>>>>>>> origin/aashika
       {showDeleteModal && (
         <div
           className="ud-modal-overlay"
@@ -1613,5 +1677,9 @@ useEffect(() => {
       )}
     </>
   );
+<<<<<<< HEAD
 }
 
+=======
+}
+>>>>>>> origin/aashika

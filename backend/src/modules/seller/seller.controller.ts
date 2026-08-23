@@ -1,6 +1,10 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { SellersService } from './seller.service';
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/aashika
 @Controller('sellers')
 export class SellersController {
   constructor(private readonly sellersService: SellersService) {}
@@ -35,4 +39,8 @@ export class SellersController {
       take ? Number(take) : 10,
     );
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

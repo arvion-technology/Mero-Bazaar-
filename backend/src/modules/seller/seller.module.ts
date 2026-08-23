@@ -6,6 +6,10 @@ import { SellersController } from './seller.controller';
 @Module({
   imports: [PrismaModule],
   controllers: [SellersController],
+<<<<<<< HEAD
   providers: [SellersService],
+=======
+  providers: [SellersService]
+>>>>>>> origin/aashika
 })
 export class SellerModule {}

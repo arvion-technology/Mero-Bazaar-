@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { IsNumber, IsOptional, IsString, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
+=======
+import { IsNumber, IsOptional, IsString, IsBoolean, IsArray } from "class-validator";
+import { Type } from "class-transformer";
+>>>>>>> origin/aashika
 
 export class TradesSearchDto {
   @IsOptional()
@@ -45,4 +50,8 @@ export class TradesSearchDto {
   @Type(() => Number)
   @IsNumber()
   radiusKm?: number;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

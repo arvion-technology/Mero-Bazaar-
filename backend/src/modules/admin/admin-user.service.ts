@@ -1,9 +1,14 @@
+<<<<<<< HEAD
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { UserRole, VerificationStatus } from '@prisma/client';
+=======
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { UserRole, VerificationStatus } from "@prisma/client";
+>>>>>>> origin/aashika
 import { PrismaService } from 'src/database/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -12,12 +17,18 @@ export class AdminUserService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+<<<<<<< HEAD
   ) {}
 
   async listUsers(
     role?: UserRole,
     kycStatus?: VerificationStatus | 'NOT_SUBMITTED',
   ) {
+=======
+) {}
+
+  async listUsers(role?: UserRole, kycStatus?: VerificationStatus | 'NOT_SUBMITTED') {
+>>>>>>> origin/aashika
     const users = await this.prisma.user.findMany({
       where: role ? { role } : undefined,
       select: {
@@ -56,6 +67,7 @@ export class AdminUserService {
       },
     });
     if (!user) throw new NotFoundException('User not found. ');
+<<<<<<< HEAD
 
     if (user.vendorProfile) {
       const agg = await this.prisma.review.aggregate({
@@ -66,6 +78,18 @@ export class AdminUserService {
       (user.vendorProfile as any).liveRating = agg._avg.rating ?? 0;
       (user.vendorProfile as any).reviewCount = agg._count.rating;
     }
+=======
+      
+    if (user.vendorProfile) {
+    const agg = await this.prisma.review.aggregate({
+      where: { listing: { userId: user.id } },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+    (user.vendorProfile as any).liveRating = agg._avg.rating ?? 0;
+    (user.vendorProfile as any).reviewCount = agg._count.rating;
+  }
+>>>>>>> origin/aashika
     return user;
   }
 
@@ -93,6 +117,7 @@ export class AdminUserService {
 
     return updated;
   }
+<<<<<<< HEAD
 
   /**
    * Admin-only role management. Privileged roles (DOCTOR, ADMIN) must never be
@@ -134,3 +159,6 @@ export class AdminUserService {
     return updated;
   }
 }
+=======
+}
+>>>>>>> origin/aashika

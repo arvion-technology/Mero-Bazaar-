@@ -14,6 +14,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [PrismaModule, NotificationsModule],
+<<<<<<< HEAD
   controllers: [
     AdminUserController,
     AdminListingController,
@@ -30,3 +31,9 @@ import { NotificationsModule } from '../notifications/notifications.module';
   ],
 })
 export class AdminModule {}
+=======
+  controllers: [AdminUserController, AdminListingController, AdminReportController, AdminPaymentController, AdminFlagController],
+  providers: [AdminUserService, AdminListingService, AdminReportService, AdminPaymentService, AdminFlagService],
+})
+export class AdminModule {}
+>>>>>>> origin/aashika

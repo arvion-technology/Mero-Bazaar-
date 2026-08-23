@@ -4,4 +4,8 @@ export class RaiseDisputeDto {
   @IsString()
   @MinLength(5)
   reason: string;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

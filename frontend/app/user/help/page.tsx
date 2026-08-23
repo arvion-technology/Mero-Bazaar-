@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 ﻿"use client";
 
 import { deleteAccountWithReauth } from "@/lib/accountActions";
+=======
+"use client";
+>>>>>>> origin/aashika
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -193,7 +197,11 @@ export default function HelpSupportPage() {
     setDeleting(true);
     setDeleteError("");
     try {
+<<<<<<< HEAD
       const res = await deleteAccountWithReauth(token);
+=======
+      const res = await fetch("/api/user/delete-account", { method: "DELETE" });
+>>>>>>> origin/aashika
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
@@ -1578,5 +1586,9 @@ export default function HelpSupportPage() {
       )}
     </>
   );
+<<<<<<< HEAD
 }
 
+=======
+}
+>>>>>>> origin/aashika

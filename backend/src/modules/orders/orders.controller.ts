@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   Controller,
   Post,
@@ -7,6 +8,9 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+=======
+import { Controller, Post, Get, Body, Param, Req, UseGuards } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { OrdersService } from './orders.service';
 import { CreateReservationDto } from './dto/create_reservation.dto';
 import { CreateDeliveryOrderDto } from './dto/create_delivery_order.dto';
@@ -19,6 +23,10 @@ import { RaiseDisputeDto } from './dto/raise_dispute.dto';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/aashika
   @Post('reservations')
   reserve(@Body() dto: CreateReservationDto, @Req() req) {
     return this.ordersService.reserveListing(dto.listingId, req.user.id);
@@ -50,12 +58,17 @@ export class OrdersController {
     return this.ordersService.getMyOrders(req.user.id);
   }
 
+<<<<<<< HEAD
   @Get(':id')
+=======
+  @Get(':id')                                    
+>>>>>>> origin/aashika
   getOne(@Param('id') id: string, @Req() req) {
     return this.ordersService.getOrderById(id, req.user.id);
   }
 
   @Post(':id/confirm-payment')
+<<<<<<< HEAD
   confirmPayment(
     @Param('id') id: string,
     @Body() dto: ConfirmPaymentDto,
@@ -67,6 +80,10 @@ export class OrdersController {
       req.user.id,
       dto.paymentMethod,
     );
+=======
+  confirmPayment(@Param('id') id: string, @Body() dto: ConfirmPaymentDto, @Req() req) {
+    return this.ordersService.confirmPayment(id, dto.providerTransactionId, req.user.id, dto.paymentMethod);
+>>>>>>> origin/aashika
   }
 
   @Post(':id/cancel')
@@ -80,6 +97,7 @@ export class OrdersController {
   }
 
   @Post(':id/dispute')
+<<<<<<< HEAD
   raiseDispute(
     @Param('id') id: string,
     @Body() dto: RaiseDisputeDto,
@@ -88,3 +106,9 @@ export class OrdersController {
     return this.ordersService.raiseDispute(id, req.user.id, dto.reason);
   }
 }
+=======
+  raiseDispute(@Param('id') id: string, @Body() dto: RaiseDisputeDto, @Req() req) {
+    return this.ordersService.raiseDispute(id, req.user.id, dto.reason);
+  }
+}
+>>>>>>> origin/aashika

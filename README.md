@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Mero Bazaar
 
 Nepali multi-category marketplace: vehicles, jobs, medical & dental, trades & home repair,
@@ -117,3 +118,7 @@ versions policy. Key controls implemented:
 - Payment confirmation only happens after a server-to-server verification with the
   payment provider; reservations are quota-limited and transitions are transactional.
 - Auth, OTP and search endpoints are rate-limited and pagination-bounded.
+=======
+# Mero-Bazaar-
+Nepali marketplace 
+>>>>>>> origin/aashika

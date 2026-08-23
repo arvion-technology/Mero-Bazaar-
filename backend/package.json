@@ -17,9 +17,13 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+<<<<<<< HEAD
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "seed": "ts-node prisma/seed.ts",
     "seed:admin": "ts-node prisma/seed_admin.ts"
+=======
+    "test:e2e": "jest --config ./test/jest-e2e.json"
+>>>>>>> origin/aashika
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -63,7 +67,10 @@
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
+<<<<<<< HEAD
     "globals": "^15.15.0",
+=======
+>>>>>>> origin/aashika
     "jest": "^30.0.0",
     "prettier": "^3.4.2",
     "supertest": "^7.0.0",
@@ -71,8 +78,12 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+<<<<<<< HEAD
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.67.0"
+=======
+    "typescript": "^5.7.3"
+>>>>>>> origin/aashika
   },
   "jest": {
     "moduleFileExtensions": [
@@ -82,10 +93,13 @@
     ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
+<<<<<<< HEAD
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/$1",
       "^file-type$": "<rootDir>/../__mocks__/file-type.js"
     },
+=======
+>>>>>>> origin/aashika
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },

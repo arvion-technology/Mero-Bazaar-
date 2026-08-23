@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   IsOptional,
   IsEnum,
@@ -6,6 +7,9 @@ import {
   IsString,
   IsInt,
 } from 'class-validator';
+=======
+import { IsOptional, IsEnum, IsNumber, IsBoolean, IsString, IsInt } from 'class-validator';
+>>>>>>> origin/aashika
 import { Type } from 'class-transformer';
 import { PropertyType, ListingType, OwnerType } from '@prisma/client';
 
@@ -65,4 +69,8 @@ export class QueryRentalDto {
   @IsBoolean()
   @Type(() => Boolean)
   petFriendly?: boolean;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

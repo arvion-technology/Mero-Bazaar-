@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 ﻿"use client";
 
 import { deleteAccountWithReauth } from "@/lib/accountActions";
+=======
+"use client";
+>>>>>>> origin/aashika
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -126,7 +130,11 @@ export default function UserDashboard() {
           rows.reduce((sum, r) => sum + Number(r.amount.replace(/[^\d.]/g, "")), 0)
         );
       } catch {
+<<<<<<< HEAD
         // silent â€” cards fall back to placeholders
+=======
+        // silent — cards fall back to placeholders
+>>>>>>> origin/aashika
       } finally {
         setOrdersLoading(false);
       }
@@ -199,7 +207,11 @@ export default function UserDashboard() {
     setDeleting(true);
     setDeleteError("");
     try {
+<<<<<<< HEAD
       const res = await deleteAccountWithReauth(token);
+=======
+      const res = await fetch("/api/user/delete-account", { method: "DELETE" });
+>>>>>>> origin/aashika
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
@@ -229,7 +241,11 @@ export default function UserDashboard() {
     {
       icon: FiShoppingBag,
       label: "Total Orders",
+<<<<<<< HEAD
       value: totalOrders === null ? "â€¦" : String(totalOrders),
+=======
+      value: totalOrders === null ? "…" : String(totalOrders),
+>>>>>>> origin/aashika
       change: "",
       color: "#4f46e5",
       bg: "#eef2ff",
@@ -238,7 +254,11 @@ export default function UserDashboard() {
     {
       icon: FiDollarSign,
       label: "Total Spent",
+<<<<<<< HEAD
       value: totalSpent === null ? "â€¦" : `NPR ${totalSpent.toLocaleString()}`,
+=======
+      value: totalSpent === null ? "…" : `NPR ${totalSpent.toLocaleString()}`,
+>>>>>>> origin/aashika
       change: "",
       color: "#10b981",
       bg: "#ecfdf5",
@@ -247,7 +267,11 @@ export default function UserDashboard() {
     {
       icon: FiHeart,
       label: "Wishlist",
+<<<<<<< HEAD
       value: wishlistCount === null ? "â€¦" : String(wishlistCount),
+=======
+      value: wishlistCount === null ? "…" : String(wishlistCount),
+>>>>>>> origin/aashika
       change: "",
       color: "#ef4444",
       bg: "#fef2f2",
@@ -551,7 +575,11 @@ export default function UserDashboard() {
                       ))
                     ) : (
                       <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>
+<<<<<<< HEAD
                         You&apos;re all caught up âœ“
+=======
+                        You&apos;re all caught up ✓
+>>>>>>> origin/aashika
                       </div>
                     )}
                   </div>
@@ -591,7 +619,11 @@ export default function UserDashboard() {
 
           <main className="ud-main">
             <div className="ud-welcome-section">
+<<<<<<< HEAD
               <h2 className="ud-welcome-title">Welcome back, {session?.user?.name?.split(" ")[0] || "there"}! ðŸ‘‹</h2>
+=======
+              <h2 className="ud-welcome-title">Welcome back, {session?.user?.name?.split(" ")[0] || "there"}! 👋</h2>
+>>>>>>> origin/aashika
             </div>
 
             <div className="ud-stats">
@@ -616,7 +648,11 @@ export default function UserDashboard() {
             </div>
             <div className="ud-orders-card">
               {ordersLoading ? (
+<<<<<<< HEAD
                 <div className="ud-orders-empty">Loading ordersâ€¦</div>
+=======
+                <div className="ud-orders-empty">Loading orders…</div>
+>>>>>>> origin/aashika
               ) : recentOrders.length === 0 ? (
                 <div className="ud-orders-empty">No orders yet.</div>
               ) : (
@@ -678,7 +714,11 @@ export default function UserDashboard() {
             </div>
             <div className="ud-contacts-card">
               {contactsLoading ? (
+<<<<<<< HEAD
                 <div className="ud-contacts-empty">Loading contactsâ€¦</div>
+=======
+                <div className="ud-contacts-empty">Loading contacts…</div>
+>>>>>>> origin/aashika
               ) : contacts.length === 0 ? (
                 <div className="ud-contacts-empty">No sellers contacted yet.</div>
               ) : (
@@ -740,5 +780,9 @@ export default function UserDashboard() {
       )}
     </>
   );
+<<<<<<< HEAD
 }
 
+=======
+}
+>>>>>>> origin/aashika

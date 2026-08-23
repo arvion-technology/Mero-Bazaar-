@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { Prisma, ListingCategory, VerificationStatus } from '@prisma/client';
 import { MedicalSearchDto } from '../dto/medical_search.dto';
+=======
+import { Prisma, ListingCategory, VerificationStatus } from "@prisma/client";
+import { MedicalSearchDto } from "../dto/medical_search.dto";
+>>>>>>> origin/aashika
 
 export function buildMedicalFilter(
   dto: MedicalSearchDto,
@@ -14,14 +19,22 @@ export function buildMedicalFilter(
         ...(dto.city && {
           city: {
             contains: dto.city,
+<<<<<<< HEAD
             mode: 'insensitive',
+=======
+            mode: "insensitive",
+>>>>>>> origin/aashika
           },
         }),
 
         ...(dto.specialty && {
           specialty: {
             contains: dto.specialty,
+<<<<<<< HEAD
             mode: 'insensitive',
+=======
+            mode: "insensitive",
+>>>>>>> origin/aashika
           },
         }),
 
@@ -47,7 +60,11 @@ export function buildMedicalFilter(
             {
               doctorName: {
                 contains: query,
+<<<<<<< HEAD
                 mode: 'insensitive',
+=======
+                mode: "insensitive",
+>>>>>>> origin/aashika
               },
             },
           ],
@@ -55,4 +72,8 @@ export function buildMedicalFilter(
       },
     },
   };
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

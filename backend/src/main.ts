@@ -5,11 +5,17 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { json, urlencoded } from 'express';
 
+<<<<<<< HEAD
 async function bootstrap() {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
     throw new Error(
       'JWT_SECRET is missing or two short (need 32+ chars of entropy). Refusing to start.',
     );
+=======
+async function bootstrap() { 
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    throw new Error('JWT_SECRET is missing or two short (need 32+ chars of entropy). Refusing to start.');
+>>>>>>> origin/aashika
   }
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -32,7 +38,11 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> origin/aashika
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads',
   });

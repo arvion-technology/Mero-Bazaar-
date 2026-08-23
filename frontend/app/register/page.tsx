@@ -96,8 +96,13 @@ function RegisterPageContent() {
       address: form.address,
     };
     const data = await api.register(payload);
+<<<<<<< HEAD
     // The registration response carries an access token that provides no value
     // here (the user is redirected to login) — never persist it to localStorage.
+=======
+    localStorage.setItem("token",data.access_token);
+    localStorage.setItem("user",JSON.stringify(data.user));
+>>>>>>> origin/aashika
     toast.success("Account created successfully!");
     router.push("/login");
     } catch (error: unknown) {

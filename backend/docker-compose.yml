@@ -5,6 +5,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
+<<<<<<< HEAD
       db:
         condition: service_healthy
     environment:
@@ -48,3 +49,25 @@ services:
 
 volumes:
   pgdata:
+=======
+      - db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/merobazaar
+      NODE_ENV: production
+
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: marketplace
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+>>>>>>> origin/aashika

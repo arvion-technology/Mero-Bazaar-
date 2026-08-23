@@ -4,4 +4,8 @@ import { AppointmentStatus } from '@prisma/client';
 export class UpdateMedicalAppointmentStatusDto {
   @IsEnum(AppointmentStatus)
   status: AppointmentStatus;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

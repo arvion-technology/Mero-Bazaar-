@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { IsEnum, IsString, MinLength } from 'class-validator';
 import { PaymentMethod } from '@prisma/client';
+=======
+import { IsEnum, IsString, MinLength } from "class-validator";
+import { PaymentMethod } from "@prisma/client";
+>>>>>>> origin/aashika
 
 export class ConfirmPaymentDto {
   @IsEnum(PaymentMethod)
@@ -8,4 +13,8 @@ export class ConfirmPaymentDto {
   @IsString()
   @MinLength(4)
   providerTransactionId: string;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

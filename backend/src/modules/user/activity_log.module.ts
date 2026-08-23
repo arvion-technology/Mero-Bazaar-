@@ -7,4 +7,8 @@ import { PrismaModule } from 'src/database/prisma.module';
   providers: [ActivityLogService],
   exports: [ActivityLogService],
 })
+<<<<<<< HEAD
 export class ActivityLogModule {}
+=======
+export class ActivityLogModule {}
+>>>>>>> origin/aashika

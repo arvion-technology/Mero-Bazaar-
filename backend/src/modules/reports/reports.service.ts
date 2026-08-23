@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿import { Injectable } from '@nestjs/common';
+=======
+import { BadRequestException, Injectable } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { PrismaService } from 'src/database/prisma.service';
 import { OrderStatus } from '@prisma/client';
 
@@ -25,10 +29,14 @@ export interface OrderStatusBreakdown {
 export class ReportsService {
   constructor(private readonly prisma: PrismaService) {}
 
+<<<<<<< HEAD
   async getTopListings(
     sellerId: string,
     limit = 5,
   ): Promise<TopListingReport[]> {
+=======
+  async getTopListings(sellerId: string, limit = 5): Promise<TopListingReport[]> {
+>>>>>>> origin/aashika
     const grouped = await this.prisma.order.groupBy({
       by: ['listingId'],
       where: {
@@ -62,9 +70,13 @@ export class ReportsService {
     });
   }
 
+<<<<<<< HEAD
   async getCategoryBreakdown(
     sellerId: string,
   ): Promise<CategoryBreakdownReport[]> {
+=======
+  async getCategoryBreakdown(sellerId: string): Promise<CategoryBreakdownReport[]> {
+>>>>>>> origin/aashika
     const orders = await this.prisma.order.findMany({
       where: {
         listing: { userId: sellerId },
@@ -89,9 +101,13 @@ export class ReportsService {
     return Object.values(byCategory).sort((a, b) => b.revenue - a.revenue);
   }
 
+<<<<<<< HEAD
   async getOrderStatusBreakdown(
     sellerId: string,
   ): Promise<OrderStatusBreakdown[]> {
+=======
+  async getOrderStatusBreakdown(sellerId: string): Promise<OrderStatusBreakdown[]> {
+>>>>>>> origin/aashika
     const grouped = await this.prisma.order.groupBy({
       by: ['status'],
       where: { listing: { userId: sellerId } },
@@ -100,4 +116,8 @@ export class ReportsService {
 
     return grouped.map((g) => ({ status: g.status, count: g._count._all }));
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

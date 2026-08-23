@@ -17,4 +17,8 @@ export class QueryAgricultureDto {
   @IsOptional()
   @IsString()
   search?: string;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

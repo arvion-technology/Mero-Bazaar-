@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 import { IsOptional, IsString, IsEnum, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ListingCategory } from '@prisma/client';
+=======
+import { IsOptional, IsString, IsEnum, IsNumber } from "class-validator";
+import { Type } from "class-transformer";
+import { ListingCategory } from "@prisma/client";
+>>>>>>> origin/aashika
 
 export class SearchListingDto {
   @IsOptional()
@@ -34,4 +40,8 @@ export class SearchListingDto {
   @Type(() => Number)
   @IsNumber()
   page?: number = 1;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

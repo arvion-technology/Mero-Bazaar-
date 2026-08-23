@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   Body,
   Controller,
@@ -7,6 +8,9 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
+=======
+import { Body, Controller, Get, Post, Query, Request, UseGuards } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -40,4 +44,8 @@ export class AdminFlagController {
   create(@Body() dto: CreateReportDto, @Request() req) {
     return this.adminFlagService.create(dto, req.user.id);
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

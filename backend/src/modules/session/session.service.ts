@@ -24,4 +24,8 @@ export class SessionsService {
       isCurrent: s.id === currentSessionId,
     }));
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

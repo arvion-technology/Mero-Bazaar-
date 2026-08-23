@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   IsEnum,
   IsBoolean,
@@ -16,6 +17,11 @@ import {
   VehicleCondition,
   VehicleType,
 } from 'src/common/enums/vehicle.enum';
+=======
+import { IsEnum, IsBoolean, IsInt, IsString, Min,IsNumber, IsOptional, IsArray, IsObject } from "class-validator"; 
+import { Type } from "class-transformer";
+import { BluebookStatus, FuelType, VehicleCondition, VehicleType } from "src/common/enums/vehicle.enum";
+>>>>>>> origin/aashika
 
 export class CreateVehicleDto {
   @IsEnum(VehicleType)
@@ -83,4 +89,8 @@ export class CreateVehicleDto {
   @IsOptional()
   @IsObject()
   details: Record<string, any>;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

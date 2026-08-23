@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 ﻿"use client";
 
 import { deleteAccountWithReauth } from "@/lib/accountActions";
+=======
+"use client";
+>>>>>>> origin/aashika
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -178,7 +182,11 @@ export default function UserOrders() {
     setDeleting(true);
     setDeleteError("");
     try {
+<<<<<<< HEAD
       const res = await deleteAccountWithReauth(accessToken);
+=======
+      const res = await fetch("/api/user/delete-account", { method: "DELETE" });
+>>>>>>> origin/aashika
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
@@ -202,7 +210,11 @@ export default function UserOrders() {
   if (loadingOrders) {
     return (
       <div className="ud-page" style={{ alignItems: "center", justifyContent: "center", width: "100%" }}>
+<<<<<<< HEAD
         <div className="orders-empty"><p>Loading your ordersâ€¦</p></div>
+=======
+        <div className="orders-empty"><p>Loading your orders…</p></div>
+>>>>>>> origin/aashika
         <style>{`.ud-page { display: flex; }`}</style>
       </div>
     );
@@ -229,7 +241,11 @@ export default function UserOrders() {
           font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Sidebar â”€â”€ */
+=======
+        /* ── Sidebar ── */
+>>>>>>> origin/aashika
         .ud-sidebar {
           width: 260px; background: #ffffff; border-right: 1px solid #e8ecf0;
           display: flex; flex-direction: column; flex-shrink: 0;
@@ -276,7 +292,11 @@ export default function UserOrders() {
         .ud-nav-item.danger { color: rgba(239,68,68,0.7); }
         .ud-nav-item.danger:hover { background: rgba(239,68,68,0.06); color: #ef4444; }
 
+<<<<<<< HEAD
         /* â”€â”€ Main Area â”€â”€ */
+=======
+        /* ── Main Area ── */
+>>>>>>> origin/aashika
         .ud-main-area {
           flex: 1; margin-left: 260px; display: flex; flex-direction: column;
           min-height: 100vh; min-height: 100dvh; transition: margin-left 0.3s ease;
@@ -284,7 +304,11 @@ export default function UserOrders() {
         }
         .ud-sidebar.collapsed ~ .ud-main-area { margin-left: 72px; width: calc(100% - 72px); }
 
+<<<<<<< HEAD
         /* â”€â”€ Top Header â”€â”€ */
+=======
+        /* ── Top Header ── */
+>>>>>>> origin/aashika
         .ud-topbar {
           background: #fff; border-bottom: 1px solid #e2e8f0;
           padding: 0 32px; height: 64px; display: flex; align-items: center;
@@ -311,7 +335,11 @@ export default function UserOrders() {
           border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Profile Dropdown â”€â”€ */
+=======
+        /* ── Profile Dropdown ── */
+>>>>>>> origin/aashika
         .ud-profile-wrap { position: relative; }
         .ud-profile-btn {
           display: flex; align-items: center; gap: 8px; padding: 5px 10px 5px 5px;
@@ -347,10 +375,17 @@ export default function UserOrders() {
         .ud-dropdown-item.logout:hover { background: #fef2f2; color: #dc2626; }
         .ud-dropdown-divider { height: 1px; background: #f1f5f9; }
 
+<<<<<<< HEAD
         /* â”€â”€ Main Content â”€â”€ */
         .ud-main { flex: 1; padding: 28px 32px; overflow-y: auto; min-width: 0; }
 
         /* â”€â”€ Orders Page Specific â”€â”€ */
+=======
+        /* ── Main Content ── */
+        .ud-main { flex: 1; padding: 28px 32px; overflow-y: auto; min-width: 0; }
+
+        /* ── Orders Page Specific ── */
+>>>>>>> origin/aashika
         .orders-toolbar {
           display: flex; align-items: center; justify-content: space-between;
           gap: 16px; margin-bottom: 20px; flex-wrap: wrap;
@@ -418,7 +453,11 @@ export default function UserOrders() {
         .orders-empty h3 { font-size: 16px; font-weight: 600; color: #64748b; margin-bottom: 6px; }
         .orders-empty p { font-size: 14px; }
 
+<<<<<<< HEAD
         /* â”€â”€ Pagination â”€â”€ */
+=======
+        /* ── Pagination ── */
+>>>>>>> origin/aashika
         .orders-pagination {
           display: flex; align-items: center; justify-content: space-between;
           padding: 16px 20px; border-top: 1px solid #f1f5f9; gap: 12px; flex-wrap: wrap;
@@ -449,7 +488,11 @@ export default function UserOrders() {
         .orders-mobile-item { font-size: 13px; color: #475569; margin-bottom: 6px; }
         .orders-mobile-date { font-size: 12px; color: #94a3b8; }
 
+<<<<<<< HEAD
         /* â”€â”€ Backdrop â”€â”€ */
+=======
+        /* ── Backdrop ── */
+>>>>>>> origin/aashika
         .ud-backdrop { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.45); backdrop-filter: blur(2px); z-index: 99; }
         .ud-backdrop.active { display: block; }
         .ud-sidebar-close {
@@ -468,7 +511,11 @@ export default function UserOrders() {
         .ud-hamburger:hover { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
         .ud-desktop-toggle { display: flex; }
 
+<<<<<<< HEAD
         /* â”€â”€ Responsive â”€â”€ */
+=======
+        /* ── Responsive ── */
+>>>>>>> origin/aashika
         @media (max-width: 1023px) {
           .ud-sidebar { transform: translateX(-100%); width: 280px !important; z-index: 200; }
           .ud-sidebar.mobile-open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.15); }
@@ -496,7 +543,11 @@ export default function UserOrders() {
           .orders-filter-btn { padding: 6px 12px; font-size: 12px; }
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Delete Modal â”€â”€ */
+=======
+        /* ── Delete Modal ── */
+>>>>>>> origin/aashika
         .ud-modal-overlay {
           position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
           z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -519,7 +570,11 @@ export default function UserOrders() {
       <div className={`ud-backdrop ${sidebarOpen ? "active" : ""}`} onClick={() => setSidebarOpen(false)} aria-hidden="true" />
 
       <div className="ud-page">
+<<<<<<< HEAD
         {/* â”€â”€ Sidebar â”€â”€ */}
+=======
+        {/* ── Sidebar ── */}
+>>>>>>> origin/aashika
         <aside className={`ud-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
           <button type="button" className="ud-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
             <FiX size={18} />
@@ -568,7 +623,11 @@ export default function UserOrders() {
           </div>
         </aside>
 
+<<<<<<< HEAD
         {/* â”€â”€ Main Area â”€â”€ */}
+=======
+        {/* ── Main Area ── */}
+>>>>>>> origin/aashika
         <div className="ud-main-area">
           {/* Top Header */}
           <header className="ud-topbar">
@@ -598,7 +657,11 @@ export default function UserOrders() {
                         {msg}
                       </Link>
                     )) : (
+<<<<<<< HEAD
                       <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>You&apos;re all caught up âœ“</div>
+=======
+                      <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>You&apos;re all caught up ✓</div>
+>>>>>>> origin/aashika
                     )}
                   </div>
                 )}
@@ -640,7 +703,11 @@ export default function UserOrders() {
                 <input
                   type="text"
                   className="orders-search"
+<<<<<<< HEAD
                   placeholder="Search by order ID, item, or dateâ€¦"
+=======
+                  placeholder="Search by order ID, item, or date…"
+>>>>>>> origin/aashika
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -747,7 +814,11 @@ export default function UserOrders() {
               {filtered.length > PER_PAGE && (
                 <div className="orders-pagination">
                   <div className="pagination-info">
+<<<<<<< HEAD
                     Showing {Math.min((safePage - 1) * PER_PAGE + 1, filtered.length)}â€“{Math.min(safePage * PER_PAGE, filtered.length)} of {filtered.length} orders
+=======
+                    Showing {Math.min((safePage - 1) * PER_PAGE + 1, filtered.length)}–{Math.min(safePage * PER_PAGE, filtered.length)} of {filtered.length} orders
+>>>>>>> origin/aashika
                   </div>
                   <div className="pagination-btns">
                     <button type="button" className="pag-btn" disabled={safePage === 1} onClick={() => setPage((p) => p - 1)}>
@@ -792,5 +863,9 @@ export default function UserOrders() {
       )}
     </>
   );
+<<<<<<< HEAD
 }
 
+=======
+}
+>>>>>>> origin/aashika

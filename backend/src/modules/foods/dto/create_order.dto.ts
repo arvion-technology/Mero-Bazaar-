@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { IsDateString, IsInt, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+=======
+import { IsDateString, IsInt, IsString, Min } from "class-validator";
+import { Type } from "class-transformer";
+>>>>>>> origin/aashika
 
 export class CreateOrderDto {
   @IsString()
@@ -15,4 +20,8 @@ export class CreateOrderDto {
 
   @IsString()
   deliveryAddress: string;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

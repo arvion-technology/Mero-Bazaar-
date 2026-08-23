@@ -5,7 +5,11 @@ import { PrismaService } from 'src/database/prisma.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
+<<<<<<< HEAD
   imports: [AuthModule],
+=======
+  imports:  [AuthModule],
+>>>>>>> origin/aashika
   controllers: [RentalController],
   providers: [RentalService, PrismaService],
 })

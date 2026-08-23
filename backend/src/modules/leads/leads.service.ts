@@ -1,9 +1,13 @@
+<<<<<<< HEAD
 import {
   Injectable,
   BadRequestException,
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+=======
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateLeadDto } from './dto/create_lead.dto';
 import { LeadStatus, ListingCategory, LeadType } from '@prisma/client';
@@ -137,16 +141,21 @@ export class LeadsService {
     });
   }
 
+<<<<<<< HEAD
   async findForSeller(
     sellerId: string,
     filters?: { status?: LeadStatus; leadType?: LeadType },
   ) {
+=======
+  async findForSeller(sellerId: string, filters?: { status?: LeadStatus; leadType?: LeadType }) {
+>>>>>>> origin/aashika
     return this.prisma.lead.findMany({
       where: {
         listing: { userId: sellerId },
         ...(filters?.status && { status: filters.status }),
         ...(filters?.leadType && { leadType: filters.leadType }),
       },
+<<<<<<< HEAD
       include: {
         listing: {
           select: {
@@ -166,6 +175,9 @@ export class LeadsService {
           },
         },
       },
+=======
+      include: { listing: true, user: true },
+>>>>>>> origin/aashika
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -180,7 +192,11 @@ export class LeadsService {
     return { count };
   }
 
+<<<<<<< HEAD
   async findSentByUser(userId: string) {
+=======
+    async findSentByUser(userId: string) {
+>>>>>>> origin/aashika
     return this.prisma.lead.findMany({
       where: { userId },
       include: {
@@ -201,4 +217,8 @@ export class LeadsService {
       orderBy: { createdAt: 'desc' },
     });
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

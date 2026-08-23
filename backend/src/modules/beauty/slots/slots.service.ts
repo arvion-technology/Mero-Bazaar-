@@ -1,9 +1,13 @@
+<<<<<<< HEAD
 import {
   Injectable,
   NotFoundException,
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
+=======
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateBeautySlotDto } from './dto/create_beauty_slot.dto';
 import { UpdateBeautySlotDto } from './dto/update_beauty_slot.dto';
@@ -44,11 +48,15 @@ export class BeautySlotsService {
     return listing;
   }
 
+<<<<<<< HEAD
   private assertOwnerOrAdmin(
     listingUserId: string,
     userId: string,
     role: string,
   ) {
+=======
+  private assertOwnerOrAdmin(listingUserId: string, userId: string, role: string) {
+>>>>>>> origin/aashika
     if (role !== 'ADMIN' && listingUserId !== userId) {
       throw new ForbiddenException('You do not own this beauty listing');
     }
@@ -73,9 +81,13 @@ export class BeautySlotsService {
     });
 
     if (existing) {
+<<<<<<< HEAD
       throw new BadRequestException(
         'Slot already exists for this day and time',
       );
+=======
+      throw new BadRequestException('Slot already exists for this day and time');
+>>>>>>> origin/aashika
     }
 
     try {
@@ -88,6 +100,7 @@ export class BeautySlotsService {
         },
       });
     } catch (e) {
+<<<<<<< HEAD
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
         e.code === 'P2002'
@@ -95,6 +108,10 @@ export class BeautySlotsService {
         throw new BadRequestException(
           'Slot already exists for this day and time',
         );
+=======
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new BadRequestException('Slot already exists for this day and time');
+>>>>>>> origin/aashika
       }
       throw e;
     }
@@ -177,12 +194,16 @@ export class BeautySlotsService {
     return slot;
   }
 
+<<<<<<< HEAD
   async update(
     id: string,
     dto: UpdateBeautySlotDto,
     userId: string,
     role: string,
   ) {
+=======
+  async update(id: string, dto: UpdateBeautySlotDto, userId: string, role: string) {
+>>>>>>> origin/aashika
     const slot = await this.findOneWithOwner(id);
     this.assertOwnerOrAdmin(slot.beauty.listing.userId, userId, role);
 
@@ -218,4 +239,8 @@ export class BeautySlotsService {
 
     return { id, deleted: true };
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

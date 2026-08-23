@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   IsArray,
   IsBoolean,
@@ -9,6 +10,11 @@ import {
 } from 'class-validator';
 import { BeautyServiceType } from '@prisma/client';
 import { Type } from 'class-transformer';
+=======
+import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, IsString, Min } from "class-validator";
+import { BeautyServiceType } from "@prisma/client";
+import { Type } from "class-transformer";
+>>>>>>> origin/aashika
 
 export class CreateHairBeautyAndWellnessDto {
   @IsString()
@@ -79,4 +85,8 @@ export class CreateHairBeautyAndWellnessDto {
   @IsOptional()
   @IsString()
   city?: string;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

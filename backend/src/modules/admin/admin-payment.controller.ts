@@ -18,4 +18,8 @@ export class AdminPaymentController {
   ) {
     return this.adminPaymentService.findAllForAdmin({ paymentMethod, status });
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

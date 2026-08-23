@@ -13,6 +13,7 @@ import { SellerPaymentsController } from './payments.controller';
 
 @Module({
   imports: [PrismaModule, OrdersModule, AuthModule],
+<<<<<<< HEAD
   providers: [
     EsewaService,
     KhaltiService,
@@ -25,5 +26,9 @@ import { SellerPaymentsController } from './payments.controller';
     ConnectipsController,
     SellerPaymentsController,
   ],
+=======
+  providers: [EsewaService, KhaltiService, ConnectipsService, SellerPaymentsService],
+  controllers: [EsewaController, KhaltiController, ConnectipsController, SellerPaymentsController], 
+>>>>>>> origin/aashika
 })
 export class PaymentsModule {}

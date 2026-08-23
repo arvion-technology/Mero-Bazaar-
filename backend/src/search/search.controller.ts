@@ -51,7 +51,11 @@ export class SearchController {
   }
 
   @Get('agriculture')
+<<<<<<< HEAD
   agriculture(@Query() filters: AgricultureSearchDto) {
+=======
+  agriculture(@Query() filters: AgricultureSearchDto){
+>>>>>>> origin/aashika
     return this.searchService.agricultureSearch(filters);
   }
 
@@ -64,4 +68,8 @@ export class SearchController {
   rental(@Query() filters: RentalSearchDto) {
     return this.searchService.rentalSearch(filters);
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

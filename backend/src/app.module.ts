@@ -67,4 +67,8 @@ import { AdminModule } from './modules/admin/admin.module';
   controllers: [AppController],
   providers: [AppService],
 })
+<<<<<<< HEAD
 export class AppModule {}
+=======
+export class AppModule {}
+>>>>>>> origin/aashika

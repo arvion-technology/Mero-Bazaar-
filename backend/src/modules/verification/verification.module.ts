@@ -8,4 +8,8 @@ import { VerificationController } from './verification.controller';
   controllers: [VerificationController],
   providers: [VerificationService],
 })
+<<<<<<< HEAD
 export class VerificationModule {}
+=======
+export class VerificationModule {}
+>>>>>>> origin/aashika

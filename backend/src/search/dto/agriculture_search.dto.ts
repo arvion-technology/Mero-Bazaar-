@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { IsEnum, IsOptional, IsString, IsInt } from 'class-validator';
 import { Type } from 'class-transformer';
 import {
@@ -5,6 +6,11 @@ import {
   UnitType,
   HealthVaccineStatus,
 } from '@prisma/client';
+=======
+import { IsEnum, IsOptional, IsString, IsInt } from "class-validator";
+import { Type } from 'class-transformer';
+import { AgricultureListingType, UnitType, HealthVaccineStatus } from "@prisma/client";
+>>>>>>> origin/aashika
 
 export class AgricultureSearchDto {
   @IsOptional()
@@ -38,7 +44,11 @@ export class AgricultureSearchDto {
   unit?: UnitType;
 
   @IsOptional()
+<<<<<<< HEAD
   @Type(() => Boolean)
+=======
+  @Type(() => Boolean)  
+>>>>>>> origin/aashika
   organicCertified?: boolean;
 
   @IsOptional()
@@ -50,10 +60,18 @@ export class AgricultureSearchDto {
   healthVaccineStatus?: HealthVaccineStatus;
 
   @IsOptional()
+<<<<<<< HEAD
   @Type(() => Number)
+=======
+  @Type(() => Number)  
+>>>>>>> origin/aashika
   @IsInt()
   age?: number;
 
   @IsOptional()
   search?: string;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

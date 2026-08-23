@@ -131,4 +131,8 @@ export class CreateRentalDto {
   @IsArray()
   @IsString({ each: true })
   rules?: string[];
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

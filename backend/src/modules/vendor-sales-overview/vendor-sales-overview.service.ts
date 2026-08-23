@@ -61,4 +61,8 @@ export class VendorSalesOverviewService {
 
     return Object.values(buckets);
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

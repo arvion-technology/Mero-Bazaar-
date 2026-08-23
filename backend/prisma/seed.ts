@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 import 'dotenv/config';
+=======
+>>>>>>> origin/aashika
 import { PrismaClient, ListingCategory, VehicleType, VehicleCondition, BluebookStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+<<<<<<< HEAD
 // Demo job listings so the Job category filter (type/city/skill) is populated.
 const DEMO_JOBS = [
   { role: 'Sales Manager', city: 'Kathmandu', salaryMin: 30000, salaryMax: 45000, payPeriod: 'MONTHLY', contractType: 'FULL_TIME', skillTags: ['Sales', 'Marketing'], isUrgent: true },
@@ -15,6 +19,8 @@ const DEMO_JOBS = [
   { role: 'Delivery Rider', city: 'Chitwan', salaryMin: 50000, salaryMax: 70000, payPeriod: 'MONTHLY', contractType: 'GIG', skillTags: ['Delivery', 'Riding'], isUrgent: true },
 ] as const;
 
+=======
+>>>>>>> origin/aashika
 async function main() {
   // 1. Create user
   const user = await prisma.user.upsert({
@@ -56,12 +62,17 @@ async function main() {
       year: 2018,
       km_driven: 45000,
       condition: VehicleCondition.used,
+<<<<<<< HEAD
       bluebook_status: BluebookStatus.pending, // reviewer-controlled flag; not self-asserted
+=======
+      bluebook_status: BluebookStatus.verified,
+>>>>>>> origin/aashika
       fuel_type: 'hybrid',
       ownership_transfer_ready: true,
     },
   });
 
+<<<<<<< HEAD
   // 4. Demo employer (KYC-verified VENDOR) so job listings have a real owner.
   const employer = await prisma.user.upsert({
     where: { email: 'employer@mero.com' },
@@ -111,6 +122,8 @@ async function main() {
     console.log(`Job listings already present (${existingJobs}); skipping.`);
   }
 
+=======
+>>>>>>> origin/aashika
   console.log('Seed completed 🚗');
 }
 

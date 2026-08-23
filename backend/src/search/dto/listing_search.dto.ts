@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   IsOptional,
   IsString,
@@ -8,6 +9,11 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ListingCategory } from '@prisma/client';
+=======
+import {IsOptional, IsString, IsNumber, IsEnum, Min, Max } from "class-validator";
+import { Type } from "class-transformer";
+import { ListingCategory } from "@prisma/client";
+>>>>>>> origin/aashika
 
 export class ListingSearchDto {
   @IsOptional()
@@ -40,4 +46,8 @@ export class ListingSearchDto {
   @Min(1)
   @Max(20)
   limit?: number = 10;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

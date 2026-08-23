@@ -1,4 +1,5 @@
 import { Type } from 'class-transformer';
+<<<<<<< HEAD
 import {
   IsBoolean,
   IsEnum,
@@ -14,6 +15,10 @@ import {
   VetServiceType,
   WeekDay,
 } from '@prisma/client';
+=======
+import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUUID, IsArray } from 'class-validator';
+import { AgricultureListingType, UnitType, HealthVaccineStatus, VetServiceType, WeekDay } from '@prisma/client';
+>>>>>>> origin/aashika
 
 export class CreateAgricultureDto {
   @IsEnum(AgricultureListingType)
@@ -100,4 +105,8 @@ export class CreateAgricultureDto {
   @IsArray()
   @IsEnum(WeekDay, { each: true })
   availabilityDays?: WeekDay[];
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   Controller,
   Get,
@@ -9,6 +10,9 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
+=======
+import { Controller, Get, Post, Body, Param, Patch, Query, UseGuards, Req } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { Request } from 'express';
 import { LeadsService } from './leads.service';
 import { CreateLeadDto } from './dto/create_lead.dto';
@@ -29,12 +33,18 @@ export class LeadsController {
   }
 
   @Get()
+<<<<<<< HEAD
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   findAll(
     @Query('category') category?: ListingCategory,
     @Query('status') status?: LeadStatus,
   ) {
+=======
+  @UseGuards(JwtAuthGuard, RolesGuard) 
+  @Roles('ADMIN')
+  findAll(@Query('category') category?: ListingCategory, @Query('status') status?: LeadStatus) {
+>>>>>>> origin/aashika
     return this.leadsService.findAll({ category, status });
   }
 
@@ -69,4 +79,8 @@ export class LeadsController {
     const userId = (req.user as { id: string }).id;
     return this.leadsService.findSentByUser(userId);
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

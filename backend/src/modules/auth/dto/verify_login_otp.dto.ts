@@ -7,4 +7,8 @@ export class VerifyLoginOtpDto {
   @IsString()
   @Length(6, 6)
   otp: string;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

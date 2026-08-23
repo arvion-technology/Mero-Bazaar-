@@ -12,4 +12,8 @@ export class UploadVerificationDto {
   @IsString()
   @IsNotEmpty()
   filePath: string;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

@@ -8,8 +8,13 @@ export class NotificationsService {
 
   async findAllForUser(userId: string) {
     return this.prisma.notification.findMany({
+<<<<<<< HEAD
       where: { userId },
       orderBy: { createdAt: 'desc' },
+=======
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+>>>>>>> origin/aashika
     });
   }
 
@@ -24,7 +29,11 @@ export class NotificationsService {
     return this.prisma.activityLog.updateMany({
       where: { userId, read: false },
       data: { read: true },
+<<<<<<< HEAD
     });
+=======
+    })
+>>>>>>> origin/aashika
   }
 
   async markRead(userId: string, id: string) {
@@ -41,6 +50,7 @@ export class NotificationsService {
     });
   }
 
+<<<<<<< HEAD
   async create(
     userId: string,
     data: {
@@ -50,6 +60,9 @@ export class NotificationsService {
       description: string;
     },
   ) {
+=======
+  async create(userId: string, data: { category: NotificationCategory; type: string; title: string; description: string }) {
+>>>>>>> origin/aashika
     return this.prisma.notification.create({ data: { userId, ...data } });
   }
 
@@ -60,12 +73,16 @@ export class NotificationsService {
     return { count };
   }
 
+<<<<<<< HEAD
   async notifyAllAdmins(data: {
     category: NotificationCategory;
     type: string;
     title: string;
     description: string;
   }) {
+=======
+  async notifyAllAdmins(data: { category: NotificationCategory; type: string; title: string; description: string }) {
+>>>>>>> origin/aashika
     const admins = await this.prisma.user.findMany({
       where: { role: 'ADMIN' },
       select: { id: true },

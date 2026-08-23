@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   IsString,
   IsNotEmpty,
@@ -5,6 +6,9 @@ import {
   Min,
   IsDateString,
 } from 'class-validator';
+=======
+import { IsString, IsNotEmpty, IsInt, Min, IsDateString } from 'class-validator';
+>>>>>>> origin/aashika
 import { Type } from 'class-transformer';
 
 export class CreateDeliveryOrderDto {
@@ -23,4 +27,8 @@ export class CreateDeliveryOrderDto {
   @IsString()
   @IsNotEmpty()
   deliveryAddress: string;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

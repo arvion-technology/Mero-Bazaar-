@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿import {
   IsArray,
   IsEnum,
@@ -8,6 +9,20 @@
 
 import { Type } from 'class-transformer';
 import { ListingCategory } from '@prisma/client';
+=======
+import {
+  IsArray,
+  IsEnum,
+  IsNumber,
+  ValidateNested,
+  IsOptional,
+  IsString,
+} from "class-validator";
+
+import { CreateVehicleDto } from "src/modules/vehicles/dto/create_vehicle.dto";
+import { Type } from "class-transformer";
+import { ListingCategory } from "@prisma/client";
+>>>>>>> origin/aashika
 
 export class CreateListingDto {
   @IsString()
@@ -38,4 +53,8 @@ export class CreateListingDto {
   @Type(() => Number)
   @IsNumber()
   longitude?: number;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

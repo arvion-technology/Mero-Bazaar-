@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   Controller,
   UseGuards,
@@ -8,6 +9,9 @@ import {
   Res,
   Query,
 } from '@nestjs/common';
+=======
+import { Controller, UseGuards, Post, Req, Body, Get, Res, Query } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { Response } from 'express';
 import { ConnectipsService } from './connectips.service';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
@@ -28,6 +32,7 @@ export class ConnectipsController {
   async success(@Query('TXNID') txnId: string, @Res() res: Response) {
     try {
       const order = await this.connectipsService.handleCallback(txnId);
+<<<<<<< HEAD
       return res.redirect(
         `${this.connectipsService.redirectFrontendUrl}/checkout/${order.id}?payment=success`,
       );
@@ -35,13 +40,24 @@ export class ConnectipsController {
       return res.redirect(
         `${this.connectipsService.redirectFrontendUrl}/checkout/failed?reason=verification_failed`,
       );
+=======
+      return res.redirect(`${this.connectipsService.redirectFrontendUrl}/checkout/${order.id}?payment=success`);
+    } catch {
+      return res.redirect(`${this.connectipsService.redirectFrontendUrl}/checkout/failed?reason=verification_failed`);
+>>>>>>> origin/aashika
     }
   }
 
   @Get('failure')
   failure(@Res() res: Response) {
+<<<<<<< HEAD
     return res.redirect(
       `${this.connectipsService.redirectFrontendUrl}/checkout/failed?reason=payment_cancelled`,
     );
   }
 }
+=======
+    return res.redirect(`${this.connectipsService.redirectFrontendUrl}/checkout/failed?reason=payment_cancelled`);
+  }
+}
+>>>>>>> origin/aashika

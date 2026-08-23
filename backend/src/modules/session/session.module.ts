@@ -10,4 +10,8 @@ import { AuthModule } from '../auth/auth.module';
   providers: [SessionsService],
   exports: [SessionsService],
 })
+<<<<<<< HEAD
 export class SessionsModule {}
+=======
+export class SessionsModule {}
+>>>>>>> origin/aashika

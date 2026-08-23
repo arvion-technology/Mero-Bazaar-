@@ -1,19 +1,27 @@
+<<<<<<< HEAD
 import {
   Injectable,
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+=======
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { PrismaService } from '../../database/prisma.service';
 import { CreateMedicalDto } from './dto/create_medical.dto';
 import { MedicalQueryDto } from './dto/medical_query.dto';
 import { ListingCategory, MedicalServiceType } from '@prisma/client';
+<<<<<<< HEAD
 import { validateAndReencodeImage } from '../../common/uploads/upload.util';
+=======
+>>>>>>> origin/aashika
 
 @Injectable()
 export class MedicalService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateMedicalDto, userId: string) {
+<<<<<<< HEAD
     // Bind the claimed identity to the platform-assigned doctor profile: the NMC
     // licence number on the listing must match the account's verified profile.
     const doctor = await this.prisma.doctorProfile.findUnique({
@@ -40,6 +48,8 @@ export class MedicalService {
       });
     }
 
+=======
+>>>>>>> origin/aashika
     return this.prisma.$transaction(async (tx) => {
       const listing = await tx.listing.create({
         data: {
@@ -92,6 +102,7 @@ export class MedicalService {
     });
   }
 
+<<<<<<< HEAD
   async findAll(query: MedicalQueryDto) {
     return this.prisma.listing.findMany({
       where: {
@@ -124,6 +135,40 @@ export class MedicalService {
       },
     });
   }
+=======
+async findAll(query: MedicalQueryDto) {
+  return this.prisma.listing.findMany({
+    where: {
+      category: ListingCategory.MEDICAL,
+      medical: {
+        is: {
+          ...(query.city && {
+            city: query.city,
+          }),
+
+          ...(query.specialty && {
+            serviceType: query.specialty as MedicalServiceType,
+          }),
+
+          ...(query.doctorName && {
+            doctorName: {
+              contains: query.doctorName,
+              mode: 'insensitive',
+            },
+          }),
+
+          ...(query.homeVisitAvailable !== undefined && {
+            homeVisitAvailable: query.homeVisitAvailable,
+          }),
+        },
+      },
+    },
+    include: {
+      medical: true,
+    },
+  });
+}
+>>>>>>> origin/aashika
 
   async findOne(id: string) {
     return this.prisma.listing.findFirst({
@@ -222,6 +267,7 @@ export class MedicalService {
       throw new ForbiddenException('Unauthorized');
     }
 
+<<<<<<< HEAD
     const newPhotoNames: string[] = [];
     for (const file of files) {
       const finalName = await validateAndReencodeImage(
@@ -234,6 +280,9 @@ export class MedicalService {
     const newPhotoUrls = newPhotoNames.map(
       (name) => `/uploads/medical/${name}`,
     );
+=======
+    const newPhotoUrls = files.map((file) => `/uploads/medical/${file.filename}`);
+>>>>>>> origin/aashika
     const updatedImages = [...listing.images, ...newPhotoUrls];
 
     return this.prisma.listing.update({
@@ -242,4 +291,8 @@ export class MedicalService {
       include: { medical: true },
     });
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

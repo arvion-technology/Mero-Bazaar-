@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   Controller,
   Get,
@@ -10,6 +11,9 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+=======
+import { Controller, Get, Post, Body, Param, Patch, Delete, Query, UseGuards, Request } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create_job.dto';
 import { UpdateJobDto } from './dto/update_jobs.dto';
@@ -31,12 +35,15 @@ export class JobsController {
     return this.jobsService.findAll(query);
   }
 
+<<<<<<< HEAD
   // Must be declared before the `:id` route so it is not captured as an id.
   @Get('filters')
   getFilters() {
     return this.jobsService.getFilterOptions();
   }
 
+=======
+>>>>>>> origin/aashika
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.jobsService.findOne(id);
@@ -53,4 +60,8 @@ export class JobsController {
   remove(@Param('id') id: string, @Request() req) {
     return this.jobsService.remove(id, req.user.id);
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

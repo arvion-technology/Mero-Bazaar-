@@ -42,6 +42,7 @@ export class ListingsService {
   }
 
   async findOne(id: string) {
+<<<<<<< HEAD
     const listing = await this.prisma.listing.findUnique({
       where: { id },
       include: {
@@ -71,6 +72,37 @@ export class ListingsService {
         },
       },
     });
+=======
+  const listing = await this.prisma.listing.findUnique({
+    where: { id },
+    include: {
+      vehicle: true,
+      job: true,
+      medical: true,
+      trades: true,
+      rental: true,
+      agriculture: true,
+      secondhand: true,
+      foods: true,
+      beauty: true,
+      reviews: true,
+      user: {
+        select: {
+          name: true,
+          image: true,
+          phone: true,
+          createdAt: true,
+          vendorProfile: {
+            select: { isVerified: true },
+          },
+          _count: {
+            select: { listings: true },
+          },
+        },
+      },
+    },
+  });
+>>>>>>> origin/aashika
 
     if (!listing) return null;
 
@@ -129,6 +161,7 @@ export class ListingsService {
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
+<<<<<<< HEAD
     const [totalProducts, productsThisMonth, productsLastMonth] =
       await Promise.all([
         this.prisma.listing.count({ where: { userId } }),
@@ -197,3 +230,74 @@ export class ListingsService {
     });
   }
 }
+=======
+    const [totalProducts, productsThisMonth, productsLastMonth] = await Promise.all([
+      this.prisma.listing.count({ where: { userId } }),
+      this.prisma.listing.count({
+        where: { userId, createdAt: { gte: startOfThisMonth } },
+      }),
+      this.prisma.listing.count({
+        where: {
+          userId,
+          createdAt: { gte: startOfLastMonth, lt: startOfThisMonth },
+        },
+      }),
+    ]);
+    return { totalProducts, productsThisMonth, productsLastMonth };
+  }
+
+async search(query: SearchListingDto) {
+  const where = buildListingFilter(query);
+
+  const page = query.page ?? 1;
+  const limit = query.limit ?? 10;
+
+  return this.prisma.listing.findMany({
+    where: {
+      ...where,
+
+      id: query.exclude
+        ? { not: query.exclude }
+        : undefined,
+    },
+
+    include: {
+      vehicle: true,
+      job: true,
+      medical: true,
+    },
+
+    orderBy: {
+      createdAt: "desc",
+    },
+
+    take: limit,
+    skip: (page - 1) * limit,
+  });
+}
+
+async getRelated(category: ListingCategory, exclude: string, limit: number) {
+  return this.prisma.listing.findMany({
+    where: {
+      category,
+      id: exclude ? { not: exclude } : undefined,
+    },
+    include: {
+      vehicle: true,
+      job: true,
+      medical: true,
+      trades: true,
+      rental: true,
+      agriculture: true,
+      secondhand: true,
+      foods: true,
+      beauty: true,
+    },
+    take: limit,
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}
+}
+>>>>>>> origin/aashika

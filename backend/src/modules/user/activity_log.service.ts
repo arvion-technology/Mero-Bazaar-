@@ -50,4 +50,8 @@ export class ActivityLogService {
       data: { read: true },
     });
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

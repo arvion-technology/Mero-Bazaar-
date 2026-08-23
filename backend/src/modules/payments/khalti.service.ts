@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   BadRequestException,
   ConflictException,
@@ -5,6 +6,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+=======
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { PrismaService } from 'src/database/prisma.service';
 import { OrdersService } from '../orders/orders.service';
 
@@ -26,12 +30,18 @@ export class KhaltiService {
       include: { listing: true },
     });
     if (!order) throw new NotFoundException('Order not found.');
+<<<<<<< HEAD
     if (order.userId !== buyerId)
       throw new ForbiddenException('Not your order.');
     if (order.status !== 'PENDING') {
       throw new ConflictException(
         `Order is already ${order.status.toLowerCase()}.`,
       );
+=======
+    if (order.userId !== buyerId) throw new ForbiddenException('Not your order.');
+    if (order.status !== 'PENDING') {
+      throw new ConflictException(`Order is already ${order.status.toLowerCase()}.`);
+>>>>>>> origin/aashika
     }
 
     const buyer = await this.prisma.user.findUnique({ where: { id: buyerId } });
@@ -92,6 +102,7 @@ export class KhaltiService {
     const statusData = await res.json();
 
     if (statusData.status !== 'Completed') {
+<<<<<<< HEAD
       throw new BadRequestException(
         `Payment not complete: ${statusData.status}`,
       );
@@ -110,6 +121,16 @@ export class KhaltiService {
         order.userId,
         'KHALTI',
       );
+=======
+      throw new BadRequestException(`Payment not complete: ${statusData.status}`);
+    }
+
+    const order = await this.prisma.order.findFirst({ where: { paymentRef: pidx } });
+    if (!order) throw new NotFoundException('Order not found for this transaction.');
+
+    if (order.status === 'PENDING') {
+      await this.ordersService.confirmPayment(order.id, pidx, order.userId, 'KHALTI');
+>>>>>>> origin/aashika
     }
 
     return order;
@@ -118,4 +139,8 @@ export class KhaltiService {
   get redirectFrontendUrl() {
     return this.frontendUrl;
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

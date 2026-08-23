@@ -34,4 +34,8 @@ export class AdminFlagService {
       select: { id: true, status: true, createdAt: true },
     });
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

@@ -1,11 +1,18 @@
+<<<<<<< HEAD
 ﻿"use client";
+=======
+"use client";
+>>>>>>> origin/aashika
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useFoodCart } from "../../context/FoodCartContext";
+<<<<<<< HEAD
 import { deleteAccountWithReauth } from "@/lib/accountActions";
+=======
+>>>>>>> origin/aashika
 import {
   FiGrid,
   FiShoppingBag,
@@ -185,8 +192,12 @@ export default function UserWishlist() {
     setDeleting(true);
     setDeleteError("");
     try {
+<<<<<<< HEAD
       const res = await deleteAccountWithReauth(token);
       if (res.status === 499) return; // user cancelled the confirmation
+=======
+      const res = await fetch("/api/user/delete-account", { method: "DELETE" });
+>>>>>>> origin/aashika
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
@@ -248,7 +259,11 @@ export default function UserWishlist() {
           font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Sidebar â”€â”€ */
+=======
+        /* ── Sidebar ── */
+>>>>>>> origin/aashika
         .ud-sidebar {
           width: 260px;
           background: #ffffff;
@@ -463,7 +478,11 @@ export default function UserWishlist() {
           max-width: 160px;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Main Area â”€â”€ */
+=======
+        /* ── Main Area ── */
+>>>>>>> origin/aashika
         .ud-main-area {
           flex: 1;
           margin-left: 260px;
@@ -481,7 +500,11 @@ export default function UserWishlist() {
           width: calc(100% - 72px);
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Top Header â”€â”€ */
+=======
+        /* ── Top Header ── */
+>>>>>>> origin/aashika
         .ud-topbar {
           background: #fff;
           border-bottom: 1px solid #e2e8f0;
@@ -582,7 +605,11 @@ export default function UserWishlist() {
           border: 2px solid #fff;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Profile Avatar Dropdown â”€â”€ */
+=======
+        /* ── Profile Avatar Dropdown ── */
+>>>>>>> origin/aashika
         .ud-profile-wrap {
           position: relative;
         }
@@ -717,7 +744,11 @@ export default function UserWishlist() {
           margin: 0;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Main Content â”€â”€ */
+=======
+        /* ── Main Content ── */
+>>>>>>> origin/aashika
         .ud-main {
           flex: 1;
           padding: 28px 32px;
@@ -977,7 +1008,11 @@ export default function UserWishlist() {
           font-size: 14px;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Backdrop (mobile overlay) â”€â”€ */
+=======
+        /* ── Backdrop (mobile overlay) ── */
+>>>>>>> origin/aashika
         .ud-backdrop {
           display: none;
           position: fixed;
@@ -1050,7 +1085,11 @@ export default function UserWishlist() {
           color: #ef4444;
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Responsive â”€â”€ */
+=======
+        /* ── Responsive ── */
+>>>>>>> origin/aashika
 
         /* Tablet + Mobile: overlay sidebar */
         @media (max-width: 1023px) {
@@ -1177,7 +1216,11 @@ export default function UserWishlist() {
           }
         }
 
+<<<<<<< HEAD
         /* â”€â”€ Delete Account Modal â”€â”€ */
+=======
+        /* ── Delete Account Modal ── */
+>>>>>>> origin/aashika
         .ud-modal-overlay {
           position: fixed;
           inset: 0;
@@ -1284,7 +1327,11 @@ export default function UserWishlist() {
         .ud-modal-delete:disabled { opacity: 0.7; cursor: not-allowed; }
       `}</style>
 
+<<<<<<< HEAD
       {/* â”€â”€ Mobile Backdrop â”€â”€ */}
+=======
+      {/* ── Mobile Backdrop ── */}
+>>>>>>> origin/aashika
       <div
         className={`ud-backdrop ${sidebarOpen ? "active" : ""}`}
         onClick={() => setSidebarOpen(false)}
@@ -1292,7 +1339,11 @@ export default function UserWishlist() {
       />
 
       <div className="ud-page">
+<<<<<<< HEAD
         {/* â”€â”€ Sidebar â”€â”€ */}
+=======
+        {/* ── Sidebar ── */}
+>>>>>>> origin/aashika
         <aside className={`ud-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
           {/* Mobile close button */}
           <button
@@ -1374,7 +1425,11 @@ export default function UserWishlist() {
 
         </aside>
 
+<<<<<<< HEAD
         {/* â”€â”€ Main Area â”€â”€ */}
+=======
+        {/* ── Main Area ── */}
+>>>>>>> origin/aashika
         <div className="ud-main-area">
           {/* Top Header */}
           <header className="ud-topbar">
@@ -1436,7 +1491,11 @@ export default function UserWishlist() {
                       ))
                     ) : (
                       <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>
+<<<<<<< HEAD
                         You&apos;re all caught up âœ“
+=======
+                        You&apos;re all caught up ✓
+>>>>>>> origin/aashika
                       </div>
                     )}
                   </div>
@@ -1600,7 +1659,11 @@ export default function UserWishlist() {
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* â”€â”€ Delete Account Confirmation Modal â”€â”€ */}
+=======
+      {/* ── Delete Account Confirmation Modal ── */}
+>>>>>>> origin/aashika
       {showDeleteModal && (
         <div className="ud-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
           <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
@@ -1650,4 +1713,8 @@ export default function UserWishlist() {
       )}
     </>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

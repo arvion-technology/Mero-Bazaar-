@@ -24,4 +24,8 @@ export class CreateReportDto {
   @IsString()
   @MaxLength(1000)
   description?: string;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

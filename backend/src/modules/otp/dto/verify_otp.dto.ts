@@ -11,4 +11,8 @@ export class VerifyOtpDto {
 
   @IsEnum(OtpContext)
   context: OtpContext;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

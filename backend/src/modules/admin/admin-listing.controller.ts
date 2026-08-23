@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   Body,
   Controller,
@@ -8,6 +9,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+=======
+import { Body, Controller, Delete, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -47,4 +51,8 @@ export class AdminListingController {
   deleteListing(@Param('id') id: string) {
     return this.adminListingService.deleteListing(id);
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/aashika

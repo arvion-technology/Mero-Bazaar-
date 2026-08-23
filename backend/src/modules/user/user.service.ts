@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   BadRequestException,
   ConflictException,
@@ -6,19 +7,28 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+=======
+import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { PrismaService } from '../../database/prisma.service';
 import { UpdateUserDto } from './dto/update_user.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UpdatePasswordDto } from './dto/update_password.dto';
 import * as crypto from 'crypto';
+<<<<<<< HEAD
 import * as fs from 'fs/promises';
+=======
+>>>>>>> origin/aashika
 import * as nodemailer from 'nodemailer';
 import { PhoneOtpService } from '../otp/otp.service';
 import { OtpContext } from '@prisma/client';
 import { parseUserAgent } from '../auth/auth.service';
 import { ActivityLogService } from './activity_log.service';
+<<<<<<< HEAD
 import { validateAndReencodeImage } from '../../common/uploads/upload.util';
+=======
+>>>>>>> origin/aashika
 
 @Injectable()
 export class UserService {
@@ -27,6 +37,10 @@ export class UserService {
     private jwtService: JwtService,
     private phoneOtpService: PhoneOtpService,
     private activityLogService: ActivityLogService,
+<<<<<<< HEAD
+=======
+    
+>>>>>>> origin/aashika
   ) {}
 
   async findAll() {
@@ -56,6 +70,7 @@ export class UserService {
   }
 
   async findOrCreateOAuthUser(data: {
+<<<<<<< HEAD
     email: string;
     name: string;
     image?: string;
@@ -127,6 +142,51 @@ export class UserService {
       });
       this.notifyNewProviderLinked(data.email, data.provider!).catch(() => {});
     }
+=======
+      email: string;
+      name: string;
+      image?: string;
+      role?: string;
+      userAgent?: string;
+      ipAddress?: string;
+      provider?: string;
+    }) {
+      const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
+
+      const isNewProviderLink = !!existing && existing.lastOAuthProvider && existing.lastOAuthProvider !== data.provider;
+
+      const user = existing
+        ? await this.prisma.user.update({
+            where: { id: existing.id },
+            data: { lastOAuthProvider: data.provider },
+            select: { id: true, email: true, role: true, phone: true, phoneVerifiedAt: true, address: true, image: true, name: true, twoFactorEnabled: true },
+          })
+        : await this.prisma.user.create({
+            data: {
+              email: data.email,
+              name: data.name,
+              image: data.image,
+              role: data.role === 'VENDOR' ? 'VENDOR' : 'USER',
+              isActive: true,
+              lastOAuthProvider: data.provider,
+              ...(data.role === 'VENDOR' && {
+                vendorProfile: {
+                  create: { businessName: data.name ?? '', businessType: 'INDIVIDUAL' },
+                },
+              }),
+            },
+            select: { id: true, email: true, role: true, phone: true, phoneVerifiedAt: true, address: true, image: true, name: true, twoFactorEnabled: true },
+          });
+
+      if (isNewProviderLink) {
+        await this.activityLogService.log(user.id, 'OAUTH_PROVIDER_LINKED', {
+          ipAddress: data.ipAddress,
+          deviceLabel: parseUserAgent(data.userAgent),
+          description: `Signed in with ${data.provider} (previously used a different method)`,
+        });
+        this.notifyNewProviderLinked(data.email, data.provider!).catch(() => {});
+      }
+>>>>>>> origin/aashika
 
     if (user.twoFactorEnabled) {
       if (!user.phone || !user.phoneVerifiedAt) {
@@ -135,6 +195,7 @@ export class UserService {
           data: { twoFactorEnabled: false },
         });
         await this.activityLogService.log(user.id, 'TWO_FA_DISABLED', {
+<<<<<<< HEAD
           description:
             'Auto-disabled: no verified phone on file at login time.',
         });
@@ -144,10 +205,18 @@ export class UserService {
           { sub: user.id, purpose: 'login_2fa' },
           { expiresIn: '5m' },
         );
+=======
+          description: 'Auto-disabled: no verified phone on file at login time.',
+        });
+      } else {
+        await this.phoneOtpService.sendOtp(user.phone, OtpContext.LOGIN);
+        const tempToken = this.jwtService.sign({ sub: user.id, purpose: 'login_2fa' }, { expiresIn: '5m' });
+>>>>>>> origin/aashika
         return { requiresTwoFactor: true, tempToken };
       }
     }
 
+<<<<<<< HEAD
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const opaqueSecret = crypto.randomBytes(32).toString('hex');
     const refreshTokenHash = await bcrypt.hash(opaqueSecret, 10);
@@ -194,6 +263,45 @@ export class UserService {
       html: `<p>Your account was just signed into using <strong>${provider}</strong>, a method not previously used. If this wasn't you, please secure your account immediately.</p>`,
     });
   }
+=======
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const opaqueSecret = crypto.randomBytes(32).toString('hex');
+      const refreshTokenHash = await bcrypt.hash(opaqueSecret, 10);
+
+      const session = await this.prisma.session.create({
+        data: {
+          userId: user.id,
+          refreshTokenHash,
+          expiresAt,
+          deviceLabel: parseUserAgent(data.userAgent),
+          userAgent: data.userAgent,
+          ipAddress: data.ipAddress,
+        },
+      });
+
+      const accessToken = this.jwtService.sign({
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+        sid: session.id,
+      });
+
+      return { id: user.id, role: user.role, phone: user.phone, address: user.address, image: user.image, name: user.name, accessToken };
+    }
+
+    private async notifyNewProviderLinked(email: string, provider: string) {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
+      });
+      await transporter.sendMail({
+        from: `"HamroNepal Bazaar" <${process.env.MAIL_USER}>`,
+        to: email,
+        subject: 'New sign-in method added to your account',
+        html: `<p>Your account was just signed into using <strong>${provider}</strong>, a method not previously used. If this wasn't you, please secure your account immediately.</p>`,
+      });
+    }
+>>>>>>> origin/aashika
 
   async findOne(id: string) {
     const user = await this.prisma.user.findUnique({
@@ -222,7 +330,11 @@ export class UserService {
     const { name, address, image } = data;
     const updated = await this.prisma.user.update({
       where: { id },
+<<<<<<< HEAD
       data: { name, address, image },
+=======
+      data: {name, address, image },
+>>>>>>> origin/aashika
       select: {
         id: true,
         name: true,
@@ -238,6 +350,7 @@ export class UserService {
 
   async updateProfileImage(userId: string, file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file uploaded');
+<<<<<<< HEAD
 
     const previous = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -252,10 +365,15 @@ export class UserService {
     const imagePath = `/uploads/profile/${finalName}`;
 
     const updated = await this.prisma.user.update({
+=======
+    const imagePath = `/uploads/profile/${file.filename}`;
+    const updated = await  this.prisma.user.update({
+>>>>>>> origin/aashika
       where: { id: userId },
       data: { image: imagePath },
       select: { id: true, image: true },
     });
+<<<<<<< HEAD
 
     // Delete the replaced image so old files do not accumulate publicly.
     if (previous?.image?.startsWith('/uploads/profile/')) {
@@ -265,6 +383,8 @@ export class UserService {
       }
     }
 
+=======
+>>>>>>> origin/aashika
     await this.activityLogService.log(userId, 'PROFILE_PHOTO_CHANGED');
     return updated;
   }
@@ -274,17 +394,22 @@ export class UserService {
     return this.prisma.user.delete({ where: { id } });
   }
 
+<<<<<<< HEAD
   async updatePassword(
     id: string,
     dto: UpdatePasswordDto,
     currentSessionId?: string,
   ) {
+=======
+  async updatePassword(id: string, dto: UpdatePasswordDto) {
+>>>>>>> origin/aashika
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: { id: true, password: true },
     });
 
     if (!user) throw new NotFoundException('User not found');
+<<<<<<< HEAD
     if (!user.password)
       throw new UnauthorizedException(
         'Password login is not enabled for this account',
@@ -310,14 +435,27 @@ export class UserService {
       data: { revokedAt: new Date() },
     });
 
+=======
+    if (!user.password) throw new UnauthorizedException('Password login is not enabled for this account');
+
+    const isValid = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!isValid) throw new UnauthorizedException('Current password is incorrect');
+
+    const newHash = await bcrypt.hash(dto.newPassword, 12);
+    await this.prisma.user.update({ where: { id }, data: { password: newHash } });
+>>>>>>> origin/aashika
     await this.activityLogService.log(id, 'PASSWORD_CHANGED');
     return { message: 'Password updated successfully' };
   }
 
   async forgotPassword(email: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
+<<<<<<< HEAD
     if (!user || !user.password)
       return { message: 'If that email exists, a link has been sent.' };
+=======
+    if (!user || !user.password) return { message: 'If that email exists, a link has been sent.' };
+>>>>>>> origin/aashika
 
     const token = crypto.randomBytes(32).toString('hex');
     const expiry = new Date(Date.now() + 1000 * 60 * 60);
@@ -356,6 +494,7 @@ export class UserService {
     const hash = await bcrypt.hash(newPassword, 12);
     await this.prisma.user.update({
       where: { id: user.id },
+<<<<<<< HEAD
       data: {
         password: hash,
         passwordResetToken: null,
@@ -363,6 +502,11 @@ export class UserService {
       },
     });
 
+=======
+      data: { password: hash, passwordResetToken: null, passwordResetExpiry: null },
+    });
+    
+>>>>>>> origin/aashika
     await this.prisma.session.updateMany({
       where: { userId: user.id, revokedAt: null },
       data: { revokedAt: new Date() },
@@ -371,6 +515,7 @@ export class UserService {
     return { message: 'Password reset successfully' };
   }
 
+<<<<<<< HEAD
   async requestPhoneUpdate(
     userId: string,
     phone: string,
@@ -379,6 +524,9 @@ export class UserService {
   ): Promise<{ message: string }> {
     await this.assertReauth(userId, currentPassword, otp);
 
+=======
+  async requestPhoneUpdate(userId: string, phone: string): Promise<{ message: string }> {
+>>>>>>> origin/aashika
     if (!/^(98|97)\d{8}$/.test(phone)) {
       throw new BadRequestException('Invalid Nepal phone number');
     }
@@ -397,16 +545,21 @@ export class UserService {
     return { message: `OTP sent to ${phone}` };
   }
 
+<<<<<<< HEAD
   async confirmPhoneUpdate(
     userId: string,
     otp: string,
   ): Promise<{ message: string }> {
+=======
+  async confirmPhoneUpdate(userId: string, otp: string): Promise<{ message: string }> {
+>>>>>>> origin/aashika
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { phone: true },
     });
 
     if (!user?.phone) {
+<<<<<<< HEAD
       throw new BadRequestException(
         'No pending phone update. Request OTP first.',
       );
@@ -417,6 +570,12 @@ export class UserService {
       otp,
       OtpContext.USER_REGISTRATION,
     );
+=======
+      throw new BadRequestException('No pending phone update. Request OTP first.');
+    }
+
+    await this.phoneOtpService.verifyOtp(user.phone, otp, OtpContext.USER_REGISTRATION);
+>>>>>>> origin/aashika
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -427,6 +586,7 @@ export class UserService {
   }
 
   async requestEnableTwoFactor(userId: string) {
+<<<<<<< HEAD
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { phone: true, phoneVerifiedAt: true, twoFactorEnabled: true },
@@ -529,3 +689,33 @@ export class UserService {
     await this.phoneOtpService.verifyOtp(user.phone, otp, OtpContext.REAUTH);
   }
 }
+=======
+  const user = await this.prisma.user.findUnique({
+    where: { id: userId },
+    select: { phone: true, phoneVerifiedAt: true, twoFactorEnabled: true },
+  });
+  if (!user) throw new NotFoundException('User not found');
+  if (user.twoFactorEnabled) throw new BadRequestException('Two-factor is already enabled.');
+  if (!user.phone || !user.phoneVerifiedAt) {
+    throw new BadRequestException('Verify a phone number before enabling two-factor authentication.');
+  }
+  await this.phoneOtpService.sendOtp(user.phone, OtpContext.TWO_FA_SETUP);
+  return { message: `OTP sent to ${user.phone}` };
+}
+
+async confirmEnableTwoFactor(userId: string, otp: string) {
+  const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { phone: true } });
+  if (!user?.phone) throw new BadRequestException('No phone on file.');
+  await this.phoneOtpService.verifyOtp(user.phone, otp, OtpContext.TWO_FA_SETUP);
+  await this.prisma.user.update({ where: { id: userId }, data: { twoFactorEnabled: true } });
+  await this.activityLogService.log(userId, 'TWO_FA_ENABLED');
+  return { message: 'Two-factor authentication enabled.' };
+}
+
+async disableTwoFactor(userId: string) {
+  await this.prisma.user.update({ where: { id: userId }, data: { twoFactorEnabled: false } });
+  await this.activityLogService.log(userId, 'TWO_FA_DISABLED');
+  return { message: 'Two-factor authentication disabled.' };
+}
+}
+>>>>>>> origin/aashika

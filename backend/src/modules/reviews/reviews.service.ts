@@ -1,9 +1,13 @@
+<<<<<<< HEAD
 import {
   ConflictException,
   Injectable,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+=======
+import { Injectable, ForbiddenException } from '@nestjs/common';
+>>>>>>> origin/aashika
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateReviewDto } from './dto/create_reviews.dto';
 import { QueryReviewDto } from './dto/query_review.dto';
@@ -19,6 +23,7 @@ export class ReviewsService {
       select: { userId: true },
     });
 
+<<<<<<< HEAD
     if (!listing) {
       throw new NotFoundException('Listing not found');
     }
@@ -36,11 +41,18 @@ export class ReviewsService {
       throw new ConflictException('You have already reviewed this listing');
     }
 
+=======
+    if (listing?.userId === userId) {
+      throw new ForbiddenException("You can't review your own listing");
+    }
+
+>>>>>>> origin/aashika
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { name: true },
     });
 
+<<<<<<< HEAD
     try {
       return await this.prisma.review.create({
         data: {
@@ -68,22 +80,48 @@ export class ReviewsService {
       limit = 10,
       search,
     } = query;
+=======
+    return this.prisma.review.create({
+      data: {
+        userId,
+        listingId: dto.listingId,
+        reviewerName: user?.name ?? "Anonymous",
+        rating: dto.rating,
+        comment: dto.comment,
+      },
+    });
+  }
+
+  async findAll(query: QueryReviewDto) {
+    const {listingId, minRating, maxRating, page=1, limit=10, search }=query;
+>>>>>>> origin/aashika
     const where: any = {};
 
     if (listingId) {
       where.listingId = listingId;
     }
+<<<<<<< HEAD
     if (minRating !== undefined || maxRating !== undefined) {
+=======
+    if (minRating !== undefined || maxRating !== undefined ) {
+>>>>>>> origin/aashika
       where.rating = {
         ...(minRating !== undefined ? { gte: Number(minRating) } : {}),
         ...(maxRating !== undefined ? { lte: Number(maxRating) } : {}),
       };
     }
     if (search) {
+<<<<<<< HEAD
       where.OR = [
         { comment: { contains: search, mode: 'insensitive' } },
         { reviewerName: { contains: search, mode: 'insensitive' } },
       ];
+=======
+        where.OR = [
+        { comment: { contains: search, mode: 'insensitive' } },
+        { reviewerName: { contains: search, mode: 'insensitive' } },
+        ];
+>>>>>>> origin/aashika
     }
     const pageNumber = Number(page);
     const limitNumber = Number(limit);
@@ -102,7 +140,11 @@ export class ReviewsService {
     return this.prisma.review.findUnique({
       where: { id },
     });
+<<<<<<< HEAD
   }
+=======
+}
+>>>>>>> origin/aashika
 
   async update(id: string, dto: UpdateReviewDto, userId: string) {
     return this.prisma.review.update({
@@ -117,3 +159,7 @@ export class ReviewsService {
     });
   }
 }
+<<<<<<< HEAD
+=======
+ 
+>>>>>>> origin/aashika

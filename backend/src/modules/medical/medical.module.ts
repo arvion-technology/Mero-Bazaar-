@@ -27,4 +27,8 @@ import { AuthModule } from '../auth/auth.module';
     MedicalAppointmentsService,
   ],
 })
+<<<<<<< HEAD
 export class MedicalModule {}
+=======
+export class MedicalModule {}
+>>>>>>> origin/aashika
