@@ -5,7 +5,7 @@ import * as crypto from 'crypto';
 
 export const kycUploadconfig = {
     storage: diskStorage({
-      destination: './uploads/kyc-quarantine',
+      destination: './private-storage/kyc-quarantine',
       filename: (req, file, cb) => {
         const random = crypto.randomBytes(16).toString('hex');
         cb(null, `${random}.tmp`);

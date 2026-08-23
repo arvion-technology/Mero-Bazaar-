@@ -468,41 +468,41 @@ export default function TradeDetailPage() {
 
                 <div className="cd-price">{listing.calloutCharge}</div>
 
-                <div className="cd-meta-row">
-                  <span className="cd-meta-item">
-                    <FiMapPin size={11} color="#888" style={{ marginRight: 3 }} />
-                    {listing.location}
-                  </span>
-                  <span className="cd-meta-item">
-                    <FiClock size={12} color="#bbb" style={{ marginRight: 3 }} />
-                    Posted {listing.postedDaysAgo} day
-                    {listing.postedDaysAgo !== 1 ? "s" : ""} ago
-                  </span>
-                  <button
-                    className="cd-share-btn"
-                    onClick={() => {
-                      if (navigator.share)
-                        navigator.share({
-                          title: listing.title,
-                          url: window.location.href,
-                        });
-                    }}
-                  >
-                    <FiShare2 size={16} />
-                  </button>
-                  <button
-                    className={`cd-action-btn${isFav ? " fav-active" : ""}`}
-                    aria-label="Save to wishlist"
-                    onClick={handleToggleFavorite}
-                    disabled={favLoading}
-                  >
-                    {isFav ? (
-                      <FaHeart size={14} color="#e74c3c" />
-                    ) : (
-                      <FiHeart size={14} color="#888" />
-                    )}
-                  </button>
-                </div>
+              <div className="cd-meta-row">
+                <span className="cd-meta-item">
+                  <FiMapPin size={11} color="#888" style={{ marginRight: 3 }} />
+                  {listing.location}
+                </span>
+                <span className="cd-meta-item">
+                  <FiClock size={12} color="#bbb" style={{ marginRight: 3 }} />
+                  Posted {listing.postedDaysAgo} day
+                  {listing.postedDaysAgo !== 1 ? "s" : ""} ago
+                </span>
+                <button
+                  className="cd-share-btn"
+                  onClick={() => {
+                    if (navigator.share)
+                      navigator.share({
+                        title: listing.title,
+                        url: window.location.href,
+                      });
+                  }}
+                >
+                  <FiShare2 size={16} />
+                </button>
+                <button
+                  className={`cd-action-btn${isFav ? " fav-active" : ""}`}
+                  aria-label="Save to wishlist"
+                  onClick={handleToggleFavorite}
+                  disabled={favLoading}
+                >
+                  {isFav ? (
+                    <FaHeart size={14} color="#e74c3c" />
+                  ) : (
+                    <FiHeart size={14} color="#888" />
+                  )}
+                </button>
+              </div>
 
                 <div className="cd-chips-row">
                   <div className="cd-chip">
@@ -573,6 +573,50 @@ export default function TradeDetailPage() {
               </div>
             </div>
           </div>
+          {/* <div className="cd-right"> */}
+            <div className="cd-seller-card">
+              <SellerCard
+                seller={listing.seller}
+                reviews={listing.reviews}
+                listingId={listing.id} 
+                sellerId={listing.sellerId}
+              />
+            {/* </div> */}
+
+            {/* <div className="cd-lead-card">
+              <p className="cd-company-card-title" style={{ marginBottom: 10 }}>Request a Quote</p>
+              {leadSent ? (
+                <p style={{ fontSize: 13, color: "#0b8a6b", fontWeight: 600 }}>
+                  <FiCheckCircle size={14} style={{ marginRight: 4 }} />
+                  Your request has been sent.
+                </p>
+              ) : (
+                <>
+                  <textarea
+                    className="cd-lead-textarea"
+                    placeholder="Describe what you need help with…"
+                    value={leadMessage}
+                    onChange={(e) => setLeadMessage(e.target.value)}
+                  />
+                  <input
+                    className="cd-lead-input"
+                    placeholder="Your phone number (optional)"
+                    value={leadPhone}
+                    onChange={(e) => setLeadPhone(e.target.value)}
+                  />
+                  <button
+                    className="cd-lead-submit"
+                    onClick={handleSendLead}
+                    disabled={sendingLead || !leadMessage.trim()}
+                  >
+                    <FiMessageSquare size={13} style={{ marginRight: 6 }} />
+                    {sendingLead ? "Sending…" : "Send Request"}
+                  </button>
+                </>
+              )}
+            </div> */}
+          </div>
+        </div>
 
           {similar.length > 0 && (
             <div className="cd-similar">

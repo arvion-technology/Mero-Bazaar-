@@ -4,6 +4,8 @@ import { LeadsService } from './leads.service';
 import { CreateLeadDto } from './dto/create_lead.dto';
 import { LeadStatus, ListingCategory } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @Controller('leads')
 export class LeadsController {
@@ -17,7 +19,8 @@ export class LeadsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard) 
+  @UseGuards(JwtAuthGuard, RolesGuard) 
+  @Roles('ADMIN')
   findAll(@Query('category') category?: ListingCategory, @Query('status') status?: LeadStatus) {
     return this.leadsService.findAll({ category, status });
   }

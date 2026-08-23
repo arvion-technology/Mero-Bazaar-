@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
-import { WeekDay } from '@prisma/client';
+import { Prisma, WeekDay } from '@prisma/client';
 import { UpdateMedicalSlotDto } from './dto/update_medical_slots.dto';
 import { CreateMedicalSlotDto } from './dto/create_medical_slots.dto';
 
@@ -26,8 +26,29 @@ export class MedicalSlotsService {
     return listing.medical;
   }
 
-  async create(dto: CreateMedicalSlotDto) {
-    const medical = await this.resolveMedicalByListingId(dto.medicalId);
+  private async resolveListingWithMedical(listingId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      include: { medical: true },
+    });
+
+    if (!listing?.medical) {
+      throw new NotFoundException('Medical service not found');
+    }
+
+    return listing;
+  }
+
+  private assertOwnerOrAdmin(listingUserId: string, userId: string, role: string) {
+    if (role !== 'ADMIN' && listingUserId !== userId) {
+      throw new ForbiddenException('You do not own this medical listing');
+    }
+  }
+
+  async create(dto: CreateMedicalSlotDto, userId: string, role: string) {
+    const listing = await this.resolveListingWithMedical(dto.medicalId);
+    this.assertOwnerOrAdmin(listing.userId, userId, role);
+    const medical = listing.medical!;
 
     if (this.toMinutes(dto.startTime) >= this.toMinutes(dto.endTime)) {
       throw new BadRequestException('startTime must be before endTime');
@@ -46,14 +67,21 @@ export class MedicalSlotsService {
       throw new BadRequestException('Slot already exists for this day and time');
     }
 
-    return this.prisma.medicalSlot.create({
-      data: {
-        medicalId: medical.id,
-        day: dto.day as WeekDay,
-        startTime: dto.startTime,
-        endTime: dto.endTime,
-      },
-    });
+    try {
+      return await this.prisma.medicalSlot.create({
+        data: {
+          medicalId: medical.id,
+          day: dto.day as WeekDay,
+          startTime: dto.startTime,
+          endTime: dto.endTime,
+        },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new BadRequestException('Slot already exists for this day and time');
+      }
+      throw e;
+    }
   }
 
   async findAll() {
@@ -114,6 +142,7 @@ export class MedicalSlotsService {
       },
     });
   }
+
   async findOne(id: string) {
     const slot = await this.prisma.medicalSlot.findUnique({ where: { id } });
 
@@ -122,30 +151,50 @@ export class MedicalSlotsService {
     return slot;
   }
 
-  async update(id: string, dto: UpdateMedicalSlotDto) {
-    const slot = await this.findOne(id);
-
-    if (slot.isBooked) {
-      throw new BadRequestException('Cannot update a booked slot');
-    }
-
-    return this.prisma.medicalSlot.update({
+  private async findOneWithOwner(id: string) {
+    const slot = await this.prisma.medicalSlot.findUnique({
       where: { id },
-      data: {
-        day: dto.day,
-        startTime: dto.startTime,
-        endTime: dto.endTime,
-      },
+      include: { medical: { include: { listing: true } } },
+    });
+
+    if (!slot) throw new NotFoundException('Slot not found');
+    return slot;
+  }
+
+  async update(id: string, dto: UpdateMedicalSlotDto, userId: string, role: string) {
+    const slot = await this.findOneWithOwner(id);
+    this.assertOwnerOrAdmin(slot.medical.listing.userId, userId, role);
+
+    return this.prisma.$transaction(async (tx) => {
+      const result = await tx.medicalSlot.updateMany({
+        where: { id, isBooked: false },
+        data: {
+          day: dto.day,
+          startTime: dto.startTime,
+          endTime: dto.endTime,
+        },
+      });
+
+      if (result.count === 0) {
+        throw new BadRequestException('Cannot update a booked slot');
+      }
+
+      return tx.medicalSlot.findUniqueOrThrow({ where: { id } });
     });
   }
 
-  async remove(id: string) {
-    const slot = await this.findOne(id);
+  async remove(id: string, userId: string, role: string) {
+    const slot = await this.findOneWithOwner(id);
+    this.assertOwnerOrAdmin(slot.medical.listing.userId, userId, role);
 
-    if (slot.isBooked) {
+    const result = await this.prisma.medicalSlot.deleteMany({
+      where: { id, isBooked: false },
+    });
+
+    if (result.count === 0) {
       throw new BadRequestException('Cannot delete a booked slot');
     }
 
-    return this.prisma.medicalSlot.delete({ where: { id } });
+    return { id, deleted: true };
   }
 }

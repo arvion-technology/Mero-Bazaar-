@@ -40,14 +40,14 @@ export class AuthService {
       if (phoneExists) throw new ConflictException('Phone number already in use');
     }
     const hash = await bcrypt.hash(dto.password, 10);
-
+    const allowedRole = dto.role === UserRole.VENDOR ? UserRole.VENDOR : UserRole.USER;
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         password: hash,
         name: dto.name,
         phone: dto.phone,
-        role: dto.role ?? UserRole.USER,
+        role: allowedRole,
         address: dto.address,
 
         ...(dto.role === UserRole.VENDOR && {
@@ -61,7 +61,7 @@ export class AuthService {
       },
     });
 
-    return this.signToken(user.id, user.email, user.role ?? UserRole.USER,req);
+    return this.signToken(user.id, user.email, allowedRole,req);
   }
 
   async login(dto: LoginDto, req: Request) {
