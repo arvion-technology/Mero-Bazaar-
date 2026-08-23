@@ -1,0 +1,204 @@
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { PrismaService } from 'src/database/prisma.service';
+import { CreateLeadDto } from './dto/create_lead.dto';
+import { LeadStatus, ListingCategory, LeadType } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
+
+@Injectable()
+export class LeadsService {
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsService,
+  ) {}
+
+  async create(dto: CreateLeadDto, userId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: dto.listingId },
+      select: { category: true },
+    });
+
+    if (!listing) {
+      throw new BadRequestException('Listing not found');
+    }
+
+    const allowedCategories: ListingCategory[] = [
+      ListingCategory.JOB,
+      ListingCategory.RENTAL,
+      ListingCategory.TRADES,
+    ];
+
+    if (!allowedCategories.includes(listing.category)) {
+      throw new BadRequestException(
+        'Leads are only allowed for JOB, RENTAL, and TRADES categories',
+      );
+    }
+
+    // prevent duplicate leads
+    const existing = await this.prisma.lead.findFirst({
+      where: {
+        listingId: dto.listingId,
+        userId,
+        leadType: dto.leadType,
+      },
+    });
+
+    if (existing) {
+      throw new BadRequestException(
+        'You already submitted a lead for this listing',
+      );
+    }
+
+    const lead = await this.prisma.lead.create({
+      data: {
+        listingId: dto.listingId,
+        userId,
+        leadType: dto.leadType,
+        message: dto.message ?? null,
+        status: LeadStatus.PENDING,
+      },
+      include: {
+        listing: true,
+      },
+    });
+
+    await this.notifications.create(lead.listing.userId, {
+      category: 'ORDERS',
+      type: 'NEW_LEAD',
+      title: 'New client message',
+      description: `Someone sent an inquiry about "${lead.listing.title}"`,
+    });
+    return lead;
+  }
+
+  async findAll(filters?: {
+    category?: ListingCategory;
+    status?: LeadStatus;
+    userId?: string;
+    listingId?: string;
+  }) {
+    return this.prisma.lead.findMany({
+      where: {
+        ...(filters?.status && { status: filters.status }),
+        ...(filters?.userId && { userId: filters.userId }),
+        ...(filters?.listingId && { listingId: filters.listingId }),
+
+        listing: filters?.category
+          ? {
+              category: filters.category,
+            }
+          : {
+              category: {
+                in: [
+                  ListingCategory.JOB,
+                  ListingCategory.RENTAL,
+                  ListingCategory.TRADES,
+                ],
+              },
+            },
+      },
+      include: {
+        listing: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async updateStatus(id: string, status: LeadStatus, sellerId: string) {
+    const lead = await this.prisma.lead.findUnique({
+      where: { id },
+      include: { listing: true },
+    });
+
+    if (!lead) {
+      throw new NotFoundException('Lead not found');
+    }
+
+    if (lead.listing.userId !== sellerId) {
+      throw new ForbiddenException('Not your listing');
+    }
+
+    return this.prisma.lead.update({
+      where: { id },
+      data: {
+        status,
+        ...(status === LeadStatus.VIEWED && { contactedAt: new Date() }),
+        ...(status === LeadStatus.INTERVIEWED && { respondedAt: new Date() }),
+      },
+      include: {
+        listing: true,
+      },
+    });
+  }
+
+  async findForSeller(
+    sellerId: string,
+    filters?: { status?: LeadStatus; leadType?: LeadType },
+  ) {
+    return this.prisma.lead.findMany({
+      where: {
+        listing: { userId: sellerId },
+        ...(filters?.status && { status: filters.status }),
+        ...(filters?.leadType && { leadType: filters.leadType }),
+      },
+      include: {
+        listing: {
+          select: {
+            id: true,
+            title: true,
+            category: true,
+            images: true,
+            price: true,
+          },
+        },
+        // Never serialize the applicant's credential/PII fields to sellers.
+        user: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async countUnreadForSeller(sellerId: string) {
+    const count = await this.prisma.lead.count({
+      where: {
+        listing: { userId: sellerId },
+        status: LeadStatus.PENDING,
+      },
+    });
+    return { count };
+  }
+
+  async findSentByUser(userId: string) {
+    return this.prisma.lead.findMany({
+      where: { userId },
+      include: {
+        listing: {
+          select: {
+            id: true,
+            title: true,
+            user: {
+              select: {
+                name: true,
+                phone: true,
+                vendorKyc: { select: { contactNumber: true, status: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+}

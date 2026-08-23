@@ -1,0 +1,200 @@
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { PrismaService } from 'src/database/prisma.service';
+import { CreateHairBeautyAndWellnessDto } from './dto/create_beauty.dto';
+import { UpdateHairBeautyAndWellnessDto } from './dto/update_beauty.dto';
+import { ListingCategory } from '@prisma/client';
+import { validateAndReencodeImage } from '../../common/uploads/upload.util';
+import { assertVerifiedSeller } from '../../common/authz/seller-access';
+
+@Injectable()
+export class HairBeautyAndWellnessService {
+  constructor(private prisma: PrismaService) {}
+
+  async create(dto: CreateHairBeautyAndWellnessDto, userId: string) {
+    await assertVerifiedSeller(this.prisma, userId);
+    return this.prisma.listing.create({
+      data: {
+        title: dto.serviceTitle,
+        category: ListingCategory.BEAUTY,
+        description:
+          dto.shortDescription ??
+          (dto.city
+            ? `${dto.serviceType} available in ${dto.city}`
+            : `${dto.serviceType} service`),
+        price: dto.price,
+        images: dto.portfolioUrls ?? [],
+        user: {
+          connect: { id: userId },
+        },
+        beauty: {
+          create: {
+            serviceType: dto.serviceType,
+            price: dto.price,
+            priceStartingFrom: dto.priceStartingFrom,
+            homeVisit: dto.homeVisit,
+            portfolioUrls: dto.portfolioUrls,
+            bridalAvailable: dto.bridalAvailable,
+            city: dto.city,
+            shortDescription: dto.shortDescription,
+            serviceLocationType: dto.serviceLocationType,
+            studioLocation: dto.studioLocation,
+            duration: dto.duration,
+            whoIsThisFor: dto.whoIsThisFor,
+            genderPreference: dto.genderPreference,
+            experienceLevel: dto.experienceLevel,
+            preparationTime: dto.preparationTime,
+            tags: dto.tags ?? [],
+          },
+        },
+      },
+      include: {
+        beauty: true,
+      },
+    });
+  }
+
+  async findAll() {
+    return this.prisma.listing.findMany({
+      where: { category: ListingCategory.BEAUTY },
+      include: {
+        beauty: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            isVerified: true,
+            phone: true,
+            createdAt: true,
+            vendorProfile: {
+              select: { businessName: true, rating: true },
+            },
+          },
+        },
+        reviews: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findOne(id: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      include: {
+        beauty: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            isVerified: true,
+            phone: true,
+            createdAt: true,
+            vendorProfile: {
+              select: { businessName: true, rating: true },
+            },
+          },
+        },
+        reviews: true,
+      },
+    });
+
+    if (!listing || listing.category !== ListingCategory.BEAUTY) {
+      throw new NotFoundException('Hair Beauty & Wellness listing not found');
+    }
+
+    return listing;
+  }
+
+  async update(
+    id: string,
+    dto: UpdateHairBeautyAndWellnessDto,
+    userId: string,
+  ) {
+    await this.findOne(id);
+
+    return this.prisma.listing.update({
+      where: { id, userId },
+      data: {
+        title: dto.serviceTitle,
+        description:
+          dto.shortDescription ??
+          (dto.city
+            ? `${dto.serviceType ?? ''} available in ${dto.city}`
+            : undefined),
+        price: dto.price,
+        images: dto.portfolioUrls ?? undefined,
+        beauty: {
+          update: {
+            serviceType: dto.serviceType,
+            price: dto.price,
+            priceStartingFrom: dto.priceStartingFrom,
+            homeVisit: dto.homeVisit,
+            portfolioUrls: dto.portfolioUrls,
+            bridalAvailable: dto.bridalAvailable,
+            city: dto.city,
+            shortDescription: dto.shortDescription,
+            serviceLocationType: dto.serviceLocationType,
+            studioLocation: dto.studioLocation,
+            duration: dto.duration,
+            whoIsThisFor: dto.whoIsThisFor,
+            genderPreference: dto.genderPreference,
+            experienceLevel: dto.experienceLevel,
+            preparationTime: dto.preparationTime,
+            tags: dto.tags,
+          },
+        },
+      },
+      include: { beauty: true },
+    });
+  }
+
+  async remove(id: string, userId: string) {
+    await this.findOne(id);
+    return this.prisma.listing.delete({ where: { id, userId } });
+  }
+
+  async addPhotos(id: string, files: Express.Multer.File[], userId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      include: { beauty: true },
+    });
+
+    if (!listing || listing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
+    if (!listing.beauty) {
+      throw new NotFoundException('Beauty listing not found');
+    }
+
+    const newPhotoNames: string[] = [];
+    for (const file of files) {
+      const finalName = await validateAndReencodeImage(
+        file.path,
+        './uploads/beauty',
+      );
+      newPhotoNames.push(finalName);
+    }
+
+    const newPhotoUrls = newPhotoNames.map((name) => `/uploads/beauty/${name}`);
+    const updatedImages = [...listing.images, ...newPhotoUrls];
+
+    return this.prisma.listing.update({
+      where: { id },
+      data: {
+        images: updatedImages,
+        beauty: {
+          update: {
+            portfolioUrls: updatedImages,
+          },
+        },
+      },
+      include: {
+        beauty: true,
+      },
+    });
+  }
+}

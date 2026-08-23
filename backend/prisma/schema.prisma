@@ -1,0 +1,1100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String    @id @default(cuid())
+  email      String    @unique
+  phone      String?   @unique
+  password   String?
+  name       String?
+  role       UserRole? @default(USER)
+  address    String?
+  image      String?
+  isActive   Boolean   @default(true)
+  isVerified Boolean   @default(false)
+
+  emailVerifiedAt DateTime?
+  phoneVerifiedAt DateTime?
+
+  refreshTokenHash String?
+  lastLoginAt      DateTime?
+  lastOAuthProvider     String?
+
+  passwordResetToken    String?
+  passwordResetExpiry   DateTime?
+
+  vendorProfile VendorProfile?
+  doctorProfile DoctorProfile?
+
+  vendorKyc     VendorKyc?
+  twoFactorEnabled  Boolean @default(false)
+
+  leads         Lead[]
+  orders        Order[]
+  reviews       Review[]
+  listings      Listing[]
+  sessions      Session[]
+  ActivityLogs  ActivityLog[]
+  notifications Notification[]
+  wishlist      Wishlist[]
+  reportsFiled  Report[] @relation("ReporterUser")
+  reportsReceived Report[] @relation("ReportedUser")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+}
+
+enum UserRole {
+  USER
+  VENDOR
+  DOCTOR
+  ADMIN
+}
+
+model VendorProfile {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  businessName String
+  businessType VendorType
+  description  String?
+  address      String?
+  isVerified   Boolean    @default(false)
+  rating       Float      @default(0)
+
+  isOnProbation    Boolean @default(true)
+  probationEndsAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum VendorType {
+  INDIVIDUAL
+  COMPANY
+  AGENCY
+}
+
+model VendorKyc {
+  id                String @id @default(cuid())
+  userId            String @unique
+  user              User   @relation(fields:[userId], references: [id], onDelete: Cascade)
+
+  fullName          String
+  dateOfBirth       DateTime
+  contactNumber     String  @unique
+  address           String  
+  panNumber         String? @unique
+
+  panCardUrl        String?
+  photoUrl          String?
+  selfieWithPanUrl  String?
+
+  phoneVerified     Boolean @default(false)
+  phoneVerifiedAt   DateTime?
+
+  bankName          String
+  account           String
+  accountHolderName String
+
+//admin review
+  status            VerificationStatus @default(PENDING) 
+  rejectionReason   String?
+  reviewedAt        DateTime?
+  reviewedBy        String?
+
+  submittedAt       DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([status])
+  @@index([contactNumber])
+  @@index([panNumber])
+  @@index([account])
+}
+
+model PhoneOtp {
+  id         String @id @default(cuid())
+  phone      String
+  otpHash        String
+  context    OtpContext
+  expiresAt  DateTime
+  attempts   Int @default(0)
+  verified   Boolean @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([phone]) 
+  @@index([context])
+}
+
+enum OtpContext {
+  USER_REGISTRATION
+  KYC_CONTACT
+  PASSWORD_RESET
+  LOGIN
+  TWO_FA_SETUP
+  REAUTH
+}
+
+model DoctorProfile {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  doctorName         String
+  nmcLicenseNumber   String             @unique
+  specialization     MedicalServiceType
+  verificationStatus VerificationStatus @default(PENDING)
+
+  clinicAddress String?
+  clinicName    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  id               String @id @default(cuid())
+  userId           String
+  user             User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  refreshTokenHash String
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+
+  userAgent        String?
+  ipAddress        String?
+  deviceLabel      String?
+  lastActiveAt     DateTime @default(now())
+  revokedAt        DateTime?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+enum ActivityType {
+  LOGIN 
+  PASSWORD_CHANGED
+  TWO_FA_ENABLED
+  TWO_FA_DISABLED
+  PHONE_CHANGED
+  PROFILE_UPDATED
+  PROFILE_PHOTO_CHANGED
+  OAUTH_PROVIDER_LINKED
+}
+
+model ActivityLog {
+  id           String @id @default(cuid())
+  userId       String
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         ActivityType 
+  description  String?
+  ipAddress    String?
+  deviceLabel  String?
+  read         Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+enum NotificationCategory {
+  ORDERS
+  LISTINGS
+  PAYMENTS
+  DISPUTES
+  LEADS
+  REVIEWS
+  KYC
+  APPOINTMENTS
+  ACCOUNT
+  PROMOTIONS
+  SYSTEM
+
+}
+
+model Notification {
+  id            String @id @default(cuid())
+  userId        String
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category      NotificationCategory
+  type          String
+  title         String
+  description   String
+  read          Boolean @default(false)
+  createdAt     DateTime @default(now())
+  entityId      String?
+  entityType    String?
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+
+}
+
+model Wishlist {
+  id           String @id @default(cuid())
+  userId       String
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId    String
+  listing      Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@index([userId])
+  @@index([listingId])
+}
+
+model Listing {
+  id          String          @id @default(cuid())
+
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  price       Int?
+  category    ListingCategory @default(VEHICLE)
+
+  latitude  Float?
+  longitude Float?
+
+  images String[]
+
+  isVerifiedDoctor Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  status      ListingStatus @default(ACTIVE)
+
+  vehicle     Vehicle?
+  job         Job?
+  medical     MedicalAndDental?
+  trades      TradesAndHomeRepair?
+  rental      RentalAndRealEstate?
+  agriculture AgricultureAndLivestock?
+  secondhand  SecondHandGoods?
+  foods       FoodsAndHomeDelivery?
+  beauty      HairBeautyAndWellness?
+
+  leads               Lead[]
+  medicalappointments MedicalAppointment[]
+  beautyAppointments  BeautyAppointment[]
+  orders              Order[]
+  reviews             Review[]
+  wishlist            Wishlist[]
+  reports             Report[]
+
+  @@index(userId)
+  @@index([category])
+  @@index([latitude, longitude])
+}
+
+enum ListingCategory {
+  VEHICLE
+  JOB
+  MEDICAL
+  TRADES
+  RENTAL
+  AGRICULTURE
+  SECONDHAND
+  FOODS
+  BEAUTY
+}
+
+model Vehicle {
+  id        String  @id @default(cuid())
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  type                     VehicleType
+  brand                    String
+  model                    String
+  year                     Int
+  km_driven                Int
+  condition                VehicleCondition
+  bluebook_status          BluebookStatus
+  fuel_type                FuelType?
+  details                  Json?
+  ownership_transfer_ready Boolean @default(false)
+  reservationFee           Int?
+
+  createdAt DateTime @default(now())
+}
+
+enum VehicleType {
+  bike
+  scooter
+  car
+  ev
+  truck
+  spare_parts
+}
+
+enum VehicleCondition {
+  new
+  used
+  refurb
+}
+
+enum BluebookStatus {
+  verified
+  pending
+  none
+}
+
+enum FuelType {
+  petrol
+  diesel
+  electric
+  hybrid
+}
+
+model Job {
+  id String @id @default(cuid())
+
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  role String
+
+  salaryMin Int
+  salaryMax Int
+  payPeriod PayPeriod
+
+  city      String
+  skillTags String[]
+
+  contractType ContractType
+
+  isUrgent              Boolean @default(false)
+  employerPhoneVerified Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([city])
+  @@index([isUrgent])
+  @@index([contractType])
+}
+
+enum PayPeriod {
+  HOURLY
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum ContractType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  FREELANCE
+  INTERNSHIP
+  GIG
+  LABOUR
+  DOMESTIC
+}
+
+model Lead {
+  id     String  @id @default(cuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  leadType  LeadType
+  createdAt DateTime @default(now())
+
+  status  LeadStatus @default(PENDING)
+  message String?
+
+  contactedAt DateTime?
+  respondedAt DateTime?
+
+  @@index([listingId])
+  @@index([leadType])
+  @@index([status])
+  @@index([userId])
+}
+
+enum LeadType {
+  CALL
+  CHAT
+  APPLY
+}
+
+enum LeadStatus {
+  PENDING
+  VIEWED
+  SHORTLISTED
+  INTERVIEWED
+  REJECTED
+  HIRED
+  WITHDRAWN
+}
+
+model MedicalAndDental {
+  id String @id @default(cuid())
+
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  serviceType MedicalServiceType @default(GENERAL_MEDICINE)
+  serviceOffered   String?
+
+  doctorName       String
+  nmcLicenseNumber String
+
+  verificationStatus VerificationStatus @default(PENDING)
+  appointmentFee     Int
+  homeVisitAvailable Boolean @default(false)
+  onlineAppointments Boolean @default(false)
+  clinicAddress      String
+  city               String
+
+  shortBio           String?
+  languages          String[]
+  experience         String?
+
+  slotDurationMinutes Int?
+  bufferMinutes       Int?
+  sameDayBooking      Boolean @default(false)
+
+  latitude  Float?
+  longitude Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  medicalAppointments   MedicalAppointment[]
+  verificationDocuments VerificationDocument[]
+  medicalSlots          MedicalSlot[]
+
+  @@unique([nmcLicenseNumber])
+  @@index([city])
+  @@index([homeVisitAvailable])
+  @@index([verificationStatus])
+}
+
+model MedicalAppointment {
+  id String @id @default(cuid())
+
+  medicalId String
+  medical   MedicalAndDental @relation(fields: [medicalId], references: [id], onDelete: Cascade)
+
+  slotId String
+  slot   MedicalSlot @relation(fields: [slotId], references: [id])
+
+  patientName String
+  patientId   String?
+  startTime   DateTime
+  endTime     DateTime
+
+  notes String?
+
+  status    AppointmentStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+
+  Listing   Listing? @relation(fields: [listingId], references: [id])
+  listingId String?
+
+  @@index([status])
+  @@index([medicalId])
+}
+
+model MedicalSlot {
+  id String @id @default(cuid())
+
+  medicalId String
+  medical   MedicalAndDental @relation(fields: [medicalId], references: [id], onDelete: Cascade)
+
+  day       WeekDay
+  startTime String
+  endTime   String
+
+  isBooked Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  medicalAppointments MedicalAppointment[]
+
+  @@index([medicalId])
+  @@index([day])
+  @@unique([medicalId, day, startTime, endTime])
+}
+
+enum MedicalServiceType {
+  GENERAL_MEDICINE
+  DENTAL
+  CARDIOLOGY
+  DERMATOLOGY
+  PEDIATRICS
+  ORTHOPEDIC
+  GYNECOLOGY
+  NEUROLOGY
+  ENT
+  OTHER
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model VerificationDocument {
+  id String @id @default(cuid())
+
+  medicalId String
+  medical   MedicalAndDental @relation(fields: [medicalId], references: [id], onDelete: Cascade)
+
+  filePath String
+
+  status          VerificationStatus @default(PENDING)
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([medicalId])
+}
+
+model TradesAndHomeRepair {
+  id String @id @default(cuid())
+
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  city               String
+  ward               String?
+  skillTags          String[]
+  serviceAreaKm      Int
+  calloutCharge      Int
+  warrantyGiven      Boolean  @default(false)
+  emergencyAvailable Boolean  @default(false)
+  avgResponseHours   Float?   @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([city])
+  @@index([emergencyAvailable])
+  @@index([serviceAreaKm])
+}
+
+model RentalAndRealEstate {
+  id String @id @default(cuid())
+
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  propertyType PropertyType
+  listingType  ListingType
+
+  city String
+  area String?
+  ward String?
+
+  address String?
+
+  latitude  Float?
+  longitude Float?
+
+  monthlyRent   Int
+  depositAmount Int
+
+  bedrooms   Int?
+  bathrooms  Int?
+  squareFeet Int?
+
+  furnished Boolean @default(false)
+
+  parkingAvailable    Boolean @default(false)
+  wifiAvailable       Boolean @default(false)
+  waterIncluded       Boolean @default(false)
+  electricityIncluded Boolean @default(false)
+
+  petFriendly Boolean @default(false)
+
+  availableFrom DateTime?
+
+  isOwnerOrAgent OwnerType
+  noBroker       Boolean   @default(false)
+
+  nearbyLandmarks String[]
+
+  rules String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([city])
+  @@index([propertyType])
+  @@index([listingType])
+  @@index([furnished])
+  @@index([isOwnerOrAgent])
+  @@index([latitude, longitude])
+}
+
+enum PropertyType {
+  ROOM
+  FLAT
+  APARTMENT
+  HOUSE
+  HOSTEL
+  LAND
+  SHUTTER
+  OFFICE
+}
+
+enum ListingType {
+  RENT
+  SALE
+}
+
+enum OwnerType {
+  OWNER
+  AGENT
+}
+
+model AgricultureAndLivestock {
+  id String @id @default(cuid())
+
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  listingType AgricultureListingType
+
+  district     String
+  village      String?
+  location     String
+  pricePerUnit Int
+  unit         UnitType
+
+  organicCertified Boolean @default(false)
+  organicVerified  Boolean @default(false)
+
+  seasonalAvailability String?
+  animalType           String?
+  breed                String?
+  age                  Int?
+  healthVaccineStatus  HealthVaccineStatus?
+
+  vetServiceType       VetServiceType?
+  experienceYears      Int?
+  mobileService        Boolean  @default(false)
+  vaccinationAvailable Boolean  @default(false)
+  serviceRadiusKm      Int?
+  healthCertificate    Boolean  @default(false)
+  availabilityDays     WeekDay[]
+
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  @@index([district])
+  @@index([listingType])
+  @@index([organicCertified])
+  @@index([healthVaccineStatus])
+  @@index([vetServiceType])
+}
+
+enum AgricultureListingType {
+  PRODUCE
+  LIVESTOCK
+  TOOL
+  SEED
+  FERTILIZER
+  VET_SERVICE
+  FARM_LABOUR
+}
+
+enum UnitType {
+  KG
+  LITRE
+  PIECE
+  HEAD
+  BIGHA
+}
+
+enum HealthVaccineStatus {
+  VACCINATED
+  NOT_VACCINATED
+  UNKNOWN
+}
+
+enum VetServiceType {
+  GENERAL_CHECKUP
+  VACCINATION
+  SURGERY
+  DEWORMING
+  BREEDING_CONSULTATION
+  EMERGENCY
+  OTHER
+}
+
+model SecondHandGoods {
+  id        String  @id @default(cuid())
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  category  SecondHandCategory
+  condition SecondHandCondition
+
+  itemName     String
+  price        Int
+  isNegotiable Boolean       @default(false)
+  photos       String[]
+  city         String
+  description  String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  expiresAt    DateTime
+
+  @@index([category])
+  @@index([condition])
+  @@index([city])
+  @@index([price])
+}
+
+enum SecondHandCategory {
+  FURNITURE
+  APPLIANCES
+  CLOTHING
+  BOOKS
+  BABY
+  SPORTS
+  INSTRUMENTS
+  OTHER
+}
+
+enum SecondHandCondition {
+  LIKE_NEW
+  GOOD
+  FAIR
+  FOR_PARTS
+}
+
+enum ListingStatus {
+  ACTIVE
+  RESERVED
+  SOLD
+  EXPIRED
+}
+
+model FoodsAndHomeDelivery {
+  id        String  @id @default(cuid())
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  foodType  FoodType
+  price     Int
+  priceUnit PriceUnit
+  deliveryDays          WeekDay[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([foodType])
+}
+
+model Review {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  reviewerName String?
+  rating       Int
+  comment      String?
+
+  createdAt               DateTime               @default(now())
+  HairBeautyAndWellness   HairBeautyAndWellness? @relation(fields: [hairBeautyAndWellnessId], references: [id])
+  hairBeautyAndWellnessId String?
+
+  reports   Report[]
+
+  @@unique([userId, listingId])
+  @@index(userId)
+  @@index([listingId])
+}
+
+model Order {
+  id              String @id @default(cuid())
+
+  userId          String
+  user            User   @relation(fields: [userId], references: [id])
+
+  listingId       String
+  listing         Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  type            OrderType @default(DELIVERY)
+
+  quantity        Int @default(1)
+  totalPrice      Int
+  priceAtOrder    Int
+
+  deliveryDate    DateTime?
+  deliveryAddress String?
+
+  reservedUntil   DateTime?
+  paymentRef      String?  @unique
+  cancelReason    String?
+  paymentMethod   PaymentMethod?
+
+  status            OrderStatus @default(PENDING)
+  disputeStatus     DisputeStatus @default(NONE)   
+  disputeReason     String?
+  disputeResolvedAt DateTime?
+  disputeResolvedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index(userId)
+  @@index([listingId])
+  @@index([status])
+  @@index([deliveryDate])
+  @@index([type])
+  @@index([disputeStatus])
+}
+
+enum OrderType {
+  DELIVERY
+  RESERVATION
+}
+
+enum PaymentMethod {
+  ESEWA
+  KHALTI
+  CONNECTIPS
+}
+
+enum DisputeStatus {
+  NONE
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+}
+enum FoodType {
+  TIFFIN
+  BAKERY
+  DAIRY
+  MEAT
+  ORGANIC
+  HOME_COOK
+  WHOLESALE
+}
+
+enum WeekDay {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+  SUN
+}
+
+enum PriceUnit {
+  PER_MEAL
+  PER_KG
+  PER_LITRE
+  PER_PIECE
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  EXPIRED
+}
+
+model HairBeautyAndWellness {
+  id        String  @id @default(cuid())
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  serviceType BeautyServiceType
+
+  price             Int
+  priceStartingFrom Boolean  @default(false)
+  homeVisit         Boolean  @default(false)
+  portfolioUrls     String[]
+  bridalAvailable   Boolean  @default(false)
+  rating            Float    @default(0)
+  city              String?
+
+  shortDescription    String?
+  serviceLocationType String?
+  studioLocation      String?
+  duration            String?
+  whoIsThisFor        String?
+  genderPreference    String?
+  experienceLevel     String?
+  preparationTime     String?
+  tags                String[] @default([])
+
+  beautySlots        BeautySlot[]
+  beautyAppointments BeautyAppointment[]
+  reviews            Review[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceType])
+  @@index([homeVisit])
+  @@index([bridalAvailable])
+}
+
+model BeautyAppointment {
+  id String @id @default(cuid())
+
+  beautyId String
+  beauty   HairBeautyAndWellness @relation(fields: [beautyId], references: [id], onDelete: Cascade)
+
+  slotId String
+  slot   BeautySlot @relation(fields: [slotId], references: [id])
+
+  customerName String
+  customerId   String?
+  startTime    DateTime
+  endTime      DateTime
+
+  notes String?
+
+  status    AppointmentStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  Listing   Listing?          @relation(fields: [listingId], references: [id])
+  listingId String?
+
+  @@index([beautyId])
+  @@index([status])
+}
+
+model BeautySlot {
+  id String @id @default(cuid())
+
+  beautyId String
+  beauty   HairBeautyAndWellness @relation(fields: [beautyId], references: [id], onDelete: Cascade)
+
+  day       WeekDay
+  startTime String
+  endTime   String
+
+  isBooked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  beautyappointments BeautyAppointment[]
+
+  @@index([beautyId])
+  @@index([day])
+  @@unique([beautyId, day, startTime, endTime])
+}
+
+enum BeautyServiceType {
+  SALON
+  BARBER
+  MAKEUP_ARTIST
+  SKINCARE
+  SPA
+  COSMETICS
+  BRIDAL
+}
+
+
+model Report {
+  id String @id @default(cuid())
+
+  source ReportSource @default(USER_REPORT)
+
+  targetType ReportTargetType
+
+  listingId String?
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  targetUserId String?
+  targetUser   User?   @relation("ReportedUser", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  reviewId String?
+  review   Review?  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  reporterId String?
+  reporter   User?   @relation("ReporterUser", fields: [reporterId], references: [id], onDelete: SetNull)
+
+  reason      ReportReason
+  description String?
+
+  status         ReportStatus @default(OPEN)
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  resolutionNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([targetType])
+  @@index([listingId])
+  @@index([targetUserId])
+  @@index([reviewId])
+  @@index([status])
+  @@index([source])
+}
+
+enum ReportSource {
+  USER_REPORT   
+  ADMIN_FLAG  
+}
+
+enum ReportTargetType {
+  LISTING
+  USER
+  REVIEW
+}
+
+enum ReportReason {
+  SPAM
+  SCAM_FRAUD
+  INAPPROPRIATE_CONTENT
+  FAKE_LISTING
+  HARASSMENT
+  PRICE_MANIPULATION
+  COUNTERFEIT
+  DUPLICATE
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  UNDER_REVIEW
+  ACTIONED
+  DISMISSED
+}

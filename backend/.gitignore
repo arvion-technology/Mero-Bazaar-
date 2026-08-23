@@ -1,0 +1,91 @@
+# compiled output
+/dist
+/build
+node_modules
+
+# logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# tests
+/coverage
+/.nyc_output
+/jest-cache
+
+# IDE
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# env
+.env
+.env.*
+!.env.example
+
+# temp
+.temp
+.tmp
+
+# runtime
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# diagnostics
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Prisma
+prisma/dev.db
+prisma/migrations/dev
+.prisma
+
+# Docker
+docker-compose.override.yml
+
+#uploads
+uploads/
+
+# Frontend (IMPORTANT FIX)
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.env.*
+
+# logs inside frontend
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/pnpm-debug.log*
+
+# allow example env
+!frontend/.env.example
+
+# TypeScript build cache
+*.tsbuildinfo
+
+#testing and fixing
+forge-test.js
+/private-storage/

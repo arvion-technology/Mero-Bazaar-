@@ -1,0 +1,190 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
+import { FiBell, FiMenu, FiEye, FiLogOut } from "react-icons/fi";
+import AdminSidebar from "@/components/admin/AdminSidebar";
+import StatusBadge from "@/components/StatusBadge";
+import type { VendorKycRecord, KYCRow } from "@/app/types/kyc";
+import { mapKycRow } from "@/app/types/kyc_mappers";
+import AdminNotificationBell from "@/components/admin/AdminNotificationBell";
+
+const PRIMARY = "#0f172a";
+const SITE_PRIMARY = "#C0392B";
+const BG = "#f8f5f5";
+
+export default function RejectedKYCPage() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showAvatarDropdown, setShowAvatarDropdown] = useState(false);
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [kycRows, setKycRows] = useState<KYCRow[]>([]);
+
+  const userInitials = session?.user?.name
+    ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "A";
+
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    fetch("/api/vendor-kyc/admin/all?status=REJECTED", {
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+    })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows: VendorKycRecord[]) => {
+        setKycRows(rows.map(mapKycRow));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [session?.accessToken]);
+
+  useEffect(() => {
+    if (sidebarOpen) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [sidebarOpen]);
+
+  if (loading) {
+    return (
+      <div style={{ padding: 40, textAlign: "center", color: "#888" }}>
+        Loading Rejected KYCs...
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <style>{`
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .admin-page { min-height: 100vh; background: ${BG}; display: flex; font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .admin-main { flex: 1; margin-left: 240px; padding: 0; width: 100%; max-width: calc(100% - 240px); }
+        .admin-topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 32px; background: ${BG}; border-bottom: 1px solid #e8e4e4; flex-wrap: wrap; gap: 12px; }
+        .admin-topbar-left { display: flex; align-items: center; gap: 12px; }
+        .admin-topbar-title { font-size: 22px; font-weight: 700; color: ${PRIMARY}; letter-spacing: -0.3px; }
+        .admin-topbar-right { display: flex; align-items: center; gap: 16px; }
+        .admin-icon-btn { width: 40px; height: 40px; border-radius: 50%; background: transparent; border: none; display: flex; align-items: center; justify-content: center; color: #333; cursor: pointer; transition: all 0.2s; position: relative; }
+        .admin-icon-btn:hover { background: #eee; }
+        .admin-badge { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: ${SITE_PRIMARY}; color: #fff; font-size: 9px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid ${BG}; }
+        .admin-section { padding: 24px 32px 32px; }
+        .admin-section-title { font-size: 18px; font-weight: 700; color: ${PRIMARY}; letter-spacing: -0.2px; margin-bottom: 20px; }
+        .admin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+        .admin-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 400px; }
+        .admin-table th { text-align: left; padding: 14px 20px; font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e8e4e4; background: #faf8f8; }
+        .admin-table td { padding: 14px 20px; font-size: 14px; color: #333; border-bottom: 1px solid #f0eeee; vertical-align: middle; }
+        .admin-table tr:last-child td { border-bottom: none; }
+        .admin-table tbody tr { transition: background 0.15s; }
+        .admin-table tbody tr:hover { background: #faf8f8; }
+        .admin-name-cell { display: flex; align-items: center; gap: 12px; }
+        .admin-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+        .admin-view-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; background: #eef2ff; color: #818cf8; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .admin-view-btn:hover { background: #818cf8; color: #fff; }
+        .admin-avatar-wrap { position: relative; }
+        .admin-avatar-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: none; cursor: pointer; padding: 0; transition: all 0.2s; }
+        .admin-avatar-btn:hover { transform: scale(1.05); }
+        .admin-avatar-circle { width: 40px; height: 40px; border-radius: 50%; background: ${SITE_PRIMARY}; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; overflow: hidden; }
+        .admin-avatar-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); min-width: 200px; z-index: 999; overflow: hidden; animation: dropdownIn 0.15s ease; }
+        @keyframes dropdownIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        .admin-avatar-dropdown-header { padding: 14px 16px 12px; border-bottom: 1px solid #f1f5f9; }
+        .admin-avatar-dropdown-name { font-size: 14px; font-weight: 700; color: #1e293b; }
+        .admin-avatar-dropdown-email { font-size: 12px; color: #94a3b8; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .admin-avatar-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 14px; font-weight: 500; color: #475569; cursor: pointer; transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; font-family: inherit; }
+        .admin-avatar-dropdown-item:hover { background: #f8fafc; color: #1e293b; }
+        .admin-avatar-dropdown-item.logout { color: #ef4444; }
+        .admin-avatar-dropdown-item.logout:hover { background: #fef2f2; color: #dc2626; }
+        .admin-backdrop { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(2px); z-index: 99; animation: backdropIn 0.2s ease; }
+        @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
+        .admin-hamburger { display: none; width: 38px; height: 38px; border-radius: 8px; border: 1.5px solid #e2e8f0; background: #fff; align-items: center; justify-content: center; cursor: pointer; color: #64748b; flex-shrink: 0; }
+        @media (max-width: 1023px) {
+          .admin-backdrop.active { display: block; }
+          .admin-hamburger { display: flex; }
+          .admin-main { margin-left: 0 !important; max-width: 100% !important; }
+          .admin-topbar { padding: 16px 20px; }
+          .admin-section { padding: 20px; }
+        }
+        @media (max-width: 767px) {
+          .admin-topbar { flex-direction: column; align-items: stretch; gap: 12px; padding: 16px; }
+          .admin-topbar-left { justify-content: space-between; width: 100%; }
+          .admin-topbar-right { justify-content: flex-end; width: 100%; }
+          .admin-topbar-title { font-size: 18px; }
+          .admin-section { padding: 16px; }
+          .admin-section-title { font-size: 16px; }
+          .admin-table th, .admin-table td { padding: 12px 14px; font-size: 13px; }
+          .admin-table-wrap { margin: 0 -16px; padding: 0 16px; width: calc(100% + 32px); }
+          .admin-table { min-width: 360px; }
+        }
+        @media (max-width: 480px) {
+          .admin-table th, .admin-table td { padding: 10px 12px; font-size: 12px; }
+          .admin-avatar { width: 28px; height: 28px; font-size: 11px; }
+        }
+      `}</style>
+
+      <div className={`admin-backdrop ${sidebarOpen ? "active" : ""}`} onClick={() => setSidebarOpen(false)} aria-hidden="true" />
+
+      <div className="admin-page">
+        <AdminSidebar activeId="rejected" sidebarOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+        <main className="admin-main">
+          <div className="admin-topbar">
+            <div className="admin-topbar-left">
+              <button type="button" className="admin-hamburger" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar"><FiMenu size={20} /></button>
+              <h1 className="admin-topbar-title">Rejected KYC</h1>
+            </div>
+            <div className="admin-topbar-right">
+              <AdminNotificationBell bg={BG} />
+              <div className="admin-avatar-wrap">
+                <button type="button" className="admin-avatar-btn" onClick={() => setShowAvatarDropdown((v) => !v)}>
+                  <div className="admin-avatar-circle">
+                    {session?.user?.image ? (
+                      <img src={session.user.image} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                    ) : (
+                      userInitials
+                    )}
+                  </div>
+                </button>
+                {showAvatarDropdown && (
+                  <div className="admin-avatar-dropdown">
+                    <div className="admin-avatar-dropdown-header">
+                      <div className="admin-avatar-dropdown-name">{session?.user?.name || "Admin"}</div>
+                      <div className="admin-avatar-dropdown-email">{session?.user?.email || "admin@hamronepal.com"}</div>
+                    </div>
+                    <button type="button" className="admin-avatar-dropdown-item logout" onClick={() => signOut({ callbackUrl: "/" })}>
+                      <FiLogOut size={15} /> Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="admin-section">
+            <h2 className="admin-section-title">Rejected KYC Applications</h2>
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr><th>Name</th><th>Date</th><th>Status</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                  {kycRows.map((kyc) => (
+                    <tr key={kyc.id}>
+                      <td>
+                        <div className="admin-name-cell">
+                          <div className="admin-avatar" style={{ background: kyc.color }}>{kyc.initial}</div>
+                          <span>{kyc.name}</span>
+                        </div>
+                      </td>
+                      <td>{kyc.date}</td>
+                      <td><StatusBadge status={kyc.status} /></td>
+                      <td>
+                        <Link href={`/admin/rejected/${kyc.id}`} className="admin-view-btn"><FiEye size={14} /> View</Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </>
+  );
+}
