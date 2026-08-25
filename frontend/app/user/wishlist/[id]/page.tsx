@@ -865,30 +865,32 @@ export default function WishlistItemDetail() {
             </div>
 
           
-{seller && (
+{seller ? (
   <SellerCard
     seller={{
-      name: seller.name || "Seller",
+      name: seller.name,
       avatar: seller.avatar ?? seller.image ?? "/default-avatar.png",
-      phone: seller.phone || "",
-      isVerified: seller.isVerified ?? false,
+      phone: seller.phone,
+      isVerified: seller.isVerified,
       isPro: seller.isPro ?? false,
       isTrusted: seller.isTrusted ?? false,
-      rating: seller.rating ?? 0,
-      reviewCount: seller.reviewCount ?? 0,
-      memberSince: seller.memberSince || "",
-      totalListing: seller.totalListings ?? 0,
+      rating: seller.rating,
+      reviewCount: seller.reviewCount,
+      memberSince: seller.memberSince,
+      totalListing: seller.totalListings,
       responseRate: seller.responseRate ?? "N/A",
       avgResponseTime: seller.avgResponseTime ?? "N/A",
     }}
-reviews={(product.reviews ?? []).map((r) => ({
-  reviewerName: r.reviewerName,
-  rating: r.rating,
-  comment: r.comment ?? null,
-  createdAt: r.createdAt ?? "",
-}))}
+    reviews={(product.reviews ?? []).map((r) => ({
+      reviewerName: r.reviewerName,
+      rating: r.rating,
+      comment: r.comment ?? null,
+      createdAt: r.createdAt ?? "",
+    }))}
+    listingId={product.id}
+    sellerId={seller.id}
   />
-)}
+) : null}
 
 
   </div>
