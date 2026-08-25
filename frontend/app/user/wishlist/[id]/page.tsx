@@ -864,28 +864,35 @@ export default function WishlistItemDetail() {
               </div>
             </div>
 
-            
-                <SellerCard
-  seller={{
-    ...seller,
-    totalListing: seller.totalListings, 
-    avatar:
-      seller.avatar ??
-      seller.image ??
-      "/default-avatar.png",
-    isPro: seller.isPro ?? false,
-    isTrusted: seller.isTrusted ?? false,
-    responseRate: seller.responseRate ?? "N/A",
-    avgResponseTime: seller.avgResponseTime ?? "N/A",
-  }}
-  reviews={product.reviews ?? []}
-  listingId={product.id}
-  sellerId={seller.id}
-/>
+          
+{seller && (
+  <SellerCard
+    seller={{
+      id: seller.id || "",
+      name: seller.name || "Seller",
+      avatar: seller.avatar ?? seller.image ?? "/default-avatar.png",
+      image: seller.image ?? seller.avatar ?? "/default-avatar.png",
+      phone: seller.phone || "",
+      email: seller.email || "",
+      isVerified: seller.isVerified ?? false,
+      isPro: seller.isPro ?? false,
+      isTrusted: seller.isTrusted ?? false,
+      rating: seller.rating ?? 0,
+      reviewCount: seller.reviewCount ?? 0,
+      memberSince: seller.memberSince || "",
+      totalListing: seller.totalListings ?? 0,
+      responseRate: seller.responseRate ?? "N/A",
+      avgResponseTime: seller.avgResponseTime ?? "N/A",
+    }}
+    reviews={product.reviews ?? []}
+    listingId={product.id}
+    sellerId={seller.id}
+  />
+)}
 
 
-          </div>
-        </div>
+  </div>
+</div>
 
         {/* ═══════════════ RELATED LISTINGS ═══════════════ */}
         {related.length > 0 && (
