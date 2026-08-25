@@ -774,7 +774,7 @@ export default function WishlistItemDetail() {
 
               {(product.tags ?? []).length > 0 && (
                 <div className="pd-tags-row">
-                  {product.tags.map((tag) => (
+                  {(product.tags ?? []).map((tag) => (
                     <span key={tag} className="pd-tag-pill">
                       {tag}
                     </span>
@@ -784,7 +784,7 @@ export default function WishlistItemDetail() {
 
               {(product.details ?? []).length > 0 && (
                 <div className="pd-details-grid">
-                  {product.details.slice(0, 4).map((d) => (
+                  {(product.details ?? []).slice(0, 4).map((d) => (
                     <div key={d.label} className="pd-detail-item">
                       <p className="pd-detail-label">{d.label}</p>
                       <p className="pd-detail-val">{d.value}</p>
@@ -794,13 +794,13 @@ export default function WishlistItemDetail() {
               )}
 
               <div className="pd-badges-row">
-                {/* @ts-ignore – deliveryAvailable may exist on extended type */}
+              
                 {product.deliveryAvailable && (
                   <span className="pd-badge-delivery">
                     <FiTruck size={11} /> Free Delivery
                   </span>
                 )}
-                {/* @ts-ignore – warrantyAvailable may exist on extended type */}
+               
                 {product.warrantyAvailable && (
                   <span className="pd-badge-warranty">
                     <FiShield size={11} /> Warranty Included
