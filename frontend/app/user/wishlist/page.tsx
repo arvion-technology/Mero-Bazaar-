@@ -1492,7 +1492,7 @@ export default function UserWishlist() {
                   >
                     {/* ── Clickable Image ── */}
                     <div className="ud-wishlist-img-wrap">
-                      <Link href={`/product/${item.listingId}`} style={{ display: "block", width: "100%", height: "100%" }}>
+                      <Link href={`/user/wishlist/${item.listingId}`} style={{ display: "block", width: "100%", height: "100%" }}>
                         <img
                           src={item.image}
                           alt={item.name}
@@ -1514,7 +1514,7 @@ export default function UserWishlist() {
                     <div className="ud-wishlist-body">
                       {/* ── Clickable Title ── */}
                       <Link
-                        href={`/product/${item.listingId}`}
+                        href={`/user/wishlist/${item.listingId}`}
                         style={{ textDecoration: "none", color: "inherit" }}
                       >
                         <div className="ud-wishlist-name">{item.name}</div>
