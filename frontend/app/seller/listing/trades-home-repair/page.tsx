@@ -1,8 +1,20 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { FiArrowLeft, FiChevronRight, FiChevronDown, FiFileText, FiBriefcase, FiEye, FiCheck, FiX, FiTool, FiList } from "react-icons/fi";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import {
+  FiArrowLeft,
+  FiChevronRight,
+  FiChevronDown,
+  FiFileText,
+  FiBriefcase,
+  FiEye,
+  FiCheck,
+  FiX,
+  FiTool,
+  FiList,
+} from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useTradesDraft } from "./layout";
@@ -29,8 +41,21 @@ const steps = [
 ];
 
 const wards = [
-  "Ward 1", "Ward 2", "Ward 3", "Ward 4", "Ward 5", "Ward 6", "Ward 7",
-  "Ward 8", "Ward 9", "Ward 10", "Ward 11", "Ward 12", "Ward 13", "Ward 14", "Ward 15",
+  "Ward 1",
+  "Ward 2",
+  "Ward 3",
+  "Ward 4",
+  "Ward 5",
+  "Ward 6",
+  "Ward 7",
+  "Ward 8",
+  "Ward 9",
+  "Ward 10",
+  "Ward 11",
+  "Ward 12",
+  "Ward 13",
+  "Ward 14",
+  "Ward 15",
 ];
 
 interface CustomSelectProps {
@@ -40,14 +65,22 @@ interface CustomSelectProps {
   placeholder?: string;
 }
 
-function CustomSelect({ options, value, onChange, placeholder }: CustomSelectProps) {
+function CustomSelect({
+  options,
+  value,
+  onChange,
+  placeholder,
+}: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -78,7 +111,9 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
         break;
       case "ArrowUp":
         e.preventDefault();
-        setHighlightedIndex((prev) => (prev - 1 + options.length) % options.length);
+        setHighlightedIndex(
+          (prev) => (prev - 1 + options.length) % options.length,
+        );
         break;
       case "Enter":
         e.preventDefault();
@@ -94,12 +129,27 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
   };
 
   return (
-    <div ref={containerRef} className="custom-select-container" onKeyDown={handleKeyDown} tabIndex={0}>
-      <div className={`custom-select-trigger ${isOpen ? "open" : ""}`} onClick={() => setIsOpen(!isOpen)}>
-        <span className={value ? "custom-select-value" : "custom-select-placeholder"}>
+    <div
+      ref={containerRef}
+      className="custom-select-container"
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+    >
+      <div
+        className={`custom-select-trigger ${isOpen ? "open" : ""}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span
+          className={
+            value ? "custom-select-value" : "custom-select-placeholder"
+          }
+        >
           {value || placeholder || "Select..."}
         </span>
-        <FiChevronDown size={16} className={`custom-select-chevron ${isOpen ? "rotated" : ""}`} />
+        <FiChevronDown
+          size={16}
+          className={`custom-select-chevron ${isOpen ? "rotated" : ""}`}
+        />
       </div>
       {isOpen && (
         <div className="custom-select-dropdown">
@@ -128,13 +178,99 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
 
 export default function NewTradesHomeRepairListingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+
+  const { data: session } = useSession();
   const { data, setData } = useTradesDraft();
-  const { serviceTitle, startingPrice, description, selectedService, city, ward, skills } = data;
+  useEffect(() => {
+    if (!editId || !session?.accessToken) return;
+
+    const loadExistingListing = async () => {
+      try {
+        const res = await fetch(`/api/trades-home-repair/${editId}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const result = await res.json();
+
+        console.log("TRADES EDIT RESPONSE:", result);
+
+        if (!res.ok) {
+          throw new Error(result?.message || "Failed to load existing listing");
+        }
+
+        const existing =
+          result?.tradesAndHomeRepair ??
+          result?.tradesHomeRepair ??
+          result?.listing?.tradesAndHomeRepair ??
+          result?.listing ??
+          result;
+
+        setData((prev) => ({
+          ...prev,
+
+          serviceTitle:
+            existing?.serviceTitle ?? existing?.title ?? prev.serviceTitle,
+
+          startingPrice:
+            existing?.startingPrice != null
+              ? String(existing.startingPrice)
+              : existing?.price != null
+                ? String(existing.price)
+                : prev.startingPrice,
+
+          description: existing?.description ?? prev.description,
+
+          selectedService:
+            existing?.selectedService ??
+            existing?.serviceType ??
+            existing?.service ??
+            prev.selectedService,
+
+          city: existing?.city ?? prev.city,
+
+          ward: existing?.ward ?? prev.ward,
+
+          skills: Array.isArray(existing?.skills)
+            ? existing.skills
+            : Array.isArray(existing?.skillTags)
+              ? existing.skillTags
+              : prev.skills,
+        }));
+      } catch (error) {
+        console.error("TRADES EDIT LOAD ERROR:", error);
+
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to load existing listing",
+        );
+      }
+    };
+
+    loadExistingListing();
+  }, [editId, session?.accessToken, setData]);
+  const {
+    serviceTitle,
+    startingPrice,
+    description,
+    selectedService,
+    city,
+    ward,
+    skills,
+  } = data;
 
   const setServiceTitle = (v: string) => setData({ ...data, serviceTitle: v });
-  const setStartingPrice = (v: string) => setData({ ...data, startingPrice: v });
+  const setStartingPrice = (v: string) =>
+    setData({ ...data, startingPrice: v });
   const setDescription = (v: string) => setData({ ...data, description: v });
-  const setSelectedService = (v: string) => setData({ ...data, selectedService: v });
+  const setSelectedService = (v: string) =>
+    setData({ ...data, selectedService: v });
   const setCity = (v: string) => setData({ ...data, city: v });
   const setWard = (v: string) => setData({ ...data, ward: v });
   const setSkills = (tags: string[]) => setData({ ...data, skills: tags });
@@ -171,12 +307,19 @@ export default function NewTradesHomeRepairListingPage() {
     if (e.key === "Enter") {
       e.preventDefault();
       addSkill();
-    } 
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!serviceTitle || !startingPrice || !description || !selectedService || !city || !ward) {
+    if (
+      !serviceTitle ||
+      !startingPrice ||
+      !description ||
+      !selectedService ||
+      !city ||
+      !ward
+    ) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -743,7 +886,11 @@ export default function NewTradesHomeRepairListingPage() {
       <div className="listing-page">
         <div className="listing-container">
           <div className="listing-header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={18} />
             </button>
             <div className="listing-header-text">
@@ -757,15 +904,28 @@ export default function NewTradesHomeRepairListingPage() {
 
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div
+                    className={`step-connector ${step.status === "done" ? "filled" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -774,7 +934,11 @@ export default function NewTradesHomeRepairListingPage() {
           <form onSubmit={handleSubmit} className="form-card">
             <div className="category-wrap">
               <label className="category-label">Category</label>
-              <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
+              <button
+                type="button"
+                className="category-pill"
+                onClick={() => router.push("/seller/dashboard")}
+              >
                 <FiTool size={16} />
                 Trades & Home Repair
                 <span className="change-badge">Change</span>
@@ -833,7 +997,9 @@ export default function NewTradesHomeRepairListingPage() {
                     onChange={(e) => setDescription(e.target.value)}
                     required
                   />
-                  <div className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}>
+                  <div
+                    className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}
+                  >
                     {descLength}/{descMax}
                   </div>
                 </div>
@@ -862,17 +1028,17 @@ export default function NewTradesHomeRepairListingPage() {
                 </div>
 
                 <div className="form-group full-width">
-                <label className="form-label">
-                  City <span className="required">*</span>
-                </label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Enter city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  required
-                />
+                  <label className="form-label">
+                    City <span className="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Enter city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    required
+                  />
                 </div>
 
                 <div className="form-group full-width">
@@ -893,7 +1059,10 @@ export default function NewTradesHomeRepairListingPage() {
                     {skills.map((skill) => (
                       <span key={skill} className="skill-tag">
                         {skill}
-                        <span className="remove-skill" onClick={() => removeSkill(skill)}>
+                        <span
+                          className="remove-skill"
+                          onClick={() => removeSkill(skill)}
+                        >
                           <FiX size={12} />
                         </span>
                       </span>
@@ -909,7 +1078,9 @@ export default function NewTradesHomeRepairListingPage() {
                       onKeyDown={handleSkillKeyDown}
                     />
                   </div>
-                  <p className="skill-input-hint">Type and press Enter to add more</p>
+                  <p className="skill-input-hint">
+                    Type and press Enter to add more
+                  </p>
                 </div>
               </div>
             </div>
@@ -917,7 +1088,11 @@ export default function NewTradesHomeRepairListingPage() {
             <div className="divider" />
 
             <div className="submit-wrap">
-              <button type="button" className="back-link" onClick={() => router.back()}>
+              <button
+                type="button"
+                className="back-link"
+                onClick={() => router.back()}
+              >
                 <FiArrowLeft size={16} />
                 Back
               </button>

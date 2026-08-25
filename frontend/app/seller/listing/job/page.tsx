@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -18,6 +18,7 @@ import {
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useJobDraft } from "./layout";
+import { useSession } from "next-auth/react";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -39,16 +40,42 @@ const steps = [
   { label: "Preview", icon: FiEye, status: "upcoming" as const },
 ];
 
-const payPeriods = ["Hourly", "Daily", "Weekly", "Bi-weekly", "Monthly", "Yearly"];
-const contractTypes = ["Full Time", "Part Time", "Contract", "Freelance", "Internship"];
+const payPeriods = [
+  "Hourly",
+  "Daily",
+  "Weekly",
+  "Bi-weekly",
+  "Monthly",
+  "Yearly",
+];
+const contractTypes = [
+  "Full Time",
+  "Part Time",
+  "Contract",
+  "Freelance",
+  "Internship",
+];
 
 export default function NewJobListingPage() {
   const router = useRouter();
- 
+  const { data: session } = useSession();
+
   const [title, setTitle] = useState("");
   const { data, setData } = useJobDraft();
-  const { role, company, salaryMin, salaryMax, payPeriod, location, contractType, skillTags, urgentHiring, phoneVerified, description } = data;
-
+  const {
+    role,
+    company,
+    salaryMin,
+    salaryMax,
+    payPeriod,
+    location,
+    contractType,
+    skillTags,
+    urgentHiring,
+    phoneVerified,
+    description,
+  } = data;
+  const [isLoadingEdit, setIsLoadingEdit] = useState(false);
   const setRole = (v: string) => setData({ ...data, role: v });
   const setCompany = (v: string) => setData({ ...data, company: v });
   const setSalaryMin = (v: string) => setData({ ...data, salaryMin: v });
@@ -56,9 +83,11 @@ export default function NewJobListingPage() {
   const setPayPeriod = (v: string) => setData({ ...data, payPeriod: v });
   const setLocation = (v: string) => setData({ ...data, location: v });
   const setContractType = (v: string) => setData({ ...data, contractType: v });
-  const setSkillTags = (tags: string[]) => setData({ ...data, skillTags: tags });
+  const setSkillTags = (tags: string[]) =>
+    setData({ ...data, skillTags: tags });
   const setUrgentHiring = (v: boolean) => setData({ ...data, urgentHiring: v });
-  const setPhoneVerified = (v: boolean) => setData({ ...data, phoneVerified: v });
+  const setPhoneVerified = (v: boolean) =>
+    setData({ ...data, phoneVerified: v });
   const setDescription = (v: string) => setData({ ...data, description: v });
 
   const [skillInput, setSkillInput] = useState("");
@@ -106,8 +135,11 @@ export default function NewJobListingPage() {
       return;
     }
 
-    toast.success("Details saved! Now add photos.");
-    router.push("/seller/listing/job/preview");
+    if (editId) {
+      router.push(`/seller/listing/job/preview?edit=${editId}`);
+    } else {
+      router.push("/seller/listing/job/preview");
+    }
   };
 
   const descLength = description.length;
@@ -126,6 +158,111 @@ export default function NewJobListingPage() {
     if (isNaN(num)) return salaryMax;
     return num.toLocaleString("en-IN");
   }, [salaryMax]);
+
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+  useEffect(() => {
+    if (!editId || !session?.accessToken) return;
+
+    const loadListing = async () => {
+      setIsLoadingEdit(true);
+
+      try {
+        const response = await fetch(`/api/listings/${editId}`, {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result?.message || "Failed to load listing");
+        }
+
+        setTitle(result.title ?? "");
+
+        setData((prev: any) => ({
+          ...prev,
+
+          role: result.role ?? result.job?.role ?? "",
+
+          company: result.companyName ?? result.job?.companyName ?? "",
+
+          salaryMin:
+            result.salaryMin != null
+              ? String(result.salaryMin)
+              : result.job?.salaryMin != null
+                ? String(result.job.salaryMin)
+                : "",
+
+          salaryMax:
+            result.salaryMax != null
+              ? String(result.salaryMax)
+              : result.job?.salaryMax != null
+                ? String(result.job.salaryMax)
+                : "",
+
+          payPeriod: result.payPeriod ?? result.job?.payPeriod ?? "",
+
+          location:
+            result.location ??
+            result.address ??
+            result.job?.location ??
+            result.job?.address ??
+            "",
+
+          contractType: result.contractType ?? result.job?.contractType ?? "",
+
+          skillTags: result.skillTags ?? result.job?.skillTags ?? [],
+
+          urgentHiring:
+            result.urgentHiring ??
+            result.isUrgent ??
+            result.job?.urgentHiring ??
+            result.job?.isUrgent ??
+            false,
+
+          phoneVerified:
+            result.phoneVerified ??
+            result.isPhoneVerified ??
+            result.job?.phoneVerified ??
+            result.job?.isPhoneVerified ??
+            false,
+
+          description: result.description ?? result.job?.description ?? "",
+        }));
+      } catch (error) {
+        console.error("Failed to load job listing:", error);
+        toast.error("Failed to load listing data.");
+      } finally {
+        setIsLoadingEdit(false);
+      }
+    };
+
+    loadListing();
+  }, [editId, session?.accessToken, setData]);
+  if (isLoadingEdit) {
+  return (
+    <>
+      <ToastContainer position="top-right" autoClose={3000} />
+
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#f8fafc",
+          color: "#64748b",
+          fontSize: 14,
+        }}
+      >
+        Loading listing data...
+      </div>
+    </>
+  );
+}
 
   return (
     <>
@@ -686,7 +823,11 @@ export default function NewJobListingPage() {
         <div className="listing-container">
           {/* Header */}
           <div className="listing-header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={18} />
             </button>
             <div className="listing-header-text">
@@ -701,15 +842,28 @@ export default function NewJobListingPage() {
           {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div
+                    className={`step-connector ${step.status === "done" ? "filled" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -717,6 +871,29 @@ export default function NewJobListingPage() {
 
           <form onSubmit={handleSubmit} className="form-card">
             {/* Section: Basic Information */}
+            <div className="category-wrap">
+              <label className="category-label">Category</label>
+              <button
+                type="button"
+                className="category-pill"
+                onClick={() => router.push("/seller/dashboard")}
+              >
+                <FiBriefcase size={16} />
+                Job
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    color: "#7c3aed",
+                    background: "#ede9fe",
+                    padding: "2px 8px",
+                    borderRadius: "6px",
+                  }}
+                >
+                  Change
+                </span>
+              </button>
+            </div>
             <div className="section-header">
               <div className="section-icon blue">
                 <FiFileText size={18} color="#fff" />
@@ -728,7 +905,9 @@ export default function NewJobListingPage() {
 
             <div className="form-row">
               <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                <label className="form-label">Title<span className="required">*</span></label>
+                <label className="form-label">
+                  Title<span className="required">*</span>
+                </label>
                 <input
                   type="text"
                   className="form-input"
@@ -739,7 +918,9 @@ export default function NewJobListingPage() {
                 />
               </div>
               <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                <label className="form-label">Description<span className="required">*</span></label>
+                <label className="form-label">
+                  Description<span className="required">*</span>
+                </label>
                 <textarea
                   className="form-textarea"
                   placeholder="Enter description"
@@ -748,19 +929,12 @@ export default function NewJobListingPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   required
                 />
-                <div className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}>
+                <div
+                  className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}
+                >
                   {descLength}/{descMax}
                 </div>
               </div>
-            </div>
-
-            <div className="category-wrap">
-              <label className="category-label">Category</label>
-              <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
-                <FiBriefcase size={16} />
-                Job
-                <span style={{ fontSize: "12px", fontWeight: 500, color: "#7c3aed", background: "#ede9fe", padding: "2px 8px", borderRadius: "6px" }}>Change</span>
-              </button>
             </div>
 
             <div className="divider" />
@@ -777,32 +951,44 @@ export default function NewJobListingPage() {
 
             <div className="form-row">
               <div className="form-group">
-              <label className="form-label">Role<span className="required">*</span></label>
-                 <input
+                <label className="form-label">
+                  Role<span className="required">*</span>
+                </label>
+                <input
                   type="text"
                   className="form-input"
-                   placeholder="Enter role"
+                  placeholder="Enter role"
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                   required
-                 />
+                />
               </div>
               <div className="form-group">
-              <label className="form-label">Company Name<span className="required">*</span></label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Enter company name"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                required
-              />
+                <label className="form-label">
+                  Company Name<span className="required">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Enter company name"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  required
+                />
               </div>
               <div className="form-group">
-                <label className="form-label">Contract Type<span className="required">*</span></label>
-                <select className="form-select" value={contractType} onChange={(e) => setContractType(e.target.value)}>
+                <label className="form-label">
+                  Contract Type<span className="required">*</span>
+                </label>
+                <select
+                  className="form-select"
+                  value={contractType}
+                  onChange={(e) => setContractType(e.target.value)}
+                >
                   {contractTypes.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -810,7 +996,9 @@ export default function NewJobListingPage() {
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Salary Min<span className="required">*</span></label>
+                <label className="form-label">
+                  Salary Min<span className="required">*</span>
+                </label>
                 <div className="price-input-wrap">
                   <span className="price-prefix">Rs.</span>
                   <input
@@ -825,7 +1013,9 @@ export default function NewJobListingPage() {
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Salary Max<span className="required">*</span></label>
+                <label className="form-label">
+                  Salary Max<span className="required">*</span>
+                </label>
                 <div className="price-input-wrap">
                   <span className="price-prefix">Rs.</span>
                   <input
@@ -840,10 +1030,18 @@ export default function NewJobListingPage() {
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Pay Period<span className="required">*</span></label>
-                <select className="form-select" value={payPeriod} onChange={(e) => setPayPeriod(e.target.value)}>
+                <label className="form-label">
+                  Pay Period<span className="required">*</span>
+                </label>
+                <select
+                  className="form-select"
+                  value={payPeriod}
+                  onChange={(e) => setPayPeriod(e.target.value)}
+                >
                   {payPeriods.map((p) => (
-                    <option key={p} value={p}>{p}</option>
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -851,7 +1049,9 @@ export default function NewJobListingPage() {
 
             <div className="form-row">
               <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                <label className="form-label">Address / Location<span className="required">*</span></label>
+                <label className="form-label">
+                  Address / Location<span className="required">*</span>
+                </label>
                 <div className="address-wrap">
                   <input
                     type="text"
@@ -873,7 +1073,10 @@ export default function NewJobListingPage() {
                   {skillTags.map((skill) => (
                     <span key={skill} className="skill-tag">
                       {skill}
-                      <span className="skill-tag-remove" onClick={() => removeSkill(skill)}>
+                      <span
+                        className="skill-tag-remove"
+                        onClick={() => removeSkill(skill)}
+                      >
                         <FiX size={10} />
                       </span>
                     </span>
@@ -888,7 +1091,11 @@ export default function NewJobListingPage() {
                     onChange={(e) => setSkillInput(e.target.value)}
                     onKeyDown={handleSkillKeyDown}
                   />
-                  <button type="button" className="skill-add-btn" onClick={addSkill}>
+                  <button
+                    type="button"
+                    className="skill-add-btn"
+                    onClick={addSkill}
+                  >
                     <FiPlus size={14} />
                   </button>
                 </div>
@@ -929,7 +1136,11 @@ export default function NewJobListingPage() {
             </div>
 
             <div className="submit-wrap">
-              <button type="button" className="back-link" onClick={() => router.back()}>
+              <button
+                type="button"
+                className="back-link"
+                onClick={() => router.back()}
+              >
                 <FiArrowLeft size={16} />
                 Back
               </button>

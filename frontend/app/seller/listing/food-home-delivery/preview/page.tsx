@@ -117,7 +117,7 @@ export default function PreviewFoodDeliveryPage() {
     } finally {
       setIsPublishing(false);
     }
-  };
+  }; 
 
   const handleEdit = () => {
     router.push("/seller/listing/food-home-delivery");

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import {
+import { useRouter, useSearchParams } from "next/navigation";import {
   FiArrowLeft,
   FiCheck,
   FiMapPin,
@@ -35,6 +34,8 @@ const CARD_BG = "#ffffff";
 
 export default function PreviewPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+const editId = searchParams.get("edit");
   const { agricultureData: data, setAgricultureData, images, setImages } = useDraft();
   const [isPublishing, setIsPublishing] = useState(false);
   const [mainImage, setMainImage] = useState<string>(
@@ -80,51 +81,120 @@ export default function PreviewPage() {
   }
 
   setIsPublishing(true);
+
   try {
-    const listingRes = await fetch("/api/agriculture", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session?.accessToken}`,
-      },
-      body: JSON.stringify(data), 
-    });
+    // ============================================
+    // 1. CREATE for NEW
+    // 2. UPDATE for EDIT
+    // ============================================
+
+    const isEdit = Boolean(editId);
+
+    const listingRes = await fetch(
+      isEdit
+        ? `/api/agriculture/${editId}`
+        : "/api/agriculture",
+      {
+        method: isEdit ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify(data),
+      }
+    );
+
+    const listingResult = await listingRes.json().catch(() => null);
 
     if (!listingRes.ok) {
-      const err = await listingRes.json().catch(() => null);
-      throw new Error(err?.message || "Failed to create listing");
+      throw new Error(
+        listingResult?.message ||
+          (isEdit
+            ? "Failed to update listing"
+            : "Failed to create listing")
+      );
     }
 
-    const listing = await listingRes.json();
+    // For edit use existing ID
+    // For new use newly created ID
+    const listingId = editId || listingResult?.id;
 
-    const photoFormData = new FormData();
-    images.forEach(({ file }) => photoFormData.append("images", file));
-
-    const photosRes = await fetch(`/api/agriculture/${listing.id}/photos`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${session?.accessToken}` },
-      body: photoFormData,
-    });
-
-    if (!photosRes.ok) {
-      const err = await photosRes.json().catch(() => null);
-      throw new Error(err?.message || "Listing created but photo upload failed");
+    if (!listingId) {
+      throw new Error("Listing ID not found");
     }
 
-    toast.success("Listing published successfully!");
+    // ============================================
+    // 2. UPLOAD ONLY NEW PHOTOS
+    // ============================================
+
+    const newImages = images.filter(
+      ({ file }) => file && file.size > 0
+    );
+
+    if (newImages.length > 0) {
+      const photoFormData = new FormData();
+
+      newImages.forEach(({ file }) => {
+        photoFormData.append("images", file);
+      });
+
+      const photosRes = await fetch(
+        `/api/agriculture/${listingId}/photos`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+          body: photoFormData,
+        }
+      );
+
+      if (!photosRes.ok) {
+        const err = await photosRes.json().catch(() => null);
+
+        throw new Error(
+          err?.message ||
+            (isEdit
+              ? "Listing updated but photo upload failed"
+              : "Listing created but photo upload failed")
+        );
+      }
+    }
+
+    // ============================================
+    // SUCCESS
+    // ============================================
+
+    toast.success(
+      isEdit
+        ? "Listing updated successfully!"
+        : "Listing published successfully!"
+    );
+
     setAgricultureData(defaultAgricultureData);
     setImages([]);
+
     router.push("/seller/products");
   } catch (err: unknown) {
-    toast.error(err instanceof Error ? err.message : "Something went wrong publishing");
+    console.error("PUBLISH/UPDATE ERROR:", err);
+
+    toast.error(
+      err instanceof Error
+        ? err.message
+        : "Something went wrong"
+    );
   } finally {
     setIsPublishing(false);
   }
 };
 
-  const handleEdit = () => {
+ const handleEdit = () => {
+  if (editId) {
+    router.push(`/seller/listing/agriculture-livestock?edit=${editId}`);
+  } else {
     router.push("/seller/listing/agriculture-livestock");
-  };
+  }
+};
 
   return (
     <>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   FiArrowLeft,
   FiCheck,
@@ -43,11 +43,16 @@ export default function MedicalPreviewPage() {
   const { medicalData, setMedicalData, images, setImages } = useDraft();
   const [submitting, setSubmitting] = useState(false);
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
 
   const mainPhoto = images.find((p) => p.isMain) || images[0];
 
   const servicesList = medicalData.servicesOffered
-    ? medicalData.servicesOffered.split(",").map((s) => s.trim()).filter(Boolean)
+    ? medicalData.servicesOffered
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
     : [];
 
   const handlePublish = async () => {
@@ -60,14 +65,23 @@ export default function MedicalPreviewPage() {
     try {
       const payload = draftToCreateMedicalPayload(medicalData, medicalData);
 
-      const listingRes = await fetch("/api/medical", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const listingRes = editId
+        ? await fetch(`/api/medical/${editId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.accessToken}`,
+            },
+            body: JSON.stringify(payload),
+          })
+        : await fetch("/api/medical", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.accessToken}`,
+            },
+            body: JSON.stringify(payload),
+          });
 
       if (!listingRes.ok) {
         const err = await listingRes.json().catch(() => null);
@@ -87,16 +101,25 @@ export default function MedicalPreviewPage() {
 
       if (!photosRes.ok) {
         const err = await photosRes.json().catch(() => null);
-        throw new Error(err?.message || "Listing created but photo upload failed");
+        throw new Error(
+          err?.message || "Listing created but photo upload failed",
+        );
       }
 
-      toast.success("Listing published successfully!");
-      setMedicalData(defaultMedicalData);
+toast.success(
+  editId
+    ? "Listing updated successfully!"
+    : "Listing published successfully!"
+);      setMedicalData(defaultMedicalData);
       setImages([]);
       setTimeout(() => router.push("/seller/products"), 1200);
     } catch (err: unknown) {
       console.error("publish error:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to publish listing. Please try again.");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to publish listing. Please try again.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -472,7 +495,12 @@ export default function MedicalPreviewPage() {
       <div className="page">
         <div className="container">
           <div className="header">
-            <button type="button" className="back-btn" onClick={() => router.back()} disabled={submitting}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+              disabled={submitting}
+            >
               <FiArrowLeft size={18} />
               Back
             </button>
@@ -483,15 +511,28 @@ export default function MedicalPreviewPage() {
 
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div
+                    className={`step-connector ${step.status === "done" ? "filled" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -499,7 +540,9 @@ export default function MedicalPreviewPage() {
 
           <div className="title-section">
             <h1 className="page-title">Preview your listing</h1>
-            <p className="page-subtitle">Review your listing details before publishing.</p>
+            <p className="page-subtitle">
+              Review your listing details before publishing.
+            </p>
           </div>
 
           <div className="preview-card">
@@ -507,7 +550,11 @@ export default function MedicalPreviewPage() {
               {/* Doctor Image */}
               <div className="doctor-image-wrap">
                 {mainPhoto ? (
-                  <img className="doctor-image" src={mainPhoto.preview} alt="Doctor" />
+                  <img
+                    className="doctor-image"
+                    src={mainPhoto.preview}
+                    alt="Doctor"
+                  />
                 ) : (
                   <div className="doctor-image-placeholder">
                     <FiUser size={64} />
@@ -518,7 +565,9 @@ export default function MedicalPreviewPage() {
               {/* Content */}
               <div className="preview-content">
                 <div className="name-row">
-                  <h2 className="doctor-name">{medicalData.doctorName || "Doctor Name"}</h2>
+                  <h2 className="doctor-name">
+                    {medicalData.doctorName || "Doctor Name"}
+                  </h2>
                   <span className="verified-badge">
                     <FiCheck size={10} strokeWidth={3} />
                     Verified
@@ -531,7 +580,9 @@ export default function MedicalPreviewPage() {
 
                 <div className="badges-row">
                   <div className="info-badge">
-                    <div className="badge-value">NPR {medicalData.appointmentFee || "0"}</div>
+                    <div className="badge-value">
+                      NPR {medicalData.appointmentFee || "0"}
+                    </div>
                     <div className="badge-label">Appointment fee</div>
                   </div>
                   {medicalData.homeVisit && (
@@ -545,19 +596,27 @@ export default function MedicalPreviewPage() {
                 <div className="info-table">
                   <div className="info-row">
                     <span className="info-key">Clinic Address</span>
-                    <span className="info-value">{medicalData.clinicAddress || "-"}</span>
+                    <span className="info-value">
+                      {medicalData.clinicAddress || "-"}
+                    </span>
                   </div>
                   <div className="info-row">
                     <span className="info-key">City</span>
-                    <span className="info-value">{medicalData.city || "-"}</span>
+                    <span className="info-value">
+                      {medicalData.city || "-"}
+                    </span>
                   </div>
                   <div className="info-row">
                     <span className="info-key">Languages</span>
-                    <span className="info-value">{(medicalData.languages || []).join(", ")}</span>
+                    <span className="info-value">
+                      {(medicalData.languages || []).join(", ")}
+                    </span>
                   </div>
                   <div className="info-row">
                     <span className="info-key">Experience</span>
-                    <span className="info-value">{medicalData.experience || "-"}</span>
+                    <span className="info-value">
+                      {medicalData.experience || "-"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -583,20 +642,34 @@ export default function MedicalPreviewPage() {
               <div className="tags-row">
                 {servicesList.length > 0 ? (
                   servicesList.map((service: string, idx: number) => (
-                    <span key={idx} className="service-tag">{service}</span>
+                    <span key={idx} className="service-tag">
+                      {service}
+                    </span>
                   ))
                 ) : (
-                  <span style={{ fontSize: 13, color: TEXT_MUTED }}>No services listed.</span>
+                  <span style={{ fontSize: 13, color: TEXT_MUTED }}>
+                    No services listed.
+                  </span>
                 )}
               </div>
             </div>
 
             <div className="actions-wrap">
-              <button type="button" className="edit-btn" onClick={() => router.back()} disabled={submitting}>
+              <button
+                type="button"
+                className="edit-btn"
+                onClick={() => router.back()}
+                disabled={submitting}
+              >
                 <FiEdit3 size={16} />
                 Edit Listing
               </button>
-              <button type="button" className="publish-btn" onClick={handlePublish} disabled={submitting}>
+              <button
+                type="button"
+                className="publish-btn"
+                onClick={handlePublish}
+                disabled={submitting}
+              >
                 {submitting ? "Publishing..." : "Publish Listing"}
                 <FiSend size={16} />
               </button>

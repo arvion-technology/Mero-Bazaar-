@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   FiArrowLeft,
   FiCheck,
@@ -27,6 +27,8 @@ const CARD_BG = "#ffffff";
 
 export default function PreviewSecondHandPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+const editId = searchParams.get("edit");
   const [isPublishing, setIsPublishing] = useState(false);
   const { data: session } = useSession();
   const { data, images } = useDraft();
@@ -35,82 +37,151 @@ export default function PreviewSecondHandPage() {
     images.find((img) => img.isMain)?.preview || images[0]?.preview || ""
   );
 
-  const handlePublish = async () => {
-    if (images.length === 0) {
-      toast.error("Please add at least one photo before publishing");
-      router.push("/seller/listing/secondhand-goods/photos");
-      return;
+ const handlePublish = async () => {
+  if (!session?.accessToken) {
+    toast.error("Please login again");
+    return;
+  }
+
+  if (images.length === 0) {
+    toast.error("Please add at least one photo before publishing");
+    return;
+  }
+
+  setIsPublishing(true);
+
+  try {
+    const isEdit = !!editId;
+
+    const payload = {
+      listing_type: data.listingType,
+      item_name: data.itemName,
+      condition: data.condition,
+      price: Number(String(data.price).replace(/,/g, "")),
+      negotiable: data.negotiable,
+      description: data.description,
+
+      ...(data.listingType === "Baby"
+        ? {
+            brand: data.brand,
+            quantity: data.quantity,
+            gender: data.gender,
+            availability: data.availability,
+            location: data.location,
+            color: data.color,
+            material: data.material,
+            weight: data.weight,
+            delivery_option: data.deliveryOption,
+            delivery_charge: data.deliveryCharge,
+          }
+        : {
+            city: data.city,
+            expires_at: data.expiresAt,
+          }),
+    };
+
+    // =========================
+    // NEW = POST
+    // EDIT = PATCH
+    // =========================
+    const url = isEdit
+      ? `/api/secondhand/${editId}`
+      : "/api/secondhand-goods";
+
+    const response = await fetch(url, {
+      method: isEdit ? "PATCH" : "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json().catch(() => null);
+
+    console.log("SAVE RESULT:", result);
+
+    if (!response.ok) {
+      throw new Error(
+        result?.message ||
+          (isEdit
+            ? "Failed to update existing listing"
+            : "Failed to create listing")
+      );
     }
 
-    setIsPublishing(true);
-    try {
-      const res = await fetch("/api/secondhand-goods", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify({
-          listing_type: data.listingType,
-          item_name: data.itemName,
-          condition: data.condition,
-          price: data.price.replace(/,/g, ""),
-          negotiable: data.negotiable,
-          description: data.description,
-          ...(data.listingType === "Baby"
-            ? {
-                brand: data.brand,
-                quantity: data.quantity,
-                gender: data.gender,
-                availability: data.availability,
-                location: data.location,
-                color: data.color,
-                material: data.material,
-                weight: data.weight,
-                delivery_option: data.deliveryOption,
-                delivery_charge: data.deliveryCharge,
-              }
-            : {
-                city: data.city,
-                expires_at: data.expiresAt,
-              }),
-        }),
+    // IMPORTANT:
+    // Edit = same ID
+    // New = newly created ID
+    const listingId = isEdit ? editId : result?.id;
+
+    if (!listingId) {
+      throw new Error("Listing ID missing");
+    }
+
+    // =========================
+    // PHOTOS
+    // =========================
+    const newImages = images.filter(
+      ({ file }) => file && file.size > 0
+    );
+
+    if (newImages.length > 0) {
+      const photoFormData = new FormData();
+
+      newImages.forEach(({ file }) => {
+        photoFormData.append("images", file);
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        throw new Error(err?.message || "Failed to create listing");
-      }
-
-      const listing = await res.json();
-
-      const photoFormData = new FormData();
-      images.forEach(({ file }) => photoFormData.append("images", file));
-
-      const photosRes = await fetch(`/api/secondhand-goods/${listing.id}/photos`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${session?.accessToken}` },
-        body: photoFormData,
-      }
+      const photosResponse = await fetch(
+        `/api/secondhand-goods/${listingId}/photos`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: photoFormData,
+        }
       );
 
-      if (!photosRes.ok) {
-        const err = await photosRes.json().catch(() => null);
-        throw new Error(err?.message || "Listing created but photo upload failed");
-      }
+      if (!photosResponse.ok) {
+        const error = await photosResponse.json().catch(() => null);
 
-      toast.success("Listing published successfully!");
-      router.push("/seller/products");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong publishing");
-    } finally {
-      setIsPublishing(false);
+        throw new Error(
+          error?.message || "Photo upload failed"
+        );
+      }
     }
-  };
+
+    toast.success(
+      isEdit
+        ? "Listing updated successfully!"
+        : "Listing published successfully!"
+    );
+
+    router.push("/seller/products");
+  } catch (error) {
+    console.error("LISTING SAVE ERROR:", error);
+
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : "Something went wrong"
+    );
+  } finally {
+    setIsPublishing(false);
+  }
+};
 
   const handleEdit = () => {
+  if (editId) {
+    router.push(
+      `/seller/listing/secondhand-goods?edit=${editId}`
+    );
+  } else {
     router.push("/seller/listing/secondhand-goods");
-  };
+  }
+};
 
   const isBaby = data.listingType === "Baby";
 

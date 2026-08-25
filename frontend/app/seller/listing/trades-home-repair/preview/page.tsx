@@ -1,10 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
-  FiArrowLeft, FiCheck, FiMapPin, FiEdit2, FiSend, FiShield, FiClock, FiZap, FiNavigation, FiDollarSign,
+  FiArrowLeft,
+  FiCheck,
+  FiMapPin,
+  FiEdit2,
+  FiSend,
+  FiShield,
+  FiClock,
+  FiZap,
+  FiNavigation,
+  FiDollarSign,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
@@ -22,14 +31,24 @@ const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 
-const MapWithNoSSR = dynamic(() => import("../detail/MapComponent"), { ssr: false, loading: () => <MapSkeleton /> });
+const MapWithNoSSR = dynamic(() => import("../detail/MapComponent"), {
+  ssr: false,
+  loading: () => <MapSkeleton />,
+});
 
 function MapSkeleton() {
   return (
-    <div style={{
-      width: "100%", height: "100%", background: "#e5e7eb", borderRadius: "12px",
-      display: "flex", alignItems: "center", justifyContent: "center",
-    }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        background: "#e5e7eb",
+        borderRadius: "12px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <span style={{ color: "#94a3b8", fontSize: "13px" }}>Loading map...</span>
     </div>
   );
@@ -37,42 +56,130 @@ function MapSkeleton() {
 
 export default function PreviewTradesHomeRepairPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+
   const { data: session } = useSession();
   const { data } = useTradesDraft();
   const [isPublishing, setIsPublishing] = useState(false);
 
+  const handlePublish = async () => {
+    console.log("========== PUBLISH ==========");
+    console.log("EDIT ID:", editId);
+    // console.log("MODE:", editId ? "EDIT/UPDATE" : "NEW/CREATE");
 
-const handlePublish = async () => {
-  setIsPublishing(true);
-  try {
-    const payload = formToCreateTradesPayload(data);
-
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/trades`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session?.accessToken}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => null);
-      throw new Error(err?.message || "Failed to publish listing");
+    if (!session?.accessToken) {
+      toast.error("Please login again");
+      return;
     }
 
-    toast.success("Listing published successfully!");
-    router.push("/seller/products");
-  } catch (err) {
-    toast.error(err instanceof Error ? err.message : "Something went wrong publishing");
-  } finally {
-    setIsPublishing(false);
-  }
-};
+    // EDIT MODE मा ID नभए publish नै नगर्ने
+    if (!editId) {
+      console.log("Creating NEW listing");
+    } else {
+      console.log("Updating EXISTING listing:", editId);
+    }
 
+    setIsPublishing(true);
+
+    try {
+      const payload = formToCreateTradesPayload(data);
+
+      const url = editId
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/trades/${editId}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/trades`;
+
+      const method = editId ? "PATCH" : "POST";
+
+      console.log("FINAL URL:", url);
+      console.log("FINAL METHOD:", method);
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json().catch(() => null);
+
+      console.log("API RESULT:", result);
+
+      if (!res.ok) {
+        throw new Error(
+          result?.message ||
+            (editId ? "Failed to update listing" : "Failed to create listing"),
+        );
+      }
+
+      toast.success(
+        editId
+          ? "Listing updated successfully!"
+          : "Listing published successfully!",
+      );
+
+      router.push("/seller/products");
+    } catch (error) {
+      console.error("PUBLISH ERROR:", error);
+
+      toast.error(
+        error instanceof Error ? error.message : "Something went wrong",
+      );
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  // const handlePublish = async () => {
+  //   setIsPublishing(true);
+  //   try {
+  //     const payload = formToCreateTradesPayload(data);
+
+  //     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/trades`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${session?.accessToken}`,
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     if (!res.ok) {
+  //       const err = await res.json().catch(() => null);
+  //       throw new Error(err?.message || "Failed to publish listing");
+  //     }
+
+  //     toast.success("Listing published successfully!");
+  //     router.push("/seller/products");
+  //   } catch (err) {
+  //     toast.error(err instanceof Error ? err.message : "Something went wrong publishing");
+  //   } finally {
+  //     setIsPublishing(false);
+  //   }
+  // };
+
+  // const handleEdit = (step: string) => {
+  //   if (step === "basic") router.push("/seller/listing/trades-home-repair");
+  //   if (step === "detail") router.push("/seller/listing/trades-home-repair/detail");
+  // };
   const handleEdit = (step: string) => {
-    if (step === "basic") router.push("/seller/listing/trades-home-repair");
-    if (step === "detail") router.push("/seller/listing/trades-home-repair/detail");
+    if (step === "basic") {
+      if (editId) {
+        router.push(`/seller/listing/trades-home-repair?edit=${editId}`);
+      } else {
+        router.push("/seller/listing/trades-home-repair");
+      }
+    }
+
+    if (step === "detail") {
+      if (editId) {
+        router.push(`/seller/listing/trades-home-repair/detail?edit=${editId}`);
+      } else {
+        router.push("/seller/listing/trades-home-repair/detail");
+      }
+    }
   };
 
   return (
@@ -200,14 +307,16 @@ const handlePublish = async () => {
 
           <div className="page-header">
             <h1 className="page-title">Preview your listing</h1>
-            <p className="page-subtitle">Review your listing details before publishing.</p>
+            <p className="page-subtitle">
+              Review your listing details before publishing.
+            </p>
           </div>
 
           <div className="listing-card">
             <div className="card-layout">
               <div className="card-right">
-                <h2 className="service-title">{data.serviceTitle}</h2>                  
-                
+                <h2 className="service-title">{data.serviceTitle}</h2>
+
                 <div className="location-row">
                   <FiMapPin size={14} />
                   {data.city}, Nepal
@@ -226,28 +335,40 @@ const handlePublish = async () => {
                       <FiDollarSign size={14} />
                       Callout Charge
                     </div>
-                    <div className="info-cell-value">NPR {Number(data.calloutCharge || 0).toLocaleString("en-IN")}</div>
+                    <div className="info-cell-value">
+                      NPR{" "}
+                      {Number(data.calloutCharge || 0).toLocaleString("en-IN")}
+                    </div>
                   </div>
                   <div className="info-cell">
                     <div className="info-cell-label">
                       <FiShield size={14} />
                       Warranty
                     </div>
-                    <div className="info-cell-value">{data.warrantyGiven ? "Yes" : "No"}</div>
+                    <div className="info-cell-value">
+                      {data.warrantyGiven ? "Yes" : "No"}
+                    </div>
                   </div>
                   <div className="info-cell">
                     <div className="info-cell-label">
                       <FiZap size={14} />
                       Emergency
                     </div>
-                    <div className="info-cell-value">{data.emergencyService ? "Available" : "Not Available"}</div>
+                    <div className="info-cell-value">
+                      {data.emergencyService ? "Available" : "Not Available"}
+                    </div>
                   </div>
-                  <div className="info-cell" style={{ gridColumn: "span 2", borderRight: "none" }}>
+                  <div
+                    className="info-cell"
+                    style={{ gridColumn: "span 2", borderRight: "none" }}
+                  >
                     <div className="info-cell-label">
                       <FiClock size={14} />
                       Avg Response
                     </div>
-                    <div className="info-cell-value">{data.avgResponseTime}</div>
+                    <div className="info-cell-value">
+                      {data.avgResponseTime}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -255,11 +376,18 @@ const handlePublish = async () => {
           </div>
 
           <div className="actions">
-            <button className="btn btn-edit" onClick={() => handleEdit("detail")}>
+            <button
+              className="btn btn-edit"
+              onClick={() => handleEdit("detail")}
+            >
               <FiEdit2 size={15} />
               Edit Listing
             </button>
-            <button className="btn btn-publish" onClick={handlePublish} disabled={isPublishing}>
+            <button
+              className="btn btn-publish"
+              onClick={handlePublish}
+              disabled={isPublishing}
+            >
               {isPublishing ? (
                 <>
                   <span className="spinner" />

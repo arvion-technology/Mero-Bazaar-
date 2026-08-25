@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRef, useState, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+
 import {
   FiArrowLeft,
   FiCheck,
   FiUploadCloud,
   FiX,
   FiFileText,
-  FiBriefcase,
+  FiBriefcase, 
   FiPlus,
   FiInfo,
 } from "react-icons/fi";
@@ -35,12 +37,88 @@ const steps = [
   { label: "Photos", icon: FiPlus, status: "active" as const },
   { label: "Preview", icon: FiInfo, status: "upcoming" as const },
 ];
+interface ImageItem {
+  file: File;
+  preview: string;
+}
 
 export default function AddFoodPhotosPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { images, setImages } = useDraft();
   const [isDragging, setIsDragging] = useState(false);
+    const { data: session } = useSession();
+    const searchParams = useSearchParams();
+    const editId = searchParams.get("edit");
+     useEffect(() => {
+        if (!editId || !session?.accessToken) return;
+    
+        const loadExistingPhotos = async () => {
+          try {
+            const response = await fetch(`/api/listings/${editId}`, {
+              headers: {
+                Authorization: `Bearer ${session.accessToken}`,
+              },
+            });
+    
+            const data = await response.json();
+    
+            if (!response.ok) {
+              throw new Error(data?.message || "Failed to load listing");
+            }
+    
+            console.log("EDIT FULL DATA:", data);
+    
+            // Find existing images wherever the API returns them
+            const rawImages =
+              data.images ??
+              data.listing?.images ??
+              data.vehicle?.images ??
+              data.photos ??
+              data.listing?.photos ??
+              [];
+    
+            console.log("EDIT EXISTING IMAGES:", rawImages);
+    
+            if (!Array.isArray(rawImages) || rawImages.length === 0) {
+              console.log("NO EXISTING IMAGES FOUND");
+              return;
+            }
+    
+            const existingImages: ImageItem[] = rawImages
+              .map((image: any, index: number) => {
+                const url =
+                  typeof image === "string"
+                    ? image
+                    : (image?.url ??
+                      image?.imageUrl ??
+                      image?.secure_url ??
+                      image?.src ??
+                      image?.path);
+    
+                if (!url) return null;
+    
+                return {
+                  file: new File([], `existing-${index}.jpg`, {
+                    type: "image/jpeg",
+                  }),
+                  preview: url,
+                };
+              })
+              .filter((item): item is ImageItem => item !== null);
+    
+            console.log("FINAL EXISTING IMAGES:", existingImages);
+    
+            setImages(existingImages);
+          } catch (error) {
+            console.error("Failed to load existing photos:", error);
+            toast.error("Failed to load existing photos.");
+          }
+        };
+    
+        loadExistingPhotos();
+      }, [editId, session?.accessToken, setImages]);
+  
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;

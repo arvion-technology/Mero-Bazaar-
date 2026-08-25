@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -160,9 +161,169 @@ function CustomSelect({
 
 export default function AgricultureListingPage() {
   const router = useRouter();
+  
   const { agricultureData, setAgricultureData } = useDraft();
   const d = agricultureData;
+const searchParams = useSearchParams();
+const editId = searchParams.get("edit");
+const { data: session } = useSession();
+useEffect(() => {
+  if (!editId || !session?.accessToken) return;
 
+  const loadExistingAgriculture = async () => {
+    try {
+      const response = await fetch(`/api/listings/${editId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
+
+      console.log("EDIT AGRICULTURE FULL DATA:", result);
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message || "Failed to load agriculture listing"
+        );
+      }
+
+      // API response ko agriculture object
+      const agriculture =
+        result?.agriculture ??
+        result?.listing?.agriculture ??
+        result?.agricultureAndLivestock ??
+        result?.listing?.agricultureAndLivestock ??
+        result;
+
+      console.log("EDIT AGRICULTURE DATA:", agriculture);
+
+      setAgricultureData((prev) => ({
+        ...prev,
+
+        
+
+        district:
+          agriculture?.district ??
+          prev.district,
+
+        village:
+          agriculture?.village ??
+          prev.village,
+
+        location:
+          agriculture?.location ??
+          agriculture?.area ??
+          prev.location,
+
+       price:
+  agriculture?.price != null
+    ? String(agriculture.price).replace(/,/g, "")
+    : agriculture?.pricePerUnit != null
+      ? String(agriculture.pricePerUnit).replace(/,/g, "")
+      : agriculture?.unitPrice != null
+        ? String(agriculture.unitPrice).replace(/,/g, "")
+        : prev.price,
+        unit:
+          agriculture?.unit ??
+          prev.unit,
+
+        itemName:
+          agriculture?.itemName ??
+          agriculture?.productName ??
+          prev.itemName,
+
+        price:
+  agriculture?.price != null
+    ? String(agriculture.price).replace(/,/g, "")
+    : agriculture?.pricePerUnit != null
+      ? String(agriculture.pricePerUnit).replace(/,/g, "")
+      : agriculture?.unitPrice != null
+        ? String(agriculture.unitPrice).replace(/,/g, "")
+        : prev.price,
+        organicCertified:
+          agriculture?.organicCertified ??
+          false,
+
+        organicVerified:
+          agriculture?.organicVerified ??
+          false,
+
+        seasonalAvailability:
+          agriculture?.seasonalAvailability ??
+          prev.seasonalAvailability,
+
+        animalType:
+          agriculture?.animalType ??
+          prev.animalType,
+
+        age:
+          agriculture?.age ??
+          prev.age,
+
+        breed:
+          agriculture?.breed ??
+          prev.breed,
+
+        healthVaccineStatus:
+          agriculture?.healthVaccineStatus ??
+          prev.healthVaccineStatus,
+
+        serviceType:
+          agriculture?.serviceType ??
+          prev.serviceType,
+
+        servicePrice:
+          agriculture?.servicePrice != null
+            ? String(agriculture.servicePrice).replace(/,/g, "")
+            : prev.servicePrice,
+
+        priceUnit:
+          agriculture?.priceUnit ??
+          prev.priceUnit,
+
+        experience:
+          agriculture?.experience ??
+          prev.experience,
+
+        mobileService:
+          agriculture?.mobileService ??
+          false,
+
+        serviceArea:
+          agriculture?.serviceArea ??
+          prev.serviceArea,
+
+        serviceRadius:
+          agriculture?.serviceRadius != null
+            ? String(agriculture.serviceRadius)
+            : prev.serviceRadius,
+
+        healthCertificate:
+          agriculture?.healthCertificate ??
+          false,
+
+        vaccinationAvailable:
+          agriculture?.vaccinationAvailable ??
+          false,
+
+        availabilityDays:
+          Array.isArray(agriculture?.availabilityDays)
+            ? agriculture.availabilityDays
+            : Array.isArray(agriculture?.availableDays)
+              ? agriculture.availableDays
+              : prev.availabilityDays,
+      }));
+    } catch (error) {
+      console.error("Failed to load agriculture edit data:", error);
+      toast.error("Failed to load existing agriculture data.");
+    }
+  };
+
+  loadExistingAgriculture();
+}, [editId, session?.accessToken, setAgricultureData]);
   const isProduce = d.listingType === "Produce";
   const isLiveStock = d.listingType === "LiveStock";
   const isVetService = d.listingType === "Vet Service";
@@ -202,8 +363,13 @@ export default function AgricultureListingPage() {
 
     setAgricultureData(finalData);
     toast.success("Details saved! Now add photos.");
-    router.push("/seller/listing/agriculture-livestock/photos");
-  };
+if (editId) {
+  router.push(
+    `/seller/listing/agriculture-livestock/photos?edit=${editId}`
+  );
+} else {
+  router.push("/seller/listing/agriculture-livestock/photos");
+}  };
 
   return (
     <>

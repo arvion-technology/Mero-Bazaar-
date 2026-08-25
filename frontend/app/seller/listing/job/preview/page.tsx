@@ -1,9 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { FiArrowLeft, FiCheck, FiMapPin, FiEdit2, FiSend } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiCheck,
+  FiMapPin,
+  FiEdit2,
+  FiSend,
+} from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useJobDraft } from "../layout";
@@ -45,45 +51,63 @@ export default function PreviewListingPage() {
   const { data } = useJobDraft();
   const [isPublishing, setIsPublishing] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
 
   const handlePublish = async () => {
+    if (!session?.accessToken) {
+      toast.error("Please login again.");
+      return;
+    }
+
     setIsPublishing(true);
+
     try {
-      const res = await fetch("/api/jobs", {
-        method: "POST",
+      const payload = {
+        role: data.role,
+        city: toCity(data.location),
+        salaryMin: Number(data.salaryMin.replace(/,/g, "")),
+        salaryMax: Number(data.salaryMax.replace(/,/g, "")),
+        payPeriod: PAY_PERIOD_MAP[data.payPeriod] ?? "MONTHLY",
+        contractType: CONTRACT_TYPE_MAP[data.contractType] ?? "FULL_TIME",
+        skillTags: data.skillTags,
+        isUrgent: data.urgentHiring,
+        employerPhoneVerified: data.phoneVerified,
+      };
+
+      const url = editId ? `/api/jobs/${editId}` : "/api/jobs";
+
+      const method = editId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.accessToken}`,
+          Authorization: `Bearer ${session.accessToken}`,
         },
-        body: JSON.stringify({
-          role: data.role,
-          city: toCity(data.location),
-          salaryMin: Number(data.salaryMin.replace(/,/g, "")),
-          salaryMax: Number(data.salaryMax.replace(/,/g, "")),
-          payPeriod: PAY_PERIOD_MAP[data.payPeriod] ?? "MONTHLY",
-          contractType: CONTRACT_TYPE_MAP[data.contractType] ?? "FULL_TIME",
-          skillTags: data.skillTags,
-          isUrgent: data.urgentHiring,
-          employerPhoneVerified: data.phoneVerified,
-          // NOTE: `description` intentionally left out here.
-          // The Job model/DTO has no `description` field (only Listing does),
-          // so sending it trips the backend's whitelist validation
-          // ("property description should not exist"). If you want the
-          // description persisted, save it to the Listing separately
-          // (e.g. a follow-up PATCH to /api/listings/:id) once the DTO
-          // supports it, rather than bundling it into the job payload.
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        throw new Error(err?.message || "Failed to publish job listing");
+
+        throw new Error(
+          err?.message ||
+            (editId
+              ? "Failed to update job listing"
+              : "Failed to publish job listing"),
+        );
       }
 
-      toast.success("Listing published successfully!");
+      toast.success(
+        editId
+          ? "Listing updated successfully!"
+          : "Listing published successfully!",
+      );
+
       router.push("/seller/products");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong publishing");
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsPublishing(false);
     }
@@ -457,11 +481,15 @@ export default function PreviewListingPage() {
 
           <div className="page-header">
             <h1 className="section-title">Preview your listing</h1>
-            <p className="section-subtitle">Review your listing details before publishing.</p>
+            <p className="section-subtitle">
+              Review your listing details before publishing.
+            </p>
           </div>
 
           <div className="listing-card">
-            {data.urgentHiring && <div className="badge-urgent">Urgent Hiring</div>}
+            {data.urgentHiring && (
+              <div className="badge-urgent">Urgent Hiring</div>
+            )}
 
             <div className="card-header">
               <div>
@@ -508,7 +536,11 @@ export default function PreviewListingPage() {
 
             <p className="description-text">{displayedDesc}</p>
             {shouldTruncate && (
-              <button type="button" className="view-more-btn" onClick={() => setExpanded(!expanded)}>
+              <button
+                type="button"
+                className="view-more-btn"
+                onClick={() => setExpanded(!expanded)}
+              >
                 {expanded ? "View Less" : "View More"}
               </button>
             )}
@@ -525,7 +557,9 @@ export default function PreviewListingPage() {
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Employer Phone Verified</span>
-                  <span className="detail-value">{data.phoneVerified ? "Yes" : "No"}</span>
+                  <span className="detail-value">
+                    {data.phoneVerified ? "Yes" : "No"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -536,7 +570,11 @@ export default function PreviewListingPage() {
               <FiEdit2 size={15} />
               Edit Listing
             </button>
-            <button className="btn btn-publish" onClick={handlePublish} disabled={isPublishing}>
+            <button
+              className="btn btn-publish"
+              onClick={handlePublish}
+              disabled={isPublishing}
+            >
               {isPublishing ? (
                 <>
                   <span className="spinner" />

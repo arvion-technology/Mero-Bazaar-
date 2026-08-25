@@ -1,26 +1,33 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { FiArrowLeft, FiUploadCloud, FiX, FiImage, FiCheck } from "react-icons/fi";
+import { useRef, useState, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import {
+  FiArrowLeft,
+  FiUploadCloud,
+  FiX,
+  FiImage,
+  FiCheck,
+} from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useDraft } from "../layout";
 
-const ACCENT       = "#2563eb";
+const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
 const ACCENT_LIGHT = "#eff6ff";
-const ACCENT_SOFT  = "#dbeafe";
-const DANGER       = "#ef4444";
-const SUCCESS      = "#10b981";
-const BORDER       = "#e2e8f0";
+const ACCENT_SOFT = "#dbeafe";
+const DANGER = "#ef4444";
+const SUCCESS = "#10b981";
+const BORDER = "#e2e8f0";
 const BORDER_DASHED = "#c4b5fd";
 const TEXT_HEADING = "#0f172a";
 const TEXT_PRIMARY = "#1e293b";
 const TEXT_SECONDARY = "#64748b";
-const TEXT_MUTED   = "#94a3b8";
-const BG           = "#f8fafc";
-const CARD_BG      = "#ffffff";
+const TEXT_MUTED = "#94a3b8";
+const BG = "#f8fafc";
+const CARD_BG = "#ffffff";
 
 interface ImageItem {
   file: File;
@@ -30,11 +37,83 @@ interface ImageItem {
 export default function AddPhotosPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
   const dragCounter = useRef(0);
   const { images, setImages } = useDraft();
   const [isDragging, setIsDragging] = useState(false);
 
   const maxPhotos = 10;
+
+  useEffect(() => {
+    if (!editId || !session?.accessToken) return;
+
+    const loadExistingPhotos = async () => {
+      try {
+        const response = await fetch(`/api/listings/${editId}`, {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.message || "Failed to load listing");
+        }
+
+        console.log("EDIT FULL DATA:", data);
+
+        // Find existing images wherever the API returns them
+        const rawImages =
+          data.images ??
+          data.listing?.images ??
+          data.vehicle?.images ??
+          data.photos ??
+          data.listing?.photos ??
+          [];
+
+        console.log("EDIT EXISTING IMAGES:", rawImages);
+
+        if (!Array.isArray(rawImages) || rawImages.length === 0) {
+          console.log("NO EXISTING IMAGES FOUND");
+          return;
+        }
+
+        const existingImages: ImageItem[] = rawImages
+          .map((image: any, index: number) => {
+            const url =
+              typeof image === "string"
+                ? image
+                : (image?.url ??
+                  image?.imageUrl ??
+                  image?.secure_url ??
+                  image?.src ??
+                  image?.path);
+
+            if (!url) return null;
+
+            return {
+              file: new File([], `existing-${index}.jpg`, {
+                type: "image/jpeg",
+              }),
+              preview: url,
+            };
+          })
+          .filter((item): item is ImageItem => item !== null);
+
+        console.log("FINAL EXISTING IMAGES:", existingImages);
+
+        setImages(existingImages);
+      } catch (error) {
+        console.error("Failed to load existing photos:", error);
+        toast.error("Failed to load existing photos.");
+      }
+    };
+
+    loadExistingPhotos();
+  }, [editId, session?.accessToken, setImages]);
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
@@ -89,7 +168,7 @@ export default function AddPhotosPage() {
         e.dataTransfer.clearData();
       }
     },
-    [images.length]
+    [images.length],
   );
 
   const removeImage = (idx: number) => {
@@ -541,7 +620,11 @@ export default function AddPhotosPage() {
           {/* Header */}
           <div className="photos-header">
             <div className="photos-header-left">
-              <button type="button" className="back-btn" onClick={() => router.back()}>
+              <button
+                type="button"
+                className="back-btn"
+                onClick={() => router.back()}
+              >
                 <FiArrowLeft size={18} />
               </button>
             </div>
@@ -552,7 +635,9 @@ export default function AddPhotosPage() {
 
           {/* Title */}
           <h1 className="section-title">Add Photos</h1>
-          <p className="section-subtitle">Add up to 10 photos. First photo will be your main photo.</p>
+          <p className="section-subtitle">
+            Add up to 10 photos. First photo will be your main photo.
+          </p>
 
           {/* Dropzone or Grid */}
           {images.length === 0 ? (
@@ -568,10 +653,19 @@ export default function AddPhotosPage() {
                 <div className="dropzone-content">
                   <FiUploadCloud size={48} className="dropzone-icon" />
                   <p className="dropzone-text">Drag & Drop images here or</p>
-                  <button type="button" className="upload-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
+                  <button
+                    type="button"
+                    className="upload-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                  >
                     <FiImage size={16} /> Upload Images
                   </button>
-                  <p className="dropzone-hint">You can upload up to 10 images (JPG, PNG)</p>
+                  <p className="dropzone-hint">
+                    You can upload up to 10 images (JPG, PNG)
+                  </p>
                 </div>
               </div>
               <input
@@ -590,13 +684,20 @@ export default function AddPhotosPage() {
                   <div key={idx} className="photo-item">
                     <img src={img.preview} alt={`Photo ${idx + 1}`} />
                     {idx === 0 && <span className="main-badge">Main</span>}
-                    <button type="button" className="photo-remove" onClick={() => removeImage(idx)}>
+                    <button
+                      type="button"
+                      className="photo-remove"
+                      onClick={() => removeImage(idx)}
+                    >
                       <FiX size={14} />
                     </button>
                   </div>
                 ))}
                 {images.length < maxPhotos && (
-                  <div className="photo-add-more" onClick={() => fileInputRef.current?.click()}>
+                  <div
+                    className="photo-add-more"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
                     <FiUploadCloud size={24} />
                     <span>Add More</span>
                   </div>
@@ -630,7 +731,11 @@ export default function AddPhotosPage() {
 
           {/* Continue */}
           <div className="continue-wrap">
-            <button type="button" className="continue-btn" onClick={handleContinue}>
+            <button
+              type="button"
+              className="continue-btn"
+              onClick={handleContinue}
+            >
               <FiCheck size={18} />
               Save & Continue
             </button>

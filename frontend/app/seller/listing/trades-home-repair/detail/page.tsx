@@ -1,9 +1,16 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
-  FiArrowLeft, FiChevronRight, FiChevronDown, FiFileText, FiEye, FiCheck, FiList,
+  FiArrowLeft,
+  FiChevronRight,
+  FiChevronDown,
+  FiFileText,
+  FiEye,
+  FiCheck,
+  FiList,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
@@ -30,20 +37,41 @@ const steps = [
 ];
 
 const serviceAreas = ["5KM", "10KM", "15KM", "20KM", "25KM", "30KM", "50KM"];
-const responseTimes = ["30 Minutes", "1 Hour", "2 Hours", "3 Hours", "4 Hours", "Same Day", "Next Day"];
+const responseTimes = [
+  "30 Minutes",
+  "1 Hour",
+  "2 Hours",
+  "3 Hours",
+  "4 Hours",
+  "Same Day",
+  "Next Day",
+];
 
 const DEFAULT_LAT = 27.7172;
-const DEFAULT_LNG = 85.3240;
+const DEFAULT_LNG = 85.324;
 
-const MapWithNoSSR = dynamic(() => import("./MapComponent"), { ssr: false, loading: () => <MapSkeleton /> });
+const MapWithNoSSR = dynamic(() => import("./MapComponent"), {
+  ssr: false,
+  loading: () => <MapSkeleton />,
+});
 
 function MapSkeleton() {
   return (
-    <div style={{
-      width: "100%", height: "200px", background: "#e5e7eb", borderRadius: "12px",
-      display: "flex", alignItems: "center", justifyContent: "center", border: `1.5px solid ${BORDER}`,
-    }}>
-      <span style={{ color: TEXT_MUTED, fontSize: "14px" }}>Loading map...</span>
+    <div
+      style={{
+        width: "100%",
+        height: "200px",
+        background: "#e5e7eb",
+        borderRadius: "12px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: `1.5px solid ${BORDER}`,
+      }}
+    >
+      <span style={{ color: TEXT_MUTED, fontSize: "14px" }}>
+        Loading map...
+      </span>
     </div>
   );
 }
@@ -55,14 +83,22 @@ interface CustomSelectProps {
   placeholder?: string;
 }
 
-function CustomSelect({ options, value, onChange, placeholder }: CustomSelectProps) {
+function CustomSelect({
+  options,
+  value,
+  onChange,
+  placeholder,
+}: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -92,7 +128,9 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
         break;
       case "ArrowUp":
         e.preventDefault();
-        setHighlightedIndex((prev) => (prev - 1 + options.length) % options.length);
+        setHighlightedIndex(
+          (prev) => (prev - 1 + options.length) % options.length,
+        );
         break;
       case "Enter":
         e.preventDefault();
@@ -108,12 +146,27 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
   };
 
   return (
-    <div ref={containerRef} className="custom-select-container" tabIndex={0} onKeyDown={handleKeyDown}>
-      <div className={`custom-select-trigger ${isOpen ? "open" : ""}`} onClick={() => setIsOpen(!isOpen)}>
-        <span className={value ? "custom-select-value" : "custom-select-placeholder"}>
+    <div
+      ref={containerRef}
+      className="custom-select-container"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
+      <div
+        className={`custom-select-trigger ${isOpen ? "open" : ""}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span
+          className={
+            value ? "custom-select-value" : "custom-select-placeholder"
+          }
+        >
           {value || placeholder || "Select..."}
         </span>
-        <FiChevronDown size={16} className={`custom-select-chevron ${isOpen ? "rotated" : ""}`} />
+        <FiChevronDown
+          size={16}
+          className={`custom-select-chevron ${isOpen ? "rotated" : ""}`}
+        />
       </div>
       {isOpen && (
         <div className="custom-select-dropdown">
@@ -142,16 +195,106 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
 
 export default function TradesHomeRepairDetailPage() {
   const router = useRouter();
-  const { data, setData } = useTradesDraft();
-  const { serviceArea, calloutCharge, warrantyGiven, emergencyService, avgResponseTime, address, mapPosition } = data;
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
 
+  const { data: session } = useSession();
+  const { data, setData } = useTradesDraft();
+  const {
+    serviceArea,
+    calloutCharge,
+    warrantyGiven,
+    emergencyService,
+    avgResponseTime,
+    address,
+    mapPosition,
+  } = data;
+
+  useEffect(() => {
+    if (!editId || !session?.accessToken) return;
+
+    const loadExistingListing = async () => {
+      try {
+        const res = await fetch(`/api/trades-home-repair/${editId}`, {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        });
+
+        const result = await res.json();
+
+        console.log("TRADES DETAIL EDIT DATA:", result);
+
+        if (!res.ok) {
+          throw new Error(result?.message || "Failed to load listing");
+        }
+
+        const existing =
+          result?.tradesAndHomeRepair ??
+          result?.tradesHomeRepair ??
+          result?.listing?.tradesAndHomeRepair ??
+          result?.listing ??
+          result;
+
+        setData((prev) => ({
+          ...prev,
+
+          serviceArea:
+            existing?.serviceArea ??
+            existing?.serviceRadius ??
+            prev.serviceArea,
+
+          calloutCharge:
+            existing?.calloutCharge != null
+              ? String(existing.calloutCharge)
+              : prev.calloutCharge,
+
+          warrantyGiven:
+            existing?.warrantyGiven ?? existing?.serviceWarranty ?? false,
+
+          emergencyService:
+            existing?.emergencyService ?? existing?.emergency ?? false,
+
+          avgResponseTime:
+            existing?.avgResponseTime ??
+            existing?.responseTime ??
+            prev.avgResponseTime,
+
+          address: existing?.address ?? existing?.location ?? prev.address,
+
+          mapPosition: Array.isArray(existing?.mapPosition)
+            ? existing.mapPosition
+            : existing?.latitude != null && existing?.longitude != null
+              ? [Number(existing.latitude), Number(existing.longitude)]
+              : prev.mapPosition,
+        }));
+      } catch (error) {
+        console.error("TRADES DETAIL EDIT ERROR:", error);
+
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to load existing details",
+        );
+      }
+    };
+
+    loadExistingListing();
+  }, [editId, session?.accessToken, setData]);
+
+  
   const setServiceArea = (v: string) => setData({ ...data, serviceArea: v });
-  const setCalloutCharge = (v: string) => setData({ ...data, calloutCharge: v });
-  const setWarrantyGiven = (v: boolean) => setData({ ...data, warrantyGiven: v });
-  const setEmergencyService = (v: boolean) => setData({ ...data, emergencyService: v });
-  const setAvgResponseTime = (v: string) => setData({ ...data, avgResponseTime: v });
+  const setCalloutCharge = (v: string) =>
+    setData({ ...data, calloutCharge: v });
+  const setWarrantyGiven = (v: boolean) =>
+    setData({ ...data, warrantyGiven: v });
+  const setEmergencyService = (v: boolean) =>
+    setData({ ...data, emergencyService: v });
+  const setAvgResponseTime = (v: string) =>
+    setData({ ...data, avgResponseTime: v });
   const setAddress = (v: string) => setData({ ...data, address: v });
-  const setMapPosition = (v: [number, number]) => setData({ ...data, mapPosition: v });
+  const setMapPosition = (v: [number, number]) =>
+    setData({ ...data, mapPosition: v });
 
   const formattedCallout = useMemo(() => {
     if (!calloutCharge) return "";
@@ -168,7 +311,7 @@ export default function TradesHomeRepairDetailPage() {
     (lat: number, lng: number) => {
       setMapPosition([lat, lng]);
     },
-    [data]
+    [data],
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -178,7 +321,11 @@ export default function TradesHomeRepairDetailPage() {
       return;
     }
     toast.success("Details saved! Preview your listing.");
-    router.push("/seller/listing/trades-home-repair/preview");
+    if (editId) {
+      router.push(`/seller/listing/trades-home-repair/preview?edit=${editId}`);
+    } else {
+      router.push("/seller/listing/trades-home-repair/preview");
+    }
   };
 
   return (
@@ -384,7 +531,11 @@ export default function TradesHomeRepairDetailPage() {
       <div className="listing-page">
         <div className="listing-container">
           <div className="listing-header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={18} />
             </button>
             <div className="listing-header-text">
@@ -399,15 +550,28 @@ export default function TradesHomeRepairDetailPage() {
           {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div
+                    className={`step-connector ${step.status === "done" ? "filled" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -446,7 +610,9 @@ export default function TradesHomeRepairDetailPage() {
                   <p className="hint-text">Charge applied per unit</p>
                 </div>
 
-                <h2 className="section-title" style={{ marginTop: 8 }}>Availability & Response</h2>
+                <h2 className="section-title" style={{ marginTop: 8 }}>
+                  Availability & Response
+                </h2>
 
                 <div className="checkbox-group">
                   <label className="checkbox-item">
@@ -479,7 +645,9 @@ export default function TradesHomeRepairDetailPage() {
                     onChange={setAvgResponseTime}
                     placeholder="Select response time"
                   />
-                  <p className="hint-text">Average time to respond after contact</p>
+                  <p className="hint-text">
+                    Average time to respond after contact
+                  </p>
                 </div>
                 <h2 className="section-title">Location</h2>
 
@@ -492,14 +660,18 @@ export default function TradesHomeRepairDetailPage() {
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                   />
-              </div>
+                </div>
               </div>
             </div>
 
             <div className="divider" />
 
             <div className="submit-wrap">
-              <button type="button" className="back-link" onClick={() => router.back()}>
+              <button
+                type="button"
+                className="back-link"
+                onClick={() => router.back()}
+              >
                 <FiArrowLeft size={16} />
                 Back
               </button>

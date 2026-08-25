@@ -1,17 +1,29 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
-  FiArrowLeft, FiChevronRight, FiChevronDown, FiMapPin, FiFileText,
-  FiBriefcase, FiImage, FiEye, FiCheck, FiX, FiPlus, FiBox, FiCalendar,
+  FiArrowLeft,
+  FiChevronRight,
+  FiChevronDown,
+  FiMapPin,
+  FiFileText,
+  FiBriefcase,
+  FiImage,
+  FiEye,
+  FiCheck,
+  FiX,
+  FiPlus,
+  FiBox,
+  FiCalendar,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useDraft } from "./layout";
 
 const ACCENT = "#2563eb";
-const ACCENT_HOVER = "#1d4ed8"; 
+const ACCENT_HOVER = "#1d4ed8";
 const ACCENT_LIGHT = "#eff6ff";
 const DANGER = "#dc2626";
 const SUCCESS = "#10b981";
@@ -30,19 +42,133 @@ const steps = [
   { label: "Preview", icon: FiEye, status: "upcoming" as const },
 ];
 
-const listingTypes = ["Furniture", "Appliance", "Clothing", "Books", "Baby", "Sports", "Instruments"];
+const listingTypes = [
+  "Furniture",
+  "Appliance",
+  "Clothing",
+  "Books",
+  "Baby",
+  "Sports",
+  "Instruments",
+];
 const conditions = ["Like New", "Good", "Fair", "Poor"];
 
 export default function NewSecondHandListingPage() {
   const router = useRouter();
-  const [status] = useState("Active");
-  const { data, setData } = useDraft();
+const searchParams = useSearchParams();
+const editId = searchParams.get("edit");
+
+const { data: session } = useSession();
+
+const [status] = useState("Active");
+const { data, setData } = useDraft();
+
+  useEffect(() => {
+    if (!editId || !session?.accessToken) return;
+
+    const loadExistingListing = async () => {
+      try {
+        const res = await fetch(`/api/secondhand-goods/${editId}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const result = await res.json();
+
+        console.log("SECONDHAND EDIT RESPONSE:", result);
+
+        if (!res.ok) {
+          throw new Error(result?.message || "Failed to load existing listing");
+        }
+
+        const existing =
+          result?.secondHandGoods ??
+          result?.secondhandGoods ??
+          result?.listing ??
+          result;
+
+        setData((prev) => ({
+          ...prev,
+
+          listingType:
+            existing?.listingType ?? existing?.type ?? prev.listingType,
+
+          itemName: existing?.itemName ?? existing?.title ?? prev.itemName,
+
+          condition: existing?.condition ?? prev.condition,
+
+          price: existing?.price != null ? String(existing.price) : prev.price,
+
+          negotiable: existing?.negotiable ?? false,
+
+          description: existing?.description ?? prev.description,
+
+          brand: existing?.brand ?? prev.brand,
+
+          quantity:
+            existing?.quantity != null
+              ? String(existing.quantity)
+              : prev.quantity,
+
+          gender: existing?.gender ?? prev.gender,
+
+          availability: existing?.availability ?? prev.availability,
+
+          location: existing?.location ?? existing?.address ?? prev.location,
+
+          color: existing?.color ?? prev.color,
+
+          material: existing?.material ?? prev.material,
+
+          weight:
+            existing?.weight != null ? String(existing.weight) : prev.weight,
+
+          deliveryOption: existing?.deliveryOption ?? prev.deliveryOption,
+
+          deliveryCharge:
+            existing?.deliveryCharge != null
+              ? String(existing.deliveryCharge)
+              : prev.deliveryCharge,
+
+          city: existing?.city ?? prev.city,
+
+          expiresAt: existing?.expiresAt
+            ? String(existing.expiresAt).slice(0, 10)
+            : prev.expiresAt,
+        }));
+      } catch (error) {
+        console.error("SECONDHAND EDIT LOAD ERROR:", error);
+        toast.error("Failed to load existing listing");
+      }
+    };
+
+    loadExistingListing();
+  }, [editId, session?.accessToken, setData]);
+
   const isBaby = data.listingType === "Baby";
 
   const {
-    listingType, itemName, condition, price, negotiable, description,
-    brand, quantity, gender, availability, location, color, material,
-    weight, deliveryOption, deliveryCharge, city, expiresAt,
+    listingType,
+    itemName,
+    condition,
+    price,
+    negotiable,
+    description,
+    brand,
+    quantity,
+    gender,
+    availability,
+    location,
+    color,
+    material,
+    weight,
+    deliveryOption,
+    deliveryCharge,
+    city,
+    expiresAt,
   } = data;
 
   const descMax = 500;
@@ -61,8 +187,10 @@ export default function NewSecondHandListingPage() {
   const setColor = (v: string) => setData({ ...data, color: v });
   const setMaterial = (v: string) => setData({ ...data, material: v });
   const setWeight = (v: string) => setData({ ...data, weight: v });
-  const setDeliveryOption = (v: string) => setData({ ...data, deliveryOption: v });
-  const setDeliveryCharge = (v: string) => setData({ ...data, deliveryCharge: v });
+  const setDeliveryOption = (v: string) =>
+    setData({ ...data, deliveryOption: v });
+  const setDeliveryCharge = (v: string) =>
+    setData({ ...data, deliveryCharge: v });
   const setCity = (v: string) => setData({ ...data, city: v });
   const setExpiresAt = (v: string) => setData({ ...data, expiresAt: v });
 
@@ -87,7 +215,11 @@ export default function NewSecondHandListingPage() {
       return;
     }
     toast.success("Details saved! Now add photos.");
-    router.push("/seller/listing/secondhand-goods/photos");
+    if (editId) {
+      router.push(`/seller/listing/secondhand-goods/photos?edit=${editId}`);
+    } else {
+      router.push("/seller/listing/secondhand-goods/photos");
+    }
   };
 
   return (
@@ -717,7 +849,11 @@ export default function NewSecondHandListingPage() {
         <div className="listing-container">
           {/* Header */}
           <div className="listing-header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={18} />
             </button>
             <div className="listing-header-text">
@@ -732,15 +868,28 @@ export default function NewSecondHandListingPage() {
           {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div
+                    className={`step-connector ${step.status === "done" ? "filled" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -750,7 +899,11 @@ export default function NewSecondHandListingPage() {
             {/* Category Pill */}
             <div className="category-wrap">
               <label className="category-label">Category</label>
-              <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
+              <button
+                type="button"
+                className="category-pill"
+                onClick={() => router.push("/seller/dashboard")}
+              >
                 <FiBox size={16} />
                 SecondHandGoods
                 <span className="change-badge">Change</span>
@@ -808,23 +961,51 @@ export default function NewSecondHandListingPage() {
                 {/* Row 1: Item Name | Condition | Brand (Baby only) */}
                 <div className={`form-row ${isBaby ? "three-col" : "two-col"}`}>
                   <div className="form-group">
-                    <label className="form-label">Item Name <span className="required">*</span></label>
-                    <input type="text" className="form-input" placeholder="Enter item name" value={itemName} onChange={(e) => setItemName(e.target.value)} required />
+                    <label className="form-label">
+                      Item Name <span className="required">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Enter item name"
+                      value={itemName}
+                      onChange={(e) => setItemName(e.target.value)}
+                      required
+                    />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Condition <span className="required">*</span></label>
+                    <label className="form-label">
+                      Condition <span className="required">*</span>
+                    </label>
                     <div className="select-wrap">
-                      <select className="form-select" value={condition} onChange={(e) => setCondition(e.target.value)} required>
+                      <select
+                        className="form-select"
+                        value={condition}
+                        onChange={(e) => setCondition(e.target.value)}
+                        required
+                      >
                         <option value="">Select condition</option>
-                        {conditions.map((c) => <option key={c} value={c}>{c}</option>)}
+                        {conditions.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
                       </select>
                       <FiChevronDown size={16} className="select-chevron" />
                     </div>
                   </div>
                   {isBaby && (
                     <div className="form-group">
-                      <label className="form-label">Brand <span className="optional">(Optional)</span></label>
-                      <input type="text" className="form-input" placeholder="e.g. BabyHug" value={brand} onChange={(e) => setBrand(e.target.value)} />
+                      <label className="form-label">
+                        Brand <span className="optional">(Optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. BabyHug"
+                        value={brand}
+                        onChange={(e) => setBrand(e.target.value)}
+                      />
                     </div>
                   )}
                 </div>
@@ -833,13 +1014,30 @@ export default function NewSecondHandListingPage() {
                 {isBaby && (
                   <div className="form-row three-col">
                     <div className="form-group">
-                      <label className="form-label">Quantity <span className="required">*</span></label>
-                      <input type="number" className="form-input" placeholder="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} min="1" required />
+                      <label className="form-label">
+                        Quantity <span className="required">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        className="form-input"
+                        placeholder="1"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        min="1"
+                        required
+                      />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Gender <span className="required">*</span></label>
+                      <label className="form-label">
+                        Gender <span className="required">*</span>
+                      </label>
                       <div className="select-wrap">
-                        <select className="form-select" value={gender} onChange={(e) => setGender(e.target.value)} required>
+                        <select
+                          className="form-select"
+                          value={gender}
+                          onChange={(e) => setGender(e.target.value)}
+                          required
+                        >
                           <option value="Unisex">Unisex</option>
                           <option value="Male">Male</option>
                           <option value="Female">Female</option>
@@ -848,9 +1046,16 @@ export default function NewSecondHandListingPage() {
                       </div>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Availability <span className="optional">(Optional)</span></label>
+                      <label className="form-label">
+                        Availability{" "}
+                        <span className="optional">(Optional)</span>
+                      </label>
                       <div className="select-wrap">
-                        <select className="form-select" value={availability} onChange={(e) => setAvailability(e.target.value)}>
+                        <select
+                          className="form-select"
+                          value={availability}
+                          onChange={(e) => setAvailability(e.target.value)}
+                        >
                           <option value="In Stock">In Stock</option>
                           <option value="Out of Stock">Out of Stock</option>
                           <option value="Pre-Order">Pre-Order</option>
@@ -864,20 +1069,38 @@ export default function NewSecondHandListingPage() {
                 {/* Row 3: Price | Negotiable | Location */}
                 <div className={`form-row ${isBaby ? "three-col" : "two-col"}`}>
                   <div className="form-group">
-                    <label className="form-label">Price(NPR) <span className="required">*</span></label>
-                    <input type="text" inputMode="numeric" className="form-input" placeholder="Enter price" value={formattedPrice} onChange={(e) => handlePriceChange(e.target.value)} required />
+                    <label className="form-label">
+                      Price(NPR) <span className="required">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="form-input"
+                      placeholder="Enter price"
+                      value={formattedPrice}
+                      onChange={(e) => handlePriceChange(e.target.value)}
+                      required
+                    />
                   </div>
                   <div className="form-group" style={{ minWidth: "140px" }}>
-                    <label className="form-label" style={{ opacity: 0 }}>Negotiable</label>
+                    <label className="form-label" style={{ opacity: 0 }}>
+                      Negotiable
+                    </label>
                     <label className="checkbox-inline">
-                      <input type="checkbox" checked={negotiable} onChange={(e) => setNegotiable(e.target.checked)} />
+                      <input
+                        type="checkbox"
+                        checked={negotiable}
+                        onChange={(e) => setNegotiable(e.target.checked)}
+                      />
                       <span className="check-box"></span>
                       <span>Yes, negotiable</span>
                     </label>
                   </div>
                   {isBaby ? (
                     <div className="form-group">
-                      <label className="form-label">Address<span className="required">*</span></label>
+                      <label className="form-label">
+                        Address<span className="required">*</span>
+                      </label>
                       <input
                         type="text"
                         list="area-suggestions"
@@ -890,7 +1113,9 @@ export default function NewSecondHandListingPage() {
                     </div>
                   ) : (
                     <div className="form-group">
-                      <label className="form-label">City <span className="required">*</span></label>
+                      <label className="form-label">
+                        City <span className="required">*</span>
+                      </label>
                       <input
                         type="text"
                         list="city-suggestions"
@@ -906,25 +1131,63 @@ export default function NewSecondHandListingPage() {
 
                 {/* Description */}
                 <div className="form-group full-width">
-                  <label className="form-label">Description <span className="optional">(Optional)</span> <span className="required">*</span></label>
-                  <textarea className="form-textarea" placeholder="Describe your item..." value={description} maxLength={descMax} onChange={(e) => setDescription(e.target.value)} required />
-                  <div className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}>{descLength}/{descMax}</div>
+                  <label className="form-label">
+                    Description <span className="optional">(Optional)</span>{" "}
+                    <span className="required">*</span>
+                  </label>
+                  <textarea
+                    className="form-textarea"
+                    placeholder="Describe your item..."
+                    value={description}
+                    maxLength={descMax}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
+                  />
+                  <div
+                    className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}
+                  >
+                    {descLength}/{descMax}
+                  </div>
                 </div>
 
                 {/* Row 4: Baby Color | Material | Weight */}
                 {isBaby && (
                   <div className="form-row three-col">
                     <div className="form-group">
-                      <label className="form-label">Color <span className="optional">(Optional)</span></label>
-                      <input type="text" className="form-input" placeholder="e.g. Grey" value={color} onChange={(e) => setColor(e.target.value)} />
+                      <label className="form-label">
+                        Color <span className="optional">(Optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. Grey"
+                        value={color}
+                        onChange={(e) => setColor(e.target.value)}
+                      />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Material <span className="optional">(Optional)</span></label>
-                      <input type="text" className="form-input" placeholder="e.g. Aluminum, Fabric" value={material} onChange={(e) => setMaterial(e.target.value)} />
+                      <label className="form-label">
+                        Material <span className="optional">(Optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. Aluminum, Fabric"
+                        value={material}
+                        onChange={(e) => setMaterial(e.target.value)}
+                      />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Weight(kg) <span className="optional">(Optional)</span></label>
-                      <input type="text" className="form-input" placeholder="e.g. 5.2" value={weight} onChange={(e) => setWeight(e.target.value)} />
+                      <label className="form-label">
+                        Weight(kg) <span className="optional">(Optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. 5.2"
+                        value={weight}
+                        onChange={(e) => setWeight(e.target.value)}
+                      />
                     </div>
                   </div>
                 )}
@@ -937,7 +1200,13 @@ export default function NewSecondHandListingPage() {
                       <div className="delivery-group">
                         {["Buyer Pickup", "Home Delivery"].map((opt) => (
                           <label key={opt} className="delivery-option">
-                            <input type="radio" name="deliveryOption" value={opt} checked={deliveryOption === opt} onChange={() => setDeliveryOption(opt)} />
+                            <input
+                              type="radio"
+                              name="deliveryOption"
+                              value={opt}
+                              checked={deliveryOption === opt}
+                              onChange={() => setDeliveryOption(opt)}
+                            />
                             <span className="delivery-circle"></span>
                             <span>{opt}</span>
                           </label>
@@ -945,9 +1214,16 @@ export default function NewSecondHandListingPage() {
                       </div>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Delivery Charge(NPR) <span className="required">*</span></label>
+                      <label className="form-label">
+                        Delivery Charge(NPR) <span className="required">*</span>
+                      </label>
                       <div className="select-wrap">
-                        <select className="form-select" value={deliveryCharge} onChange={(e) => setDeliveryCharge(e.target.value)} required>
+                        <select
+                          className="form-select"
+                          value={deliveryCharge}
+                          onChange={(e) => setDeliveryCharge(e.target.value)}
+                          required
+                        >
                           <option value="0">Free</option>
                           <option value="100">100</option>
                           <option value="200">200</option>
@@ -964,9 +1240,18 @@ export default function NewSecondHandListingPage() {
                 {!isBaby && (
                   <div className="form-row two-col">
                     <div className="form-group">
-                      <label className="form-label">Expires At <span className="required">*</span></label>
+                      <label className="form-label">
+                        Expires At <span className="required">*</span>
+                      </label>
                       <div className="date-input-wrap">
-                        <input type="text" className="form-input" placeholder="DD/MM/YYYY" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} required />
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="DD/MM/YYYY"
+                          value={expiresAt}
+                          onChange={(e) => setExpiresAt(e.target.value)}
+                          required
+                        />
                         <FiCalendar size={18} className="date-icon" />
                       </div>
                     </div>
@@ -983,7 +1268,11 @@ export default function NewSecondHandListingPage() {
 
             {/* Submit Row */}
             <div className="submit-wrap">
-              <button type="button" className="back-link" onClick={() => router.back()}>
+              <button
+                type="button"
+                className="back-link"
+                onClick={() => router.back()}
+              >
                 <FiArrowLeft size={16} />
                 Back
               </button>
