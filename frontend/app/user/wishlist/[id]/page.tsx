@@ -881,9 +881,12 @@ export default function WishlistItemDetail() {
       responseRate: seller.responseRate ?? "N/A",
       avgResponseTime: seller.avgResponseTime ?? "N/A",
     }}
-    reviews={product.reviews ?? []}
-    listingId={product.id}
-    sellerId={seller.id}
+reviews={(product.reviews ?? []).map((r) => ({
+  reviewerName: r.reviewerName,
+  rating: r.rating,
+  comment: r.comment ?? null,
+  createdAt: r.createdAt ?? "",
+}))}
   />
 )}
 
