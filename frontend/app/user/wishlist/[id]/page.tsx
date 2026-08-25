@@ -864,25 +864,26 @@ export default function WishlistItemDetail() {
               </div>
             </div>
 
-            {/* ── Seller Card ── */}
-            {seller && (
-              <SellerCard
-                seller={{
-                  ...seller,
-                  avatar:
-                    seller.avatar ??
-                    seller.image ??
-                    "/default-avatar.png",
-                  isPro: seller.isPro ?? false,
-                  isTrusted: seller.isTrusted ?? false,
-                  responseRate: seller.responseRate ?? "N/A",
-                  avgResponseTime: seller.avgResponseTime ?? "N/A",
-                }}
-                reviews={product.reviews ?? []}
-                listingId={product.id}
-                sellerId={seller.id}
-              />
-            )}
+            
+                <SellerCard
+  seller={{
+    ...seller,
+    totalListing: seller.totalListings, 
+    avatar:
+      seller.avatar ??
+      seller.image ??
+      "/default-avatar.png",
+    isPro: seller.isPro ?? false,
+    isTrusted: seller.isTrusted ?? false,
+    responseRate: seller.responseRate ?? "N/A",
+    avgResponseTime: seller.avgResponseTime ?? "N/A",
+  }}
+  reviews={product.reviews ?? []}
+  listingId={product.id}
+  sellerId={seller.id}
+/>
+
+
           </div>
         </div>
 
