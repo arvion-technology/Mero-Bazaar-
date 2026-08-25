@@ -868,12 +868,9 @@ export default function WishlistItemDetail() {
 {seller && (
   <SellerCard
     seller={{
-      id: seller.id || "",
       name: seller.name || "Seller",
       avatar: seller.avatar ?? seller.image ?? "/default-avatar.png",
-      image: seller.image ?? seller.avatar ?? "/default-avatar.png",
       phone: seller.phone || "",
-      email: seller.email || "",
       isVerified: seller.isVerified ?? false,
       isPro: seller.isPro ?? false,
       isTrusted: seller.isTrusted ?? false,
