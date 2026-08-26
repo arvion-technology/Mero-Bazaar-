@@ -676,19 +676,33 @@ export default function JobsPage() {
                           </div>
                         </div>
                         <div className="jp-card-actions">
-                          <Link
-                            href={`/category/job/${j.id}`}
-                            className="jp-btn jp-btn-apply"
-                          >
+                          {/* Apply — span, not Link, because card is already a Link */}
+                          <span className="jp-btn jp-btn-apply">
                             <FiTarget size={14} /> Apply
-                          </Link>
-                          <a
-                            href="tel:+977-9800000000"
+                          </span>
+
+                          {/* Call — span with onClick, not <a>, because card is already a Link */}
+                          <span
                             className="jp-btn jp-btn-call"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              window.location.href = "tel:+977-9800000000";
+                            }}
                           >
                             <FiPhone size={14} /> Call
-                          </a>
-                          <button className="jp-btn jp-btn-chat">
+                          </span>
+
+                          {/* Chat — button is fine */}
+                          <button
+                            type="button"
+                            className="jp-btn jp-btn-chat"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              // TODO: open chat modal / drawer
+                            }}
+                          >
                             <FiMessageSquare size={14} /> Chat
                           </button>
                         </div>
