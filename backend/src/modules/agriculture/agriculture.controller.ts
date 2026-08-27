@@ -24,7 +24,7 @@ import {
   imageFileFilter,
   serverFilename,
   removeUploadedFiles,
-} from '../../common/uploads/upload.util';
+} from '../../common/uploads/upload.utils';
 
 @Controller('agriculture')
 export class AgricultureController {

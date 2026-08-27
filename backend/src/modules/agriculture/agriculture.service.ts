@@ -8,7 +8,7 @@ import { CreateAgricultureDto } from './dto/create_agriculture.dto';
 import { UpdateAgricultureDto } from './dto/update_agriculture.dto';
 import { ListingCategory } from '@prisma/client';
 import { QueryAgricultureDto } from './dto/query_agriculture.dto';
-import { validateAndReencodeImage } from '../../common/uploads/upload.util';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
 import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
 @Injectable()

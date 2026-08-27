@@ -8,7 +8,7 @@ import { CreateFoodsAndHomeDeliveryDto } from './dto/create_foods.dto';
 import { ListingCategory } from '@prisma/client';
 import { QueryFoodsAndHomeDeliveryDto } from './dto/query_foods.dto';
 import { UpdateFoodsAndHomeDeliveryDto } from './dto/update_foods.dto';
-import { validateAndReencodeImage } from '../../common/uploads/upload.util';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
 import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
 @Injectable()

@@ -19,7 +19,7 @@ import {
   imageFileFilter,
   serverFilename,
   removeUploadedFiles,
-} from '../../common/uploads/upload.util';
+} from '../../common/uploads/upload.utils';
 import { RentalService } from './rental.service';
 import { CreateRentalDto } from './dto/create_rental.dto';
 import { QueryRentalDto } from './dto/query_rental.dto';

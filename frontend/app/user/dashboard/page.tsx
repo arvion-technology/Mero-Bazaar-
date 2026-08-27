@@ -551,7 +551,7 @@ export default function UserDashboard() {
                       ))
                     ) : (
                       <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>
-                        You&apos;re all caught up âœ“
+                        You&apos;re all caught up
                       </div>
                     )}
                   </div>
@@ -591,7 +591,7 @@ export default function UserDashboard() {
 
           <main className="ud-main">
             <div className="ud-welcome-section">
-              <h2 className="ud-welcome-title">Welcome back, {session?.user?.name?.split(" ")[0] || "there"}! ðŸ‘‹</h2>
+              <h2 className="ud-welcome-title">Welcome back, {session?.user?.name?.split(" ")[0] || "there"}!</h2>
             </div>
 
             <div className="ud-stats">

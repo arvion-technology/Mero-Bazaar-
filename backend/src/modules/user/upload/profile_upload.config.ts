@@ -2,7 +2,7 @@ import { diskStorage } from 'multer';
 import {
   imageFileFilter,
   serverFilename,
-} from '../../../common/uploads/upload.util';
+} from '../../../common/uploads/upload.utils';
 
 export const profileUploadConfig = {
   storage: diskStorage({

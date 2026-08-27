@@ -17,7 +17,7 @@ import {
   imageFileFilter,
   serverFilename,
   removeUploadedFiles,
-} from '../../common/uploads/upload.util';
+} from '../../common/uploads/upload.utils';
 import { HairBeautyAndWellnessService } from './beauty.service';
 import { CreateHairBeautyAndWellnessDto } from './dto/create_beauty.dto';
 import { UpdateHairBeautyAndWellnessDto } from './dto/update_beauty.dto';

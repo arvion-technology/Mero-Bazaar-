@@ -8,7 +8,7 @@ import { CreateSecondHandDto } from './dto/create_secondhand.dto';
 import { ListingCategory } from '@prisma/client';
 import { QuerySecondHandDto } from './dto/query_secondhand.dto';
 import { UpdateSecondHandDto } from './dto/update_secondhand.dto';
-import { validateAndReencodeImage } from '../../common/uploads/upload.util';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
 import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
 @Injectable()

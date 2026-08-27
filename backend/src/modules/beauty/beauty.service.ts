@@ -7,7 +7,7 @@ import { PrismaService } from 'src/database/prisma.service';
 import { CreateHairBeautyAndWellnessDto } from './dto/create_beauty.dto';
 import { UpdateHairBeautyAndWellnessDto } from './dto/update_beauty.dto';
 import { ListingCategory } from '@prisma/client';
-import { validateAndReencodeImage } from '../../common/uploads/upload.util';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
 import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
 @Injectable()

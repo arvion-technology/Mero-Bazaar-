@@ -9,7 +9,7 @@ import { UpdateVehicleDto } from './dto/update_vehicle.dto';
 import { ListingCategory, BluebookStatus } from '@prisma/client';
 import { QueryVehicleDto } from './dto/query_vehicle.dto';
 import { sanitizeVehicleDetails } from 'src/common/utils/vehicle_details.util';
-import { validateAndReencodeImage } from 'src/common/uploads/upload.util';
+import { validateAndReencodeImage } from 'src/common/uploads/upload.utils';
 import { assertVerifiedSeller } from 'src/common/authz/seller-access';
 
 @Injectable()

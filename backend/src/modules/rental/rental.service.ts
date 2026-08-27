@@ -9,7 +9,7 @@ import { PrismaService } from 'src/database/prisma.service';
 import { CreateRentalDto } from './dto/create_rental.dto';
 import { UpdateRentalDto } from './dto/update_rental.dto';
 import { QueryRentalDto } from './dto/query_rental.dto';
-import { validateAndReencodeImage } from '../../common/uploads/upload.util';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
 import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
 @Injectable()

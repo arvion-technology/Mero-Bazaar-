@@ -7,7 +7,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { CreateMedicalDto } from './dto/create_medical.dto';
 import { MedicalQueryDto } from './dto/medical_query.dto';
 import { ListingCategory, MedicalServiceType } from '@prisma/client';
-import { validateAndReencodeImage } from '../../common/uploads/upload.util';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
 
 @Injectable()
 export class MedicalService {

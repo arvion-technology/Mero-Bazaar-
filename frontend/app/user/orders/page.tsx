@@ -568,7 +568,7 @@ export default function UserOrders() {
           </div>
         </aside>
 
-        {/* â”€â”€ Main Area â”€â”€ */}
+        {/* Main Area */}
         <div className="ud-main-area">
           {/* Top Header */}
           <header className="ud-topbar">

@@ -18,7 +18,7 @@ import { PhoneOtpService } from '../otp/otp.service';
 import { OtpContext } from '@prisma/client';
 import { parseUserAgent } from '../auth/auth.service';
 import { ActivityLogService } from './activity_log.service';
-import { validateAndReencodeImage } from '../../common/uploads/upload.util';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
 
 @Injectable()
 export class UserService {

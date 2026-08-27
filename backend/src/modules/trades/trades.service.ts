@@ -10,7 +10,7 @@ import { CreateTradesDto } from './dto/create_trades.dto';
 import { QueryTradesDto } from './dto/query_trades.dto';
 import { CreateLeadDto } from '../leads/dto/create_lead.dto';
 import { UpdateTradesDto } from './dto/update_trades.dto';
-import { validateAndReencodeImage } from '../../common/uploads/upload.util';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
 import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
 @Injectable()
