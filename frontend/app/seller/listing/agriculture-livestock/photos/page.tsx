@@ -23,6 +23,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"];
 interface ImageItem {
   file: File;
   preview: string;
+  isMain: boolean;
 }
 
 export default function AddPhotosPage() {
@@ -86,6 +87,8 @@ export default function AddPhotosPage() {
                   type: "image/jpeg",
                 }),
                 preview: url,
+                  isMain: index === 0,
+
               };
             })
             .filter((item): item is ImageItem => item !== null);
