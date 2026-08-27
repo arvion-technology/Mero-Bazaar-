@@ -11,7 +11,7 @@ import {
   FiInfo,
   FiTrash2,
   FiPlus,
-  FiClock, 
+  FiClock,
   FiChevronDown,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
@@ -171,11 +171,10 @@ export default function MedicalAvailabilityPage() {
 
   const { medicalData, setMedicalData } = useDraft();
   const update = (patch: Partial<typeof medicalData>) =>
-    setMedicalData((prev) => ({
-      ...prev,
+    setMedicalData({
+      ...medicalData,
       ...patch,
-    }));
-
+    });
   const [activeDay, setActiveDay] = useState("MON");
 
   const toggleDay = (day: string) => {
@@ -370,14 +369,14 @@ export default function MedicalAvailabilityPage() {
         // -----------------------------
         // FILL FORM
         // -----------------------------
-        setMedicalData((prev) => ({
-          ...prev,
+        setMedicalData({
+          ...medicalData,
           selectedDays,
           slots,
           slotDuration,
           bufferTime,
           sameDayBooking,
-        }));
+        });
 
         // Open first saved day
         if (selectedDays.length > 0) {
