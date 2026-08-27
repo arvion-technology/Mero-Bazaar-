@@ -36,8 +36,10 @@ const steps = [
 
 const MAX_PHOTOS = 10;
 interface ImageItem {
+  id: string;
   file: File;
   preview: string;
+  isMain: boolean;
 }
 
 export default function RealEstatePhotosPage() {

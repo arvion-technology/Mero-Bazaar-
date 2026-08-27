@@ -31,8 +31,10 @@ const CARD_BG = "#ffffff";
 const MAX_IMAGES = 10;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"];
 interface ImageItem {
+  id: string;
   file: File;
   preview: string;
+  isMain: boolean;
 }
 
 
