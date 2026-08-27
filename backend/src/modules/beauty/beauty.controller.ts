@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Controller,
   Delete,
@@ -19,12 +18,6 @@ import {
   serverFilename,
   removeUploadedFiles,
 } from '../../common/uploads/upload.util';
-=======
-import { Controller, Delete, Param, Patch, Get, Post, Body, UseGuards, Request, UseInterceptors, UploadedFiles } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
->>>>>>> origin/aashika
 import { HairBeautyAndWellnessService } from './beauty.service';
 import { CreateHairBeautyAndWellnessDto } from './dto/create_beauty.dto';
 import { UpdateHairBeautyAndWellnessDto } from './dto/update_beauty.dto';
@@ -52,15 +45,11 @@ export class HairBeautyAndWellnessController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-<<<<<<< HEAD
   update(
     @Param('id') id: string,
     @Body() dto: UpdateHairBeautyAndWellnessDto,
     @Request() req,
   ) {
-=======
-  update(@Param('id') id: string, @Body() dto: UpdateHairBeautyAndWellnessDto, @Request() req) {
->>>>>>> origin/aashika
     return this.beautyService.update(id, dto, req.user.id);
   }
 
@@ -76,7 +65,6 @@ export class HairBeautyAndWellnessController {
     FilesInterceptor('images', 10, {
       storage: diskStorage({
         destination: './uploads/beauty',
-<<<<<<< HEAD
         filename: serverFilename,
       }),
       limits: { fileSize: 5 * 1024 * 1024 },
@@ -84,27 +72,10 @@ export class HairBeautyAndWellnessController {
     }),
   )
   async addPhotos(
-=======
-        filename: (req, file, cb) => {
-          const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          cb(null, `${unique}${extname(file.originalname)}`);
-        },
-      }),
-      fileFilter: (req, file, cb) => {
-        if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-          return cb(new Error('Only JPG/PNG images allowed'), false);
-        }
-        cb(null, true);
-      },
-    }),
-  )
-  addPhotos(
->>>>>>> origin/aashika
     @Param('id') id: string,
     @UploadedFiles() files: Express.Multer.File[],
     @Request() req,
   ) {
-<<<<<<< HEAD
     try {
       return await this.beautyService.addPhotos(id, files, req.user.id);
     } catch (err) {
@@ -113,8 +84,3 @@ export class HairBeautyAndWellnessController {
     }
   }
 }
-=======
-    return this.beautyService.addPhotos(id, files, req.user.id);
-  }
-}
->>>>>>> origin/aashika

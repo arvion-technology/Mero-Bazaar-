@@ -10,14 +10,10 @@ export class AdminPaymentService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-<<<<<<< HEAD
   findAllForAdmin(filters: {
     paymentMethod?: PaymentMethod;
     status?: OrderStatus;
   }) {
-=======
-  findAllForAdmin(filters: { paymentMethod?: PaymentMethod; status?: OrderStatus }) {
->>>>>>> origin/aashika
     return this.prisma.order.findMany({
       where: {
         paymentMethod: { not: null },
@@ -91,13 +87,9 @@ export class AdminPaymentService {
         category: 'DISPUTES',
         type: `DISPUTE_${status}`,
         title: `Dispute ${status.toLowerCase()}`,
-<<<<<<< HEAD
         description: resolutionNote
           ? `${outcomeText} ${resolutionNote}`
           : outcomeText,
-=======
-        description: resolutionNote ? `${outcomeText} ${resolutionNote}` : outcomeText,
->>>>>>> origin/aashika
       });
 
       // Notify the seller whose listing/order is affected
@@ -111,8 +103,4 @@ export class AdminPaymentService {
 
     return updated;
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

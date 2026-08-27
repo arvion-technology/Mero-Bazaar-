@@ -1,13 +1,9 @@
-<<<<<<< HEAD
 import {
   BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-=======
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
->>>>>>> origin/aashika
 import { PrismaService } from 'src/database/prisma.service';
 import { PhoneOtpService } from '../otp/otp.service';
 import { SubmitKycDto } from './dto/submit-kyc.dto';
@@ -60,15 +56,11 @@ export class VendorKycService {
       where: { userId },
     });
 
-<<<<<<< HEAD
     if (
       existing &&
       existing.status === VerificationStatus.PENDING &&
       existing.fullName !== ''
     ) {
-=======
-    if (existing && existing.status === VerificationStatus.PENDING && existing.fullName !== '') {
->>>>>>> origin/aashika
       throw new BadRequestException('KYC already submitted and under review.');
     }
 
@@ -90,7 +82,6 @@ export class VendorKycService {
       );
     }
 
-<<<<<<< HEAD
     const panCardUrl = await this.processUpload(
       files.panCardUrl?.[0],
       existing?.panCardUrl,
@@ -103,11 +94,6 @@ export class VendorKycService {
       files.selfieWithPanUrl?.[0],
       existing?.selfieWithPanUrl,
     );
-=======
-    const panCardUrl = await this.processUpload(files.panCardUrl?.[0], existing?.panCardUrl);
-    const photoUrl = await this.processUpload(files.photoUrl?.[0], existing?.photoUrl);
-    const selfieWithPanUrl = await this.processUpload(files.selfieWithPanUrl?.[0], existing?.selfieWithPanUrl);
->>>>>>> origin/aashika
 
     const data = {
       userId,
@@ -143,7 +129,6 @@ export class VendorKycService {
         type: 'KYC_SUBMITTED',
         title: 'New KYC submission',
         description: `${kyc.fullName} submitted KYC for review.`,
-<<<<<<< HEAD
       });
 
       return { message: 'KYC submitted successfully.', kyc };
@@ -152,25 +137,14 @@ export class VendorKycService {
         e instanceof Prisma.PrismaClientKnownRequestError &&
         e.code === 'P2002'
       ) {
-=======
-      })
-
-      return { message: 'KYC submitted successfully.', kyc };
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
->>>>>>> origin/aashika
         const target = (e.meta?.target as string[]) ?? [];
         if (target.includes('panNumber')) {
           throw new ConflictException('This PAN number is already registered.');
         }
         if (target.includes('contactNumber')) {
-<<<<<<< HEAD
           throw new ConflictException(
             'This contact number is already registered.',
           );
-=======
-          throw new ConflictException('This contact number is already registered.');
->>>>>>> origin/aashika
         }
       }
       throw e;
@@ -268,7 +242,6 @@ export class VendorKycService {
   }
 
   async reviewKyc(kycId: string, adminId: string, dto: ReviewKycDto) {
-<<<<<<< HEAD
     const kyc = await this.prisma.vendorKyc.findUnique({
       where: { id: kycId },
     });
@@ -278,13 +251,6 @@ export class VendorKycService {
       throw new BadRequestException(
         'Only pending KYC records can be reviewed.',
       );
-=======
-    const kyc = await this.prisma.vendorKyc.findUnique({ where: { id: kycId } });
-    if (!kyc) throw new NotFoundException('KYC not found.');
-
-    if (kyc.status !== VerificationStatus.PENDING) {
-      throw new BadRequestException('Only pending KYC records can be reviewed.');
->>>>>>> origin/aashika
     }
 
     if (dto.status === VerificationStatus.REJECTED && !dto.rejectionReason) {
@@ -298,14 +264,10 @@ export class VendorKycService {
         where: { id: kycId },
         data: {
           status: dto.status,
-<<<<<<< HEAD
           rejectionReason:
             dto.status === VerificationStatus.REJECTED
               ? dto.rejectionReason
               : null,
-=======
-          rejectionReason: dto.status === VerificationStatus.REJECTED ? dto.rejectionReason : null,
->>>>>>> origin/aashika
           reviewedAt: new Date(),
           reviewedBy: adminId,
         },
@@ -326,12 +288,8 @@ export class VendorKycService {
         category: 'KYC',
         type: 'KYC_VERIFIED',
         title: 'KYC verified',
-<<<<<<< HEAD
         description:
           'Your seller verification was approved. Your verified badge is now active.',
-=======
-        description: 'Your seller verification was approved. Your verified badge is now active.',
->>>>>>> origin/aashika
       });
     } else if (dto.status === VerificationStatus.REJECTED) {
       await this.notificationService.create(kyc.userId, {
@@ -351,7 +309,6 @@ export class VendorKycService {
   }
 
   async getStats() {
-<<<<<<< HEAD
     const [total, verified, pending, rejected] = await Promise.all([
       this.prisma.vendorKyc.count(),
       this.prisma.vendorKyc.count({
@@ -366,16 +323,6 @@ export class VendorKycService {
     ]);
     return { total, verified, pending, rejected };
   }
-=======
-  const [total, verified, pending, rejected] = await Promise.all([
-    this.prisma.vendorKyc.count(),
-    this.prisma.vendorKyc.count({ where: { status: VerificationStatus.VERIFIED } }),
-    this.prisma.vendorKyc.count({ where: { status: VerificationStatus.PENDING } }),
-    this.prisma.vendorKyc.count({ where: { status: VerificationStatus.REJECTED } }),
-  ]);
-  return { total, verified, pending, rejected };
-}
->>>>>>> origin/aashika
 
   async getKycById(kycId: string) {
     const kyc = await this.prisma.vendorKyc.findUnique({
@@ -387,7 +334,6 @@ export class VendorKycService {
   }
 
   async streamDocument(filename: string, res: Response) {
-<<<<<<< HEAD
     const safeName = path.basename(filename);
     const filePath = path.join(
       process.cwd(),
@@ -399,19 +345,6 @@ export class VendorKycService {
     try {
       await fs.access(filePath);
     } catch {
-=======
-    const safeName = path.basename(filename); 
-    const filePath = path.join(process.cwd(), 'private-storage', 'kyc-verified', safeName);
-
-    console.log("filename:", filename);
-    console.log("filePath:", filePath);
-
-    try {
-      await fs.access(filePath);
-      console.log("File exists");
-    } catch (e) {
-      console.log("File NOT found");
->>>>>>> origin/aashika
       throw new NotFoundException('Document not found.');
     }
 
@@ -420,7 +353,6 @@ export class VendorKycService {
 
   //patching rejected documents
   async streamOwnDocument(userId: string, filename: string, res: Response) {
-<<<<<<< HEAD
     const kyc = await this.prisma.vendorKyc.findUnique({ where: { userId } });
     if (!kyc) throw new NotFoundException('KYC not found.');
 
@@ -434,16 +366,3 @@ export class VendorKycService {
     return this.streamDocument(filename, res);
   }
 }
-=======
-  const kyc = await this.prisma.vendorKyc.findUnique({ where: { userId } });
-  if (!kyc) throw new NotFoundException('KYC not found.');
-
-  const owned = [kyc.panCardUrl, kyc.photoUrl, kyc.selfieWithPanUrl].includes(filename);
-  if (!owned) {
-    console.log('Doc not found', { filename, panCardUrl: kyc.panCardUrl, photoUrl: kyc.photoUrl, selfiewithPanUrl: kyc.selfieWithPanUrl });
-    throw new NotFoundException('Document not found.');
-  }
-  return this.streamDocument(filename, res);
-}
-}
->>>>>>> origin/aashika

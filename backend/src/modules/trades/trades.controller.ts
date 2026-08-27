@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Controller,
   Get,
@@ -14,9 +13,6 @@ import {
   UseInterceptors,
   UploadedFiles,
 } from '@nestjs/common';
-=======
-import { Controller, Get, Post, Body, Query, Param, ParseFloatPipe, Patch, Delete, UseGuards, Request, UseInterceptors, UploadedFiles} from '@nestjs/common';
->>>>>>> origin/aashika
 import { TradesService } from './trades.service';
 import { CreateTradesDto } from './dto/create_trades.dto';
 import { QueryTradesDto } from './dto/query_trades.dto';
@@ -25,15 +21,11 @@ import { UpdateTradesDto } from './dto/update_trades.dto';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-<<<<<<< HEAD
 import {
   imageFileFilter,
   serverFilename,
   removeUploadedFiles,
 } from '../../common/uploads/upload.util';
-=======
-import { extname } from 'path';
->>>>>>> origin/aashika
 
 @Controller('trades')
 export class TradesController {
@@ -66,15 +58,11 @@ export class TradesController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/lead')
-<<<<<<< HEAD
   createLead(
     @Param('id') id: string,
     @Body() dto: CreateLeadDto,
     @Request() req,
   ) {
-=======
-  createLead(@Param('id') id: string, @Body() dto: CreateLeadDto, @Request() req) {
->>>>>>> origin/aashika
     return this.tradesService.createLead(id, dto, req.user.id);
   }
 
@@ -85,15 +73,11 @@ export class TradesController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-<<<<<<< HEAD
   update(
     @Param('id') id: string,
     @Body() dto: UpdateTradesDto,
     @Request() req,
   ) {
-=======
-  update(@Param('id') id: string, @Body() dto: UpdateTradesDto, @Request() req) {
->>>>>>> origin/aashika
     return this.tradesService.update(id, dto, req.user.id);
   }
 
@@ -103,17 +87,12 @@ export class TradesController {
     return this.tradesService.remove(id, req.user.id);
   }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/aashika
   @UseGuards(JwtAuthGuard)
   @Post(':id/photos')
   @UseInterceptors(
     FilesInterceptor('photos', 10, {
       storage: diskStorage({
         destination: './uploads/trades',
-<<<<<<< HEAD
         filename: serverFilename,
       }),
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per file
@@ -121,22 +100,10 @@ export class TradesController {
     }),
   )
   async addPhotos(
-=======
-        filename: (req, file, cb) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-        },
-      }),
-      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per file
-    }),
-  )
-  addPhotos(
->>>>>>> origin/aashika
     @Param('id') id: string,
     @UploadedFiles() files: Express.Multer.File[],
     @Request() req,
   ) {
-<<<<<<< HEAD
     try {
       return await this.tradesService.addPhotos(id, files, req.user.id);
     } catch (err) {
@@ -145,8 +112,3 @@ export class TradesController {
     }
   }
 }
-=======
-    return this.tradesService.addPhotos(id, files, req.user.id);
-  }
-}
->>>>>>> origin/aashika

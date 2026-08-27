@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   BadRequestException,
   ConflictException,
@@ -6,9 +5,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-=======
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
->>>>>>> origin/aashika
 import { PrismaService } from 'src/database/prisma.service';
 import { OrdersService } from '../orders/orders.service';
 import * as crypto from 'crypto';
@@ -29,7 +25,6 @@ export class EsewaService {
   ) {}
 
   private sign(message: string): string {
-<<<<<<< HEAD
     return crypto
       .createHmac('sha256', this.secretKey)
       .update(message)
@@ -47,17 +42,6 @@ export class EsewaService {
       throw new ConflictException(
         `Order is already ${order.status.toLowerCase()}.`,
       );
-=======
-    return crypto.createHmac('sha256', this.secretKey).update(message).digest('base64');
-  }
-
-  async initiate(orderId: string, buyerId: string) {
-    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
-    if (!order) throw new NotFoundException('Order not found.');
-    if (order.userId !== buyerId) throw new ForbiddenException('Not your order.');
-    if (order.status !== 'PENDING') {
-      throw new ConflictException(`Order is already ${order.status.toLowerCase()}.`);
->>>>>>> origin/aashika
     }
 
     const totalAmount = order.totalPrice.toString();
@@ -93,18 +77,13 @@ export class EsewaService {
   async handleCallback(encodedData: string) {
     let decoded: Record<string, string>;
     try {
-<<<<<<< HEAD
       decoded = JSON.parse(
         Buffer.from(encodedData, 'base64').toString('utf-8'),
       );
-=======
-      decoded = JSON.parse(Buffer.from(encodedData, 'base64').toString('utf-8'));
->>>>>>> origin/aashika
     } catch {
       throw new BadRequestException('Malformed payment response.');
     }
 
-<<<<<<< HEAD
     const {
       total_amount,
       transaction_uuid,
@@ -112,9 +91,6 @@ export class EsewaService {
       signed_field_names,
       signature,
     } = decoded;
-=======
-    const { total_amount, transaction_uuid, product_code, signed_field_names, signature } = decoded;
->>>>>>> origin/aashika
     if (!signed_field_names || !signature) {
       throw new BadRequestException('Missing signature fields.');
     }
@@ -126,13 +102,9 @@ export class EsewaService {
     const expectedSignature = this.sign(message);
 
     if (expectedSignature !== signature) {
-<<<<<<< HEAD
       throw new BadRequestException(
         'Signature mismatch — response may be tampered.',
       );
-=======
-      throw new BadRequestException('Signature mismatch — response may be tampered.');
->>>>>>> origin/aashika
     }
     if (product_code !== this.productCode) {
       throw new BadRequestException('Product code mismatch.');
@@ -143,7 +115,6 @@ export class EsewaService {
     );
     const statusData = await statusRes.json();
     if (statusData.status !== 'COMPLETE') {
-<<<<<<< HEAD
       throw new BadRequestException(
         `Payment not complete: ${statusData.status}`,
       );
@@ -162,16 +133,6 @@ export class EsewaService {
         order.userId,
         'ESEWA',
       );
-=======
-      throw new BadRequestException(`Payment not complete: ${statusData.status}`);
-    }
-
-    const order = await this.prisma.order.findFirst({ where: { paymentRef: transaction_uuid } });
-    if (!order) throw new NotFoundException('Order not found for this transaction.');
-
-    if (order.status === 'PENDING') {
-      await this.ordersService.confirmPayment(order.id, transaction_uuid, order.userId, 'ESEWA');
->>>>>>> origin/aashika
     }
 
     return order;
@@ -180,8 +141,4 @@ export class EsewaService {
   get redirectFrontendUrl() {
     return this.frontendUrl;
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

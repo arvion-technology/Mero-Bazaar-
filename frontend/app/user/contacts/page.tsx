@@ -1,10 +1,6 @@
-<<<<<<< HEAD
 ﻿"use client";
 
 import { deleteAccountWithReauth } from "@/lib/accountActions";
-=======
-"use client";
->>>>>>> origin/aashika
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -148,11 +144,7 @@ export default function UserContacts() {
     setDeleting(true);
     setDeleteError("");
     try {
-<<<<<<< HEAD
       const res = await deleteAccountWithReauth(token);
-=======
-      const res = await fetch("/api/user/delete-account", { method: "DELETE" });
->>>>>>> origin/aashika
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
@@ -189,11 +181,7 @@ export default function UserContacts() {
           font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
-<<<<<<< HEAD
         /* â”€â”€ Sidebar â”€â”€ */
-=======
-        /* ── Sidebar ── */
->>>>>>> origin/aashika
         .ud-sidebar {
           width: 260px; background: #ffffff; border-right: 1px solid #e8ecf0;
           display: flex; flex-direction: column; flex-shrink: 0;
@@ -222,19 +210,11 @@ export default function UserContacts() {
         .ud-nav-item.danger { color: rgba(239,68,68,0.7); }
         .ud-nav-item.danger:hover { background: rgba(239,68,68,0.06); color: #ef4444; }
 
-<<<<<<< HEAD
         /* â”€â”€ Main Area â”€â”€ */
         .ud-main-area { flex: 1; margin-left: 260px; display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; transition: margin-left 0.3s ease; width: calc(100% - 260px); min-width: 0; }
         .ud-sidebar.collapsed ~ .ud-main-area { margin-left: 72px; width: calc(100% - 72px); }
 
         /* â”€â”€ Top Header â”€â”€ */
-=======
-        /* ── Main Area ── */
-        .ud-main-area { flex: 1; margin-left: 260px; display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; transition: margin-left 0.3s ease; width: calc(100% - 260px); min-width: 0; }
-        .ud-sidebar.collapsed ~ .ud-main-area { margin-left: 72px; width: calc(100% - 72px); }
-
-        /* ── Top Header ── */
->>>>>>> origin/aashika
         .ud-topbar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; gap: 16px; }
         .ud-topbar-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
         .ud-toggle-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; transition: all 0.2s; flex-shrink: 0; }
@@ -245,11 +225,7 @@ export default function UserContacts() {
         .ud-icon-btn:hover { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
         .ud-badge { position: absolute; top: -2px; right: -2px; width: 18px; height: 18px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
 
-<<<<<<< HEAD
         /* â”€â”€ Profile Dropdown â”€â”€ */
-=======
-        /* ── Profile Dropdown ── */
->>>>>>> origin/aashika
         .ud-profile-wrap { position: relative; }
         .ud-profile-btn { display: flex; align-items: center; gap: 8px; padding: 5px 10px 5px 5px; border-radius: 40px; border: 1.5px solid #e2e8f0; background: #fff; cursor: pointer; transition: all 0.2s; font-family: inherit; }
         .ud-profile-btn:hover { border-color: #cbd5e1; background: #f8fafc; }
@@ -267,17 +243,10 @@ export default function UserContacts() {
         .ud-dropdown-item.logout:hover { background: #fef2f2; color: #dc2626; }
         .ud-dropdown-divider { height: 1px; background: #f1f5f9; }
 
-<<<<<<< HEAD
         /* â”€â”€ Main Content â”€â”€ */
         .ud-main { flex: 1; padding: 28px 32px; overflow-y: auto; min-width: 0; }
 
         /* â”€â”€ Contacts Page Specific â”€â”€ */
-=======
-        /* ── Main Content ── */
-        .ud-main { flex: 1; padding: 28px 32px; overflow-y: auto; min-width: 0; }
-
-        /* ── Contacts Page Specific ── */
->>>>>>> origin/aashika
         .contacts-search-wrap { position: relative; margin-bottom: 24px; max-width: 400px; }
         .contacts-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
         .contacts-search { width: 100%; padding: 10px 14px 10px 40px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: inherit; color: #1e293b; outline: none; transition: all 0.2s; background: #fff; }
@@ -303,11 +272,7 @@ export default function UserContacts() {
         .contacts-empty h3 { font-size: 16px; font-weight: 600; color: #64748b; margin-bottom: 6px; }
         .contacts-empty p { font-size: 14px; }
 
-<<<<<<< HEAD
         /* â”€â”€ Backdrop â”€â”€ */
-=======
-        /* ── Backdrop ── */
->>>>>>> origin/aashika
         .ud-backdrop { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.45); backdrop-filter: blur(2px); z-index: 99; }
         .ud-backdrop.active { display: block; }
         .ud-sidebar-close { display: none; position: absolute; top: 18px; right: 16px; width: 32px; height: 32px; border: none; background: #f1f5f9; border-radius: 8px; cursor: pointer; align-items: center; justify-content: center; color: #64748b; transition: all 0.2s; z-index: 1; }
@@ -316,11 +281,7 @@ export default function UserContacts() {
         .ud-hamburger:hover { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
         .ud-desktop-toggle { display: flex; }
 
-<<<<<<< HEAD
         /* â”€â”€ Responsive â”€â”€ */
-=======
-        /* ── Responsive ── */
->>>>>>> origin/aashika
         @media (max-width: 1023px) {
           .ud-sidebar { transform: translateX(-100%); width: 280px !important; z-index: 200; }
           .ud-sidebar.mobile-open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.15); }
@@ -345,11 +306,7 @@ export default function UserContacts() {
           .ud-topbar { padding: 0 12px; }
         }
 
-<<<<<<< HEAD
         /* â”€â”€ Delete Modal â”€â”€ */
-=======
-        /* ── Delete Modal ── */
->>>>>>> origin/aashika
         .ud-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .ud-modal { background: #fff; border-radius: 16px; padding: 32px; width: 100%; max-width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
         .ud-modal-icon { width: 56px; height: 56px; border-radius: 14px; background: #fef2f2; display: flex; align-items: center; justify-content: center; color: #ef4444; margin: 0 auto 20px; }
@@ -369,11 +326,7 @@ export default function UserContacts() {
       <div className={`ud-backdrop ${sidebarOpen ? "active" : ""}`} onClick={() => setSidebarOpen(false)} aria-hidden="true" />
 
       <div className="ud-page">
-<<<<<<< HEAD
         {/* â”€â”€ Sidebar â”€â”€ */}
-=======
-        {/* ── Sidebar ── */}
->>>>>>> origin/aashika
         <aside className={`ud-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
           <button type="button" className="ud-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
             <FiX size={18} />
@@ -427,11 +380,7 @@ export default function UserContacts() {
           </div>
         </aside>
 
-<<<<<<< HEAD
         {/* â”€â”€ Main Area â”€â”€ */}
-=======
-        {/* ── Main Area ── */}
->>>>>>> origin/aashika
         <div className="ud-main-area">
           {/* Top Header */}
           <header className="ud-topbar">
@@ -461,11 +410,7 @@ export default function UserContacts() {
                         {msg}
                       </Link>
                     )) : (
-<<<<<<< HEAD
                       <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>You&apos;re all caught up âœ“</div>
-=======
-                      <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>You&apos;re all caught up ✓</div>
->>>>>>> origin/aashika
                     )}
                   </div>
                 )}
@@ -506,11 +451,7 @@ export default function UserContacts() {
               <input
                 type="text"
                 className="contacts-search"
-<<<<<<< HEAD
                 placeholder="Search contacts by name, phone, or messageâ€¦"
-=======
-                placeholder="Search contacts by name, phone, or message…"
->>>>>>> origin/aashika
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -519,11 +460,7 @@ export default function UserContacts() {
             {contactsLoading ? (
               <div className="contacts-card">
                 <div className="contacts-empty">
-<<<<<<< HEAD
                   <p>Loading contactsâ€¦</p>
-=======
-                  <p>Loading contacts…</p>
->>>>>>> origin/aashika
                 </div>
               </div>
             ) : filtered.length === 0 ? (
@@ -636,9 +573,5 @@ export default function UserContacts() {
       )}
     </>
   );
-<<<<<<< HEAD
 }
 
-=======
-}
->>>>>>> origin/aashika

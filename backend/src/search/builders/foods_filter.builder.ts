@@ -1,23 +1,13 @@
-<<<<<<< HEAD
 ﻿import { SearchFoodsDto } from '../dto/foods_search.dto';
 import { Prisma } from '@prisma/client';
 
 export function buildFoodsFilter(
   query: SearchFoodsDto,
 ): Prisma.ListingWhereInput {
-=======
-import { contain } from "supertest/lib/cookies";
-import { SearchFoodsDto } from "../dto/foods_search.dto";
-import { FoodType, PriceUnit } from "@prisma/client";
-import { Prisma } from "@prisma/client";
-
-export function buildFoodsFilter(query: SearchFoodsDto): Prisma.ListingWhereInput {
->>>>>>> origin/aashika
   return {
     category: 'FOODS',
 
     ...(query.keyword && {
-<<<<<<< HEAD
       OR: [
         {
           title: {
@@ -32,22 +22,6 @@ export function buildFoodsFilter(query: SearchFoodsDto): Prisma.ListingWhereInpu
           },
         },
       ],
-=======
-        OR: [
-          {
-            title: {
-                contains:query.keyword,
-                mode: 'insensitive',
-            },
-          },
-          {
-            description: {
-              contains: query.keyword,
-              mode: 'insensitive',
-            },
-          },
-        ],
->>>>>>> origin/aashika
     }),
     foods: {
       is: {
@@ -65,11 +39,7 @@ export function buildFoodsFilter(query: SearchFoodsDto): Prisma.ListingWhereInpu
         ...(query.deliveryDays?.length && {
           deliveryDays: {
             hasSome: query.deliveryDays,
-<<<<<<< HEAD
           },
-=======
-        },
->>>>>>> origin/aashika
         }),
         ...(query.minOrderAmount && {
           minOrderAmount: {
@@ -79,7 +49,6 @@ export function buildFoodsFilter(query: SearchFoodsDto): Prisma.ListingWhereInpu
       },
     },
     ...(query.minPrice || query.maxPrice
-<<<<<<< HEAD
       ? {
           price: {
             ...(query.minPrice && { get: query.minPrice }),
@@ -89,14 +58,3 @@ export function buildFoodsFilter(query: SearchFoodsDto): Prisma.ListingWhereInpu
       : {}),
   };
 }
-=======
-        ? {
-            price: {
-              ...(query.minPrice && { get: query.minPrice }),
-              ...(query.maxPrice && { lte: query.maxPrice }),
-            },
-        }
-        : {})
-  };
-}
->>>>>>> origin/aashika

@@ -7,10 +7,6 @@ import { PrismaModule } from 'src/database/prisma.module';
 @Module({
   imports: [PrismaModule, AuthModule],
   controllers: [WishlistController],
-<<<<<<< HEAD
   providers: [WishlistService],
-=======
-  providers: [WishlistService]
->>>>>>> origin/aashika
 })
 export class WishlistModule {}

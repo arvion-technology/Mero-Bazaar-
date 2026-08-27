@@ -1,32 +1,22 @@
-<<<<<<< HEAD
 import {
   Injectable,
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-=======
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
->>>>>>> origin/aashika
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateAgricultureDto } from './dto/create_agriculture.dto';
 import { UpdateAgricultureDto } from './dto/update_agriculture.dto';
 import { ListingCategory } from '@prisma/client';
 import { QueryAgricultureDto } from './dto/query_agriculture.dto';
-<<<<<<< HEAD
 import { validateAndReencodeImage } from '../../common/uploads/upload.util';
 import { assertVerifiedSeller } from '../../common/authz/seller-access';
-=======
->>>>>>> origin/aashika
 
 @Injectable()
 export class AgricultureService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateAgricultureDto, userId: string) {
-<<<<<<< HEAD
     await assertVerifiedSeller(this.prisma, userId);
-=======
->>>>>>> origin/aashika
     return this.prisma.listing.create({
       data: {
         title: `${dto.listingType} in ${dto.district}`,
@@ -49,12 +39,8 @@ export class AgricultureService {
             pricePerUnit: dto.pricePerUnit,
             unit: dto.unit,
             organicCertified: dto.organicCertified,
-<<<<<<< HEAD
             // Verification flags are reviewer-controlled; sellers cannot self-assert them.
             organicVerified: false,
-=======
-            organicVerified: dto.organicVerified,
->>>>>>> origin/aashika
             seasonalAvailability: dto.seasonalAvailability,
             animalType: dto.animalType,
             breed: dto.breed,
@@ -65,11 +51,7 @@ export class AgricultureService {
             mobileService: dto.mobileService,
             vaccinationAvailable: dto.vaccinationAvailable,
             serviceRadiusKm: dto.serviceRadiusKm,
-<<<<<<< HEAD
             healthCertificate: false,
-=======
-            healthCertificate: dto.healthCertificate,
->>>>>>> origin/aashika
             availabilityDays: dto.availabilityDays,
           },
         },
@@ -101,7 +83,6 @@ export class AgricultureService {
       },
     });
   }
-<<<<<<< HEAD
 
   async findOne(id: string) {
     const listing = await this.prisma.listing.findUnique({
@@ -147,55 +128,6 @@ export class AgricultureService {
     };
   }
 
-=======
-  
-  
-  async findOne(id: string) {
-  const listing = await this.prisma.listing.findUnique({
-    where: { id },
-    include: {
-      agriculture: true,
-      user: {
-        select: {
-          id: true,
-          name: true,
-          isVerified: true,
-          phone: true,
-          createdAt: true,
-          vendorProfile: {
-            select: { businessName: true, rating: true },
-          },
-        },
-      },
-      reviews: {
-        orderBy: { createdAt: 'desc' },
-      },
-    },
-  });
-
-  if (!listing || listing.category !== ListingCategory.AGRICULTURE) {
-    throw new NotFoundException('Agriculture listing not found');
-  }
-
-  const [totalListing, reviewAgg] = await Promise.all([
-    this.prisma.listing.count({ where: { userId: listing.userId } }),
-    this.prisma.review.aggregate({
-      where: { listing: { userId: listing.userId } },
-      _avg: { rating: true },
-      _count: { rating: true },
-    }),
-  ]);
-
-  return {
-    ...listing,
-    sellerTotalListing: totalListing,
-    sellerRating: reviewAgg._avg.rating ?? 0,
-    sellerReviewCount: reviewAgg._count.rating,
-  };
-}
-
-
->>>>>>> origin/aashika
   async update(id: string, dto: UpdateAgricultureDto, userId: string) {
     const listing = await this.findOne(id);
     if (listing.userId !== userId) {
@@ -217,11 +149,7 @@ export class AgricultureService {
             pricePerUnit: dto.pricePerUnit,
             unit: dto.unit,
             organicCertified: dto.organicCertified,
-<<<<<<< HEAD
             organicVerified: false,
-=======
-            organicVerified: dto.organicVerified,
->>>>>>> origin/aashika
             seasonalAvailability: dto.seasonalAvailability,
             animalType: dto.animalType,
             breed: dto.breed,
@@ -232,11 +160,7 @@ export class AgricultureService {
             mobileService: dto.mobileService,
             vaccinationAvailable: dto.vaccinationAvailable,
             serviceRadiusKm: dto.serviceRadiusKm,
-<<<<<<< HEAD
             healthCertificate: false,
-=======
-            healthCertificate: dto.healthCertificate,
->>>>>>> origin/aashika
             availabilityDays: dto.availabilityDays,
           },
         },
@@ -258,17 +182,11 @@ export class AgricultureService {
     });
   }
 
-<<<<<<< HEAD
   async addPhotos(id: string, files: Express.Multer.File[], userId: string) {
-=======
-  
-    async addPhotos(id: string, files: Express.Multer.File[], userId: string) {
->>>>>>> origin/aashika
     const listing = await this.prisma.listing.findUnique({
       where: { id },
       include: { agriculture: true },
     });
-<<<<<<< HEAD
 
     if (!listing || listing.userId !== userId) {
       throw new ForbiddenException('Unauthorized');
@@ -292,28 +210,10 @@ export class AgricultureService {
     );
     const updatedImages = [...listing.images, ...newPhotoUrls];
 
-=======
-  
-    if (!listing || listing.userId !== userId) {
-      throw new ForbiddenException('Unauthorized');
-    }
-  
-    if (!listing.agriculture) {
-      throw new NotFoundException('Trades listing not found');
-    }
-  
-    const newPhotoUrls = files.map((file) => `/uploads/agriculture/${file.filename}`);
-    const updatedImages = [...listing.images, ...newPhotoUrls];
-  
->>>>>>> origin/aashika
     return this.prisma.listing.update({
       where: { id },
       data: { images: updatedImages },
       include: { agriculture: true },
     });
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

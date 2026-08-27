@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Controller,
   UseGuards,
@@ -9,9 +8,6 @@ import {
   Res,
   Query,
 } from '@nestjs/common';
-=======
-import { Controller, UseGuards, Post, Req, Body, Get, Res, Query } from '@nestjs/common';
->>>>>>> origin/aashika
 import { Response } from 'express';
 import { EsewaService } from './esewa.service';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
@@ -31,7 +27,6 @@ export class EsewaController {
   async success(@Query('data') data: string, @Res() res: Response) {
     try {
       const order = await this.esewaService.handleCallback(data);
-<<<<<<< HEAD
       return res.redirect(
         `${this.esewaService.redirectFrontendUrl}/checkout/${order.id}?payment=success`,
       );
@@ -39,24 +34,13 @@ export class EsewaController {
       return res.redirect(
         `${this.esewaService.redirectFrontendUrl}/checkout/failed?reason=verification_failed`,
       );
-=======
-      return res.redirect(`${this.esewaService.redirectFrontendUrl}/checkout/${order.id}?payment=success`);
-    } catch {
-      return res.redirect(`${this.esewaService.redirectFrontendUrl}/checkout/failed?reason=verification_failed`);
->>>>>>> origin/aashika
     }
   }
 
   @Get('failure')
   failure(@Res() res: Response) {
-<<<<<<< HEAD
     return res.redirect(
       `${this.esewaService.redirectFrontendUrl}/checkout/failed?reason=payment_cancelled`,
     );
   }
 }
-=======
-    return res.redirect(`${this.esewaService.redirectFrontendUrl}/checkout/failed?reason=payment_cancelled`);
-  }
-}
->>>>>>> origin/aashika

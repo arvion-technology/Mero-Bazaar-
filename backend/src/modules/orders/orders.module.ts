@@ -8,16 +8,12 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { PaymentVerificationService } from '../payments/payment-verification.service';
 
 @Module({
-<<<<<<< HEAD
   imports: [
     PrismaModule,
     AuthModule,
     ScheduleModule.forRoot(),
     NotificationsModule,
   ],
-=======
-  imports: [PrismaModule, AuthModule, ScheduleModule.forRoot(), NotificationsModule],
->>>>>>> origin/aashika
   providers: [OrdersService, PaymentVerificationService],
   controllers: [OrdersController],
   exports: [OrdersService],

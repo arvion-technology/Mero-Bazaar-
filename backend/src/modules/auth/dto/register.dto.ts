@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { UserRole } from '@prisma/client';
 import {
   IsEmail,
@@ -7,10 +6,6 @@ import {
   MinLength,
   IsIn,
 } from 'class-validator';
-=======
-import { UserRole } from "@prisma/client";
-import { IsEmail, IsEnum, IsOptional, IsString, MinLength, IsIn } from "class-validator";
->>>>>>> origin/aashika
 
 export class RegisterDto {
   @IsEmail()
@@ -35,8 +30,4 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   address?: string;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

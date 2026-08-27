@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
@@ -9,11 +8,6 @@ import {
   Min,
 } from 'class-validator';
 import { FoodType, PriceUnit, WeekDay } from '@prisma/client';
-=======
-import { Transform, Type } from "class-transformer";
-import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, IsString, Min } from "class-validator";
-import { FoodType, PriceUnit, WeekDay } from "@prisma/client";
->>>>>>> origin/aashika
 
 export class SearchFoodsDto {
   @IsOptional()
@@ -47,20 +41,12 @@ export class SearchFoodsDto {
   deliveryRadiusKm?: number;
 
   @IsOptional()
-<<<<<<< HEAD
   @Transform(({ value }) => value === 'true')
-=======
-  @Transform(({ value }) => value === "true")
->>>>>>> origin/aashika
   subscriptionAvailable?: boolean;
 
   @IsOptional()
   @Transform(({ value }) =>
-<<<<<<< HEAD
     typeof value === 'string' ? value.split(',') : value,
-=======
-    typeof value === "string" ? value.split(",") : value
->>>>>>> origin/aashika
   )
   @IsArray()
   @IsEnum(WeekDay, { each: true })
@@ -71,8 +57,4 @@ export class SearchFoodsDto {
   @IsInt()
   @Min(0)
   minOrderAmount?: number;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

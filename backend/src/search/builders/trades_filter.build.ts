@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import { Prisma, ListingCategory } from '@prisma/client';
 import { TradesSearchDto } from '../dto/trade_search.dto';
-=======
-import { Prisma, ListingCategory } from "@prisma/client";
-import { TradesSearchDto } from "../dto/trade_search.dto";
->>>>>>> origin/aashika
 
 export function buildTradesFilter(
   dto: TradesSearchDto,
@@ -19,22 +14,14 @@ export function buildTradesFilter(
         ...(dto.city && {
           city: {
             contains: dto.city,
-<<<<<<< HEAD
             mode: 'insensitive',
-=======
-            mode: "insensitive",
->>>>>>> origin/aashika
           },
         }),
 
         ...(dto.ward && {
           ward: {
             contains: dto.ward,
-<<<<<<< HEAD
             mode: 'insensitive',
-=======
-            mode: "insensitive",
->>>>>>> origin/aashika
           },
         }),
 
@@ -63,21 +50,13 @@ export function buildTradesFilter(
             {
               city: {
                 contains: query,
-<<<<<<< HEAD
                 mode: 'insensitive',
-=======
-                mode: "insensitive",
->>>>>>> origin/aashika
               },
             },
             {
               ward: {
                 contains: query,
-<<<<<<< HEAD
                 mode: 'insensitive',
-=======
-                mode: "insensitive",
->>>>>>> origin/aashika
               },
             },
             {
@@ -103,8 +82,4 @@ export function buildTradesFilter(
         },
       }),
   };
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

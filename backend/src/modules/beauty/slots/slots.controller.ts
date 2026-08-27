@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Controller,
   Post,
@@ -10,9 +9,6 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-=======
-import { Controller, Post, Body, Delete, Param, Get, Patch, UseGuards, Request } from '@nestjs/common';
->>>>>>> origin/aashika
 import { BeautySlotsService } from './slots.service';
 import { CreateBeautySlotDto } from './dto/create_beauty_slot.dto';
 import { UpdateBeautySlotDto } from './dto/update_beauty_slot.dto';
@@ -45,15 +41,11 @@ export class BeautySlotsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-<<<<<<< HEAD
   update(
     @Param('id') id: string,
     @Body() dto: UpdateBeautySlotDto,
     @Request() req,
   ) {
-=======
-  update(@Param('id') id: string, @Body() dto: UpdateBeautySlotDto, @Request() req) {
->>>>>>> origin/aashika
     return this.slotsService.update(id, dto, req.user.id, req.user.role);
   }
 
@@ -62,8 +54,4 @@ export class BeautySlotsController {
   remove(@Param('id') id: string, @Request() req) {
     return this.slotsService.remove(id, req.user.id, req.user.role);
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

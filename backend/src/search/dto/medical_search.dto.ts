@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import { IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
-=======
-import { IsOptional, IsString, IsBoolean, IsNumber } from "class-validator";
-import { Type } from "class-transformer";
->>>>>>> origin/aashika
 
 export class MedicalSearchDto {
   @IsOptional()
@@ -34,8 +29,4 @@ export class MedicalSearchDto {
   @IsOptional()
   @Type(() => Number)
   maxFee?: number;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

@@ -18,8 +18,4 @@ export class VendorController {
     ]);
     return { ...stats, recentOrders };
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

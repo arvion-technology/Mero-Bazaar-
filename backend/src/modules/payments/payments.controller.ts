@@ -16,8 +16,4 @@ export class SellerPaymentsController {
   getTransactions(@Req() req) {
     return this.paymentsService.getTransactionHistory(req.user.id);
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

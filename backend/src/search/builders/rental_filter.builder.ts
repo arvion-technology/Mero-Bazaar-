@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { Prisma, ListingCategory } from '@prisma/client';
-=======
-import { Prisma, ListingCategory, OwnerType, PropertyType, ListingType } from '@prisma/client'; 
->>>>>>> origin/aashika
 import { RentalSearchDto } from '../dto/rental_search.dto';
 
 export function buildRentalFilter(
@@ -77,12 +73,7 @@ export function buildRentalFilter(
           noBroker: dto.noBroker,
         }),
 
-<<<<<<< HEAD
         ...((dto.minPrice !== undefined || dto.maxPrice !== undefined) && {
-=======
-        ...((dto.minPrice !== undefined ||
-          dto.maxPrice !== undefined) && {
->>>>>>> origin/aashika
           monthlyRent: {
             ...(dto.minPrice !== undefined && {
               gte: dto.minPrice,
@@ -128,8 +119,4 @@ export function buildRentalFilter(
       },
     },
   };
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

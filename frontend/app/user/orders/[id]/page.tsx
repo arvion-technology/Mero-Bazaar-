@@ -1,10 +1,6 @@
-<<<<<<< HEAD
 ﻿"use client";
 
 import { deleteAccountWithReauth } from "@/lib/accountActions";
-=======
-"use client";
->>>>>>> origin/aashika
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -42,11 +38,7 @@ const sidebarItems = [
 ];
 
 function formatDate(d: string | null) {
-<<<<<<< HEAD
   if (!d) return "â€”";
-=======
-  if (!d) return "—";
->>>>>>> origin/aashika
   return new Date(d).toLocaleString("en-US", {
     month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
   });
@@ -132,11 +124,7 @@ export default function OrderDetailPage() {
     setDeleting(true);
     setDeleteError("");
     try {
-<<<<<<< HEAD
       const res = await deleteAccountWithReauth(accessToken);
-=======
-      const res = await fetch("/api/user/delete-account", { method: "DELETE" });
->>>>>>> origin/aashika
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
@@ -160,11 +148,7 @@ export default function OrderDetailPage() {
   if (loadingOrder) {
     return (
       <div className="ud-page" style={{ alignItems: "center", justifyContent: "center", width: "100%" }}>
-<<<<<<< HEAD
         <div className="orders-empty"><p>Loading orderâ€¦</p></div>
-=======
-        <div className="orders-empty"><p>Loading order…</p></div>
->>>>>>> origin/aashika
         <style>{`.ud-page { display: flex; }`}</style>
       </div>
     );
@@ -240,11 +224,7 @@ export default function OrderDetailPage() {
         .od-title { font-size: 22px; font-weight: 700; color: #1e293b; letter-spacing: -0.4px; }
         .od-subtitle { font-size: 13px; color: #64748b; margin-top: 2px; }
 
-<<<<<<< HEAD
         /* â”€â”€ Same-line card grid â”€â”€ */
-=======
-        /* ── Same-line card grid ── */
->>>>>>> origin/aashika
         .od-grid { display: flex; flex-wrap: wrap; gap: 20px; align-items: stretch; }
         .od-card {
           background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;
@@ -452,11 +432,7 @@ export default function OrderDetailPage() {
                 ) : (
                   <>
                     <div className="od-info-row"><span className="od-info-label">Delivery Date</span><span className="od-info-value">{formatDate(order.deliveryDate)}</span></div>
-<<<<<<< HEAD
                     <div className="od-info-row"><span className="od-info-label">Delivery Address</span><span className="od-info-value">{order.deliveryAddress || "â€”"}</span></div>
-=======
-                    <div className="od-info-row"><span className="od-info-label">Delivery Address</span><span className="od-info-value">{order.deliveryAddress || "—"}</span></div>
->>>>>>> origin/aashika
                   </>
                 )}
               </div>
@@ -474,11 +450,7 @@ export default function OrderDetailPage() {
                     </span>
                   )}
                 </div>
-<<<<<<< HEAD
                 <div className="od-summary-row" style={{ borderBottom: "none" }}><span>Payment Method</span><span className="od-summary-val">{order.paymentMethod || "â€”"}</span></div>
-=======
-                <div className="od-summary-row" style={{ borderBottom: "none" }}><span>Payment Method</span><span className="od-summary-val">{order.paymentMethod || "—"}</span></div>
->>>>>>> origin/aashika
                 {order.paymentRef && (
                   <div className="od-summary-row" style={{ borderBottom: "none" }}><span>Payment Ref</span><span className="od-summary-val">{order.paymentRef}</span></div>
                 )}
@@ -549,9 +521,5 @@ export default function OrderDetailPage() {
       )}
     </>
   );
-<<<<<<< HEAD
 }
 
-=======
-}
->>>>>>> origin/aashika

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { IsEmail, IsString } from 'class-validator';
-=======
-import { IsEmail, IsString } from "class-validator";
->>>>>>> origin/aashika
 
 export class LoginDto {
   @IsEmail()
@@ -10,8 +6,4 @@ export class LoginDto {
 
   @IsString()
   password: string;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

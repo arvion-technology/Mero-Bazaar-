@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Controller,
   Param,
@@ -15,16 +14,6 @@ import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { UploadVerificationDto } from './dto/upload_verification.dto';
 import { RejectVerificationDto } from './dto/reject_verification.dto';
-=======
-import { Controller, Param, Patch, Post, Body, UseGuards, Request } from "@nestjs/common";
-import { VerificationService } from "./verification.service";
-import { JwtAuthGuard } from "../auth/jwt_auth.guards";
-import { RolesGuard } from "../auth/roles.guard";
-import { Roles } from "../auth/roles.decorator";
-import { UserRole } from "@prisma/client";
-import { UploadVerificationDto } from "./dto/upload_verification.dto";
-import { RejectVerificationDto } from "./dto/reject_verification.dto";
->>>>>>> origin/aashika
 
 @Controller('verification-docs')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -34,11 +23,7 @@ export class VerificationController {
   @Post()
   @Roles(UserRole.DOCTOR)
   upload(@Request() req, @Body() dto: UploadVerificationDto) {
-<<<<<<< HEAD
     return this.verificationService.upload(dto, req.user.id);
-=======
-    return this.verificationService.upload(dto);
->>>>>>> origin/aashika
   }
 
   @Patch(':id/approve')
@@ -52,8 +37,4 @@ export class VerificationController {
   reject(@Param('id') id: string, @Body() dto: RejectVerificationDto) {
     return this.verificationService.reject(id, dto.reason);
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

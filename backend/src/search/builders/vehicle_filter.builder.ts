@@ -1,16 +1,9 @@
-<<<<<<< HEAD
 import { Prisma } from '@prisma/client';
 import { VehicleSearchDto } from '../dto/vehicle_search.dto';
 
 export function buildVehicleFilter(
   dto: VehicleSearchDto,
 ): Prisma.ListingWhereInput {
-=======
-import { Prisma } from "@prisma/client";
-import { VehicleSearchDto } from "../dto/vehicle_search.dto";
-
-export function buildVehicleFilter(dto: VehicleSearchDto): Prisma.ListingWhereInput {
->>>>>>> origin/aashika
   const query = dto.query?.trim();
 
   return {
@@ -19,22 +12,14 @@ export function buildVehicleFilter(dto: VehicleSearchDto): Prisma.ListingWhereIn
         ...(dto.brand && {
           brand: {
             contains: dto.brand,
-<<<<<<< HEAD
             mode: 'insensitive',
-=======
-            mode: "insensitive",
->>>>>>> origin/aashika
           },
         }),
 
         ...(dto.model && {
           model: {
             contains: dto.model,
-<<<<<<< HEAD
             mode: 'insensitive',
-=======
-            mode: "insensitive",
->>>>>>> origin/aashika
           },
         }),
 
@@ -70,20 +55,11 @@ export function buildVehicleFilter(dto: VehicleSearchDto): Prisma.ListingWhereIn
 
         ...(query && {
           OR: [
-<<<<<<< HEAD
             { brand: { contains: query, mode: 'insensitive' } },
             { model: { contains: query, mode: 'insensitive' } },
-=======
-            { brand: { contains: query, mode: "insensitive" } },
-            { model: { contains: query, mode: "insensitive" } },
->>>>>>> origin/aashika
           ],
         }),
       },
     },
   };
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   IsArray,
   IsBoolean,
@@ -11,21 +10,12 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { SecondHandCategory, SecondHandCondition } from '@prisma/client';
-=======
-import { IsArray, IsBoolean, IsDateString, IsEnum, IsInt, IsOptional, IsString, Min } from "class-validator";
-import { Type } from "class-transformer";
-import { SecondHandCategory, SecondHandCondition } from "@prisma/client";
->>>>>>> origin/aashika
 
 export class CreateSecondHandDto {
   @IsOptional()
   @IsEnum(SecondHandCategory)
   category: SecondHandCategory;
-<<<<<<< HEAD
 
-=======
-  
->>>>>>> origin/aashika
   @IsOptional()
   @IsEnum(SecondHandCondition)
   condition: SecondHandCondition;
@@ -59,8 +49,4 @@ export class CreateSecondHandDto {
 
   @IsDateString()
   expiresAt: string;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

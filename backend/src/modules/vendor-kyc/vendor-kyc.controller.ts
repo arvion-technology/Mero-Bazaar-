@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Body,
   Controller,
@@ -12,9 +11,6 @@ import {
   UseInterceptors,
   Request,
 } from '@nestjs/common';
-=======
-import { Body, Controller, Param, UploadedFiles, UseGuards, Post, Get, Patch, Query, UseInterceptors, Request } from '@nestjs/common';
->>>>>>> origin/aashika
 import { VendorKycService } from './vendor-kyc.service';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { kycUploadconfig } from './upload/kyc-upload.config';
@@ -65,15 +61,11 @@ export class VendorKycController {
 
   @Post('verify')
   @Roles(UserRole.VENDOR)
-<<<<<<< HEAD
   verifyOtp(
     @Request() req,
     @Body('otp') otp: string,
     @Body('phone') phone: string,
   ) {
-=======
-  verifyOtp(@Request() req, @Body('otp') otp: string, @Body('phone') phone: string) {
->>>>>>> origin/aashika
     return this.vendorKycService.verifyContactOtp(req.user.id, otp, phone);
   }
 
@@ -110,11 +102,7 @@ export class VendorKycController {
   getKycById(@Param('id') id: string) {
     return this.vendorKycService.getKycById(id);
   }
-<<<<<<< HEAD
 
-=======
-  
->>>>>>> origin/aashika
   @Get('admin/document/:filename')
   @Roles(UserRole.ADMIN)
   getDocument(@Param('filename') filename: string, @Res() res: Response) {
@@ -124,7 +112,6 @@ export class VendorKycController {
   //patching rejected documents
   @Get('document/:filename')
   @Roles(UserRole.VENDOR)
-<<<<<<< HEAD
   getOwnDocument(
     @Request() req,
     @Param('filename') filename: string,
@@ -133,9 +120,3 @@ export class VendorKycController {
     return this.vendorKycService.streamOwnDocument(req.user.id, filename, res);
   }
 }
-=======
-  getOwnDocument(@Request() req, @Param('filename') filename: string, @Res() res: Response) {
-    return this.vendorKycService.streamOwnDocument(req.user.id, filename, res);
-  }
-}
->>>>>>> origin/aashika

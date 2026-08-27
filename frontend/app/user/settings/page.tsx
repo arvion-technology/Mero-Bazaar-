@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 ﻿"use client";
-=======
-"use client";
->>>>>>> origin/aashika
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -37,11 +33,8 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 
-<<<<<<< HEAD
 import { deleteAccountWithReauth, reauthFetch } from "@/lib/accountActions";
 
-=======
->>>>>>> origin/aashika
 const PRIMARY = "#C0392B";
 
 export default function UserSettings() {
@@ -177,11 +170,7 @@ export default function UserSettings() {
           await updateSession({ user: { ...session?.user, twoFactorEnabled: data.twoFactorEnabled } });
         }
       } catch {
-<<<<<<< HEAD
         // silent â€” non-critical background sync
-=======
-        // silent — non-critical background sync
->>>>>>> origin/aashika
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -211,15 +200,8 @@ export default function UserSettings() {
     setDeleting(true);
     setDeleteError("");
     try {
-<<<<<<< HEAD
       const res = await deleteAccountWithReauth(token);
       if (res.status === 499) return; // user cancelled the confirmation
-=======
-      const res = await fetch("/api/user/delete-account", { 
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-       });
->>>>>>> origin/aashika
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
@@ -307,11 +289,7 @@ export default function UserSettings() {
   const profileFields = [
     { key: "name", icon: FiUser, label: "Full Name", value: profileForm.name, type: "text", editable: true },
     { key: "phone", icon: FiPhone, label: "Phone Number", value: profileForm.phone, type: "tel", editable: true },
-<<<<<<< HEAD
     { key: "email", icon: FiMail, label: "Email Address", value: session?.user?.email || "â€”", type: "email", editable: false },
-=======
-    { key: "email", icon: FiMail, label: "Email Address", value: session?.user?.email || "—", type: "email", editable: false },
->>>>>>> origin/aashika
     { key: "address", icon: FiMapPin, label: "Address", value: profileForm.address, type: "text", editable: true },
   ];
 
@@ -378,23 +356,12 @@ export default function UserSettings() {
       }
 
       if (phoneChanged && profileForm.phone) {
-<<<<<<< HEAD
         const phoneRes = await reauthFetch(
           "/api/user/profile/phone/request",
           token,
           { phone: profileForm.phone },
         );
         if (phoneRes.status === 499) return; // user cancelled the confirmation
-=======
-        const phoneRes = await fetch("/api/user/profile/phone/request", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ phone: profileForm.phone }),
-        });
->>>>>>> origin/aashika
         if (!phoneRes.ok) {
           const data = await phoneRes.json().catch(() => null);
           setProfileForm((prev) => ({ ...prev, phone: session?.user?.phone || "" }));
@@ -541,23 +508,12 @@ async function handleConfirmEnable2FA() {
   }
 }
 
-<<<<<<< HEAD
 // Disable â€” requires step-up reauthentication (current password or OTP) per policy
 async function handleDisable2FA() {
   setTfaDisabling(true);
   try {
     const res = await reauthFetch("/api/user/2fa/disable", token);
     if (res.status === 499) return; // user cancelled the confirmation
-=======
-// Disable — single call, no OTP needed since the user is already authenticated
-async function handleDisable2FA() {
-  setTfaDisabling(true);
-  try {
-    const res = await fetch("/api/user/2fa/disable", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
->>>>>>> origin/aashika
     if (!res.ok) {
       const data = await res.json().catch(() => null);
       throw new Error(data?.message || "Failed to disable 2FA.");
@@ -591,11 +547,7 @@ async function handleDisable2FA() {
           font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
 
-<<<<<<< HEAD
         /* â”€â”€ Sidebar â”€â”€ */
-=======
-        /* ── Sidebar ── */
->>>>>>> origin/aashika
         .ud-sidebar {
           width: 260px;
           background: #ffffff;
@@ -810,11 +762,7 @@ async function handleDisable2FA() {
           max-width: 160px;
         }
 
-<<<<<<< HEAD
         /* â”€â”€ Main Area â”€â”€ */
-=======
-        /* ── Main Area ── */
->>>>>>> origin/aashika
         .ud-main-area {
           flex: 1;
           margin-left: 260px;
@@ -832,11 +780,7 @@ async function handleDisable2FA() {
           width: calc(100% - 72px);
         }
 
-<<<<<<< HEAD
         /* â”€â”€ Top Header â”€â”€ */
-=======
-        /* ── Top Header ── */
->>>>>>> origin/aashika
         .ud-topbar {
           background: #fff;
           border-bottom: 1px solid #e2e8f0;
@@ -937,11 +881,7 @@ async function handleDisable2FA() {
           border: 2px solid #fff;
         }
 
-<<<<<<< HEAD
         /* â”€â”€ Profile Avatar Dropdown â”€â”€ */
-=======
-        /* ── Profile Avatar Dropdown ── */
->>>>>>> origin/aashika
         .ud-profile-wrap {
           position: relative;
         }
@@ -1076,11 +1016,7 @@ async function handleDisable2FA() {
           margin: 0;
         }
 
-<<<<<<< HEAD
         /* â”€â”€ Main Content â”€â”€ */
-=======
-        /* ── Main Content ── */
->>>>>>> origin/aashika
         .ud-main {
           flex: 1;
           padding: 28px 32px;
@@ -1458,11 +1394,7 @@ async function handleDisable2FA() {
           color: #ef4444;
         }
 
-<<<<<<< HEAD
         /* â”€â”€ Backdrop (mobile overlay) â”€â”€ */
-=======
-        /* ── Backdrop (mobile overlay) ── */
->>>>>>> origin/aashika
         .ud-backdrop {
           display: none;
           position: fixed;
@@ -1526,11 +1458,7 @@ async function handleDisable2FA() {
           display: flex;
         }
 
-<<<<<<< HEAD
         /* â”€â”€ Responsive â”€â”€ */
-=======
-        /* ── Responsive ── */
->>>>>>> origin/aashika
 
         /* Tablet + Mobile: overlay sidebar */
         @media (max-width: 1023px) {
@@ -1680,11 +1608,7 @@ async function handleDisable2FA() {
           }
         }
 
-<<<<<<< HEAD
         /* â”€â”€ Delete Account Modal â”€â”€ */
-=======
-        /* ── Delete Account Modal ── */
->>>>>>> origin/aashika
         .ud-modal-overlay {
           position: fixed;
           inset: 0;
@@ -1791,11 +1715,7 @@ async function handleDisable2FA() {
         .ud-modal-delete:disabled { opacity: 0.7; cursor: not-allowed; }
       `}</style>
 
-<<<<<<< HEAD
       {/* â”€â”€ Mobile Backdrop â”€â”€ */}
-=======
-      {/* ── Mobile Backdrop ── */}
->>>>>>> origin/aashika
       <div
         className={`ud-backdrop ${sidebarOpen ? "active" : ""}`}
         onClick={() => setSidebarOpen(false)}
@@ -1803,11 +1723,7 @@ async function handleDisable2FA() {
       />
 
       <div className="ud-page">
-<<<<<<< HEAD
         {/* â”€â”€ Sidebar â”€â”€ */}
-=======
-        {/* ── Sidebar ── */}
->>>>>>> origin/aashika
         <aside className={`ud-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
           {/* Mobile close button */}
           <button
@@ -1889,11 +1805,7 @@ async function handleDisable2FA() {
           {/* Sidebar footer intentionally left empty */}
         </aside>
 
-<<<<<<< HEAD
         {/* â”€â”€ Main Area â”€â”€ */}
-=======
-        {/* ── Main Area ── */}
->>>>>>> origin/aashika
         <div className="ud-main-area">
           {/* Top Header */}
           <header className="ud-topbar">
@@ -1982,11 +1894,7 @@ async function handleDisable2FA() {
                       ))
                     ) : (
                       <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>
-<<<<<<< HEAD
                         You&apos;re all caught up âœ“
-=======
-                        You&apos;re all caught up ✓
->>>>>>> origin/aashika
                       </div>
                     )}
                   </div>
@@ -2069,11 +1977,7 @@ async function handleDisable2FA() {
 
               <div className="ud-profile-info">
                 <div className="ud-profile-name">{session?.user?.name || "User"}</div>
-<<<<<<< HEAD
                 <div className="ud-profile-role">Member Â· Kathmandu, Nepal</div>
-=======
-                <div className="ud-profile-role">Member · Kathmandu, Nepal</div>
->>>>>>> origin/aashika
               </div>
               
               <div className="ud-profile-actions">
@@ -2096,11 +2000,7 @@ async function handleDisable2FA() {
               </div>
             </div>
 
-<<<<<<< HEAD
             {/* Account Details â€” Password field removed */}
-=======
-            {/* Account Details — Password field removed */}
->>>>>>> origin/aashika
             <div className="ud-section-header">
               <h3 className="ud-section-title">Account Information</h3>
             </div>
@@ -2267,11 +2167,7 @@ async function handleDisable2FA() {
         </div>
       </div>
 
-<<<<<<< HEAD
     {/* â”€â”€ Delete Account Confirmation Modal â”€â”€ */}
-=======
-    {/* ── Delete Account Confirmation Modal ── */}
->>>>>>> origin/aashika
     {showDeleteModal && (
       <div className="ud-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
         <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
@@ -2320,11 +2216,7 @@ async function handleDisable2FA() {
       </div>
     )}
 
-<<<<<<< HEAD
     {/* â”€â”€ Active Sessions Modal â”€â”€ */}
-=======
-    {/* ── Active Sessions Modal ── */}
->>>>>>> origin/aashika
     {showSessionsModal && (
       <div className="ud-modal-overlay" onClick={() => setShowSessionsModal(false)}>
         <div className="ud-modal" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
@@ -2363,11 +2255,7 @@ async function handleDisable2FA() {
                       )}
                     </div>
                     <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
-<<<<<<< HEAD
                       {s.ipAddress || "Unknown IP"} Â· Last active {new Date(s.lastActiveAt).toLocaleString()}
-=======
-                      {s.ipAddress || "Unknown IP"} · Last active {new Date(s.lastActiveAt).toLocaleString()}
->>>>>>> origin/aashika
                     </div>
                   </div>
                   {!s.isCurrent && (
@@ -2399,11 +2287,7 @@ async function handleDisable2FA() {
     )}
 
     
-<<<<<<< HEAD
         {/* â”€â”€ Enable 2FA â€” Verify OTP Modal â”€â”€ */}
-=======
-        {/* ── Enable 2FA — Verify OTP Modal ── */}
->>>>>>> origin/aashika
         {show2FAModal && (
           <div className="ud-modal-overlay" onClick={() => !tfaConfirming && setShow2FAModal(false)}>
             <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
@@ -2452,11 +2336,7 @@ async function handleDisable2FA() {
           </div>
         )}
 
-<<<<<<< HEAD
         {/* â”€â”€ Disable 2FA Confirmation Modal â”€â”€ */}
-=======
-        {/* ── Disable 2FA Confirmation Modal ── */}
->>>>>>> origin/aashika
         {showDisable2FAModal && (
           <div className="ud-modal-overlay" onClick={() => !tfaDisabling && setShowDisable2FAModal(false)}>
             <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
@@ -2490,11 +2370,7 @@ async function handleDisable2FA() {
           </div>
         )}
  
-<<<<<<< HEAD
  {/* â”€â”€ Phone OTP Verification Modal â”€â”€ */}
-=======
- {/* ── Phone OTP Verification Modal ── */}
->>>>>>> origin/aashika
         {showPhoneOtpModal && (
           <div className="ud-modal-overlay" onClick={() => !confirmingPhone && setShowPhoneOtpModal(false)}>
             <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
@@ -2548,8 +2424,4 @@ async function handleDisable2FA() {
         )}
   </>
 );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

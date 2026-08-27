@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { IsEmail, IsIn, IsOptional, IsString } from 'class-validator';
-=======
-import { IsEmail, IsIn, IsOptional, IsString } from "class-validator";
->>>>>>> origin/aashika
 
 export class OAuthSyncDto {
   @IsEmail()
@@ -30,8 +26,4 @@ export class OAuthSyncDto {
   @IsOptional()
   @IsIn(['google', 'facebook'])
   provider?: string;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

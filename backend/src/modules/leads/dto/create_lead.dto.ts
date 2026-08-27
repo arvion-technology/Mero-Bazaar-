@@ -11,8 +11,4 @@ export class CreateLeadDto {
   @IsOptional()
   @IsString()
   message?: string;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

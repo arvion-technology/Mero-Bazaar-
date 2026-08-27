@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import { IsOptional, IsInt, Min, Max, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
-=======
-import { IsOptional, IsInt, Min, Max, IsString } from "class-validator";
-import { Type } from "class-transformer";
->>>>>>> origin/aashika
 
 export class UpdateReviewDto {
   @IsOptional()
@@ -17,8 +12,4 @@ export class UpdateReviewDto {
   @IsOptional()
   @IsString()
   comment?: string;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

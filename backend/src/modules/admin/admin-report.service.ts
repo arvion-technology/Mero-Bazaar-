@@ -48,16 +48,12 @@ export class AdminReportService {
     });
   }
 
-<<<<<<< HEAD
   async setStatus(
     id: string,
     status: ReportStatus,
     reviewerId: string,
     resolutionNote?: string,
   ) {
-=======
-  async setStatus(id: string, status: ReportStatus, reviewerId: string, resolutionNote?: string) {
->>>>>>> origin/aashika
     const updated = await this.prisma.report.update({
       where: { id },
       data: {
@@ -79,8 +75,4 @@ export class AdminReportService {
 
     return updated;
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

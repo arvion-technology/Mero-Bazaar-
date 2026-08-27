@@ -77,8 +77,4 @@ export function buildAgricultureFilter(
       },
     ],
   };
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

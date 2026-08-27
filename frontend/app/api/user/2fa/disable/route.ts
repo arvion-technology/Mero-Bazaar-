@@ -9,20 +9,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-<<<<<<< HEAD
     const body = await req.json().catch(() => ({}));
-=======
->>>>>>> origin/aashika
     const res = await fetch(`${API_URL}/api/user/2fa/disable`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: authHeader,
       },
-<<<<<<< HEAD
       body: JSON.stringify(body),
-=======
->>>>>>> origin/aashika
     });
 
     const data = await res.json().catch(() => ({}));

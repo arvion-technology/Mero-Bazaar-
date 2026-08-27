@@ -11,10 +11,6 @@ export class MedicalQueryDto {
   @IsEnum(MedicalServiceType)
   specialty?: MedicalServiceType;
 
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/aashika
   @IsOptional()
   @IsString()
   doctorName?: string;
@@ -23,8 +19,4 @@ export class MedicalQueryDto {
   @Type(() => Boolean)
   @IsBoolean()
   homeVisitAvailable?: boolean;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

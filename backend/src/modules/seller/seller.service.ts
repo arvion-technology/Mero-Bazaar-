@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 
-<<<<<<< HEAD
 const MAX_PAGE_SIZE = 50;
 
 function clampPagination(page: number, take: number, defaultTake: number) {
@@ -13,8 +12,6 @@ function clampPagination(page: number, take: number, defaultTake: number) {
   return { safePage, safeTake };
 }
 
-=======
->>>>>>> origin/aashika
 @Injectable()
 export class SellersService {
   constructor(private prisma: PrismaService) {}
@@ -73,21 +70,13 @@ export class SellersService {
   }
 
   async getSellerListings(sellerId: string, page = 1, take = 12) {
-<<<<<<< HEAD
     const { safePage, safeTake } = clampPagination(page, take, 12);
-=======
->>>>>>> origin/aashika
     const [listings, total] = await Promise.all([
       this.prisma.listing.findMany({
         where: { userId: sellerId },
         orderBy: { createdAt: 'desc' },
-<<<<<<< HEAD
         skip: (safePage - 1) * safeTake,
         take: safeTake,
-=======
-        skip: (page - 1) * take,
-        take,
->>>>>>> origin/aashika
         select: {
           id: true,
           title: true,
@@ -100,29 +89,17 @@ export class SellersService {
       this.prisma.listing.count({ where: { userId: sellerId } }),
     ]);
 
-<<<<<<< HEAD
     return { data: listings, total, page: safePage, pageSize: safeTake };
   }
 
   async getSellerReviews(sellerId: string, page = 1, take = 10) {
     const { safePage, safeTake } = clampPagination(page, take, 10);
-=======
-    return { data: listings, total, page, pageSize: take };
-  }
-
-  async getSellerReviews(sellerId: string, page = 1, take = 10) {
->>>>>>> origin/aashika
     const [reviews, total] = await Promise.all([
       this.prisma.review.findMany({
         where: { listing: { userId: sellerId } },
         orderBy: { createdAt: 'desc' },
-<<<<<<< HEAD
         skip: (safePage - 1) * safeTake,
         take: safeTake,
-=======
-        skip: (page - 1) * take,
-        take,
->>>>>>> origin/aashika
         include: {
           user: { select: { name: true, image: true } },
           listing: { select: { id: true, title: true } },
@@ -143,16 +120,8 @@ export class SellersService {
         listingTitle: r.listing.title,
       })),
       total,
-<<<<<<< HEAD
       page: safePage,
       pageSize: safeTake,
     };
   }
 }
-=======
-      page,
-      pageSize: take,
-    };
-  }
-}
->>>>>>> origin/aashika

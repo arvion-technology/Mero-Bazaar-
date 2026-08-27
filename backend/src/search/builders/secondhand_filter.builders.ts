@@ -75,8 +75,4 @@ export function buildSecondHandFilter(
         : []),
     ],
   };
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

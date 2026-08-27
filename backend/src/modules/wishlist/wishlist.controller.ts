@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Controller,
   Post,
@@ -8,9 +7,6 @@ import {
   Get,
   UseGuards,
 } from '@nestjs/common';
-=======
-import { Controller, Post, Request, Body, Param, Get, UseGuards } from '@nestjs/common';
->>>>>>> origin/aashika
 import { WishlistService } from './wishlist.service';
 import { ToggleWishlistDto } from './dto/toggle_wishlist.dto';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';

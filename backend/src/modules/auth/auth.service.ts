@@ -1,13 +1,9 @@
-<<<<<<< HEAD
 import {
   ConflictException,
   Injectable,
   UnauthorizedException,
   ForbiddenException,
 } from '@nestjs/common';
-=======
-import { ConflictException, Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
->>>>>>> origin/aashika
 import { PrismaService } from 'src/database/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -22,7 +18,6 @@ import { ActivityLogService } from '../user/activity_log.service';
 
 export function parseUserAgent(ua?: string): string {
   if (!ua) return 'Unknown device';
-<<<<<<< HEAD
   const browser = /Edg\//.test(ua)
     ? 'Edge'
     : /Chrome\//.test(ua)
@@ -43,10 +38,6 @@ export function parseUserAgent(ua?: string): string {
           : /Linux/.test(ua)
             ? 'Linux'
             : 'Unknown OS';
-=======
-  const browser = /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
-  const os = /Windows/.test(ua) ? 'Windows' : /Mac OS/.test(ua) ? 'macOS' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /Linux/.test(ua) ? 'Linux' : 'Unknown OS';
->>>>>>> origin/aashika
   return `${browser} on ${os}`;
 }
 
@@ -65,7 +56,6 @@ export class AuthService {
     });
     if (existing) throw new ConflictException('Email already in use');
 
-<<<<<<< HEAD
     if (dto.phone) {
       const phoneExists = await this.prisma.user.findUnique({
         where: { phone: dto.phone },
@@ -76,16 +66,6 @@ export class AuthService {
     const hash = await bcrypt.hash(dto.password, 10);
     const allowedRole =
       dto.role === UserRole.VENDOR ? UserRole.VENDOR : UserRole.USER;
-=======
-    if(dto.phone) {
-      const phoneExists = await this.prisma.user.findUnique({
-        where: { phone: dto.phone },
-      });
-      if (phoneExists) throw new ConflictException('Phone number already in use');
-    }
-    const hash = await bcrypt.hash(dto.password, 10);
-    const allowedRole = dto.role === UserRole.VENDOR ? UserRole.VENDOR : UserRole.USER;
->>>>>>> origin/aashika
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
@@ -106,11 +86,7 @@ export class AuthService {
       },
     });
 
-<<<<<<< HEAD
     return this.signToken(user.id, user.email, allowedRole, req);
-=======
-    return this.signToken(user.id, user.email, allowedRole,req);
->>>>>>> origin/aashika
   }
 
   async login(dto: LoginDto, req: Request) {
@@ -118,7 +94,6 @@ export class AuthService {
       where: { email: dto.email },
     });
 
-<<<<<<< HEAD
     // Generic error for missing user / bad password / deactivated account so the
     // endpoint cannot be used to enumerate accounts.
     const fail = () => new UnauthorizedException('Invalid email or password');
@@ -127,40 +102,22 @@ export class AuthService {
 
     if (!user.isActive) {
       throw fail();
-=======
-    if (!user) throw new UnauthorizedException('User not found');
-
-    if (!user.isActive) {
-      throw new UnauthorizedException('This account has been deactivated.');
->>>>>>> origin/aashika
     }
 
     if (!user.password) {
       throw new UnauthorizedException(
-<<<<<<< HEAD
         'This account uses Google/Facebook login. Please continue with OAuth.',
       );
     }
     const valid = await bcrypt.compare(dto.password, user.password);
     if (!valid) throw fail();
-=======
-        "This account uses Google/Facebook login. Please continue with OAuth."
-      );
-    }
-    const valid = await bcrypt.compare(dto.password, user.password);
-    if (!valid) throw new UnauthorizedException('Invalid credentials!');
->>>>>>> origin/aashika
 
     // NEW: 2FA gate
     if (user.twoFactorEnabled) {
       if (!user.phone) {
-<<<<<<< HEAD
         throw new ForbiddenException(
           'Two-factor is enabled but no verified phone is on file.',
         );
-=======
-        throw new ForbiddenException('Two-factor is enabled but no verified phone is on file.');
->>>>>>> origin/aashika
       }
       await this.phoneOtpService.sendOtp(user.phone, OtpContext.LOGIN);
       const tempToken = this.jwtService.sign(
@@ -181,7 +138,6 @@ export class AuthService {
     return this.signToken(user.id, user.email, user.role ?? UserRole.USER, req);
   }
 
-<<<<<<< HEAD
   async verifyLoginOtp(tempToken: string, otp: string, req: Request) {
     let payload: { sub: string; purpose: string };
     try {
@@ -193,38 +149,22 @@ export class AuthService {
       throw new UnauthorizedException(
         'Login session expired. Please log in again.',
       );
-=======
-    async verifyLoginOtp(tempToken: string, otp: string, req: Request) {
-    let payload: { sub: string; purpose: string };
-    try {
-      payload = this.jwtService.verify(tempToken);
-    } catch {
-      throw new UnauthorizedException('Login session expired. Please log in again.');
->>>>>>> origin/aashika
     }
     if (payload.purpose !== 'login_2fa') {
       throw new UnauthorizedException('Invalid token.');
     }
 
-<<<<<<< HEAD
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
     });
-=======
-    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
->>>>>>> origin/aashika
     if (!user?.phone) throw new UnauthorizedException('User not found');
 
     await this.phoneOtpService.verifyOtp(user.phone, otp, OtpContext.LOGIN);
 
-<<<<<<< HEAD
     await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
-=======
-    await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
->>>>>>> origin/aashika
     await this.activityLogService.log(user.id, 'LOGIN', {
       ipAddress: req.ip,
       deviceLabel: parseUserAgent(req.headers['user-agent']),
@@ -242,17 +182,12 @@ export class AuthService {
     return { message: 'Logged out successfully!' };
   }
 
-<<<<<<< HEAD
   private async signToken(
     userId: string,
     email: string,
     role: UserRole,
     req: Request,
   ) {
-=======
-  private async signToken(userId: string, email: string, role: UserRole, req: Request) {
-    console.log('>>> signToken called for userId:', userId);
->>>>>>> origin/aashika
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const opaqueSecret = randomBytes(32).toString('hex');
     const refreshTokenHash = await bcrypt.hash(opaqueSecret, 10);
@@ -268,7 +203,6 @@ export class AuthService {
       },
     });
 
-<<<<<<< HEAD
     return {
       access_token: this.jwtService.sign(
         { sub: userId, email, role, sid: session.id, purpose: 'access' },
@@ -278,13 +212,3 @@ export class AuthService {
     };
   }
 }
-=======
-    console.log('>>> session created with id:', session.id);
-
-    return {
-      access_token: this.jwtService.sign({ sub: userId, email, role, sid: session.id }),
-      user: { id: userId, email, role },
-    };
-  }
-} 
->>>>>>> origin/aashika

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Controller,
   Param,
@@ -7,9 +6,6 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-=======
-import { Controller, Param, Post, Get, Request, UseGuards } from '@nestjs/common';
->>>>>>> origin/aashika
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { NotificationsService } from './notifications.service';
 

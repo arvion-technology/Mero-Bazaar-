@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Controller,
   Delete,
@@ -21,12 +20,6 @@ import {
   serverFilename,
   removeUploadedFiles,
 } from '../../common/uploads/upload.util';
-=======
-import { Controller, Delete, Get, Param, Post, Body, Query, Patch, UseGuards, Request, UseInterceptors, UploadedFiles, BadRequestException } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
->>>>>>> origin/aashika
 import { RentalService } from './rental.service';
 import { CreateRentalDto } from './dto/create_rental.dto';
 import { QueryRentalDto } from './dto/query_rental.dto';
@@ -55,15 +48,11 @@ export class RentalController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-<<<<<<< HEAD
   update(
     @Param('id') id: string,
     @Body() dto: UpdateRentalDto,
     @Request() req,
   ) {
-=======
-  update(@Param('id') id: string, @Body() dto: UpdateRentalDto, @Request() req) {
->>>>>>> origin/aashika
     return this.rentalService.update(id, dto, req.user.id);
   }
 
@@ -73,7 +62,6 @@ export class RentalController {
     FilesInterceptor('images', 10, {
       storage: diskStorage({
         destination: './uploads/rental',
-<<<<<<< HEAD
         filename: serverFilename,
       }),
       limits: { fileSize: 5 * 1024 * 1024 },
@@ -81,23 +69,6 @@ export class RentalController {
     }),
   )
   async uploadPhotos(
-=======
-        filename: (req, file, cb) => {
-          const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          cb(null, `${unique}${extname(file.originalname)}`);
-        },
-      }),
-      limits: { fileSize: 5 * 1024 * 1024 },
-      fileFilter: (req, file, cb) => {
-        if (!file.mimetype.startsWith('image/')) {
-          return cb(new BadRequestException('Only image files are allowed'), false);
-        }
-        cb(null, true);
-      },
-    }),
-  )
-  uploadPhotos(
->>>>>>> origin/aashika
     @Param('id') id: string,
     @UploadedFiles() files: Express.Multer.File[],
     @Request() req,
@@ -105,16 +76,12 @@ export class RentalController {
     if (!files?.length) {
       throw new BadRequestException('At least one photo is required');
     }
-<<<<<<< HEAD
     try {
       return await this.rentalService.addPhotos(id, files, req.user.id);
     } catch (err) {
       await removeUploadedFiles(files);
       throw err;
     }
-=======
-    return this.rentalService.addPhotos(id, files, req.user.id);
->>>>>>> origin/aashika
   }
 
   @UseGuards(JwtAuthGuard)
@@ -122,8 +89,4 @@ export class RentalController {
   remove(@Param('id') id: string, @Request() req) {
     return this.rentalService.remove(id, req.user.id);
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

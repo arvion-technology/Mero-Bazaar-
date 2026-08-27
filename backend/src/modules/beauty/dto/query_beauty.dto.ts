@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 import { BeautyServiceType } from '@prisma/client';
-=======
-import { IsBoolean, IsEnum, IsOptional, IsString } from "class-validator";
-import { BeautyServiceType } from "@prisma/client";
->>>>>>> origin/aashika
 
 export class QueryHairBeautyAndWellnessDto {
   @IsOptional()
@@ -22,8 +17,4 @@ export class QueryHairBeautyAndWellnessDto {
   @IsOptional()
   @IsString()
   city?: string;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

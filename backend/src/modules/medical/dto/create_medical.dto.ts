@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   IsString,
   IsNumber,
@@ -8,9 +7,6 @@ import {
   IsEnum,
   ValidateNested,
 } from 'class-validator';
-=======
-import { IsString, IsNumber, IsBoolean, IsOptional, IsArray, IsEnum, ValidateNested } from 'class-validator';
->>>>>>> origin/aashika
 import { Type } from 'class-transformer';
 import { MedicalServiceType, WeekDay } from '@prisma/client';
 
@@ -102,8 +98,4 @@ export class CreateMedicalDto {
   @IsNumber()
   @Type(() => Number)
   longitude?: number;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

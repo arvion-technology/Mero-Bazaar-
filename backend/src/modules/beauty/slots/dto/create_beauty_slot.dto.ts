@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import { WeekDay } from '@prisma/client';
 import { IsString, IsEnum } from 'class-validator';
-=======
-import { WeekDay } from "@prisma/client";
-import { IsString, IsEnum } from "class-validator";
->>>>>>> origin/aashika
 
 export class CreateBeautySlotDto {
   @IsString()
@@ -18,8 +13,4 @@ export class CreateBeautySlotDto {
 
   @IsString()
   endTime: string;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   BadRequestException,
   Injectable,
@@ -12,13 +11,6 @@ import { randomInt } from 'crypto';
 
 const MAX_OTP_PER_PHONE_PER_HOUR = 3;
 const MAX_ATTEMPTS = 5;
-=======
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma.service';
-import { SparrowSmsService } from './sparrow_sms.service';
-import { OtpContext } from "@prisma/client";
-import * as bcrypt from 'bcrypt';
->>>>>>> origin/aashika
 
 @Injectable()
 export class PhoneOtpService {
@@ -28,7 +20,6 @@ export class PhoneOtpService {
   ) {}
 
   async sendOtp(phone: string, context: OtpContext): Promise<void> {
-<<<<<<< HEAD
     // Rate limit by phone + context within a fixed window (history is never erased).
     const recentCount = await this.prisma.phoneOtp.count({
       where: {
@@ -45,23 +36,6 @@ export class PhoneOtpService {
 
     // Cryptographically secure 6-digit code — never Math.random().
     const rawOtp = randomInt(0, 1000000).toString().padStart(6, '0');
-=======
-    const recentCount = await this.prisma.phoneOtp.count({
-        where: {
-            phone,
-            context,
-            createdAt: { gte: new Date(Date.now() - 60 * 60 * 1000) },
-        },
-    });
-    if (recentCount >= 3) {
-        throw new BadRequestException('Too many OTP requests. Please wait before trying again.',
-        );
-    }
-    await this.prisma.phoneOtp.deleteMany({
-      where: { phone, context },
-    });
-    const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
->>>>>>> origin/aashika
     const hashedOtp = await bcrypt.hash(rawOtp, 10);
 
     await this.prisma.phoneOtp.create({
@@ -73,7 +47,6 @@ export class PhoneOtpService {
       },
     });
 
-<<<<<<< HEAD
     await this.sparrow.send(
       phone,
       `Your Mero Bazaar Nepal OTP is ${rawOtp}. Valid for 10 minutes. Do not share it with anyone.`,
@@ -85,12 +58,6 @@ export class PhoneOtpService {
     rawOtp: string,
     context: OtpContext,
   ): Promise<boolean> {
-=======
-    await this.sparrow.send(phone, `Your Mero Bazaar Nepal OTP is ${rawOtp}. Valid for 10 minutes. Do not share it with anyone.`);
-  }
-
-  async verifyOtp(phone: string, rawOtp: string, context: OtpContext): Promise<boolean> {
->>>>>>> origin/aashika
     const record = await this.prisma.phoneOtp.findFirst({
       where: {
         phone,
@@ -98,7 +65,6 @@ export class PhoneOtpService {
         verified: false,
         expiresAt: { gt: new Date() },
       },
-<<<<<<< HEAD
       orderBy: { createdAt: 'desc' },
     });
 
@@ -120,34 +86,13 @@ export class PhoneOtpService {
       throw new BadRequestException(
         'Too many failed attempts. Please request a new OTP!',
       );
-=======
-      orderBy: { createdAt: 'desc',}
-    });
-
-    if (!record) {
-        throw new NotFoundException('OTP expired or not found. Please request a new one.');
-    }
-
-    if (record.attempts >= 5) {
-      await this.prisma.phoneOtp.delete({ where: { id: record.id } });
-      throw new BadRequestException('Too many failed attempts. Please request a new OTP!');
->>>>>>> origin/aashika
     }
 
     const isValid = await bcrypt.compare(rawOtp, record.otpHash);
     if (!isValid) {
-<<<<<<< HEAD
       throw new BadRequestException('Invalid OTP.');
     }
 
-=======
-      await this.prisma.phoneOtp.update({
-        where: { id: record.id },
-        data: { attempts: { increment: 1 } },
-      });
-    throw new BadRequestException('Invalid OTP.');
-    }
->>>>>>> origin/aashika
     await this.prisma.phoneOtp.delete({ where: { id: record.id } });
     return true;
   }

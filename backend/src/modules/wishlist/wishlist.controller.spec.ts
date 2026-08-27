@@ -1,11 +1,6 @@
-<<<<<<< HEAD
 ﻿import { Test, TestingModule } from '@nestjs/testing';
 import { WishlistController } from './wishlist.controller';
 import { WishlistService } from './wishlist.service';
-=======
-import { Test, TestingModule } from '@nestjs/testing';
-import { WishlistController } from './wishlist.controller';
->>>>>>> origin/aashika
 
 describe('WishlistController', () => {
   let controller: WishlistController;
@@ -13,10 +8,7 @@ describe('WishlistController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [WishlistController],
-<<<<<<< HEAD
       providers: [{ provide: WishlistService, useValue: {} }],
-=======
->>>>>>> origin/aashika
     }).compile();
 
     controller = module.get<WishlistController>(WishlistController);

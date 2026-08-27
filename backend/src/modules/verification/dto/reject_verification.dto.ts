@@ -5,8 +5,4 @@ export class RejectVerificationDto {
   @IsNotEmpty()
   @MinLength(5)
   reason: string;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

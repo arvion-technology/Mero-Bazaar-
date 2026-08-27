@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   IsBoolean,
   IsNumber,
@@ -8,11 +7,6 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ListingType, OwnerType, PropertyType } from '@prisma/client';
-=======
-import { IsBoolean, IsNumber, IsOptional, IsString, IsEnum } from "class-validator";
-import { Type } from "class-transformer";
-import { ListingType, OwnerType, PropertyType } from "@prisma/client";
->>>>>>> origin/aashika
 
 export class RentalSearchDto {
   @IsOptional()
@@ -93,8 +87,4 @@ export class RentalSearchDto {
   @Type(() => Boolean)
   @IsBoolean()
   noBroker?: boolean;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

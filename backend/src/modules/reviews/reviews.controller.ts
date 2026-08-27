@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Controller,
   Delete,
@@ -11,9 +10,6 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-=======
-import { Controller, Delete, Param, Post, Body, Patch, Get, Query, UseGuards, Request } from '@nestjs/common';
->>>>>>> origin/aashika
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create_reviews.dto';
 import { QueryReviewDto } from './dto/query_review.dto';
@@ -42,15 +38,11 @@ export class ReviewsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-<<<<<<< HEAD
   update(
     @Param('id') id: string,
     @Body() dto: UpdateReviewDto,
     @Request() req,
   ) {
-=======
-  update(@Param('id') id: string, @Body() dto: UpdateReviewDto, @Request() req) {
->>>>>>> origin/aashika
     return this.reviewsService.update(id, dto, req.user.id);
   }
 

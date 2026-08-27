@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Injectable,
   NotFoundException,
@@ -12,24 +11,11 @@ import { QueryVehicleDto } from './dto/query_vehicle.dto';
 import { sanitizeVehicleDetails } from 'src/common/utils/vehicle_details.util';
 import { validateAndReencodeImage } from 'src/common/uploads/upload.util';
 import { assertVerifiedSeller } from 'src/common/authz/seller-access';
-=======
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma.service';
-import { CreateVehicleDto } from './dto/create_vehicle.dto';
-import { UpdateVehicleDto } from './dto/update_vehicle.dto';
-import { ListingCategory } from '@prisma/client';
-import { QueryVehicleDto } from './dto/query_vehicle.dto';
-import { sanitizeVehicleDetails } from 'src/common/utils/vehicle_details.util';
-import sharp from 'sharp';
-import * as fs from 'fs/promises';
-import * as path from 'path';
->>>>>>> origin/aashika
 
 @Injectable()
 export class VehiclesService {
   constructor(private prisma: PrismaService) {}
 
-<<<<<<< HEAD
   // A seller can only claim PENDING/NONE bluebook status; "verified" is a
   // reviewer-controlled trust flag that cannot be self-asserted.
   private sanitizeBluebookStatus(status?: string): BluebookStatus {
@@ -40,33 +26,21 @@ export class VehiclesService {
 
   async create(dto: CreateVehicleDto, userId: string) {
     await assertVerifiedSeller(this.prisma, userId);
-=======
-  async create(dto: CreateVehicleDto, userId: string) {
->>>>>>> origin/aashika
     const cleanDetails = sanitizeVehicleDetails(dto.type, dto.details ?? {});
 
     let latitude = dto.latitude;
     let longitude = dto.longitude;
 
-<<<<<<< HEAD
     if ((latitude == null || longitude == null) && dto.address) {
       try {
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(dto.address)}&limit=1`,
           { headers: { 'User-Agent': 'MeroBazaar/1.0' } },
-=======
-    if((latitude == null || longitude == null) && dto.address) {
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(dto.address)}&limit=1`,
-        { headers: { 'User-Agent': 'MeroBazaar/1.0' } }
->>>>>>> origin/aashika
         );
         const results = await res.json();
         if (results?.[0]) {
           latitude = parseFloat(results[0].lat);
           longitude = parseFloat(results[0].lon);
-<<<<<<< HEAD
         } else {
           console.warn(
             '[VehiclesService.create] no geocode match for address:',
@@ -79,14 +53,6 @@ export class VehiclesService {
           err,
         );
       }
-=======
-     } else {
-      console.warn('[VehiclesService.create] no geocode match for address:', dto.address);
-    }
-  } catch (err) {
-    console.error('[VehiclesService.create] geocoding request failed:', err);
-  }
->>>>>>> origin/aashika
     }
 
     return this.prisma.listing.create({
@@ -112,11 +78,7 @@ export class VehiclesService {
             year: dto.year,
             km_driven: dto.km_driven,
             condition: dto.condition,
-<<<<<<< HEAD
             bluebook_status: this.sanitizeBluebookStatus(dto.bluebook_status),
-=======
-            bluebook_status: dto.bluebook_status,
->>>>>>> origin/aashika
             fuel_type: dto.fuel_type,
             ownership_transfer_ready: dto.ownership_transfer_ready ?? false,
             details: cleanDetails,
@@ -129,7 +91,6 @@ export class VehiclesService {
     });
   }
 
-<<<<<<< HEAD
   async findAll(query: QueryVehicleDto) {
     const listings = await this.prisma.listing.findMany({
       where: {
@@ -191,61 +152,6 @@ export class VehiclesService {
       filters,
     };
   }
-=======
-async findAll(query: QueryVehicleDto) {
-  const listings = await this.prisma.listing.findMany({
-    where: {
-      category: ListingCategory.VEHICLE,
-
-      vehicle: {
-        is: {
-          ...(query.brand && { brand: query.brand }),
-          ...(query.model && { model: query.model }),
-          ...(query.type && { type: query.type }),
-          ...(query.condition && { condition: query.condition }),
-          ...(query.fuelType && { fuel_type: query.fuelType }),
-
-          ...(query.minYear || query.maxYear
-            ? {
-                year: {
-                  ...(query.minYear && { gte: query.minYear }),
-                  ...(query.maxYear && { lte: query.maxYear }),
-                },
-              }
-            : {}),
-
-          ...(query.minKm || query.maxKm
-            ? {
-                km_driven: {
-                  ...(query.minKm && { gte: query.minKm }),
-                  ...(query.maxKm && { lte: query.maxKm }),
-                },
-              }
-            : {}),
-        },
-      },
-    },
-    include: {
-      vehicle: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
-
-  const filters = {
-    brands: [...new Set(listings.map(l => l.vehicle?.brand).filter(Boolean))],
-    conditions: [...new Set(listings.map(l => l.vehicle?.condition).filter(Boolean))],
-    fuelTypes: [...new Set(listings.map(l => l.vehicle?.fuel_type).filter(Boolean))],
-    categories: [...new Set(listings.map(l => l.vehicle?.type).filter(Boolean))],
-  };
-
-  return {
-    data: listings,
-    filters,
-  };
-}
->>>>>>> origin/aashika
   async findOne(id: string) {
     const listing = await this.prisma.listing.findUnique({
       where: { id },
@@ -261,17 +167,10 @@ async findAll(query: QueryVehicleDto) {
     return listing;
   }
 
-<<<<<<< HEAD
   async update(id: string, dto: UpdateVehicleDto, userId: string) {
     const existing = await this.findOne(id);
 
     if (existing.userId !== userId) {
-=======
-  async update(id: string, dto: UpdateVehicleDto, userId: string) {    
-    const existing = await this.findOne(id);
-
-    if (existing.userId !== userId) {                  
->>>>>>> origin/aashika
       throw new ForbiddenException('You do not own this listing');
     }
 
@@ -282,7 +181,6 @@ async findAll(query: QueryVehicleDto) {
         : undefined;
 
     return this.prisma.listing.update({
-<<<<<<< HEAD
       where: { id },
       data: {
         title:
@@ -292,16 +190,6 @@ async findAll(query: QueryVehicleDto) {
         latitude: dto.latitude,
         longitude: dto.longitude,
         images: dto.images,
-=======
-      where: { id },             
-      data: {
-        title: dto.brand && dto.model && dto.year
-          ? `${dto.brand} ${dto.model} ${dto.year}`
-          : undefined,
-        latitude: dto.latitude,
-        longitude: dto.longitude,
-        images: dto.images,                                
->>>>>>> origin/aashika
 
         vehicle: {
           update: {
@@ -311,11 +199,7 @@ async findAll(query: QueryVehicleDto) {
             year: dto.year,
             km_driven: dto.km_driven,
             condition: dto.condition,
-<<<<<<< HEAD
             bluebook_status: this.sanitizeBluebookStatus(dto.bluebook_status),
-=======
-            bluebook_status: dto.bluebook_status,
->>>>>>> origin/aashika
             fuel_type: dto.fuel_type,
             ownership_transfer_ready: dto.ownership_transfer_ready,
             ...(cleanDetails && { details: cleanDetails }),
@@ -343,7 +227,6 @@ async findAll(query: QueryVehicleDto) {
     const savedPaths: string[] = [];
 
     for (const file of files) {
-<<<<<<< HEAD
       // Verify real content (magic bytes) before any processing; throws and
       // deletes the temp file if the content is not a genuine image.
       const finalName = await validateAndReencodeImage(
@@ -351,18 +234,6 @@ async findAll(query: QueryVehicleDto) {
         './uploads/vehicles',
       );
       savedPaths.push(`/uploads/vehicles/${finalName}`);
-=======
-      const processedFilename = `processed-${file.filename}`;
-      const processedPath = path.join('./uploads/vehicles', processedFilename);
-
-      await sharp(file.path)
-        .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
-        .jpeg({ quality: 80 })
-        .toFile(processedPath);
-
-      await this.safeUnlink(file.path);
-      savedPaths.push(`/uploads/vehicles/${processedFilename}`);
->>>>>>> origin/aashika
     }
 
     return this.prisma.listing.update({
@@ -371,23 +242,4 @@ async findAll(query: QueryVehicleDto) {
       include: { vehicle: true },
     });
   }
-<<<<<<< HEAD
 }
-=======
-
-  private async safeUnlink(filePath: string, retries = 3, delayMs = 150) {
-    for (let i = 0; i < retries; i++) {
-      try {
-        await fs.unlink(filePath);
-        return;
-      } catch (err) {
-        if (i === retries - 1) {
-          console.error(`Failed to unlink ${filePath}:`, err);
-          return;
-        }
-        await new Promise((r) => setTimeout(r, delayMs));
-      }
-    }
-  }
-}
->>>>>>> origin/aashika

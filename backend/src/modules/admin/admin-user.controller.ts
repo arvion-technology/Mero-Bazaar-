@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Body,
   Controller,
@@ -9,9 +8,6 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-=======
-import { Body, Controller, Get, Param, Patch, Query, Request, UseGuards } from '@nestjs/common';
->>>>>>> origin/aashika
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -41,7 +37,6 @@ export class AdminUserController {
   setActive(
     @Param('id') id: string,
     @Request() req,
-<<<<<<< HEAD
     @Body('isActive') isActive: boolean,
   ) {
     return this.adminUserService.setActive(id, req.user.id, isActive);
@@ -52,10 +47,3 @@ export class AdminUserController {
     return this.adminUserService.setRole(id, role);
   }
 }
-=======
-    @Body('isActive') isActive: boolean,    
-  ) {
-    return this.adminUserService.setActive(id, req.user.id, isActive);
-  }
-}
->>>>>>> origin/aashika

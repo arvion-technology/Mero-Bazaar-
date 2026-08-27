@@ -6,21 +6,12 @@ export class WishlistService {
   constructor(private prisma: PrismaService) {}
 
   async toggle(userId: string, listingId: string) {
-<<<<<<< HEAD
     const existing = await this.prisma.wishlist.findUnique({
       where: { userId_listingId: { userId, listingId } },
     });
     if (existing) {
       await this.prisma.wishlist.delete({ where: { id: existing.id } });
       return { favorited: false };
-=======
-    const existing =  await this.prisma.wishlist.findUnique({
-      where: { userId_listingId: { userId, listingId } },
-    });
-    if (existing) {
-        await this.prisma.wishlist.delete({ where: { id: existing.id } });
-        return { favorited: false };
->>>>>>> origin/aashika
     }
     await this.prisma.wishlist.create({ data: { userId, listingId } });
     return { favorited: true };
@@ -44,8 +35,4 @@ export class WishlistService {
     });
     return { favorited: !!existing };
   }
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/aashika
 }

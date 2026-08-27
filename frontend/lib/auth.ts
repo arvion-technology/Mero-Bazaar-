@@ -41,12 +41,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         const data = await res.json();
-<<<<<<< HEAD
-=======
-        console.log(" OTP AUTHORIZE ");
-        console.log("Status:", res.status);
-        console.log("Response:", data);
->>>>>>> origin/aashika
 
         if (res.ok && data?.requiresTwoFactor) {
           const cookieStore = await cookies();
@@ -98,46 +92,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const data = await res.json();
 
-<<<<<<< HEAD
         const accessToken = data?.accessToken ?? data?.access_token;
 
         if (!res.ok) {
           return null;
         }
 
-=======
-        console.log(" OTP VERIFY RESPONSE ");
-        console.log("Status:", res.status);
-        console.log("Response:", data);
-
-        const accessToken = data?.accessToken ?? data?.access_token;
-
-        if (!res.ok) {
-          console.log("Request failed");
-          return null;
-        }
-
-        console.log("accessToken:", accessToken);
-        console.log("user:", data?.user);
-
->>>>>>> origin/aashika
         const profileRes = await fetch(`${API_URL}/api/user/profile/me`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         });
 
-<<<<<<< HEAD
         const profile = profileRes.ok ? await profileRes.json() : {};
 
-=======
-        console.log("PROFILE STATUS:", profileRes.status);
-
-        const profile = profileRes.ok ? await profileRes.json() : {};
-
-        console.log("PROFILE RESPONSE:", profile);
-
->>>>>>> origin/aashika
         return {
           id: data.user.id,
           email: data.user.email,

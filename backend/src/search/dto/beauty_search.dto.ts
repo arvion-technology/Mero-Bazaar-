@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   IsBoolean,
   IsEnum,
@@ -9,11 +8,6 @@ import {
 } from 'class-validator';
 import { BeautyServiceType } from '@prisma/client';
 import { Type, Transform } from 'class-transformer';
-=======
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Min, Max } from "class-validator";
-import { BeautyServiceType } from "@prisma/client";
-import { Type, Transform } from "class-transformer";
->>>>>>> origin/aashika
 
 export class BeautySearchDto {
   @IsOptional()
@@ -54,8 +48,4 @@ export class BeautySearchDto {
   @IsOptional()
   @IsString()
   search?: string;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

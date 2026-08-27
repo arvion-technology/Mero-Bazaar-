@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { BadRequestException } from '@nestjs/common';
@@ -25,31 +24,3 @@ export const kycUploadconfig = {
     cb(null, true);
   },
 };
-=======
-import { diskStorage } from "multer";
-import { extname } from 'path';
-import { BadRequestException } from "@nestjs/common";
-import * as crypto from 'crypto';
-
-export const kycUploadconfig = {
-    storage: diskStorage({
-      destination: './private-storage/kyc-quarantine',
-      filename: (req, file, cb) => {
-        const random = crypto.randomBytes(16).toString('hex');
-        cb(null, `${random}.tmp`);
-      },
-    }),
-    limits: { 
-      fileSize: 5 * 1024 *1024,
-      files: 3,
-     },
-    fileFilter: (req, file, cb) => {
-        const allowed = ['.jpg', '.jpeg', '.png'];
-        const ext = extname(file.originalname).toLowerCase();
-        if (!allowed.includes(ext)) {
-            return cb(new BadRequestException(`File type ${ext} not allowed`), false);
-        }
-        cb(null, true);
-    },
-};
->>>>>>> origin/aashika

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Controller,
   Post,
@@ -10,9 +9,6 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-=======
-import { Controller, Post, Body, Delete, Param, Get, Patch, UseGuards, Request } from '@nestjs/common';
->>>>>>> origin/aashika
 import { BeautyAppointmentsService } from './appointments.service';
 import { CreateBeautyAppointmentDto } from './dto/create_beauty_appointment.dto';
 import { UpdateBeautyAppointmentStatusDto } from './dto/update_beauty_appointment_status.dto';
@@ -22,13 +18,9 @@ import { Roles } from '../../auth/roles.decorator';
 
 @Controller('beauty/appointments')
 export class BeautyAppointmentsController {
-<<<<<<< HEAD
   constructor(
     private readonly appointmentsService: BeautyAppointmentsService,
   ) {}
-=======
-  constructor(private readonly appointmentsService: BeautyAppointmentsService) {}
->>>>>>> origin/aashika
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -52,15 +44,11 @@ export class BeautyAppointmentsController {
   @UseGuards(JwtAuthGuard)
   @Get('by-listing/:listingId')
   findByListing(@Param('listingId') listingId: string, @Request() req) {
-<<<<<<< HEAD
     return this.appointmentsService.findByBeauty(
       listingId,
       req.user.id,
       req.user.role,
     );
-=======
-    return this.appointmentsService.findByBeauty(listingId, req.user.id, req.user.role);
->>>>>>> origin/aashika
   }
 
   @UseGuards(JwtAuthGuard)
@@ -76,16 +64,12 @@ export class BeautyAppointmentsController {
     @Body() dto: UpdateBeautyAppointmentStatusDto,
     @Request() req,
   ) {
-<<<<<<< HEAD
     return this.appointmentsService.updateStatus(
       id,
       dto.status,
       req.user.id,
       req.user.role,
     );
-=======
-    return this.appointmentsService.updateStatus(id, dto.status, req.user.id, req.user.role);
->>>>>>> origin/aashika
   }
 
   @UseGuards(JwtAuthGuard)
@@ -93,8 +77,4 @@ export class BeautyAppointmentsController {
   cancel(@Param('id') id: string, @Request() req) {
     return this.appointmentsService.cancel(id, req.user.id, req.user.role);
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

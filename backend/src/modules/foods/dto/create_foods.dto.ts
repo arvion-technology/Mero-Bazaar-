@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -8,10 +7,6 @@ import {
   IsNotEmpty,
   Min,
 } from 'class-validator';
-=======
-import { Type } from "class-transformer";
-import { IsArray, IsEnum, IsInt, IsString, IsNotEmpty, Min } from "class-validator";
->>>>>>> origin/aashika
 import { FoodType, PriceUnit, WeekDay } from '@prisma/client';
 
 export class CreateFoodsAndHomeDeliveryDto {
@@ -37,8 +32,4 @@ export class CreateFoodsAndHomeDeliveryDto {
   @IsArray()
   @IsEnum(WeekDay, { each: true })
   deliveryDays: WeekDay[];
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

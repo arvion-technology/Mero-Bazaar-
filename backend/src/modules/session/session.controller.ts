@@ -9,7 +9,6 @@ export class SessionsController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-<<<<<<< HEAD
   getMySessions(
     @Req() req: Request & { user: { id: string; sessionId?: string } },
   ) {
@@ -19,9 +18,3 @@ export class SessionsController {
     );
   }
 }
-=======
-  getMySessions(@Req() req: Request & { user: { id: string; sessionId?: string } }) {
-    return this.sessionsService.findActiveByUser(req.user.id, req.user.sessionId);
-  }
-}
->>>>>>> origin/aashika

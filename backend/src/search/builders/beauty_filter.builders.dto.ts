@@ -38,12 +38,7 @@ export function buildBeautyFilter(
               priceStartingFrom: dto.priceStartingFrom,
             }),
 
-<<<<<<< HEAD
             ...((dto.minPrice !== undefined || dto.maxPrice !== undefined) && {
-=======
-            ...((dto.minPrice !== undefined ||
-              dto.maxPrice !== undefined) && {
->>>>>>> origin/aashika
               price: {
                 ...(dto.minPrice !== undefined && {
                   gte: dto.minPrice,
@@ -69,8 +64,4 @@ export function buildBeautyFilter(
       },
     ],
   };
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

@@ -6,7 +6,6 @@ export class VendorService {
   constructor(private prisma: PrismaService) {}
 
   async getStats(sellerId: string) {
-<<<<<<< HEAD
     const [totalOrders, pendingOrders, revenueAgg, productsCount] =
       await Promise.all([
         this.prisma.order.count({ where: { listing: { userId: sellerId } } }),
@@ -19,17 +18,6 @@ export class VendorService {
         }),
         this.prisma.listing.count({ where: { userId: sellerId } }),
       ]);
-=======
-    const [totalOrders, pendingOrders, revenueAgg, productsCount] = await Promise.all([
-      this.prisma.order.count({ where: { listing: { userId: sellerId } } }),
-      this.prisma.order.count({ where: { listing: { userId: sellerId }, status: 'PENDING' } }),
-      this.prisma.order.aggregate({
-        where: { listing: { userId: sellerId }, status: 'DELIVERED' },
-        _sum: { totalPrice: true },
-      }),
-      this.prisma.listing.count({ where: { userId: sellerId } }),
-    ]);
->>>>>>> origin/aashika
 
     return {
       totalOrders,
@@ -55,8 +43,4 @@ export class VendorService {
       status: o.status,
     }));
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

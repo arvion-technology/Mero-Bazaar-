@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { IsOptional, IsString } from 'class-validator';
-=======
-import { IsOptional, IsString } from "class-validator";
->>>>>>> origin/aashika
 
 export class CreateBeautyAppointmentDto {
   @IsString()
@@ -17,8 +13,4 @@ export class CreateBeautyAppointmentDto {
   @IsOptional()
   @IsString()
   notes?: string;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

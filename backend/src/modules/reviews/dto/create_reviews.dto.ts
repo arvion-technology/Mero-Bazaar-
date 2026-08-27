@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   IsInt,
   IsOptional,
@@ -8,10 +7,6 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
-=======
-import { IsInt, IsOptional, IsString, Min, Max, IsNotEmpty } from "class-validator";
-import { Type, Transform } from "class-transformer";
->>>>>>> origin/aashika
 
 export class CreateReviewDto {
   @IsString()
@@ -33,8 +28,4 @@ export class CreateReviewDto {
   @IsString()
   @Transform(({ value }) => value?.trim())
   comment?: string;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

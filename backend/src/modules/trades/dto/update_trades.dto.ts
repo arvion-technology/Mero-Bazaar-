@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   IsOptional,
   IsString,
@@ -6,9 +5,6 @@ import {
   IsNumber,
   IsArray,
 } from 'class-validator';
-=======
-import { IsOptional, IsString, IsBoolean, IsNumber, IsArray } from 'class-validator';
->>>>>>> origin/aashika
 import { Type } from 'class-transformer';
 
 export class UpdateTradesDto {
@@ -50,8 +46,4 @@ export class UpdateTradesDto {
   @Type(() => Number)
   @IsNumber()
   avgResponseHours?: number;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

@@ -27,14 +27,10 @@ const DETAIL_SELECT = {
   beauty: true,
 } as const;
 
-<<<<<<< HEAD
 const STATUS_MESSAGES: Record<
   ListingStatus,
   { title: string; description: (name: string) => string }
 > = {
-=======
-const STATUS_MESSAGES: Record<ListingStatus, { title: string; description: (name: string) => string }> = {
->>>>>>> origin/aashika
   ACTIVE: {
     title: 'Listing approved',
     description: (name) => `"${name}" is now live and visible to buyers.`,
@@ -49,12 +45,8 @@ const STATUS_MESSAGES: Record<ListingStatus, { title: string; description: (name
   },
   EXPIRED: {
     title: 'Listing taken down',
-<<<<<<< HEAD
     description: (name) =>
       `"${name}" was removed or expired. Contact support if this looks wrong.`,
-=======
-    description: (name) => `"${name}" was removed or expired. Contact support if this looks wrong.`,
->>>>>>> origin/aashika
   },
 };
 
@@ -122,7 +114,6 @@ export class AdminListingService {
     if (!listing) throw new NotFoundException('Listing not found.');
 
     const categoryKey = listing.category.toLowerCase();
-<<<<<<< HEAD
     const {
       title,
       description,
@@ -130,9 +121,6 @@ export class AdminListingService {
       status,
       [categoryKey]: categoryData,
     } = body;
-=======
-    const { title, description, price, status, [categoryKey]: categoryData } = body;
->>>>>>> origin/aashika
 
     const data: Record<string, any> = {};
     if (title !== undefined) data.title = title;
@@ -140,15 +128,11 @@ export class AdminListingService {
     if (price !== undefined) data.price = price;
     if (status !== undefined) data.status = status;
 
-<<<<<<< HEAD
     if (
       categoryData &&
       typeof categoryData === 'object' &&
       !Array.isArray(categoryData)
     ) {
-=======
-    if (categoryData && typeof categoryData === 'object' && !Array.isArray(categoryData)) {
->>>>>>> origin/aashika
       data[categoryKey] = { update: categoryData };
     }
 
@@ -195,8 +179,4 @@ export class AdminListingService {
 
     return { id, deleted: true };
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   IsString,
   IsInt,
@@ -9,9 +8,6 @@ import {
   Min,
   Max,
 } from 'class-validator';
-=======
-import { IsString, IsInt, IsEnum, IsBoolean, IsOptional, IsArray, Min, Max } from 'class-validator';
->>>>>>> origin/aashika
 import { PayPeriod, ContractType } from '@prisma/client';
 import { Type } from 'class-transformer';
 

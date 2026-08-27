@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   Controller,
   Post,
@@ -12,9 +11,6 @@ import {
   Request,
   BadRequestException,
 } from '@nestjs/common';
-=======
-import { Controller, Post, Param, Patch, Delete, Get, Body, Query, UseGuards, Request, BadRequestException } from '@nestjs/common';
->>>>>>> origin/aashika
 import { SecondhandService } from './secondhand.service';
 import { CreateSecondHandDto } from './dto/create_secondhand.dto';
 import { QuerySecondHandDto } from './dto/query_secondhand.dto';
@@ -23,15 +19,11 @@ import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { UseInterceptors, UploadedFiles } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-<<<<<<< HEAD
 import {
   imageFileFilter,
   serverFilename,
   removeUploadedFiles,
 } from '../../common/uploads/upload.util';
-=======
-import { extname } from 'path';
->>>>>>> origin/aashika
 
 @Controller('secondhand-goods')
 export class SecondhandController {
@@ -55,15 +47,11 @@ export class SecondhandController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-<<<<<<< HEAD
   update(
     @Param('id') id: string,
     @Body() dto: UpdateSecondHandDto,
     @Request() req,
   ) {
-=======
-  update(@Param('id') id: string, @Body() dto: UpdateSecondHandDto, @Request() req) {
->>>>>>> origin/aashika
     return this.service.update(id, dto, req.user.id);
   }
 
@@ -79,7 +67,6 @@ export class SecondhandController {
     FilesInterceptor('images', 10, {
       storage: diskStorage({
         destination: './uploads/secondhand-goods',
-<<<<<<< HEAD
         filename: serverFilename,
       }),
       limits: { fileSize: 5 * 1024 * 1024 },
@@ -87,23 +74,6 @@ export class SecondhandController {
     }),
   )
   async uploadPhotos(
-=======
-        filename: (req, file, cb) => {
-          const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          cb(null, `${unique}${extname(file.originalname)}`);
-        },
-      }),
-      limits: { fileSize: 5 * 1024 * 1024 },
-      fileFilter: (req, file, cb) => {
-        if (!file.mimetype.startsWith('image/')) {
-          return cb(new BadRequestException('Only image files are allowed'), false);
-        }
-        cb(null, true);
-      },
-    }),
-  )
-  uploadPhotos(
->>>>>>> origin/aashika
     @Param('id') id: string,
     @UploadedFiles() files: Express.Multer.File[],
     @Request() req,
@@ -111,15 +81,11 @@ export class SecondhandController {
     if (!files?.length) {
       throw new BadRequestException('At least one photo is required');
     }
-<<<<<<< HEAD
     try {
       return await this.service.savePhotos(id, files, req.user.id);
     } catch (err) {
       await removeUploadedFiles(files);
       throw err;
     }
-=======
-    return this.service.savePhotos(id, files, req.user.id);
->>>>>>> origin/aashika
   }
 }

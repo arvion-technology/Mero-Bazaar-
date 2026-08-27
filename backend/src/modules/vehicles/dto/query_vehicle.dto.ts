@@ -1,12 +1,6 @@
-<<<<<<< HEAD
 import { IsOptional, IsString, IsEnum, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
 import { VehicleType, VehicleCondition, FuelType } from '@prisma/client';
-=======
-import { IsOptional, IsString, IsEnum, IsNumber } from "class-validator";
-import { Type } from "class-transformer";
-import { VehicleType, VehicleCondition, FuelType } from "@prisma/client";
->>>>>>> origin/aashika
 
 export class QueryVehicleDto {
   @IsOptional()
@@ -52,8 +46,4 @@ export class QueryVehicleDto {
   @Type(() => Number)
   @IsNumber()
   maxKm?: number;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika
