@@ -200,122 +200,113 @@ useEffect(() => {
 
       console.log("EDIT AGRICULTURE DATA:", agriculture);
 
-      setAgricultureData((prev) => ({
-        ...prev,
+      setAgricultureData({
+  ...d,
 
-        
+  district:
+    agriculture?.district ??
+    d.district,
 
-        district:
-          agriculture?.district ??
-          prev.district,
+  village:
+    agriculture?.village ??
+    d.village,
 
-        village:
-          agriculture?.village ??
-          prev.village,
+  location:
+    agriculture?.location ??
+    agriculture?.area ??
+    d.location,
 
-        location:
-          agriculture?.location ??
-          agriculture?.area ??
-          prev.location,
+  price:
+    agriculture?.price != null
+      ? String(agriculture.price).replace(/,/g, "")
+      : agriculture?.pricePerUnit != null
+        ? String(agriculture.pricePerUnit).replace(/,/g, "")
+        : agriculture?.unitPrice != null
+          ? String(agriculture.unitPrice).replace(/,/g, "")
+          : d.price,
 
-       price:
-  agriculture?.price != null
-    ? String(agriculture.price).replace(/,/g, "")
-    : agriculture?.pricePerUnit != null
-      ? String(agriculture.pricePerUnit).replace(/,/g, "")
-      : agriculture?.unitPrice != null
-        ? String(agriculture.unitPrice).replace(/,/g, "")
-        : prev.price,
-        unit:
-          agriculture?.unit ??
-          prev.unit,
+  unit:
+    agriculture?.unit ??
+    d.unit,
 
-        itemName:
-          agriculture?.itemName ??
-          agriculture?.productName ??
-          prev.itemName,
+  itemName:
+    agriculture?.itemName ??
+    agriculture?.productName ??
+    d.itemName,
 
-        price:
-  agriculture?.price != null
-    ? String(agriculture.price).replace(/,/g, "")
-    : agriculture?.pricePerUnit != null
-      ? String(agriculture.pricePerUnit).replace(/,/g, "")
-      : agriculture?.unitPrice != null
-        ? String(agriculture.unitPrice).replace(/,/g, "")
-        : prev.price,
-        organicCertified:
-          agriculture?.organicCertified ??
-          false,
+  organicCertified:
+    agriculture?.organicCertified ??
+    false,
 
-        organicVerified:
-          agriculture?.organicVerified ??
-          false,
+  organicVerified:
+    agriculture?.organicVerified ??
+    false,
 
-        seasonalAvailability:
-          agriculture?.seasonalAvailability ??
-          prev.seasonalAvailability,
+  seasonalAvailability:
+    agriculture?.seasonalAvailability ??
+    d.seasonalAvailability,
 
-        animalType:
-          agriculture?.animalType ??
-          prev.animalType,
+  animalType:
+    agriculture?.animalType ??
+    d.animalType,
 
-        age:
-          agriculture?.age ??
-          prev.age,
+  age:
+    agriculture?.age ??
+    d.age,
 
-        breed:
-          agriculture?.breed ??
-          prev.breed,
+  breed:
+    agriculture?.breed ??
+    d.breed,
 
-        healthVaccineStatus:
-          agriculture?.healthVaccineStatus ??
-          prev.healthVaccineStatus,
+  healthVaccineStatus:
+    agriculture?.healthVaccineStatus ??
+    d.healthVaccineStatus,
 
-        serviceType:
-          agriculture?.serviceType ??
-          prev.serviceType,
+  serviceType:
+    agriculture?.serviceType ??
+    d.serviceType,
 
-        servicePrice:
-          agriculture?.servicePrice != null
-            ? String(agriculture.servicePrice).replace(/,/g, "")
-            : prev.servicePrice,
+  servicePrice:
+    agriculture?.servicePrice != null
+      ? String(agriculture.servicePrice).replace(/,/g, "")
+      : d.servicePrice,
 
-        priceUnit:
-          agriculture?.priceUnit ??
-          prev.priceUnit,
+  priceUnit:
+    agriculture?.priceUnit ??
+    d.priceUnit,
 
-        experience:
-          agriculture?.experience ??
-          prev.experience,
+  experience:
+    agriculture?.experience ??
+    d.experience,
 
-        mobileService:
-          agriculture?.mobileService ??
-          false,
+  mobileService:
+    agriculture?.mobileService ??
+    false,
 
-        serviceArea:
-          agriculture?.serviceArea ??
-          prev.serviceArea,
+  serviceArea:
+    agriculture?.serviceArea ??
+    d.serviceArea,
 
-        serviceRadius:
-          agriculture?.serviceRadius != null
-            ? String(agriculture.serviceRadius)
-            : prev.serviceRadius,
+  serviceRadius:
+    agriculture?.serviceRadius != null
+      ? String(agriculture.serviceRadius)
+      : d.serviceRadius,
 
-        healthCertificate:
-          agriculture?.healthCertificate ??
-          false,
+  healthCertificate:
+    agriculture?.healthCertificate ??
+    false,
 
-        vaccinationAvailable:
-          agriculture?.vaccinationAvailable ??
-          false,
+  vaccinationAvailable:
+    agriculture?.vaccinationAvailable ??
+    false,
 
-        availabilityDays:
-          Array.isArray(agriculture?.availabilityDays)
-            ? agriculture.availabilityDays
-            : Array.isArray(agriculture?.availableDays)
-              ? agriculture.availableDays
-              : prev.availabilityDays,
-      }));
+  availabilityDays:
+    Array.isArray(agriculture?.availabilityDays)
+      ? agriculture.availabilityDays
+      : Array.isArray(agriculture?.availableDays)
+        ? agriculture.availableDays
+        : d.availabilityDays,
+});
     } catch (error) {
       console.error("Failed to load agriculture edit data:", error);
       toast.error("Failed to load existing agriculture data.");
