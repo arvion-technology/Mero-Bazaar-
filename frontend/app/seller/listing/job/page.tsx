@@ -181,57 +181,71 @@ export default function NewJobListingPage() {
         }
 
         setTitle(result.title ?? "");
+setData({
+  ...data,
 
-        setData((prev: any) => ({
-          ...prev,
+  role: result.role ?? result.job?.role ?? "",
 
-          role: result.role ?? result.job?.role ?? "",
+  company:
+    result.companyName ??
+    result.job?.companyName ??
+    "",
 
-          company: result.companyName ?? result.job?.companyName ?? "",
+  salaryMin:
+    result.salaryMin != null
+      ? String(result.salaryMin)
+      : result.job?.salaryMin != null
+        ? String(result.job.salaryMin)
+        : "",
 
-          salaryMin:
-            result.salaryMin != null
-              ? String(result.salaryMin)
-              : result.job?.salaryMin != null
-                ? String(result.job.salaryMin)
-                : "",
+  salaryMax:
+    result.salaryMax != null
+      ? String(result.salaryMax)
+      : result.job?.salaryMax != null
+        ? String(result.job.salaryMax)
+        : "",
 
-          salaryMax:
-            result.salaryMax != null
-              ? String(result.salaryMax)
-              : result.job?.salaryMax != null
-                ? String(result.job.salaryMax)
-                : "",
+  payPeriod:
+    result.payPeriod ??
+    result.job?.payPeriod ??
+    "",
 
-          payPeriod: result.payPeriod ?? result.job?.payPeriod ?? "",
+  location:
+    result.location ??
+    result.address ??
+    result.job?.location ??
+    result.job?.address ??
+    "",
 
-          location:
-            result.location ??
-            result.address ??
-            result.job?.location ??
-            result.job?.address ??
-            "",
+  contractType:
+    result.contractType ??
+    result.job?.contractType ??
+    "",
 
-          contractType: result.contractType ?? result.job?.contractType ?? "",
+  skillTags:
+    result.skillTags ??
+    result.job?.skillTags ??
+    [],
 
-          skillTags: result.skillTags ?? result.job?.skillTags ?? [],
+  urgentHiring:
+    result.urgentHiring ??
+    result.isUrgent ??
+    result.job?.urgentHiring ??
+    result.job?.isUrgent ??
+    false,
 
-          urgentHiring:
-            result.urgentHiring ??
-            result.isUrgent ??
-            result.job?.urgentHiring ??
-            result.job?.isUrgent ??
-            false,
+  phoneVerified:
+    result.phoneVerified ??
+    result.isPhoneVerified ??
+    result.job?.phoneVerified ??
+    result.job?.isPhoneVerified ??
+    false,
 
-          phoneVerified:
-            result.phoneVerified ??
-            result.isPhoneVerified ??
-            result.job?.phoneVerified ??
-            result.job?.isPhoneVerified ??
-            false,
-
-          description: result.description ?? result.job?.description ?? "",
-        }));
+  description:
+    result.description ??
+    result.job?.description ??
+    "",
+});
       } catch (error) {
         console.error("Failed to load job listing:", error);
         toast.error("Failed to load listing data.");

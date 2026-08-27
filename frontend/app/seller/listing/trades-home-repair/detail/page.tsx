@@ -191,7 +191,7 @@ function CustomSelect({
       )}
     </div>
   );
-}
+} 
 
 export default function TradesHomeRepairDetailPage() {
   const router = useRouter();

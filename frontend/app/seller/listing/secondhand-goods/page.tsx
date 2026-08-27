@@ -149,7 +149,7 @@ const { data, setData } = useDraft();
   }, [editId, session?.accessToken, setData]);
 
   const isBaby = data.listingType === "Baby";
-
+ 
   const {
     listingType,
     itemName,

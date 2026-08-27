@@ -230,7 +230,7 @@ export default function NewTradesHomeRepairListingPage() {
             existing?.selectedService ??
             existing?.serviceType ??
             existing?.service ??
-            prev.selectedService,
+            prev.selectedService, 
 
           city: existing?.city ?? prev.city,
 

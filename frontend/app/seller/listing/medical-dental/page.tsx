@@ -18,7 +18,7 @@ import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { MedicalData, useDraft } from "./layout";
 
-const ACCENT = "#2563eb";
+const ACCENT = "#2563eb"; 
 const ACCENT_LIGHT = "#eff6ff";
 const DANGER = "#dc2626";
 const SUCCESS = "#10b981";
