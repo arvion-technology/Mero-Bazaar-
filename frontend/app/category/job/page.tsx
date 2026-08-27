@@ -17,11 +17,7 @@ import {
 } from "react-icons/fi";
 import { FaHeart, FaBriefcase } from "react-icons/fa";
 import { JOB_TYPES, CITIES, SKILLS, JobCard } from "../../types/jobs";
-<<<<<<< HEAD
 import { toContractType, toJobCard, toTypeLabel } from "@/lib/adapter";
-=======
-import { toContractType, toJobCard } from "@/lib/adapter";
->>>>>>> origin/aashika
 import { api } from "@/lib/api";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
@@ -46,14 +42,9 @@ export default function JobsPage() {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [jobs, setJobs] = useState<JobCard[]>([]);
   const [loading, setLoading] = useState(false);
-<<<<<<< HEAD
-  // Bumped by the "Apply Filters" button to re-run the fetch explicitly.
   const [filterNonce, setFilterNonce] = useState(0);
   const { data: session } = useSession();
 
-  // Filter options are fetched from the live job listings so the sidebar is
-  // never hard-coded to stale categories. Static constants remain as fallbacks
-  // while the API loads (or if the API is unreachable).
   const [jobTypes, setJobTypes] = useState<string[]>(JOB_TYPES);
   const [cities, setCities] = useState<string[]>(CITIES);
   const [skills, setSkills] = useState<string[]>(SKILLS);
@@ -80,12 +71,6 @@ export default function JobsPage() {
     })();
   }, []);
 
-=======
-  const { data: session } = useSession();
-
-  const EXTRA_SKILLS_THRESHOLD = 2;
-
->>>>>>> origin/aashika
   // Close sort dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -248,18 +233,8 @@ export default function JobsPage() {
           params.append("contractType", toContractType(t)),
         );
 
-<<<<<<< HEAD
         const data = await api.getJobs(params);
         const mapped = data.map(toJobCard);
-=======
-        console.log("Sending params:", params.toString());
-        const data = await api.getJobs(params);
-        const mapped = data.map(toJobCard);
-        console.log(
-          "Job IDs:",
-          mapped.map((j) => j.id),
-        );
->>>>>>> origin/aashika
         setJobs(mapped);
       } catch (err) {
         console.error(err);
@@ -269,11 +244,7 @@ export default function JobsPage() {
     };
 
     fetchJobs();
-<<<<<<< HEAD
   }, [debouncedSearch, city, skill, minSalary, selectedTypes, filterNonce]);
-=======
-  }, [debouncedSearch, city, skill, minSalary, selectedTypes]);
->>>>>>> origin/aashika
 
   // Parse salary string like "NPR 30,000 - 50,000/month" or "NPR 20,000/month"
   const parseSalaryNum = (salaryStr: string): number => {
@@ -508,11 +479,7 @@ export default function JobsPage() {
               <div className="jsb-section">
                 <p className="jsb-title">Job Type</p>
                 <div className="jsb-rows">
-<<<<<<< HEAD
                   {jobTypes.map((t) => (
-=======
-                  {JOB_TYPES.map((t) => (
->>>>>>> origin/aashika
                     <label
                       key={t}
                       className={`jsb-row${selectedTypes.includes(t) ? " checked" : ""}`}
@@ -535,11 +502,7 @@ export default function JobsPage() {
                   onChange={(e) => setCity(e.target.value)}
                 >
                   <option value="">Select city</option>
-<<<<<<< HEAD
                   {cities.map((c) => (
-=======
-                  {CITIES.map((c) => (
->>>>>>> origin/aashika
                     <option key={c} value={c}>
                       {c}
                     </option>
@@ -554,11 +517,7 @@ export default function JobsPage() {
                   onChange={(e) => setSkill(e.target.value)}
                 >
                   <option value="">Select skill</option>
-<<<<<<< HEAD
                   {skills.map((s) => (
-=======
-                  {SKILLS.map((s) => (
->>>>>>> origin/aashika
                     <option key={s} value={s}>
                       {s}
                     </option>
@@ -590,16 +549,12 @@ export default function JobsPage() {
                   </div>
                 </div>
               </div>
-<<<<<<< HEAD
               <button
                 className="jsb-apply"
                 onClick={() => setFilterNonce((n) => n + 1)}
               >
                 Apply Filters
               </button>
-=======
-              <button className="jsb-apply">Apply Filters</button>
->>>>>>> origin/aashika
             </aside>
 
             {/* RIGHT */}
@@ -746,19 +701,33 @@ export default function JobsPage() {
                           </div>
                         </div>
                         <div className="jp-card-actions">
-                          <Link
-                            href={`/category/job/${j.id}`}
-                            className="jp-btn jp-btn-apply"
-                          >
+                          {/* Apply — span, not Link, because card is already a Link */}
+                          <span className="jp-btn jp-btn-apply">
                             <FiTarget size={14} /> Apply
-                          </Link>
-                          <a
-                            href="tel:+977-9800000000"
+                          </span>
+
+                          {/* Call — span with onClick, not <a>, because card is already a Link */}
+                          <span
                             className="jp-btn jp-btn-call"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              window.location.href = "tel:+977-9800000000";
+                            }}
                           >
                             <FiPhone size={14} /> Call
-                          </a>
-                          <button className="jp-btn jp-btn-chat">
+                          </span>
+
+                          {/* Chat — button is fine */}
+                          <button
+                            type="button"
+                            className="jp-btn jp-btn-chat"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              // TODO: open chat modal / drawer
+                            }}
+                          >
                             <FiMessageSquare size={14} /> Chat
                           </button>
                         </div>

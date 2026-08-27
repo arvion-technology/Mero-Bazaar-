@@ -1,18 +1,11 @@
-<<<<<<< HEAD
-﻿"use client";
-=======
 "use client";
->>>>>>> origin/aashika
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useFoodCart } from "../../context/FoodCartContext";
-<<<<<<< HEAD
 import { deleteAccountWithReauth } from "@/lib/accountActions";
-=======
->>>>>>> origin/aashika
 import {
   FiGrid,
   FiShoppingBag,
@@ -96,14 +89,14 @@ export default function UserWishlist() {
   const { addItem } = useFoodCart();
 
   function activityLabel(type: string) {
-  switch (type) {
-    case "PASSWORD_CHANGED": return "Password changed";
-    case "TWO_FA_ENABLED": return "Two-factor authentication enabled";
-    case "TWO_FA_DISABLED": return "Two-factor authentication disabled";
-    case "PHONE_CHANGED": return "Phone number changed";
-    default: return type;
+    switch (type) {
+      case "PASSWORD_CHANGED": return "Password changed";
+      case "TWO_FA_ENABLED": return "Two-factor authentication enabled";
+      case "TWO_FA_DISABLED": return "Two-factor authentication disabled";
+      case "PHONE_CHANGED": return "Phone number changed";
+      default: return type;
+    }
   }
-}
 
   const notifications: string[] = session
     ? ([
@@ -114,7 +107,6 @@ export default function UserWishlist() {
     : [];
   const notificationCount = notifications.length;
 
-
   const sidebarItems = [
     { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/user/dashboard" },
     { id: "orders", icon: FiShoppingBag, label: "My Orders", href: "/user/orders" },
@@ -123,7 +115,6 @@ export default function UserWishlist() {
     { id: "help", icon: FiHelpCircle, label: "Help & Support", href: "/user/help" },
     { id: "settings", icon: FiSettings, label: "Settings", href: "/user/settings" },
   ];
-
 
   useEffect(() => {
     if (!token) return;
@@ -151,13 +142,12 @@ export default function UserWishlist() {
   }, [token]);
 
   function getImageUrl(image?: string | null) {
-  if (!image) return "";
-  return image.startsWith("http")
-    ? image
-    : `${process.env.NEXT_PUBLIC_API_URL}${image}`;
- }
+    if (!image) return "";
+    return image.startsWith("http")
+      ? image
+      : `${process.env.NEXT_PUBLIC_API_URL}${image}`;
+  }
 
-  // Close profile dropdown on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target as Node)) {
@@ -168,7 +158,6 @@ export default function UserWishlist() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Prevent body scroll when mobile sidebar is open
   useEffect(() => {
     if (sidebarOpen) {
       document.body.style.overflow = "hidden";
@@ -179,25 +168,21 @@ export default function UserWishlist() {
   }, [sidebarOpen]);
 
   useEffect(() => {
-  if (!token) return;
-  fetch("/api/user/notifications/security", {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-    .then((res) => (res.ok ? res.json() : []))
-    .then(setSecurityNotifs)
-    .catch(() => {});
-}, [token]);
+    if (!token) return;
+    fetch("/api/user/notifications/security", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then(setSecurityNotifs)
+      .catch(() => {});
+  }, [token]);
 
   async function handleDeleteAccount() {
     setDeleting(true);
     setDeleteError("");
     try {
-<<<<<<< HEAD
       const res = await deleteAccountWithReauth(token);
       if (res.status === 499) return; // user cancelled the confirmation
-=======
-      const res = await fetch("/api/user/delete-account", { method: "DELETE" });
->>>>>>> origin/aashika
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
@@ -215,7 +200,9 @@ export default function UserWishlist() {
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleRemove = async (wishlistId: string, listingId: string) => {
+  const handleRemove = async (wishlistId: string, listingId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setRemovingId(wishlistId);
 
     try {
@@ -259,11 +246,7 @@ export default function UserWishlist() {
           font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
 
-<<<<<<< HEAD
-        /* â”€â”€ Sidebar â”€â”€ */
-=======
         /* ── Sidebar ── */
->>>>>>> origin/aashika
         .ud-sidebar {
           width: 260px;
           background: #ffffff;
@@ -478,11 +461,7 @@ export default function UserWishlist() {
           max-width: 160px;
         }
 
-<<<<<<< HEAD
-        /* â”€â”€ Main Area â”€â”€ */
-=======
         /* ── Main Area ── */
->>>>>>> origin/aashika
         .ud-main-area {
           flex: 1;
           margin-left: 260px;
@@ -500,11 +479,7 @@ export default function UserWishlist() {
           width: calc(100% - 72px);
         }
 
-<<<<<<< HEAD
-        /* â”€â”€ Top Header â”€â”€ */
-=======
         /* ── Top Header ── */
->>>>>>> origin/aashika
         .ud-topbar {
           background: #fff;
           border-bottom: 1px solid #e2e8f0;
@@ -605,11 +580,7 @@ export default function UserWishlist() {
           border: 2px solid #fff;
         }
 
-<<<<<<< HEAD
-        /* â”€â”€ Profile Avatar Dropdown â”€â”€ */
-=======
         /* ── Profile Avatar Dropdown ── */
->>>>>>> origin/aashika
         .ud-profile-wrap {
           position: relative;
         }
@@ -744,11 +715,7 @@ export default function UserWishlist() {
           margin: 0;
         }
 
-<<<<<<< HEAD
-        /* â”€â”€ Main Content â”€â”€ */
-=======
         /* ── Main Content ── */
->>>>>>> origin/aashika
         .ud-main {
           flex: 1;
           padding: 28px 32px;
@@ -773,7 +740,6 @@ export default function UserWishlist() {
           color: #64748b;
         }
 
-        /* Search Bar */
         .ud-search-wrap {
           margin-bottom: 24px;
         }
@@ -816,7 +782,6 @@ export default function UserWishlist() {
           color: #94a3b8;
         }
 
-        /* Wishlist Grid */
         .ud-wishlist-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -858,6 +823,7 @@ export default function UserWishlist() {
           height: 100%;
           object-fit: cover;
           transition: transform 0.4s;
+          display: block;
         }
 
         .ud-wishlist-card:hover .ud-wishlist-img {
@@ -877,6 +843,8 @@ export default function UserWishlist() {
           border-radius: 20px;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+          pointer-events: none;
+          z-index: 2;
         }
 
         .ud-wishlist-remove {
@@ -895,6 +863,7 @@ export default function UserWishlist() {
           color: #64748b;
           transition: all 0.2s;
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          z-index: 3;
         }
 
         .ud-wishlist-remove:hover {
@@ -913,6 +882,12 @@ export default function UserWishlist() {
           color: #1e293b;
           margin-bottom: 4px;
           line-height: 1.4;
+          text-decoration: none;
+          display: block;
+        }
+
+        .ud-wishlist-name:hover {
+          color: #C0392B;
         }
 
         .ud-wishlist-meta {
@@ -978,7 +953,6 @@ export default function UserWishlist() {
           background: #e2e8f0;
         }
 
-        /* Empty State */
         .ud-empty {
           text-align: center;
           padding: 60px 20px;
@@ -1008,11 +982,7 @@ export default function UserWishlist() {
           font-size: 14px;
         }
 
-<<<<<<< HEAD
-        /* â”€â”€ Backdrop (mobile overlay) â”€â”€ */
-=======
         /* ── Backdrop (mobile overlay) ── */
->>>>>>> origin/aashika
         .ud-backdrop {
           display: none;
           position: fixed;
@@ -1027,7 +997,6 @@ export default function UserWishlist() {
           to   { opacity: 1; }
         }
 
-        /* Mobile sidebar close button */
         .ud-sidebar-close {
           display: none;
           position: absolute;
@@ -1050,7 +1019,6 @@ export default function UserWishlist() {
           color: #1e293b;
         }
 
-        /* Hamburger - hidden on desktop */
         .ud-hamburger {
           display: none;
           width: 38px;
@@ -1071,12 +1039,10 @@ export default function UserWishlist() {
           border-color: #cbd5e1;
         }
 
-        /* Desktop toggle - hidden on mobile */
         .ud-desktop-toggle {
           display: flex;
         }
 
-        /* Delete Account sidebar button */
         .ud-nav-item.danger {
           color: rgba(239,68,68,0.7);
         }
@@ -1085,11 +1051,7 @@ export default function UserWishlist() {
           color: #ef4444;
         }
 
-<<<<<<< HEAD
-        /* â”€â”€ Responsive â”€â”€ */
-=======
         /* ── Responsive ── */
->>>>>>> origin/aashika
 
         /* Tablet + Mobile: overlay sidebar */
         @media (max-width: 1023px) {
@@ -1126,7 +1088,6 @@ export default function UserWishlist() {
           }
         }
 
-        /* Mobile: < 768px */
         @media (max-width: 767px) {
           .ud-main {
             padding: 16px;
@@ -1144,46 +1105,34 @@ export default function UserWishlist() {
           .ud-welcome-sub {
             font-size: 13px;
           }
-
-          /* Search: full width */
           .ud-search {
             max-width: 100%;
           }
-
-          /* Wishlist: 1 column */
           .ud-wishlist-grid {
             grid-template-columns: 1fr;
             gap: 16px;
           }
-
           .ud-wishlist-img-wrap {
             height: 180px;
           }
-
           .ud-wishlist-body {
             padding: 14px;
           }
-
           .ud-wishlist-name {
             font-size: 14px;
           }
-
           .ud-wishlist-price {
             font-size: 16px;
           }
-
           .ud-btn {
             padding: 8px 12px;
             font-size: 12px;
           }
-
-          /* Profile btn */
           .ud-profile-btn-name {
             display: none;
           }
         }
 
-        /* Small mobile: < 480px */
         @media (max-width: 480px) {
           .ud-main {
             padding: 12px;
@@ -1216,11 +1165,7 @@ export default function UserWishlist() {
           }
         }
 
-<<<<<<< HEAD
-        /* â”€â”€ Delete Account Modal â”€â”€ */
-=======
         /* ── Delete Account Modal ── */
->>>>>>> origin/aashika
         .ud-modal-overlay {
           position: fixed;
           inset: 0;
@@ -1327,11 +1272,7 @@ export default function UserWishlist() {
         .ud-modal-delete:disabled { opacity: 0.7; cursor: not-allowed; }
       `}</style>
 
-<<<<<<< HEAD
-      {/* â”€â”€ Mobile Backdrop â”€â”€ */}
-=======
       {/* ── Mobile Backdrop ── */}
->>>>>>> origin/aashika
       <div
         className={`ud-backdrop ${sidebarOpen ? "active" : ""}`}
         onClick={() => setSidebarOpen(false)}
@@ -1339,13 +1280,8 @@ export default function UserWishlist() {
       />
 
       <div className="ud-page">
-<<<<<<< HEAD
-        {/* â”€â”€ Sidebar â”€â”€ */}
-=======
         {/* ── Sidebar ── */}
->>>>>>> origin/aashika
         <aside className={`ud-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
-          {/* Mobile close button */}
           <button
             type="button"
             className="ud-sidebar-close"
@@ -1355,7 +1291,6 @@ export default function UserWishlist() {
             <FiX size={18} />
           </button>
 
-          {/* Logo */}
           <div className="ud-sidebar-header">
             <Link href="/" className="ud-sidebar-logo-wrap">
               <svg className="ud-sidebar-logo-icon" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1408,7 +1343,6 @@ export default function UserWishlist() {
               </Link>
             ))}
 
-            {/* Delete Account */}
             <button
               type="button"
               className="ud-nav-item danger"
@@ -1421,20 +1355,12 @@ export default function UserWishlist() {
               <span className="ud-nav-text">Delete Account</span>
             </button>
           </div>
-
-
         </aside>
 
-<<<<<<< HEAD
-        {/* â”€â”€ Main Area â”€â”€ */}
-=======
         {/* ── Main Area ── */}
->>>>>>> origin/aashika
         <div className="ud-main-area">
-          {/* Top Header */}
           <header className="ud-topbar">
             <div className="ud-topbar-left">
-              {/* Hamburger - mobile only */}
               <button
                 type="button"
                 className="ud-hamburger"
@@ -1443,7 +1369,6 @@ export default function UserWishlist() {
               >
                 <FiMenu size={20} />
               </button>
-              {/* Desktop toggle - desktop only */}
               <button
                 type="button"
                 className="ud-toggle-btn ud-desktop-toggle"
@@ -1491,18 +1416,13 @@ export default function UserWishlist() {
                       ))
                     ) : (
                       <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>
-<<<<<<< HEAD
-                        You&apos;re all caught up âœ“
-=======
                         You&apos;re all caught up ✓
->>>>>>> origin/aashika
                       </div>
                     )}
                   </div>
                 )}
               </div> 
-            
-              {/* Profile Avatar Dropdown */}
+
               <div className="ud-profile-wrap" ref={profileDropdownRef}>
                 <button
                   type="button"
@@ -1547,7 +1467,6 @@ export default function UserWishlist() {
             </div>
           </header>
 
-          {/* Main Content */}
           <main className="ud-main">
             <div className="ud-welcome-section">
               <p className="ud-welcome-sub">
@@ -1586,66 +1505,77 @@ export default function UserWishlist() {
                     key={item.id}
                     className={`ud-wishlist-card ${removingId === item.id ? "removing" : ""}`}
                   >
+                    {/* ── Clickable Image ── */}
                     <div className="ud-wishlist-img-wrap">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="ud-wishlist-img"
-                        loading="lazy"
-                      />
+                      <Link href={`/user/wishlist/${item.listingId}`} style={{ display: "block", width: "100%", height: "100%" }}>
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="ud-wishlist-img"
+                          loading="lazy"
+                        />
+                      </Link>
                       <span className="ud-wishlist-category">{item.category}</span>
                       <button
                         type="button"
                         className="ud-wishlist-remove"
-                        onClick={() => handleRemove(item.id, item.listingId)}
+                        onClick={(e) => handleRemove(item.id, item.listingId, e)}
                         title="Remove from wishlist"
                       >
                         <FiTrash2 size={14} />
                       </button>
                     </div>
+
                     <div className="ud-wishlist-body">
-                      <div className="ud-wishlist-name">{item.name}</div>
+                      {/* ── Clickable Title ── */}
+                      <Link
+                        href={`/user/wishlist/${item.listingId}`}
+                        style={{ textDecoration: "none", color: "inherit" }}
+                      >
+                        <div className="ud-wishlist-name">{item.name}</div>
+                      </Link>
+
                       <div className="ud-wishlist-meta">
                         <span className="ud-wishlist-price">
                           {formatPrice(item.price, item.currency)}
                         </span>
                         <span className="ud-wishlist-date">{item.addedDate}</span>
                       </div>
+
                       <div className="ud-wishlist-actions">
                         <button type="button" className="ud-btn ud-btn-primary" 
                           onClick={() => {
-                          addItem({
-                            id: item.listingId,
-                            listingId: item.listingId,
-                            name: item.name,
-                            description: item.category,
-                            variant: "",
-                            price: item.price,
-                            quantity: 1,
-                            image: item.image,
-                          });
-                          router.push("/cart");
-                        }}
-                      >
-                        <FiShoppingCart size={14} />
+                            addItem({
+                              id: item.listingId,
+                              listingId: item.listingId,
+                              name: item.name,
+                              description: item.category,
+                              variant: "",
+                              price: item.price,
+                              quantity: 1,
+                              image: item.image,
+                            });
+                            router.push("/cart");
+                          }}
+                        >
+                          <FiShoppingCart size={14} />
                           Add to Cart
                         </button>
                         <button type="button" className="ud-btn ud-btn-ghost" 
                           onClick={() => {
-                          addItem({
-                            id: item.listingId,
-                            listingId: item.listingId,
-                            name: item.name,
-                            description: item.category,
-                            variant: "",
-                            price: item.price,
-                            quantity: 1,
-                            image: item.image,
-                          });
-                          router.push("/cart");
-                        }}
-                      >
+                            addItem({
+                              id: item.listingId,
+                              listingId: item.listingId,
+                              name: item.name,
+                              description: item.category,
+                              variant: "",
+                              price: item.price,
+                              quantity: 1,
+                              image: item.image,
+                            });
+                            router.push("/cart");
+                          }}
+                        >
                           <FiShoppingBag size={14} />
                           Buy Now
                         </button>
@@ -1659,11 +1589,6 @@ export default function UserWishlist() {
         </div>
       </div>
 
-<<<<<<< HEAD
-      {/* â”€â”€ Delete Account Confirmation Modal â”€â”€ */}
-=======
-      {/* ── Delete Account Confirmation Modal ── */}
->>>>>>> origin/aashika
       {showDeleteModal && (
         <div className="ud-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
           <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
@@ -1713,8 +1638,4 @@ export default function UserWishlist() {
       )}
     </>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/aashika
