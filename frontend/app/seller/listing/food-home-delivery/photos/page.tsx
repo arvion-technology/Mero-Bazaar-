@@ -10,7 +10,7 @@ import {
   FiUploadCloud,
   FiX,
   FiFileText,
-  FiBriefcase, 
+  FiBriefcase,
   FiPlus,
   FiInfo,
 } from "react-icons/fi";
@@ -47,78 +47,79 @@ export default function AddFoodPhotosPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { images, setImages } = useDraft();
   const [isDragging, setIsDragging] = useState(false);
-    const { data: session } = useSession();
-    const searchParams = useSearchParams();
-    const editId = searchParams.get("edit");
-     useEffect(() => {
-        if (!editId || !session?.accessToken) return;
-    
-        const loadExistingPhotos = async () => {
-          try {
-            const response = await fetch(`/api/listings/${editId}`, {
-              headers: {
-                Authorization: `Bearer ${session.accessToken}`,
-              },
-            });
-    
-            const data = await response.json();
-    
-            if (!response.ok) {
-              throw new Error(data?.message || "Failed to load listing");
-            }
-    
-            console.log("EDIT FULL DATA:", data);
-    
-            // Find existing images wherever the API returns them
-            const rawImages =
-              data.images ??
-              data.listing?.images ??
-              data.vehicle?.images ??
-              data.photos ??
-              data.listing?.photos ??
-              [];
-    
-            console.log("EDIT EXISTING IMAGES:", rawImages);
-    
-            if (!Array.isArray(rawImages) || rawImages.length === 0) {
-              console.log("NO EXISTING IMAGES FOUND");
-              return;
-            }
-    
-            const existingImages: ImageItem[] = rawImages
-              .map((image: any, index: number) => {
-                const url =
-                  typeof image === "string"
-                    ? image
-                    : (image?.url ??
-                      image?.imageUrl ??
-                      image?.secure_url ??
-                      image?.src ??
-                      image?.path);
-    
-                if (!url) return null;
-    
-                return {
-                  file: new File([], `existing-${index}.jpg`, {
-                    type: "image/jpeg",
-                  }),
-                  preview: url,
-                };
-              })
-              .filter((item): item is ImageItem => item !== null);
-    
-            console.log("FINAL EXISTING IMAGES:", existingImages);
-    
-            setImages(existingImages);
-          } catch (error) {
-            console.error("Failed to load existing photos:", error);
-            toast.error("Failed to load existing photos.");
-          }
-        };
-    
-        loadExistingPhotos();
-      }, [editId, session?.accessToken, setImages]);
-  
+  const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+  useEffect(() => {
+    if (!editId || !session?.accessToken) return;
+
+    const loadExistingPhotos = async () => {
+      try {
+        const response = await fetch(`/api/listings/${editId}`, {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.message || "Failed to load listing");
+        }
+
+        console.log("EDIT FULL DATA:", data);
+
+        // Find existing images wherever the API returns them
+        const rawImages =
+          data.images ??
+          data.listing?.images ??
+          data.vehicle?.images ??
+          data.photos ??
+          data.listing?.photos ??
+          [];
+
+        console.log("EDIT EXISTING IMAGES:", rawImages);
+
+        if (!Array.isArray(rawImages) || rawImages.length === 0) {
+          console.log("NO EXISTING IMAGES FOUND");
+          return;
+        }
+
+        const existingImages: FoodDeliveryImageItem[] = rawImages
+          .map((image: any, index: number) => {
+            const url =
+              typeof image === "string"
+                ? image
+                : (image?.url ??
+                  image?.imageUrl ??
+                  image?.secure_url ??
+                  image?.src ??
+                  image?.path);
+
+            if (!url) return null;
+
+            return {
+              id: image?.id ?? `existing-${index}`,
+
+              file: new File([], `existing-${index}.jpg`, {
+                type: "image/jpeg",
+              }),
+              preview: url,
+              isMain: image?.isMain ?? index === 0,
+            };
+          })
+.filter(
+    (item): item is FoodDeliveryImageItem => item !== null);
+
+        setImages(existingImages);
+      } catch (error) {
+        console.error("Failed to load existing photos:", error);
+        toast.error("Failed to load existing photos.");
+      }
+    };
+
+    loadExistingPhotos();
+  }, [editId, session?.accessToken, setImages]);
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
@@ -134,12 +135,14 @@ export default function AddFoodPhotosPage() {
     if (newFiles.length > remainingSlots) {
       toast.warning(`Only ${remainingSlots} more image(s) can be added`);
     }
-    const newImages: FoodDeliveryImageItem[] = filesToAdd.map((file, index) => ({
-      id: `${Date.now()}-${index}`,
-      file,
-      preview: URL.createObjectURL(file),
-      isMain: images.length === 0 && index === 0,
-    }));
+    const newImages: FoodDeliveryImageItem[] = filesToAdd.map(
+      (file, index) => ({
+        id: `${Date.now()}-${index}`,
+        file,
+        preview: URL.createObjectURL(file),
+        isMain: images.length === 0 && index === 0,
+      }),
+    );
     setImages([...images, ...newImages]);
   };
 
@@ -150,7 +153,7 @@ export default function AddFoodPhotosPage() {
       setIsDragging(false);
       handleFileSelect(e.dataTransfer.files);
     },
-    [images]
+    [images],
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -186,7 +189,11 @@ export default function AddFoodPhotosPage() {
       return;
     }
     toast.success("Photos saved! Proceeding to preview...");
-    router.push("/seller/listing/food-home-delivery/preview");
+    if (editId) {
+      router.push(`/seller/listing/food-home-delivery/preview?edit=${editId}`);
+    } else {
+      router.push("/seller/listing/food-home-delivery/preview");
+    }
   };
 
   const canAddMore = images.length < MAX_IMAGES;
@@ -608,7 +615,11 @@ export default function AddFoodPhotosPage() {
       <div className="photos-page">
         <div className="photos-container">
           <div className="photos-header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={18} />
             </button>
             <div className="draft-badge">
@@ -618,15 +629,28 @@ export default function AddFoodPhotosPage() {
 
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div
+                    className={`step-connector ${step.status === "done" ? "filled" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -634,7 +658,9 @@ export default function AddFoodPhotosPage() {
 
           <div className="title-section">
             <h1 className="page-title">Add Photos</h1>
-            <p className="page-subtitle">Add up to 10 photos. First photo will be your main photo.</p>
+            <p className="page-subtitle">
+              Add up to 10 photos. First photo will be your main photo.
+            </p>
           </div>
 
           {images.length === 0 ? (
@@ -650,11 +676,16 @@ export default function AddFoodPhotosPage() {
               <button
                 type="button"
                 className="upload-btn-inline"
-                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
               >
                 Upload Images
               </button>
-              <span className="drop-zone-hint">You can upload up to 10 images (JPG, PNG)</span>
+              <span className="drop-zone-hint">
+                You can upload up to 10 images (JPG, PNG)
+              </span>
             </div>
           ) : (
             <>
@@ -670,7 +701,10 @@ export default function AddFoodPhotosPage() {
                     <button
                       type="button"
                       className="remove-btn"
-                      onClick={(e) => { e.stopPropagation(); removeImage(img.id); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeImage(img.id);
+                      }}
                     >
                       <FiX size={14} />
                     </button>
