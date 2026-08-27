@@ -18,7 +18,7 @@ import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { MedicalData, useDraft } from "./layout";
 
-const ACCENT = "#2563eb"; 
+const ACCENT = "#2563eb";
 const ACCENT_LIGHT = "#eff6ff";
 const DANGER = "#dc2626";
 const SUCCESS = "#10b981";
@@ -79,7 +79,7 @@ function CustomSelect({
   placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);
-const triggerRef = useRef<HTMLDivElement>(null);
+const triggerRef = useRef<HTMLButtonElement>(null);
 const menuRef = useRef<HTMLDivElement>(null);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
@@ -112,7 +112,6 @@ const menuRef = useRef<HTMLDivElement>(null);
       };
     }
   }, [open, updatePosition]);
-
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -197,7 +196,8 @@ const menuRef = useRef<HTMLDivElement>(null);
       </button>
 
       {open && (
-        <div ref={menuRef}
+        <div
+          ref={menuRef}
           style={{
             ...menuStyle,
             background: CARD_BG,
@@ -362,8 +362,7 @@ function LanguageSelector({
 
       {open && (
         <div
-            ref={menuRef}
-
+          ref={menuRef}
           style={{
             position: "absolute",
             top: "calc(100% + 6px)",
