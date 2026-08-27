@@ -79,7 +79,8 @@ function CustomSelect({
   placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+const triggerRef = useRef<HTMLDivElement>(null);
+const menuRef = useRef<HTMLDivElement>(null);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
   const updatePosition = useCallback(() => {
@@ -112,7 +113,6 @@ function CustomSelect({
     }
   }, [open, updatePosition]);
 
-  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -197,8 +197,7 @@ function CustomSelect({
       </button>
 
       {open && (
-        <div
-          ref={menuRef}
+        <div ref={menuRef}
           style={{
             ...menuStyle,
             background: CARD_BG,
@@ -363,6 +362,8 @@ function LanguageSelector({
 
       {open && (
         <div
+            ref={menuRef}
+
           style={{
             position: "absolute",
             top: "calc(100% + 6px)",
