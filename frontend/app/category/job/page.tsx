@@ -671,7 +671,7 @@ export default function JobsPage() {
                         </button>
 
                         <div className="jp-card-body-row">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          { }
                           {/* <img src={j.thumb} alt={j.company} className="jp-thumb" /> */}
                           <div className="jp-card-main-content">
                             <p className="jp-card-title">{j.title}</p>

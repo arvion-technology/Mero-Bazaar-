@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FiChevronRight, FiEdit3 } from "react-icons/fi";
+import { FiChevronRight } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
@@ -35,53 +35,8 @@ interface KYCDetailsContentProps {
   pageType: "verified" | "pending" | "rejected";
 }
 
-export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentProps) {
-  const { data: session } = useSession();
-  const [docPreviews, setDocPreviews] = useState<{panCardUrl?: string; photoUrl?: string; selfieWithPanUrl?: string;}>({});
-
-  useEffect(() => {
-    const token = session?.accessToken;
-    if (!token || !kyc) return;
-
-    let revoke: string[] = [];
-
-    const loadDoc = async (filename: string | null | undefined, key: "panCardUrl" | "photoUrl" | "selfieWithPanUrl") => {
-      if (!filename) return;
-      try {
-        const res = await fetch(`/api/vendor-kyc/admin/document/${filename}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) {
-          console.error("Admin doc fetch failed", filename, res.status);
-          return;
-        }
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        revoke.push(url);
-        setDocPreviews((prev) => ({ ...prev, [key]: url }));
-      } catch (e) {
-        console.error("Admin doct fetch threw", filename, e);
-      }
-    };
-    loadDoc(kyc.panCardUrl, "panCardUrl");
-    loadDoc(kyc.photoUrl, "photoUrl");
-    loadDoc(kyc.selfieWithPanUrl, "selfieWithPanUrl");
-
-    return () => {
-      revoke.forEach((u) => URL.revokeObjectURL(u));
-    };
-  }, [session?.accessToken, kyc]);
-  
-
-  if (!kyc) {
-    return (
-      <div style={{ padding: "32px" }}>
-        <h2 style={{ color: "#333", fontSize: "18px" }}>KYC record not found</h2>
-      </div>
-    );
-  }
-
-  const DocumentPlaceholder = ({ label, src }: { label: string; src?: string }) => (
+function DocumentPlaceholder({ label, src }: { label: string; src?: string }) {
+  return (
     <div style={{ textAlign: "center" as const }}>
       <div
         style={{
@@ -96,14 +51,16 @@ export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentPr
           overflow: "hidden",
         }}
       >
-        {src ? ( <img src={src} alt={label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        {src ? (
+          <img src={src} alt={label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
           <span style={{ color: "#fff", fontSize: "12px", opacity: 0.7 }}>No Image</span>
         )}
-
       </div>
       <button
-        type="button" disabled={!src} onClick={() => src && window.open(src, "_blank")}
+        type="button"
+        disabled={!src}
+        onClick={() => src && window.open(src, "_blank")}
         style={{
           background: "none",
           border: "none",
@@ -118,8 +75,10 @@ export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentPr
       </button>
     </div>
   );
+}
 
-  const InfoRow = ({ label, value, badge }: { label: string; value: string; badge?: React.ReactNode }) => (
+function InfoRow({ label, value, badge }: { label: string; value: string; badge?: React.ReactNode }) {
+  return (
     <div style={{ display: "contents" }}>
       <div
         style={{
@@ -152,8 +111,10 @@ export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentPr
       </div>
     </div>
   );
+}
 
-  const PhoneVerifiedBadge = () => (
+function PhoneVerifiedBadge() {
+  return (
     <span
       style={{
         display: "inline-flex",
@@ -170,6 +131,52 @@ export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentPr
       Verified
     </span>
   );
+}
+
+export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentProps) {
+  const { data: session } = useSession();
+  const [docPreviews, setDocPreviews] = useState<{ panCardUrl?: string; photoUrl?: string; selfieWithPanUrl?: string }>({});
+
+  useEffect(() => {
+    const token = session?.accessToken;
+    if (!token || !kyc) return;
+
+    const revoke: string[] = [];
+
+    const loadDoc = async (filename: string | null | undefined, key: "panCardUrl" | "photoUrl" | "selfieWithPanUrl") => {
+      if (!filename) return;
+      try {
+        const res = await fetch(`/api/vendor-kyc/admin/document/${filename}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          console.error("Admin doc fetch failed", filename, res.status);
+          return;
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        revoke.push(url);
+        setDocPreviews((prev) => ({ ...prev, [key]: url }));
+      } catch (e) {
+        console.error("Admin doct fetch threw", filename, e);
+      }
+    };
+    loadDoc(kyc.panCardUrl, "panCardUrl");
+    loadDoc(kyc.photoUrl, "photoUrl");
+    loadDoc(kyc.selfieWithPanUrl, "selfieWithPanUrl");
+
+    return () => {
+      revoke.forEach((u) => URL.revokeObjectURL(u));
+    };
+  }, [session?.accessToken, kyc]);
+
+  if (!kyc) {
+    return (
+      <div style={{ padding: "32px" }}>
+        <h2 style={{ color: "#333", fontSize: "18px" }}>KYC record not found</h2>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -269,7 +276,7 @@ export default function KYCDetailsContent({ kyc, pageType }: KYCDetailsContentPr
             </div>
             <div>
               <div className="kyc-doc-label">Selfie With Pan Card</div>
-              <DocumentPlaceholder label="Selfie"  src={docPreviews.selfieWithPanUrl} />
+              <DocumentPlaceholder label="Selfie" src={docPreviews.selfieWithPanUrl} />
             </div>
           </div>
         </div>
