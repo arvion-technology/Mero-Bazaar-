@@ -8,10 +8,17 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
+  // Pass through the reauthentication proof (currentPassword or OTP).
+  const body = await req.json().catch(() => ({}));
+
   try {
     const res = await fetch(`${API_URL}/api/user/profile/me`, {
       method: "DELETE",
-      headers: { Authorization: authHeader },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+      },
+      body: JSON.stringify(body),
     });
 
     const data = await res.json().catch(() => ({}));
@@ -25,7 +32,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ message: "Account deleted successfully" }, { status: 200 });
   } catch (err) {
-    console.error("delete-account proxy error:", err);
+    console.error("delete-account proxy error:", err instanceof Error ? err.message : err);
     return NextResponse.json(
       { message: "Something went wrong. Please try again." },
       { status: 500 }

@@ -1,5 +1,5 @@
-import { IsDateString, IsInt, IsString, Min } from "class-validator";
-import { Type } from "class-transformer";
+import { IsDateString, IsInt, IsString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateOrderDto {
   @IsString()

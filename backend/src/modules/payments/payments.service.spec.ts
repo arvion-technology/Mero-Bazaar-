@@ -1,15 +1,19 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { PaymentsService } from './esewa.service';
+﻿import { Test, TestingModule } from '@nestjs/testing';
+import { SellerPaymentsService } from './payments.service';
+import { PrismaService } from 'src/database/prisma.service';
 
-describe('PaymentsService', () => {
-  let service: PaymentsService;
+describe('SellerPaymentsService', () => {
+  let service: SellerPaymentsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PaymentsService],
+      providers: [
+        SellerPaymentsService,
+        { provide: PrismaService, useValue: {} },
+      ],
     }).compile();
 
-    service = module.get<PaymentsService>(PaymentsService);
+    service = module.get<SellerPaymentsService>(SellerPaymentsService);
   });
 
   it('should be defined', () => {

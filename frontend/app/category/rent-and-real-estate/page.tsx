@@ -811,7 +811,7 @@ export default function PropertyPage() {
                 ) : loadError ? (
                   <div className="pp-empty">
                     <div className="pp-empty-icon">⚠️</div>
-                    <p>Couldn't load listings</p>
+                    <p>Couldn&apos;ct load listings</p>
                     <span>{loadError}</span>
                   </div>
                 ) : displayed.length === 0 ? (

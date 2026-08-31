@@ -29,32 +29,39 @@ export class SellerPaymentsService {
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-    const [delivered, confirmed, thisMonth, lastMonth] = await this.prisma.$transaction([
-      this.prisma.order.aggregate({
-        where: { listing: { userId: sellerId }, status: OrderStatus.DELIVERED },
-        _sum: { totalPrice: true },
-      }),
-      this.prisma.order.aggregate({
-        where: { listing: { userId: sellerId }, status: OrderStatus.CONFIRMED },
-        _sum: { totalPrice: true },
-      }),
-      this.prisma.order.aggregate({
-        where: {
-          listing: { userId: sellerId },
-          status: OrderStatus.DELIVERED,
-          createdAt: { gte: startOfThisMonth },
-        },
-        _sum: { totalPrice: true },
-      }),
-      this.prisma.order.aggregate({
-        where: {
-          listing: { userId: sellerId },
-          status: OrderStatus.DELIVERED,
-          createdAt: { gte: startOfLastMonth, lt: startOfThisMonth },
-        },
-        _sum: { totalPrice: true },
-      }),
-    ]);
+    const [delivered, confirmed, thisMonth, lastMonth] =
+      await this.prisma.$transaction([
+        this.prisma.order.aggregate({
+          where: {
+            listing: { userId: sellerId },
+            status: OrderStatus.DELIVERED,
+          },
+          _sum: { totalPrice: true },
+        }),
+        this.prisma.order.aggregate({
+          where: {
+            listing: { userId: sellerId },
+            status: OrderStatus.CONFIRMED,
+          },
+          _sum: { totalPrice: true },
+        }),
+        this.prisma.order.aggregate({
+          where: {
+            listing: { userId: sellerId },
+            status: OrderStatus.DELIVERED,
+            createdAt: { gte: startOfThisMonth },
+          },
+          _sum: { totalPrice: true },
+        }),
+        this.prisma.order.aggregate({
+          where: {
+            listing: { userId: sellerId },
+            status: OrderStatus.DELIVERED,
+            createdAt: { gte: startOfLastMonth, lt: startOfThisMonth },
+          },
+          _sum: { totalPrice: true },
+        }),
+      ]);
 
     return {
       totalEarned: delivered._sum.totalPrice ?? 0,
@@ -68,7 +75,13 @@ export class SellerPaymentsService {
     const orders = await this.prisma.order.findMany({
       where: {
         listing: { userId: sellerId },
-        status: { in: [OrderStatus.CONFIRMED, OrderStatus.DELIVERED, OrderStatus.CANCELLED] },
+        status: {
+          in: [
+            OrderStatus.CONFIRMED,
+            OrderStatus.DELIVERED,
+            OrderStatus.CANCELLED,
+          ],
+        },
       },
       include: {
         listing: { select: { title: true } },

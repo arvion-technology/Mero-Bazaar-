@@ -1,5 +1,5 @@
-import { IsNumber, IsOptional, IsString, IsBoolean, IsArray } from "class-validator";
-import { Type } from "class-transformer";
+import { IsNumber, IsOptional, IsString, IsArray } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class TradesSearchDto {
   @IsOptional()

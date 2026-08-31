@@ -32,7 +32,7 @@ export class SupabaseService {
   async getSignedUrl(filePath: string) {
     const { data, error } = await this.supabase.storage
       .from('kyc-private')
-      .createSignedUrl(filePath, 60 * 10); 
+      .createSignedUrl(filePath, 60 * 10);
 
     if (error) {
       throw new InternalServerErrorException(

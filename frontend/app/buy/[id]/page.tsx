@@ -202,50 +202,53 @@ export default function BuyDetailPage() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastIdRef = useRef(0);
 
-  /* ─── FETCH PRODUCT ─── */
-const fetchProduct = useCallback(async () => {
-  if (!id) return;
-  setLoading(true);
-  setError(null);
-  try {
-    const res = await fetch(`/api/listings/${id}`);
-    if (!res.ok) {
-      if (res.status === 404) {
-        setProduct(null);
-        setLoading(false);
-        return;
-      }
-      throw new Error("Failed to fetch product");
-    }
-    const raw: RawListing = await res.json();
-    const detail = toBuyDetail(raw);
-    setProduct(detail);
+  /* ─── TOAST HELPERS ─── */
+  const showToast = useCallback(
+    (message: string, type: "success" | "info" | "error" = "success") => {
+      const id = ++toastIdRef.current;
+      setToasts((prev) => [...prev, { id, message, type }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 2500);
+    },
+    [],
+  );
 
-    const similarRes = await fetch(`/api/listings/related?category=${detail.category}&limit=3&exclude=${id}`);
-    if (similarRes.ok) {
-      const rawSimilar: RawListing[] = await similarRes.json();
-      setSimilarItems(rawSimilar.map(toBuyCard));
+  /* ─── FETCH PRODUCT ─── */
+  const fetchProduct = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/listings/${id}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          setProduct(null);
+          setLoading(false);
+          return;
+        }
+        throw new Error("Failed to fetch product");
+      }
+      const raw: RawListing = await res.json();
+      const detail = toBuyDetail(raw);
+      setProduct(detail);
+
+      const similarRes = await fetch(`/api/listings/related?category=${detail.category}&limit=3&exclude=${id}`);
+      if (similarRes.ok) {
+        const rawSimilar: RawListing[] = await similarRes.json();
+        setSimilarItems(rawSimilar.map(toBuyCard));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      showToast("Failed to load product", "error");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "Something went wrong");
-    showToast("Failed to load product", "error");
-  } finally {
-    setLoading(false);
-  }
-}, [id]);
+  }, [id, showToast]);
 
   useEffect(() => {
     fetchProduct();
   }, [fetchProduct]);
-
-  /* ─── TOAST HELPERS ─── */
-  const showToast = (message: string, type: "success" | "info" | "error" = "success") => {
-    const id = ++toastIdRef.current;
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 2500);
-  };
 
   const addToCart = () => {
     if (!product) return;

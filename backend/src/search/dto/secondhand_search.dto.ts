@@ -1,6 +1,17 @@
-import { Type, Transform } from "class-transformer";
-import { IsOptional, IsString, IsEnum, IsBoolean, IsInt, Min } from "class-validator";
-import { SecondHandCategory, SecondHandCondition, ListingStatus } from "@prisma/client";
+import { Type, Transform } from 'class-transformer';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsBoolean,
+  IsInt,
+  Min,
+} from 'class-validator';
+import {
+  SecondHandCategory,
+  SecondHandCondition,
+  ListingStatus,
+} from '@prisma/client';
 
 export class SecondHandSearchDto {
   @IsOptional()

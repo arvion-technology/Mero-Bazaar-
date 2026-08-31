@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateBeautyAppointmentDto } from './dto/create_beauty_appointment.dto';
 import { AppointmentStatus } from '@prisma/client';
@@ -13,7 +19,8 @@ export class BeautyAppointmentsService {
       include: { beauty: true },
     });
 
-    if (!listing?.beauty) throw new NotFoundException('Beauty service not found');
+    if (!listing?.beauty)
+      throw new NotFoundException('Beauty service not found');
 
     const beauty = listing.beauty;
 
@@ -24,7 +31,9 @@ export class BeautyAppointmentsService {
     if (!slot) throw new NotFoundException('Slot not found');
 
     if (slot.beautyId !== beauty.id) {
-      throw new BadRequestException('Slot does not belong to this beauty service');
+      throw new BadRequestException(
+        'Slot does not belong to this beauty service',
+      );
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -74,10 +83,13 @@ export class BeautyAppointmentsService {
       include: { beauty: true },
     });
 
-    if (!listing?.beauty) throw new NotFoundException('Beauty service not found');
+    if (!listing?.beauty)
+      throw new NotFoundException('Beauty service not found');
 
     if (role !== 'ADMIN' && listing.userId !== userId) {
-      throw new ForbiddenException('You do not have access to these appointments');
+      throw new ForbiddenException(
+        'You do not have access to these appointments',
+      );
     }
 
     return this.prisma.beautyAppointment.findMany({
@@ -101,7 +113,10 @@ export class BeautyAppointmentsService {
   }
 
   private assertCanAccess(
-    appointment: { customerId: string | null; beauty: { listing: { userId: string } | null } | null },
+    appointment: {
+      customerId: string | null;
+      beauty: { listing: { userId: string } | null } | null;
+    },
     userId: string,
     role: string,
   ) {
@@ -109,7 +124,9 @@ export class BeautyAppointmentsService {
     const isProvider = appointment.beauty?.listing?.userId === userId;
 
     if (role !== 'ADMIN' && !isCustomer && !isProvider) {
-      throw new ForbiddenException('You do not have access to this appointment');
+      throw new ForbiddenException(
+        'You do not have access to this appointment',
+      );
     }
   }
 
@@ -119,12 +136,19 @@ export class BeautyAppointmentsService {
     return appointment;
   }
 
-  async updateStatus(id: string, status: AppointmentStatus, userId: string, role: string) {
+  async updateStatus(
+    id: string,
+    status: AppointmentStatus,
+    userId: string,
+    role: string,
+  ) {
     const appointment = await this.findWithOwnerContext(id);
     const isProvider = appointment.beauty?.listing?.userId === userId;
 
     if (role !== 'ADMIN' && !isProvider) {
-      throw new ForbiddenException('Only the provider or an admin can update appointment status');
+      throw new ForbiddenException(
+        'Only the provider or an admin can update appointment status',
+      );
     }
 
     const allowedTransitions: Record<AppointmentStatus, AppointmentStatus[]> = {
@@ -147,7 +171,9 @@ export class BeautyAppointmentsService {
       });
 
       if (result.count === 0) {
-        throw new ConflictException('Appointment status changed concurrently, please retry');
+        throw new ConflictException(
+          'Appointment status changed concurrently, please retry',
+        );
       }
 
       if (status === AppointmentStatus.CANCELLED) {
@@ -167,7 +193,10 @@ export class BeautyAppointmentsService {
 
     return this.prisma.$transaction(async (tx) => {
       const result = await tx.beautyAppointment.updateMany({
-        where: { id: appointmentId, status: { not: AppointmentStatus.CANCELLED } },
+        where: {
+          id: appointmentId,
+          status: { not: AppointmentStatus.CANCELLED },
+        },
         data: { status: AppointmentStatus.CANCELLED },
       });
 
@@ -180,7 +209,9 @@ export class BeautyAppointmentsService {
         data: { isBooked: false },
       });
 
-      return tx.beautyAppointment.findUniqueOrThrow({ where: { id: appointmentId } });
+      return tx.beautyAppointment.findUniqueOrThrow({
+        where: { id: appointmentId },
+      });
     });
   }
 }

@@ -1,4 +1,10 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { OrdersService } from '../orders/orders.service';
 import * as crypto from 'crypto';
@@ -19,15 +25,23 @@ export class EsewaService {
   ) {}
 
   private sign(message: string): string {
-    return crypto.createHmac('sha256', this.secretKey).update(message).digest('base64');
+    return crypto
+      .createHmac('sha256', this.secretKey)
+      .update(message)
+      .digest('base64');
   }
 
   async initiate(orderId: string, buyerId: string) {
-    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
     if (!order) throw new NotFoundException('Order not found.');
-    if (order.userId !== buyerId) throw new ForbiddenException('Not your order.');
+    if (order.userId !== buyerId)
+      throw new ForbiddenException('Not your order.');
     if (order.status !== 'PENDING') {
-      throw new ConflictException(`Order is already ${order.status.toLowerCase()}.`);
+      throw new ConflictException(
+        `Order is already ${order.status.toLowerCase()}.`,
+      );
     }
 
     const totalAmount = order.totalPrice.toString();
@@ -63,12 +77,20 @@ export class EsewaService {
   async handleCallback(encodedData: string) {
     let decoded: Record<string, string>;
     try {
-      decoded = JSON.parse(Buffer.from(encodedData, 'base64').toString('utf-8'));
+      decoded = JSON.parse(
+        Buffer.from(encodedData, 'base64').toString('utf-8'),
+      );
     } catch {
       throw new BadRequestException('Malformed payment response.');
     }
 
-    const { total_amount, transaction_uuid, product_code, signed_field_names, signature } = decoded;
+    const {
+      total_amount,
+      transaction_uuid,
+      product_code,
+      signed_field_names,
+      signature,
+    } = decoded;
     if (!signed_field_names || !signature) {
       throw new BadRequestException('Missing signature fields.');
     }
@@ -80,7 +102,9 @@ export class EsewaService {
     const expectedSignature = this.sign(message);
 
     if (expectedSignature !== signature) {
-      throw new BadRequestException('Signature mismatch — response may be tampered.');
+      throw new BadRequestException(
+        'Signature mismatch — response may be tampered.',
+      );
     }
     if (product_code !== this.productCode) {
       throw new BadRequestException('Product code mismatch.');
@@ -91,14 +115,24 @@ export class EsewaService {
     );
     const statusData = await statusRes.json();
     if (statusData.status !== 'COMPLETE') {
-      throw new BadRequestException(`Payment not complete: ${statusData.status}`);
+      throw new BadRequestException(
+        `Payment not complete: ${statusData.status}`,
+      );
     }
 
-    const order = await this.prisma.order.findFirst({ where: { paymentRef: transaction_uuid } });
-    if (!order) throw new NotFoundException('Order not found for this transaction.');
+    const order = await this.prisma.order.findFirst({
+      where: { paymentRef: transaction_uuid },
+    });
+    if (!order)
+      throw new NotFoundException('Order not found for this transaction.');
 
     if (order.status === 'PENDING') {
-      await this.ordersService.confirmPayment(order.id, transaction_uuid, order.userId, 'ESEWA');
+      await this.ordersService.confirmPayment(
+        order.id,
+        transaction_uuid,
+        order.userId,
+        'ESEWA',
+      );
     }
 
     return order;

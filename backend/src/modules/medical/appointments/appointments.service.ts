@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateMedicalAppointmentDto } from './dto/create_medical_appointment.dto';
 import { AppointmentStatus } from '@prisma/client';
@@ -13,7 +19,8 @@ export class MedicalAppointmentsService {
       include: { medical: true },
     });
 
-    if (!listing?.medical) throw new NotFoundException('Medical service not found');
+    if (!listing?.medical)
+      throw new NotFoundException('Medical service not found');
 
     const medical = listing.medical;
 
@@ -24,7 +31,9 @@ export class MedicalAppointmentsService {
     if (!slot) throw new NotFoundException('Slot not found');
 
     if (slot.medicalId !== medical.id) {
-      throw new BadRequestException('Slot does not belong to this medical service');
+      throw new BadRequestException(
+        'Slot does not belong to this medical service',
+      );
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -74,10 +83,13 @@ export class MedicalAppointmentsService {
       include: { medical: true },
     });
 
-    if (!listing?.medical) throw new NotFoundException('medical service not found');
+    if (!listing?.medical)
+      throw new NotFoundException('medical service not found');
 
     if (role !== 'ADMIN' && listing.userId !== userId) {
-      throw new ForbiddenException('You do not have access to these appointments');
+      throw new ForbiddenException(
+        'You do not have access to these appointments',
+      );
     }
 
     return this.prisma.medicalAppointment.findMany({
@@ -101,7 +113,10 @@ export class MedicalAppointmentsService {
   }
 
   private assertCanAccess(
-    appointment: { patientId: string | null; medical: { listing: { userId: string } | null } | null },
+    appointment: {
+      patientId: string | null;
+      medical: { listing: { userId: string } | null } | null;
+    },
     userId: string,
     role: string,
   ) {
@@ -109,7 +124,9 @@ export class MedicalAppointmentsService {
     const isProvider = appointment.medical?.listing?.userId === userId;
 
     if (role !== 'ADMIN' && !isPatient && !isProvider) {
-      throw new ForbiddenException('You do not have access to this appointment');
+      throw new ForbiddenException(
+        'You do not have access to this appointment',
+      );
     }
   }
 
@@ -119,12 +136,19 @@ export class MedicalAppointmentsService {
     return appointment;
   }
 
-  async updateStatus(id: string, status: AppointmentStatus, userId: string, role: string) {
+  async updateStatus(
+    id: string,
+    status: AppointmentStatus,
+    userId: string,
+    role: string,
+  ) {
     const appointment = await this.findWithOwnerContext(id);
     const isProvider = appointment.medical?.listing?.userId === userId;
 
     if (role !== 'ADMIN' && !isProvider) {
-      throw new ForbiddenException('Only the provider or an admin can update appointment status');
+      throw new ForbiddenException(
+        'Only the provider or an admin can update appointment status',
+      );
     }
 
     const allowedTransitions: Record<AppointmentStatus, AppointmentStatus[]> = {
@@ -147,7 +171,9 @@ export class MedicalAppointmentsService {
       });
 
       if (result.count === 0) {
-        throw new ConflictException('Appointment status changed concurrently, please retry');
+        throw new ConflictException(
+          'Appointment status changed concurrently, please retry',
+        );
       }
 
       if (status === AppointmentStatus.CANCELLED) {
@@ -167,7 +193,10 @@ export class MedicalAppointmentsService {
 
     return this.prisma.$transaction(async (tx) => {
       const result = await tx.medicalAppointment.updateMany({
-        where: { id: appointmentId, status: { not: AppointmentStatus.CANCELLED } },
+        where: {
+          id: appointmentId,
+          status: { not: AppointmentStatus.CANCELLED },
+        },
         data: { status: AppointmentStatus.CANCELLED },
       });
 
@@ -180,7 +209,9 @@ export class MedicalAppointmentsService {
         data: { isBooked: false },
       });
 
-      return tx.medicalAppointment.findUniqueOrThrow({ where: { id: appointmentId } });
+      return tx.medicalAppointment.findUniqueOrThrow({
+        where: { id: appointmentId },
+      });
     });
   }
 }

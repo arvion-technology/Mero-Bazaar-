@@ -1,6 +1,14 @@
-import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, IsString, Min } from "class-validator";
-import { BeautyServiceType } from "@prisma/client";
-import { Type } from "class-transformer";
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
+import { BeautyServiceType } from '@prisma/client';
+import { Type } from 'class-transformer';
 
 export class CreateHairBeautyAndWellnessDto {
   @IsString()

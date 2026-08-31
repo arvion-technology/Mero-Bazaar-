@@ -291,16 +291,8 @@ export default function SellerProductPage() {
           Loading your listings...
         </div>
       ) : products.length === 0 ? (
-        /* EMPTY */
-        <div
-          style={{
-            padding: "40px 0",
-            textAlign: "center",
-            color: "#94a3b8",
-            fontSize: 13,
-          }}
-        >
-          You haven't listed any products yet.
+        <div style={{ padding: "40px 0", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
+          You haven&apos;t listed any products yet.
         </div>
       ) : (
         /* PRODUCTS */

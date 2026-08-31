@@ -1,27 +1,27 @@
-import { contain } from "supertest/lib/cookies";
-import { SearchFoodsDto } from "../dto/foods_search.dto";
-import { FoodType, PriceUnit } from "@prisma/client";
-import { Prisma } from "@prisma/client";
+﻿import { SearchFoodsDto } from '../dto/foods_search.dto';
+import { Prisma } from '@prisma/client';
 
-export function buildFoodsFilter(query: SearchFoodsDto): Prisma.ListingWhereInput {
+export function buildFoodsFilter(
+  query: SearchFoodsDto,
+): Prisma.ListingWhereInput {
   return {
     category: 'FOODS',
 
     ...(query.keyword && {
-        OR: [
-          {
-            title: {
-                contains:query.keyword,
-                mode: 'insensitive',
-            },
+      OR: [
+        {
+          title: {
+            contains: query.keyword,
+            mode: 'insensitive',
           },
-          {
-            description: {
-              contains: query.keyword,
-              mode: 'insensitive',
-            },
+        },
+        {
+          description: {
+            contains: query.keyword,
+            mode: 'insensitive',
           },
-        ],
+        },
+      ],
     }),
     foods: {
       is: {
@@ -39,7 +39,7 @@ export function buildFoodsFilter(query: SearchFoodsDto): Prisma.ListingWhereInpu
         ...(query.deliveryDays?.length && {
           deliveryDays: {
             hasSome: query.deliveryDays,
-        },
+          },
         }),
         ...(query.minOrderAmount && {
           minOrderAmount: {
@@ -49,12 +49,12 @@ export function buildFoodsFilter(query: SearchFoodsDto): Prisma.ListingWhereInpu
       },
     },
     ...(query.minPrice || query.maxPrice
-        ? {
-            price: {
-              ...(query.minPrice && { get: query.minPrice }),
-              ...(query.maxPrice && { lte: query.maxPrice }),
-            },
+      ? {
+          price: {
+            ...(query.minPrice && { get: query.minPrice }),
+            ...(query.maxPrice && { lte: query.maxPrice }),
+          },
         }
-        : {})
+      : {}),
   };
 }

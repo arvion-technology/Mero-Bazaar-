@@ -1,6 +1,19 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUUID, IsArray } from 'class-validator';
-import { AgricultureListingType, UnitType, HealthVaccineStatus, VetServiceType, WeekDay } from '@prisma/client';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsArray,
+} from 'class-validator';
+import {
+  AgricultureListingType,
+  UnitType,
+  HealthVaccineStatus,
+  VetServiceType,
+  WeekDay,
+} from '@prisma/client';
 
 export class CreateAgricultureDto {
   @IsEnum(AgricultureListingType)

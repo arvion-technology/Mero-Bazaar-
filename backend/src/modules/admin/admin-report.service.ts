@@ -48,7 +48,12 @@ export class AdminReportService {
     });
   }
 
-  async setStatus(id: string, status: ReportStatus, reviewerId: string, resolutionNote?: string) {
+  async setStatus(
+    id: string,
+    status: ReportStatus,
+    reviewerId: string,
+    resolutionNote?: string,
+  ) {
     const updated = await this.prisma.report.update({
       where: { id },
       data: {

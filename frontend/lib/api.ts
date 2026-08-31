@@ -107,6 +107,8 @@ export const api = {
 
   getJobs:     (params?: URLSearchParams) => get<JobListing[]>('/api/jobs', params),
   getJob:      (id: string) => get<JobListing>(`/api/jobs/${id}`),
+  getJobFilters: () =>
+    get<{ contractTypes: string[]; cities: string[]; skills: string[] }>('/api/jobs/filters'),
 
   getSecondhandListings: (params?: URLSearchParams) =>
     get<SecondhandListing[]>('/api/secondhand-goods', params),

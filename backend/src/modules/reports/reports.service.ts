@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { OrderStatus } from '@prisma/client';
 
@@ -25,7 +25,10 @@ export interface OrderStatusBreakdown {
 export class ReportsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getTopListings(sellerId: string, limit = 5): Promise<TopListingReport[]> {
+  async getTopListings(
+    sellerId: string,
+    limit = 5,
+  ): Promise<TopListingReport[]> {
     const grouped = await this.prisma.order.groupBy({
       by: ['listingId'],
       where: {
@@ -59,7 +62,9 @@ export class ReportsService {
     });
   }
 
-  async getCategoryBreakdown(sellerId: string): Promise<CategoryBreakdownReport[]> {
+  async getCategoryBreakdown(
+    sellerId: string,
+  ): Promise<CategoryBreakdownReport[]> {
     const orders = await this.prisma.order.findMany({
       where: {
         listing: { userId: sellerId },
@@ -84,7 +89,9 @@ export class ReportsService {
     return Object.values(byCategory).sort((a, b) => b.revenue - a.revenue);
   }
 
-  async getOrderStatusBreakdown(sellerId: string): Promise<OrderStatusBreakdown[]> {
+  async getOrderStatusBreakdown(
+    sellerId: string,
+  ): Promise<OrderStatusBreakdown[]> {
     const grouped = await this.prisma.order.groupBy({
       by: ['status'],
       where: { listing: { userId: sellerId } },

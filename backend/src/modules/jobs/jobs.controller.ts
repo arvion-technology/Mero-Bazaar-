@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Delete,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create_job.dto';
 import { UpdateJobDto } from './dto/update_jobs.dto';
@@ -18,6 +29,12 @@ export class JobsController {
   @Get()
   findAll(@Query() query: JobSearchDto) {
     return this.jobsService.findAll(query);
+  }
+
+  // Must be declared before the `:id` route so it is not captured as an id.
+  @Get('filters')
+  getFilters() {
+    return this.jobsService.getFilterOptions();
   }
 
   @Get(':id')

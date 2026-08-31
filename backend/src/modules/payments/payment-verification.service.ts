@@ -17,16 +17,20 @@ export class PaymentVerificationService {
   private readonly esewaProductCode = process.env.ESEWA_PRODUCT_CODE!;
 
   private readonly khaltiLookupUrl =
-    process.env.KHALTI_LOOKUP_URL ?? 'https://khalti.com/api/v2/epayment/lookup/';
+    process.env.KHALTI_LOOKUP_URL ??
+    'https://khalti.com/api/v2/epayment/lookup/';
   private readonly khaltiSecretKey = process.env.KHALTI_SECRET_KEY!;
 
-  async verifyEsewa(transactionUuid: string, expectedAmount: number): Promise<VerifiedPayment> {
+  async verifyEsewa(
+    transactionUuid: string,
+    expectedAmount: number,
+  ): Promise<VerifiedPayment> {
     try {
       const { data } = await axios.get(this.esewaStatusUrl, {
         params: {
           product_code: this.esewaProductCode,
           total_amount: expectedAmount,
-          transaction_uuid: transactionUuid, 
+          transaction_uuid: transactionUuid,
         },
         timeout: 8000,
       });
@@ -38,14 +42,24 @@ export class PaymentVerificationService {
         typeof data?.ref_id === 'string' &&
         data.ref_id.length > 0;
 
-      return { verified, providerAmount, providerRef: data?.ref_id ?? transactionUuid };
+      return {
+        verified,
+        providerAmount,
+        providerRef: data?.ref_id ?? transactionUuid,
+      };
     } catch (err) {
-      this.logger.error(`eSewa verification failed for ${transactionUuid}`, err?.message);
+      this.logger.error(
+        `eSewa verification failed for ${transactionUuid}`,
+        err?.message,
+      );
       throw new BadGatewayException('Unable to verify payment with eSewa.');
     }
   }
 
-  async verifyKhalti(pidx: string, expectedAmount: number): Promise<VerifiedPayment> {
+  async verifyKhalti(
+    pidx: string,
+    expectedAmount: number,
+  ): Promise<VerifiedPayment> {
     try {
       const { data } = await axios.post(
         this.khaltiLookupUrl,
@@ -63,7 +77,11 @@ export class PaymentVerificationService {
         typeof data?.transaction_id === 'string' &&
         data.transaction_id.length > 0;
 
-      return { verified, providerAmount: providerAmountRupees, providerRef: data?.transaction_id ?? pidx };
+      return {
+        verified,
+        providerAmount: providerAmountRupees,
+        providerRef: data?.transaction_id ?? pidx,
+      };
     } catch (err) {
       this.logger.error(`Khalti verification failed for ${pidx}`, err?.message);
       throw new BadGatewayException('Unable to verify payment with Khalti.');

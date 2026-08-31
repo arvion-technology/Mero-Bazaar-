@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useFoodCart } from "../../context/FoodCartContext";
+import { deleteAccountWithReauth } from "@/lib/accountActions";
 import {
   FiGrid,
   FiShoppingBag,
@@ -180,7 +181,8 @@ export default function UserWishlist() {
     setDeleting(true);
     setDeleteError("");
     try {
-      const res = await fetch("/api/user/delete-account", { method: "DELETE" });
+      const res = await deleteAccountWithReauth(token);
+      if (res.status === 499) return; // user cancelled the confirmation
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
@@ -244,6 +246,7 @@ export default function UserWishlist() {
           font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
 
+        /* ── Sidebar ── */
         .ud-sidebar {
           width: 260px;
           background: #ffffff;
@@ -458,6 +461,7 @@ export default function UserWishlist() {
           max-width: 160px;
         }
 
+        /* ── Main Area ── */
         .ud-main-area {
           flex: 1;
           margin-left: 260px;
@@ -475,6 +479,7 @@ export default function UserWishlist() {
           width: calc(100% - 72px);
         }
 
+        /* ── Top Header ── */
         .ud-topbar {
           background: #fff;
           border-bottom: 1px solid #e2e8f0;
@@ -575,6 +580,7 @@ export default function UserWishlist() {
           border: 2px solid #fff;
         }
 
+        /* ── Profile Avatar Dropdown ── */
         .ud-profile-wrap {
           position: relative;
         }
@@ -709,6 +715,7 @@ export default function UserWishlist() {
           margin: 0;
         }
 
+        /* ── Main Content ── */
         .ud-main {
           flex: 1;
           padding: 28px 32px;
@@ -975,6 +982,7 @@ export default function UserWishlist() {
           font-size: 14px;
         }
 
+        /* ── Backdrop (mobile overlay) ── */
         .ud-backdrop {
           display: none;
           position: fixed;
@@ -1043,6 +1051,9 @@ export default function UserWishlist() {
           color: #ef4444;
         }
 
+        /* ── Responsive ── */
+
+        /* Tablet + Mobile: overlay sidebar */
         @media (max-width: 1023px) {
           .ud-sidebar {
             transform: translateX(-100%);
@@ -1154,6 +1165,7 @@ export default function UserWishlist() {
           }
         }
 
+        /* ── Delete Account Modal ── */
         .ud-modal-overlay {
           position: fixed;
           inset: 0;
@@ -1260,6 +1272,7 @@ export default function UserWishlist() {
         .ud-modal-delete:disabled { opacity: 0.7; cursor: not-allowed; }
       `}</style>
 
+      {/* ── Mobile Backdrop ── */}
       <div
         className={`ud-backdrop ${sidebarOpen ? "active" : ""}`}
         onClick={() => setSidebarOpen(false)}
@@ -1267,6 +1280,7 @@ export default function UserWishlist() {
       />
 
       <div className="ud-page">
+        {/* ── Sidebar ── */}
         <aside className={`ud-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
           <button
             type="button"
@@ -1343,6 +1357,7 @@ export default function UserWishlist() {
           </div>
         </aside>
 
+        {/* ── Main Area ── */}
         <div className="ud-main-area">
           <header className="ud-topbar">
             <div className="ud-topbar-left">

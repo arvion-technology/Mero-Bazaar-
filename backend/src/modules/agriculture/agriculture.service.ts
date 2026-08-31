@@ -1,15 +1,22 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateAgricultureDto } from './dto/create_agriculture.dto';
 import { UpdateAgricultureDto } from './dto/update_agriculture.dto';
 import { ListingCategory } from '@prisma/client';
 import { QueryAgricultureDto } from './dto/query_agriculture.dto';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
+import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
 @Injectable()
 export class AgricultureService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateAgricultureDto, userId: string) {
+    await assertVerifiedSeller(this.prisma, userId);
     return this.prisma.listing.create({
       data: {
         title: `${dto.listingType} in ${dto.district}`,
@@ -32,7 +39,8 @@ export class AgricultureService {
             pricePerUnit: dto.pricePerUnit,
             unit: dto.unit,
             organicCertified: dto.organicCertified,
-            organicVerified: dto.organicVerified,
+            // Verification flags are reviewer-controlled; sellers cannot self-assert them.
+            organicVerified: false,
             seasonalAvailability: dto.seasonalAvailability,
             animalType: dto.animalType,
             breed: dto.breed,
@@ -43,7 +51,7 @@ export class AgricultureService {
             mobileService: dto.mobileService,
             vaccinationAvailable: dto.vaccinationAvailable,
             serviceRadiusKm: dto.serviceRadiusKm,
-            healthCertificate: dto.healthCertificate,
+            healthCertificate: false,
             availabilityDays: dto.availabilityDays,
           },
         },
@@ -75,52 +83,50 @@ export class AgricultureService {
       },
     });
   }
-  
-  
+
   async findOne(id: string) {
-  const listing = await this.prisma.listing.findUnique({
-    where: { id },
-    include: {
-      agriculture: true,
-      user: {
-        select: {
-          id: true,
-          name: true,
-          isVerified: true,
-          phone: true,
-          createdAt: true,
-          vendorProfile: {
-            select: { businessName: true, rating: true },
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      include: {
+        agriculture: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            isVerified: true,
+            phone: true,
+            createdAt: true,
+            vendorProfile: {
+              select: { businessName: true, rating: true },
+            },
           },
         },
+        reviews: {
+          orderBy: { createdAt: 'desc' },
+        },
       },
-      reviews: {
-        orderBy: { createdAt: 'desc' },
-      },
-    },
-  });
+    });
 
-  if (!listing || listing.category !== ListingCategory.AGRICULTURE) {
-    throw new NotFoundException('Agriculture listing not found');
+    if (!listing || listing.category !== ListingCategory.AGRICULTURE) {
+      throw new NotFoundException('Agriculture listing not found');
+    }
+
+    const [totalListing, reviewAgg] = await Promise.all([
+      this.prisma.listing.count({ where: { userId: listing.userId } }),
+      this.prisma.review.aggregate({
+        where: { listing: { userId: listing.userId } },
+        _avg: { rating: true },
+        _count: { rating: true },
+      }),
+    ]);
+
+    return {
+      ...listing,
+      sellerTotalListing: totalListing,
+      sellerRating: reviewAgg._avg.rating ?? 0,
+      sellerReviewCount: reviewAgg._count.rating,
+    };
   }
-
-  const [totalListing, reviewAgg] = await Promise.all([
-    this.prisma.listing.count({ where: { userId: listing.userId } }),
-    this.prisma.review.aggregate({
-      where: { listing: { userId: listing.userId } },
-      _avg: { rating: true },
-      _count: { rating: true },
-    }),
-  ]);
-
-  return {
-    ...listing,
-    sellerTotalListing: totalListing,
-    sellerRating: reviewAgg._avg.rating ?? 0,
-    sellerReviewCount: reviewAgg._count.rating,
-  };
-}
-
 
   async update(id: string, dto: UpdateAgricultureDto, userId: string) {
     const listing = await this.findOne(id);
@@ -143,7 +149,7 @@ export class AgricultureService {
             pricePerUnit: dto.pricePerUnit,
             unit: dto.unit,
             organicCertified: dto.organicCertified,
-            organicVerified: dto.organicVerified,
+            organicVerified: false,
             seasonalAvailability: dto.seasonalAvailability,
             animalType: dto.animalType,
             breed: dto.breed,
@@ -154,7 +160,7 @@ export class AgricultureService {
             mobileService: dto.mobileService,
             vaccinationAvailable: dto.vaccinationAvailable,
             serviceRadiusKm: dto.serviceRadiusKm,
-            healthCertificate: dto.healthCertificate,
+            healthCertificate: false,
             availabilityDays: dto.availabilityDays,
           },
         },
@@ -176,24 +182,34 @@ export class AgricultureService {
     });
   }
 
-  
-    async addPhotos(id: string, files: Express.Multer.File[], userId: string) {
+  async addPhotos(id: string, files: Express.Multer.File[], userId: string) {
     const listing = await this.prisma.listing.findUnique({
       where: { id },
       include: { agriculture: true },
     });
-  
+
     if (!listing || listing.userId !== userId) {
       throw new ForbiddenException('Unauthorized');
     }
-  
+
     if (!listing.agriculture) {
-      throw new NotFoundException('Trades listing not found');
+      throw new NotFoundException('Agriculture listing not found');
     }
-  
-    const newPhotoUrls = files.map((file) => `/uploads/agriculture/${file.filename}`);
+
+    const newPhotoNames: string[] = [];
+    for (const file of files) {
+      const finalName = await validateAndReencodeImage(
+        file.path,
+        './uploads/agriculture',
+      );
+      newPhotoNames.push(finalName);
+    }
+
+    const newPhotoUrls = newPhotoNames.map(
+      (name) => `/uploads/agriculture/${name}`,
+    );
     const updatedImages = [...listing.images, ...newPhotoUrls];
-  
+
     return this.prisma.listing.update({
       where: { id },
       data: { images: updatedImages },

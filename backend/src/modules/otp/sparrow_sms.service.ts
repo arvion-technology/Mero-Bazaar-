@@ -1,5 +1,9 @@
 //using mock data instead of sparrowsms tokens
-import { Injectable, InternalServerErrorException, Logger} from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 
@@ -13,7 +17,8 @@ interface SparrowSmsResponse {
 @Injectable()
 export class SparrowSmsService {
   private readonly logger = new Logger(SparrowSmsService.name);
-  private readonly baseUrl = 'http://api.sparrowsms.com/v2/sms/';
+  // TLS only: the provider token and OTP must never travel in plaintext.
+  private readonly baseUrl = 'https://api.sparrowsms.com/v2/sms/';
 
   constructor(private config: ConfigService) {}
 
@@ -22,11 +27,16 @@ export class SparrowSmsService {
 
     const phone = this.normalizePhone(to);
 
-    // MOCK MODE
+    // MOCK MODE — development only. Never emit the OTP body into production logs;
+    // log only the destination so log readers cannot replay codes.
     if (provider === 'mock') {
-      this.logger.log(
-        `[MOCK SMS] OTP would be sent to ${phone}: ${message}`,
-      );
+      if (process.env.NODE_ENV === 'production') {
+        this.logger.log(
+          `[MOCK SMS] OTP sent to ${phone} (content withheld in production)`,
+        );
+      } else {
+        this.logger.log(`[MOCK SMS] OTP for ${phone}: ${message}`);
+      }
       return;
     }
 
@@ -64,9 +74,7 @@ export class SparrowSmsService {
       this.logger.log(`SMS sent successfully to ${phone}`);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        this.logger.error(
-          `Sparrow SMS network error: ${error.message}`,
-        );
+        this.logger.error(`Sparrow SMS network error: ${error.message}`);
         throw new InternalServerErrorException(
           'SMS service unavailable. Try again later.',
         );

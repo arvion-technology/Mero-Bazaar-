@@ -1,5 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { UserRole, VerificationStatus } from "@prisma/client";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { UserRole, VerificationStatus } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -8,9 +12,12 @@ export class AdminUserService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
-) {}
+  ) {}
 
-  async listUsers(role?: UserRole, kycStatus?: VerificationStatus | 'NOT_SUBMITTED') {
+  async listUsers(
+    role?: UserRole,
+    kycStatus?: VerificationStatus | 'NOT_SUBMITTED',
+  ) {
     const users = await this.prisma.user.findMany({
       where: role ? { role } : undefined,
       select: {
@@ -49,16 +56,16 @@ export class AdminUserService {
       },
     });
     if (!user) throw new NotFoundException('User not found. ');
-      
+
     if (user.vendorProfile) {
-    const agg = await this.prisma.review.aggregate({
-      where: { listing: { userId: user.id } },
-      _avg: { rating: true },
-      _count: { rating: true },
-    });
-    (user.vendorProfile as any).liveRating = agg._avg.rating ?? 0;
-    (user.vendorProfile as any).reviewCount = agg._count.rating;
-  }
+      const agg = await this.prisma.review.aggregate({
+        where: { listing: { userId: user.id } },
+        _avg: { rating: true },
+        _count: { rating: true },
+      });
+      (user.vendorProfile as any).liveRating = agg._avg.rating ?? 0;
+      (user.vendorProfile as any).reviewCount = agg._count.rating;
+    }
     return user;
   }
 
@@ -82,6 +89,46 @@ export class AdminUserService {
         title: 'User deactivated',
         description: `${user.name ?? user.email} was deactivated.`,
       });
+    }
+
+    return updated;
+  }
+
+  /**
+   * Admin-only role management. Privileged roles (DOCTOR, ADMIN) must never be
+   * self-assigned through public registration — only an admin can grant them.
+   */
+  async setRole(userId: string, role: UserRole) {
+    if (role === UserRole.ADMIN) {
+      throw new BadRequestException(
+        'Admin role cannot be granted through this endpoint.',
+      );
+    }
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { role },
+      select: { id: true, role: true },
+    });
+
+    // When a user is promoted to DOCTOR, ensure their doctor profile exists so
+    // the medical listing flow can bind the licence number to the account.
+    if (role === UserRole.DOCTOR) {
+      const existing = await this.prisma.doctorProfile.findUnique({
+        where: { userId },
+      });
+      if (!existing) {
+        await this.prisma.doctorProfile.create({
+          data: {
+            userId,
+            doctorName: user.name ?? 'Doctor',
+            nmcLicenseNumber: `NMC-${Date.now().toString(36).toUpperCase()}`,
+            specialization: 'GENERAL_MEDICINE',
+          },
+        });
+      }
     }
 
     return updated;

@@ -65,11 +65,11 @@ export const SERVICE_TYPE_LABEL: Record<MedicalServiceType, string> = {
 
 function to24Hour(time: string): string {
   const match = time.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
-  if (!match) return time; // already 24h or unparseable — pass through
-  let [, h, m, period] = match;
+  if (!match) return time;
+  const [, h, m, rawPeriod] = match;
   let hour = parseInt(h, 10);
-  if (period) {
-    period = period.toUpperCase();
+  if (rawPeriod) {
+    const period = rawPeriod.toUpperCase();
     if (period === "PM" && hour !== 12) hour += 12;
     if (period === "AM" && hour === 12) hour = 0;
   }

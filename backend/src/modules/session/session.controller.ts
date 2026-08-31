@@ -9,7 +9,12 @@ export class SessionsController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getMySessions(@Req() req: Request & { user: { id: string; sessionId?: string } }) {
-    return this.sessionsService.findActiveByUser(req.user.id, req.user.sessionId);
+  getMySessions(
+    @Req() req: Request & { user: { id: string; sessionId?: string } },
+  ) {
+    return this.sessionsService.findActiveByUser(
+      req.user.id,
+      req.user.sessionId,
+    );
   }
 }

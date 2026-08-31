@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Query, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -28,8 +37,13 @@ export class AdminUserController {
   setActive(
     @Param('id') id: string,
     @Request() req,
-    @Body('isActive') isActive: boolean,    
+    @Body('isActive') isActive: boolean,
   ) {
     return this.adminUserService.setActive(id, req.user.id, isActive);
+  }
+
+  @Patch(':id/role')
+  setRole(@Param('id') id: string, @Body('role') role: UserRole) {
+    return this.adminUserService.setRole(id, role);
   }
 }

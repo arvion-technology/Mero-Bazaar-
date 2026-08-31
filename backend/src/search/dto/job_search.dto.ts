@@ -1,4 +1,14 @@
-import { IsOptional, IsString, IsBoolean, IsInt,IsIn, IsEnum, IsArray, Min, Max } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsInt,
+  IsIn,
+  IsEnum,
+  IsArray,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ContractType } from '@prisma/client';
 
@@ -22,8 +32,10 @@ export class JobSearchDto {
   minSalary?: number;
 
   @IsOptional()
-  @Transform(({ value }) => {if (!value) return undefined;
-    return Array.isArray(value) ? value : [value];})
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    return Array.isArray(value) ? value : [value];
+  })
   @IsArray()
   @IsEnum(ContractType, { each: true })
   contractType?: ContractType[];

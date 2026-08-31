@@ -1,5 +1,12 @@
-import { Type } from "class-transformer";
-import { IsArray, IsEnum, IsInt, IsString, IsNotEmpty, Min } from "class-validator";
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsEnum,
+  IsInt,
+  IsString,
+  IsNotEmpty,
+  Min,
+} from 'class-validator';
 import { FoodType, PriceUnit, WeekDay } from '@prisma/client';
 
 export class CreateFoodsAndHomeDeliveryDto {

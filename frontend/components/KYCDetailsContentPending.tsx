@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { FiChevronRight, FiEdit3 } from "react-icons/fi";
+import { FiChevronRight } from "react-icons/fi";
 import KycDocumentImage from "./KycDocumentImage";
 import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
@@ -36,50 +36,42 @@ interface KYCDetailsContentPendingProps {
   kyc: KYCRecord | undefined;
 }
 
-export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendingProps) {
-  const [selectedStatus, setSelectedStatus] = useState<string>(kyc?.status || "Pending");
-  const [rejectionReason, setRejectionReason] = useState<string>("");
-  const { data: session } = useSession();
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
-
-  if (!kyc) {
+function DocumentPlaceholder({
+  label,
+  filename,
+  accessToken,
+}: {
+  label: string;
+  filename?: string | null;
+  accessToken?: string;
+}) {
+  if (!filename) {
     return (
-      <div style={{ padding: "32px" }}>
-        <h2 style={{ color: "#333", fontSize: "18px" }}>KYC record not found</h2>
+      <div style={{ textAlign: "center" as const }}>
+        <div
+          style={{
+            width: "100%",
+            height: "120px",
+            background: "#c4b5b5",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "8px",
+          }}
+        >
+          <span style={{ color: "#fff", fontSize: "12px", opacity: 0.7 }}>No Image</span>
+        </div>
       </div>
     );
   }
 
-  const DocumentPlaceholder = ({ label, filename }: { label: string; filename?: string | null }) => {
-    if (!filename) {
-      return (
-        <div style={{ textAlign: "center" as const }}>
-          <div
-            style={{
-              width: "100%",
-              height: "120px",
-              background: "#c4b5b5",
-              borderRadius: "8px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: "8px",
-            }}
-          >
-            <span style={{ color: "#fff", fontSize: "12px", opacity: 0.7 }}>No Image</span>
-          </div>
-        </div>
-      );
-    }
-
   const handleViewFullSize = async () => {
-    if (!session?.accessToken) return;
+    if (!accessToken) return;
     const newTab = window.open("", "_blank"); // open synchronously, before await
     try {
       const res = await fetch(`/api/vendor-kyc/admin/document/${filename}`, {
-        headers: { Authorization: `Bearer ${session.accessToken}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (!res.ok || !newTab) return;
       const blob = await res.blob();
@@ -91,31 +83,32 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
     }
   };
 
-    return (
-      <div style={{ textAlign: "center" as const }}>
-        <KycDocumentImage filename={filename} alt={label} />
-        <button
-          type="button"
-          onClick={handleViewFullSize}
-          style={{
-            background: "none",
-            border: "none",
-            color: "#6366f1",
-            fontSize: "13px",
-            cursor: "pointer",
-            fontWeight: 500,
-            textDecoration: "none",
-            display: "inline-block",
-            marginTop: "4px",
-          }}
-        >
-          View Full Size
-        </button>
-      </div>
-    );
-  };
+  return (
+    <div style={{ textAlign: "center" as const }}>
+      <KycDocumentImage filename={filename} alt={label} />
+      <button
+        type="button"
+        onClick={handleViewFullSize}
+        style={{
+          background: "none",
+          border: "none",
+          color: "#6366f1",
+          fontSize: "13px",
+          cursor: "pointer",
+          fontWeight: 500,
+          textDecoration: "none",
+          display: "inline-block",
+          marginTop: "4px",
+        }}
+      >
+        View Full Size
+      </button>
+    </div>
+  );
+}
 
-  const InfoRow = ({ label, value }: { label: string; value: string }) => (
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
     <div style={{ display: "contents" }}>
       <div
         style={{
@@ -147,6 +140,23 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
       </div>
     </div>
   );
+}
+
+export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendingProps) {
+  const [selectedStatus, setSelectedStatus] = useState<string>(kyc?.status || "Pending");
+  const [rejectionReason, setRejectionReason] = useState<string>("");
+  const { data: session } = useSession();
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+
+  if (!kyc) {
+    return (
+      <div style={{ padding: "32px" }}>
+        <h2 style={{ color: "#333", fontSize: "18px" }}>KYC record not found</h2>
+      </div>
+    );
+  }
 
   const showRejectionField = selectedStatus === "Rejected";
 
@@ -163,7 +173,6 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
   };
 
   const currentStatusStyle = getStatusBadgeStyle(kyc.status);
-
 
   const handleSubmitStatus = async () => {
     if (selectedStatus === "Rejected" && !rejectionReason.trim()) {
@@ -338,15 +347,15 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
               <div className="kyc-documents-grid">
                 <div>
                   <div className="kyc-doc-label">PAN Card Image</div>
-                  <DocumentPlaceholder label="PAN Card" filename={kyc.panCardUrl} />
+                  <DocumentPlaceholder label="PAN Card" filename={kyc.panCardUrl} accessToken={session?.accessToken} />
                 </div>
                 <div>
                   <div className="kyc-doc-label">Passport Size Photo</div>
-                  <DocumentPlaceholder label="Passport" filename={kyc.photoUrl} />
+                  <DocumentPlaceholder label="Passport" filename={kyc.photoUrl} accessToken={session?.accessToken} />
                 </div>
                 <div>
                   <div className="kyc-doc-label">Selfie With Pan Card</div>
-                  <DocumentPlaceholder label="Selfie" filename={kyc.selfieWithPanUrl} />
+                  <DocumentPlaceholder label="Selfie" filename={kyc.selfieWithPanUrl} accessToken={session?.accessToken} />
                 </div>
               </div>
             </div>

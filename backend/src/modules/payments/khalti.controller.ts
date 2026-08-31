@@ -1,4 +1,13 @@
-import { Controller, UseGuards, Post, Req, Body, Get, Res, Query } from '@nestjs/common';
+import {
+  Controller,
+  UseGuards,
+  Post,
+  Req,
+  Body,
+  Get,
+  Res,
+  Query,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { InitiateKhaltiDto } from './dto/initiate_khalti.dto';
@@ -18,9 +27,13 @@ export class KhaltiController {
   async callback(@Query('pidx') pidx: string, @Res() res: Response) {
     try {
       const order = await this.khaltiService.handleCallback(pidx);
-      return res.redirect(`${this.khaltiService.redirectFrontendUrl}/checkout/${order.id}?payment=success`);
+      return res.redirect(
+        `${this.khaltiService.redirectFrontendUrl}/checkout/${order.id}?payment=success`,
+      );
     } catch {
-      return res.redirect(`${this.khaltiService.redirectFrontendUrl}/checkout/failed?reason=verification_failed`);
+      return res.redirect(
+        `${this.khaltiService.redirectFrontendUrl}/checkout/failed?reason=verification_failed`,
+      );
     }
   }
 }

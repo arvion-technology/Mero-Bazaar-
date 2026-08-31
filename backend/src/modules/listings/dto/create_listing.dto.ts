@@ -1,15 +1,13 @@
-import {
+﻿import {
   IsArray,
   IsEnum,
   IsNumber,
-  ValidateNested,
   IsOptional,
   IsString,
-} from "class-validator";
+} from 'class-validator';
 
-import { CreateVehicleDto } from "src/modules/vehicles/dto/create_vehicle.dto";
-import { Type } from "class-transformer";
-import { ListingCategory } from "@prisma/client";
+import { Type } from 'class-transformer';
+import { ListingCategory } from '@prisma/client';
 
 export class CreateListingDto {
   @IsString()

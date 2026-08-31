@@ -1,6 +1,12 @@
-import { IsBoolean, IsNumber, IsOptional, IsString, IsEnum } from "class-validator";
-import { Type } from "class-transformer";
-import { ListingType, OwnerType, PropertyType } from "@prisma/client";
+import {
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsEnum,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { ListingType, OwnerType, PropertyType } from '@prisma/client';
 
 export class RentalSearchDto {
   @IsOptional()

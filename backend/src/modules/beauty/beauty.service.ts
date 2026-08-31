@@ -1,21 +1,30 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateHairBeautyAndWellnessDto } from './dto/create_beauty.dto';
 import { UpdateHairBeautyAndWellnessDto } from './dto/update_beauty.dto';
 import { ListingCategory } from '@prisma/client';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
+import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
 @Injectable()
 export class HairBeautyAndWellnessService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateHairBeautyAndWellnessDto, userId: string) {
+    await assertVerifiedSeller(this.prisma, userId);
     return this.prisma.listing.create({
       data: {
         title: dto.serviceTitle,
         category: ListingCategory.BEAUTY,
         description:
           dto.shortDescription ??
-          (dto.city ? `${dto.serviceType} available in ${dto.city}` : `${dto.serviceType} service`),
+          (dto.city
+            ? `${dto.serviceType} available in ${dto.city}`
+            : `${dto.serviceType} service`),
         price: dto.price,
         images: dto.portfolioUrls ?? [],
         user: {
@@ -72,34 +81,38 @@ export class HairBeautyAndWellnessService {
   }
 
   async findOne(id: string) {
-  const listing = await this.prisma.listing.findUnique({
-    where: { id },
-    include: {
-      beauty: true,
-      user: {
-        select: {
-          id: true,
-          name: true,
-          isVerified: true,
-          phone: true,
-          createdAt: true,
-          vendorProfile: {
-            select: { businessName: true, rating: true },
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      include: {
+        beauty: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            isVerified: true,
+            phone: true,
+            createdAt: true,
+            vendorProfile: {
+              select: { businessName: true, rating: true },
+            },
           },
         },
+        reviews: true,
       },
-      reviews: true,
-    },
-  });
+    });
 
-  if (!listing || listing.category !== ListingCategory.BEAUTY) {
-    throw new NotFoundException('Hair Beauty & Wellness listing not found');
+    if (!listing || listing.category !== ListingCategory.BEAUTY) {
+      throw new NotFoundException('Hair Beauty & Wellness listing not found');
+    }
+
+    return listing;
   }
 
-  return listing;
-}
-
-  async update(id: string, dto: UpdateHairBeautyAndWellnessDto, userId: string) {
+  async update(
+    id: string,
+    dto: UpdateHairBeautyAndWellnessDto,
+    userId: string,
+  ) {
     await this.findOne(id);
 
     return this.prisma.listing.update({
@@ -108,7 +121,9 @@ export class HairBeautyAndWellnessService {
         title: dto.serviceTitle,
         description:
           dto.shortDescription ??
-          (dto.city ? `${dto.serviceType ?? ''} available in ${dto.city}` : undefined),
+          (dto.city
+            ? `${dto.serviceType ?? ''} available in ${dto.city}`
+            : undefined),
         price: dto.price,
         images: dto.portfolioUrls ?? undefined,
         beauty: {
@@ -155,7 +170,16 @@ export class HairBeautyAndWellnessService {
       throw new NotFoundException('Beauty listing not found');
     }
 
-    const newPhotoUrls = files.map((file) => `/uploads/beauty/${file.filename}`);
+    const newPhotoNames: string[] = [];
+    for (const file of files) {
+      const finalName = await validateAndReencodeImage(
+        file.path,
+        './uploads/beauty',
+      );
+      newPhotoNames.push(finalName);
+    }
+
+    const newPhotoUrls = newPhotoNames.map((name) => `/uploads/beauty/${name}`);
     const updatedImages = [...listing.images, ...newPhotoUrls];
 
     return this.prisma.listing.update({

@@ -803,7 +803,7 @@ function NewListingContent() {
               </div>
               <div className="section-title-wrap">
                 <h2>Vehicle Details</h2>
-                <p>Specify your vehicle's specifications</p>
+                <p>Specify your vehicle&apos;s specifications</p>
               </div>
             </div>
 

@@ -1,4 +1,4 @@
-import { Prisma, ListingCategory, OwnerType, PropertyType, ListingType } from '@prisma/client'; 
+import { Prisma, ListingCategory } from '@prisma/client';
 import { RentalSearchDto } from '../dto/rental_search.dto';
 
 export function buildRentalFilter(
@@ -73,8 +73,7 @@ export function buildRentalFilter(
           noBroker: dto.noBroker,
         }),
 
-        ...((dto.minPrice !== undefined ||
-          dto.maxPrice !== undefined) && {
+        ...((dto.minPrice !== undefined || dto.maxPrice !== undefined) && {
           monthlyRent: {
             ...(dto.minPrice !== undefined && {
               gte: dto.minPrice,

@@ -38,8 +38,7 @@ export function buildBeautyFilter(
               priceStartingFrom: dto.priceStartingFrom,
             }),
 
-            ...((dto.minPrice !== undefined ||
-              dto.maxPrice !== undefined) && {
+            ...((dto.minPrice !== undefined || dto.maxPrice !== undefined) && {
               price: {
                 ...(dto.minPrice !== undefined && {
                   gte: dto.minPrice,

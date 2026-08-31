@@ -1,4 +1,17 @@
-import { Controller, Delete, Param, Body, Post, Get, Patch, UseGuards, Request, Query, NotFoundException, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Param,
+  Body,
+  Post,
+  Get,
+  Patch,
+  UseGuards,
+  Request,
+  Query,
+  NotFoundException,
+  UseInterceptors,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { UpdateUserDto } from './dto/update_user.dto';
 import { Roles } from '../auth/roles.decorator';
@@ -11,6 +24,8 @@ import { UploadedFile } from '@nestjs/common';
 import { profileUploadConfig } from './upload/profile_upload.config';
 import { ActivityLogService } from './activity_log.service';
 import { InternalAuthGuard } from '../auth/internal_auth.guard';
+import { ForgotPasswordDto } from './dto/forgot_password.dto';
+import { ResetPasswordDto } from './dto/reset_password.dto';
 
 @Controller('user')
 export class UserController {
@@ -26,6 +41,7 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('by-email')
   async getUserByEmail(@Query('email') email: string) {
     const user = await this.userService.findByEmail(email);
@@ -40,20 +56,19 @@ export class UserController {
   }
 
   @Post('forgot-password')
-  forgotPassword(@Body() body: { email: string }) {
-    return this.userService.forgotPassword(body.email);
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.userService.forgotPassword(dto.email);
   }
 
   @Post('reset-password')
-  resetPassword(@Body() body: { token: string; newPassword: string }) {
-    console.log('reset-password hit, body:', body);
-    return this.userService.resetPassword(body.token, body.newPassword);
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.userService.resetPassword(dto.token, dto.newPassword);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile/activity')
   getActivityLog(@Request() req) {
-    return  this.activityLogService.list(req.user.id);
+    return this.activityLogService.list(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -71,13 +86,27 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Patch('profile/password')
   updatePassword(@Request() req, @Body() dto: UpdatePasswordDto) {
-    return this.userService.updatePassword(req.user.id, dto);
+    return this.userService.updatePassword(
+      req.user.id,
+      dto,
+      req.user.sessionId,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('profile/phone/request')
-  requestPhoneUpdate(@Request() req, @Body('phone') phone: string) {
-    return this.userService.requestPhoneUpdate(req.user.id, phone);
+  requestPhoneUpdate(
+    @Request() req,
+    @Body('phone') phone: string,
+    @Body('currentPassword') currentPassword?: string,
+    @Body('otp') otp?: string,
+  ) {
+    return this.userService.requestPhoneUpdate(
+      req.user.id,
+      phone,
+      currentPassword,
+      otp,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -100,21 +129,41 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Post('2fa/disable')
-  disableTwoFactor(@Request() req) {
-    return this.userService.disableTwoFactor(req.user.id);
+  disableTwoFactor(
+    @Request() req,
+    @Body('currentPassword') currentPassword?: string,
+    @Body('otp') otp?: string,
+  ) {
+    return this.userService.disableTwoFactor(req.user.id, currentPassword, otp);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('profile/me')
-  removeSelf(@Request() req) {
-    return this.userService.remove(req.user.id);
+  removeSelf(
+    @Request() req,
+    @Body('currentPassword') currentPassword?: string,
+    @Body('otp') otp?: string,
+  ) {
+    return this.userService.removeSelf(req.user.id, currentPassword, otp);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('profile/photo')
   @UseInterceptors(FileInterceptor('image', profileUploadConfig))
-  uploadProfilePhoto(@Request() req, @UploadedFile() file: Express.Multer.File) {
-    return this.userService.updateProfileImage(req.user.id, file);
+  async uploadProfilePhoto(
+    @Request() req,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    try {
+      return await this.userService.updateProfileImage(req.user.id, file);
+    } catch (err) {
+      // Multer already wrote the temp file — never leave an orphan behind.
+      if (file?.path) {
+        const { unlink } = await import('fs/promises');
+        await unlink(file.path).catch(() => {});
+      }
+      throw err;
+    }
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

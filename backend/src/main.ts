@@ -5,9 +5,11 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { json, urlencoded } from 'express';
 
-async function bootstrap() { 
+async function bootstrap() {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-    throw new Error('JWT_SECRET is missing or two short (need 32+ chars of entropy). Refusing to start.');
+    throw new Error(
+      'JWT_SECRET is missing or two short (need 32+ chars of entropy). Refusing to start.',
+    );
   }
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -30,7 +32,7 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
-  
+
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads',
   });

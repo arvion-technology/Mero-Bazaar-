@@ -6,15 +6,18 @@ export class VendorService {
   constructor(private prisma: PrismaService) {}
 
   async getStats(sellerId: string) {
-    const [totalOrders, pendingOrders, revenueAgg, productsCount] = await Promise.all([
-      this.prisma.order.count({ where: { listing: { userId: sellerId } } }),
-      this.prisma.order.count({ where: { listing: { userId: sellerId }, status: 'PENDING' } }),
-      this.prisma.order.aggregate({
-        where: { listing: { userId: sellerId }, status: 'DELIVERED' },
-        _sum: { totalPrice: true },
-      }),
-      this.prisma.listing.count({ where: { userId: sellerId } }),
-    ]);
+    const [totalOrders, pendingOrders, revenueAgg, productsCount] =
+      await Promise.all([
+        this.prisma.order.count({ where: { listing: { userId: sellerId } } }),
+        this.prisma.order.count({
+          where: { listing: { userId: sellerId }, status: 'PENDING' },
+        }),
+        this.prisma.order.aggregate({
+          where: { listing: { userId: sellerId }, status: 'DELIVERED' },
+          _sum: { totalPrice: true },
+        }),
+        this.prisma.listing.count({ where: { userId: sellerId } }),
+      ]);
 
     return {
       totalOrders,

@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+coverage/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+*.pem
+
+# Runtime uploads / private storage (never commit identity documents)
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/private-storage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+
+# Next.js
+frontend/next-env.d.ts

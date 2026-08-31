@@ -1,5 +1,12 @@
-import { IsInt, IsOptional, IsString, Min, Max, IsNotEmpty } from "class-validator";
-import { Type, Transform } from "class-transformer";
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+  Max,
+  IsNotEmpty,
+} from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 
 export class CreateReviewDto {
   @IsString()

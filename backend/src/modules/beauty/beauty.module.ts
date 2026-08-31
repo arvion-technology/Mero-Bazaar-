@@ -15,6 +15,11 @@ import { AuthModule } from '../auth/auth.module';
     BeautyAppointmentsController,
     HairBeautyAndWellnessController,
   ],
-  providers: [HairBeautyAndWellnessService, PrismaService, BeautySlotsService, BeautyAppointmentsService],
+  providers: [
+    HairBeautyAndWellnessService,
+    PrismaService,
+    BeautySlotsService,
+    BeautyAppointmentsService,
+  ],
 })
 export class BeautyModule {}

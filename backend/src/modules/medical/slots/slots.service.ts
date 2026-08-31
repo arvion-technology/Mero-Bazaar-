@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { Prisma, WeekDay } from '@prisma/client';
 import { UpdateMedicalSlotDto } from './dto/update_medical_slots.dto';
@@ -39,7 +44,11 @@ export class MedicalSlotsService {
     return listing;
   }
 
-  private assertOwnerOrAdmin(listingUserId: string, userId: string, role: string) {
+  private assertOwnerOrAdmin(
+    listingUserId: string,
+    userId: string,
+    role: string,
+  ) {
     if (role !== 'ADMIN' && listingUserId !== userId) {
       throw new ForbiddenException('You do not own this medical listing');
     }
@@ -64,7 +73,9 @@ export class MedicalSlotsService {
     });
 
     if (existing) {
-      throw new BadRequestException('Slot already exists for this day and time');
+      throw new BadRequestException(
+        'Slot already exists for this day and time',
+      );
     }
 
     try {
@@ -77,8 +88,13 @@ export class MedicalSlotsService {
         },
       });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new BadRequestException('Slot already exists for this day and time');
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new BadRequestException(
+          'Slot already exists for this day and time',
+        );
       }
       throw e;
     }
@@ -161,7 +177,12 @@ export class MedicalSlotsService {
     return slot;
   }
 
-  async update(id: string, dto: UpdateMedicalSlotDto, userId: string, role: string) {
+  async update(
+    id: string,
+    dto: UpdateMedicalSlotDto,
+    userId: string,
+    role: string,
+  ) {
     const slot = await this.findOneWithOwner(id);
     this.assertOwnerOrAdmin(slot.medical.listing.userId, userId, role);
 

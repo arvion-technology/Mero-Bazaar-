@@ -7,6 +7,6 @@ import { PrismaModule } from 'src/database/prisma.module';
 @Module({
   imports: [PrismaModule, AuthModule],
   controllers: [WishlistController],
-  providers: [WishlistService]
+  providers: [WishlistService],
 })
 export class WishlistModule {}

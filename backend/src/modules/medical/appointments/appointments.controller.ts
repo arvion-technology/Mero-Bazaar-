@@ -1,4 +1,14 @@
-import { Controller, Post, Body, Delete, Param, Get, Patch, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Delete,
+  Param,
+  Get,
+  Patch,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { CreateMedicalAppointmentDto } from './dto/create_medical_appointment.dto';
 import { MedicalAppointmentsService } from './appointments.service';
 import { UpdateMedicalAppointmentStatusDto } from './dto/update_beauty_appointment_status.dto';
@@ -8,7 +18,9 @@ import { Roles } from '../../auth/roles.decorator';
 
 @Controller('medical/appointments')
 export class MedicalAppointmentsController {
-  constructor(private readonly appointmentsService: MedicalAppointmentsService) {}
+  constructor(
+    private readonly appointmentsService: MedicalAppointmentsService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -32,7 +44,11 @@ export class MedicalAppointmentsController {
   @UseGuards(JwtAuthGuard)
   @Get('by-listing/:listingId')
   findByListing(@Param('listingId') listingId: string, @Request() req) {
-    return this.appointmentsService.findByMedical(listingId, req.user.id, req.user.role);
+    return this.appointmentsService.findByMedical(
+      listingId,
+      req.user.id,
+      req.user.role,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -48,7 +64,12 @@ export class MedicalAppointmentsController {
     @Body() dto: UpdateMedicalAppointmentStatusDto,
     @Request() req,
   ) {
-    return this.appointmentsService.updateStatus(id, dto.status, req.user.id, req.user.role);
+    return this.appointmentsService.updateStatus(
+      id,
+      dto.status,
+      req.user.id,
+      req.user.role,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

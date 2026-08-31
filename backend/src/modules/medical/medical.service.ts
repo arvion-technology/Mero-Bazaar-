@@ -1,14 +1,45 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateMedicalDto } from './dto/create_medical.dto';
 import { MedicalQueryDto } from './dto/medical_query.dto';
 import { ListingCategory, MedicalServiceType } from '@prisma/client';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
 
 @Injectable()
 export class MedicalService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateMedicalDto, userId: string) {
+    // Bind the claimed identity to the platform-assigned doctor profile: the NMC
+    // licence number on the listing must match the account's verified profile.
+    const doctor = await this.prisma.doctorProfile.findUnique({
+      where: { userId },
+    });
+
+    if (doctor) {
+      if (doctor.nmcLicenseNumber !== dto.nmcLicenseNumber) {
+        throw new ForbiddenException(
+          'NMC licence number does not match your verified doctor profile.',
+        );
+      }
+    } else {
+      // First-time doctor: seed the profile from the submitted licence. It starts
+      // PENDING and only an admin verification document approval flips it to VERIFIED.
+      await this.prisma.doctorProfile.create({
+        data: {
+          userId,
+          doctorName: dto.doctorName,
+          nmcLicenseNumber: dto.nmcLicenseNumber,
+          specialization: dto.specialty,
+          clinicAddress: dto.clinicAddress,
+        },
+      });
+    }
+
     return this.prisma.$transaction(async (tx) => {
       const listing = await tx.listing.create({
         data: {
@@ -61,38 +92,38 @@ export class MedicalService {
     });
   }
 
-async findAll(query: MedicalQueryDto) {
-  return this.prisma.listing.findMany({
-    where: {
-      category: ListingCategory.MEDICAL,
-      medical: {
-        is: {
-          ...(query.city && {
-            city: query.city,
-          }),
+  async findAll(query: MedicalQueryDto) {
+    return this.prisma.listing.findMany({
+      where: {
+        category: ListingCategory.MEDICAL,
+        medical: {
+          is: {
+            ...(query.city && {
+              city: query.city,
+            }),
 
-          ...(query.specialty && {
-            serviceType: query.specialty as MedicalServiceType,
-          }),
+            ...(query.specialty && {
+              serviceType: query.specialty as MedicalServiceType,
+            }),
 
-          ...(query.doctorName && {
-            doctorName: {
-              contains: query.doctorName,
-              mode: 'insensitive',
-            },
-          }),
+            ...(query.doctorName && {
+              doctorName: {
+                contains: query.doctorName,
+                mode: 'insensitive',
+              },
+            }),
 
-          ...(query.homeVisitAvailable !== undefined && {
-            homeVisitAvailable: query.homeVisitAvailable,
-          }),
+            ...(query.homeVisitAvailable !== undefined && {
+              homeVisitAvailable: query.homeVisitAvailable,
+            }),
+          },
         },
       },
-    },
-    include: {
-      medical: true,
-    },
-  });
-}
+      include: {
+        medical: true,
+      },
+    });
+  }
 
   async findOne(id: string) {
     return this.prisma.listing.findFirst({
@@ -191,7 +222,18 @@ async findAll(query: MedicalQueryDto) {
       throw new ForbiddenException('Unauthorized');
     }
 
-    const newPhotoUrls = files.map((file) => `/uploads/medical/${file.filename}`);
+    const newPhotoNames: string[] = [];
+    for (const file of files) {
+      const finalName = await validateAndReencodeImage(
+        file.path,
+        './uploads/medical',
+      );
+      newPhotoNames.push(finalName);
+    }
+
+    const newPhotoUrls = newPhotoNames.map(
+      (name) => `/uploads/medical/${name}`,
+    );
     const updatedImages = [...listing.images, ...newPhotoUrls];
 
     return this.prisma.listing.update({

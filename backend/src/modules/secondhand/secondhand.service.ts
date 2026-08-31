@@ -1,152 +1,159 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateSecondHandDto } from './dto/create_secondhand.dto';
-import { ListingCategory, ListingStatus, SecondHandCategory, SecondHandCondition } from '@prisma/client';
+import { ListingCategory } from '@prisma/client';
 import { QuerySecondHandDto } from './dto/query_secondhand.dto';
 import { UpdateSecondHandDto } from './dto/update_secondhand.dto';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
+import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
 @Injectable()
 export class SecondhandService {
   constructor(private prisma: PrismaService) {}
-  
-    async create(dto: CreateSecondHandDto, userId: string) {
-      return this.prisma.listing.create({
-        data: {
-          title: dto.itemName,
-          category: ListingCategory.SECONDHAND,
-          description: dto.description,
-          price: dto.price,
-          images: dto.photos,
-          user: {
-            connect: {
-              id: userId,
-            },
-          },
-          secondhand: {
-            create: {
-                category: dto.category,
-                condition: dto.condition,
-                itemName: dto.itemName,
-                price: dto.price,
-                isNegotiable: dto.isNegotiable ?? false,
-                photos: dto.photos,
-                city: dto.city,
-                description: dto.description,
-                expiresAt: new Date(dto.expiresAt),
-            },
+
+  async create(dto: CreateSecondHandDto, userId: string) {
+    await assertVerifiedSeller(this.prisma, userId);
+    return this.prisma.listing.create({
+      data: {
+        title: dto.itemName,
+        category: ListingCategory.SECONDHAND,
+        description: dto.description,
+        price: dto.price,
+        images: dto.photos,
+        user: {
+          connect: {
+            id: userId,
           },
         },
-        include: {
-          secondhand: true,
-        },
-      });
-    }
-
-    async findAll(query: QuerySecondHandDto) {
-      return this.prisma.listing.findMany({
-        where: {
-            category: ListingCategory.SECONDHAND,
-            secondhand: {
-              is: {
-                ...(query.category && { category: query.category }),
-                ...(query.condition && { condition: query.condition }),
-                ...(query.city && { city: query.city }),
-                ...(query.minPrice || query.maxPrice 
-                  ?{
-                    price: {
-                      gte: query.minPrice,
-                      lte: query.maxPrice,
-                    },
-                  }
-                  : {}),
-              },
-            },
-        },
-        include: {
-          secondhand:true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-    }
-
-    async findOne(id: string) {
-      const listing = await this.prisma.listing.findUnique({
-        where: { id },
-        include: {
-          secondhand: true,
-          user: {
-            select: {
-              id: true,
-              name: true,
-              phone: true,
-              image: true,
-              isVerified: true,
-              createdAt: true,
-              _count: { select: { listings: true } },
-            },
-          },
-          reviews: true, // if Review is scoped per-listing, not per-seller — check this against how vehicles does it
-        },
-      });
-      if (!listing || listing.category !== ListingCategory.SECONDHAND) {
-        throw new NotFoundException('Secondhand listing not found');
-      }
-      return listing;
-    }
-
-    async update(id: string, dto: UpdateSecondHandDto, userId: string) {
-      const listing = await this.prisma.listing.findUnique({
-        where: { id },
-      });
-
-      if (!listing || listing.userId !== userId) {
-        throw new ForbiddenException('Unauthorized');
-      }
-
-      return this.prisma.listing.update({
-        where: { id },
-        data: {
-          title: dto.itemName,
-          description: dto.description,
-          price: dto.price,
-          images: dto.photos,
-
-          secondhand: {
-            update: {
-              category: dto.category,
-              condition: dto.condition,
-              itemName: dto.itemName,
-              price: dto.price,
-              isNegotiable: dto.isNegotiable,
-              photos: dto.photos,
-              city: dto.city,
-              description: dto.description,
-              ...(dto.expiresAt && {
-                expiresAt: new Date(dto.expiresAt),
-              }),
-            },
+        secondhand: {
+          create: {
+            category: dto.category,
+            condition: dto.condition,
+            itemName: dto.itemName,
+            price: dto.price,
+            isNegotiable: dto.isNegotiable ?? false,
+            photos: dto.photos,
+            city: dto.city,
+            description: dto.description,
+            expiresAt: new Date(dto.expiresAt),
           },
         },
-        include: {
-          secondhand: true,
+      },
+      include: {
+        secondhand: true,
+      },
+    });
+  }
+
+  async findAll(query: QuerySecondHandDto) {
+    return this.prisma.listing.findMany({
+      where: {
+        category: ListingCategory.SECONDHAND,
+        secondhand: {
+          is: {
+            ...(query.category && { category: query.category }),
+            ...(query.condition && { condition: query.condition }),
+            ...(query.city && { city: query.city }),
+            ...(query.minPrice || query.maxPrice
+              ? {
+                  price: {
+                    gte: query.minPrice,
+                    lte: query.maxPrice,
+                  },
+                }
+              : {}),
+          },
         },
-      });
-    }
-    async remove(id: string, userId: string) {
-      const listing = await this.prisma.listing.findUnique({
-        where: { id },
-      });
+      },
+      include: {
+        secondhand: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
 
-      if (!listing || listing.userId !== userId) {
-        throw new ForbiddenException('Unauthorized');
-      }
-
-      return this.prisma.listing.delete({
-        where: { id },
-      });
+  async findOne(id: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      include: {
+        secondhand: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            image: true,
+            isVerified: true,
+            createdAt: true,
+            _count: { select: { listings: true } },
+          },
+        },
+        reviews: true, // if Review is scoped per-listing, not per-seller â€” check this against how vehicles does it
+      },
+    });
+    if (!listing || listing.category !== ListingCategory.SECONDHAND) {
+      throw new NotFoundException('Secondhand listing not found');
     }
+    return listing;
+  }
+
+  async update(id: string, dto: UpdateSecondHandDto, userId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+    });
+
+    if (!listing || listing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
+    return this.prisma.listing.update({
+      where: { id },
+      data: {
+        title: dto.itemName,
+        description: dto.description,
+        price: dto.price,
+        images: dto.photos,
+
+        secondhand: {
+          update: {
+            category: dto.category,
+            condition: dto.condition,
+            itemName: dto.itemName,
+            price: dto.price,
+            isNegotiable: dto.isNegotiable,
+            photos: dto.photos,
+            city: dto.city,
+            description: dto.description,
+            ...(dto.expiresAt && {
+              expiresAt: new Date(dto.expiresAt),
+            }),
+          },
+        },
+      },
+      include: {
+        secondhand: true,
+      },
+    });
+  }
+  async remove(id: string, userId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+    });
+
+    if (!listing || listing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
+    return this.prisma.listing.delete({
+      where: { id },
+    });
+  }
 
   async savePhotos(id: string, files: Express.Multer.File[], userId: string) {
     const listing = await this.prisma.listing.findUnique({
@@ -162,7 +169,18 @@ export class SecondhandService {
       throw new NotFoundException('Secondhand listing not found');
     }
 
-    const newPhotoUrls = files.map((file) => `/uploads/secondhand-goods/${file.filename}`);
+    const newPhotoNames: string[] = [];
+    for (const file of files) {
+      const finalName = await validateAndReencodeImage(
+        file.path,
+        './uploads/secondhand-goods',
+      );
+      newPhotoNames.push(finalName);
+    }
+
+    const newPhotoUrls = newPhotoNames.map(
+      (name) => `/uploads/secondhand-goods/${name}`,
+    );
 
     const updatedImages = [...listing.images, ...newPhotoUrls];
     const updatedPhotos = [...listing.secondhand.photos, ...newPhotoUrls];

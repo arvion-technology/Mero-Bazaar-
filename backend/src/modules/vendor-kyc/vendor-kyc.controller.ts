@@ -1,4 +1,16 @@
-import { Body, Controller, Param, UploadedFiles, UseGuards, Post, Get, Patch, Query, UseInterceptors, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  UploadedFiles,
+  UseGuards,
+  Post,
+  Get,
+  Patch,
+  Query,
+  UseInterceptors,
+  Request,
+} from '@nestjs/common';
 import { VendorKycService } from './vendor-kyc.service';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { kycUploadconfig } from './upload/kyc-upload.config';
@@ -49,7 +61,11 @@ export class VendorKycController {
 
   @Post('verify')
   @Roles(UserRole.VENDOR)
-  verifyOtp(@Request() req, @Body('otp') otp: string, @Body('phone') phone: string) {
+  verifyOtp(
+    @Request() req,
+    @Body('otp') otp: string,
+    @Body('phone') phone: string,
+  ) {
     return this.vendorKycService.verifyContactOtp(req.user.id, otp, phone);
   }
 
@@ -86,7 +102,7 @@ export class VendorKycController {
   getKycById(@Param('id') id: string) {
     return this.vendorKycService.getKycById(id);
   }
-  
+
   @Get('admin/document/:filename')
   @Roles(UserRole.ADMIN)
   getDocument(@Param('filename') filename: string, @Res() res: Response) {
@@ -96,7 +112,11 @@ export class VendorKycController {
   //patching rejected documents
   @Get('document/:filename')
   @Roles(UserRole.VENDOR)
-  getOwnDocument(@Request() req, @Param('filename') filename: string, @Res() res: Response) {
+  getOwnDocument(
+    @Request() req,
+    @Param('filename') filename: string,
+    @Res() res: Response,
+  ) {
     return this.vendorKycService.streamOwnDocument(req.user.id, filename, res);
   }
 }

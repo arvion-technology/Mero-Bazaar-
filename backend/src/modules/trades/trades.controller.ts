@@ -1,4 +1,18 @@
-import { Controller, Get, Post, Body, Query, Param, ParseFloatPipe, Patch, Delete, UseGuards, Request, UseInterceptors, UploadedFiles} from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  Param,
+  ParseFloatPipe,
+  Patch,
+  Delete,
+  UseGuards,
+  Request,
+  UseInterceptors,
+  UploadedFiles,
+} from '@nestjs/common';
 import { TradesService } from './trades.service';
 import { CreateTradesDto } from './dto/create_trades.dto';
 import { QueryTradesDto } from './dto/query_trades.dto';
@@ -7,7 +21,11 @@ import { UpdateTradesDto } from './dto/update_trades.dto';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import {
+  imageFileFilter,
+  serverFilename,
+  removeUploadedFiles,
+} from '../../common/uploads/upload.utils';
 
 @Controller('trades')
 export class TradesController {
@@ -40,7 +58,11 @@ export class TradesController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/lead')
-  createLead(@Param('id') id: string, @Body() dto: CreateLeadDto, @Request() req) {
+  createLead(
+    @Param('id') id: string,
+    @Body() dto: CreateLeadDto,
+    @Request() req,
+  ) {
     return this.tradesService.createLead(id, dto, req.user.id);
   }
 
@@ -51,7 +73,11 @@ export class TradesController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateTradesDto, @Request() req) {
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateTradesDto,
+    @Request() req,
+  ) {
     return this.tradesService.update(id, dto, req.user.id);
   }
 
@@ -61,26 +87,28 @@ export class TradesController {
     return this.tradesService.remove(id, req.user.id);
   }
 
-
   @UseGuards(JwtAuthGuard)
   @Post(':id/photos')
   @UseInterceptors(
     FilesInterceptor('photos', 10, {
       storage: diskStorage({
         destination: './uploads/trades',
-        filename: (req, file, cb) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-        },
+        filename: serverFilename,
       }),
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per file
+      fileFilter: imageFileFilter,
     }),
   )
-  addPhotos(
+  async addPhotos(
     @Param('id') id: string,
     @UploadedFiles() files: Express.Multer.File[],
     @Request() req,
   ) {
-    return this.tradesService.addPhotos(id, files, req.user.id);
+    try {
+      return await this.tradesService.addPhotos(id, files, req.user.id);
+    } catch (err) {
+      await removeUploadedFiles(files);
+      throw err;
+    }
   }
 }

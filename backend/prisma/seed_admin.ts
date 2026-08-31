@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { PrismaClient, UserRole } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 
@@ -32,7 +33,7 @@ async function main() {
   });
 
   console.log("Admin ready:", admin.email, admin.id);
-  console.log("Login with password:", plainPassword);
+  console.log("Admin credentials were read from environment and stored as a hash.");
 }
 
 main()

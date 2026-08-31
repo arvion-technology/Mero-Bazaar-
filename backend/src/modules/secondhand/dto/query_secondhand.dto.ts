@@ -1,6 +1,6 @@
-import { SecondHandCategory, SecondHandCondition } from "@prisma/client";
-import { IsEnum, IsInt, IsOptional, IsString, Min, Max } from "class-validator";
-import { Type } from "class-transformer";
+import { SecondHandCategory, SecondHandCondition } from '@prisma/client';
+import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class QuerySecondHandDto {
   @IsOptional()
@@ -33,5 +33,4 @@ export class QuerySecondHandDto {
   @IsOptional()
   @IsString()
   sort?: 'newest' | 'price-low' | 'price-high';
-
 }

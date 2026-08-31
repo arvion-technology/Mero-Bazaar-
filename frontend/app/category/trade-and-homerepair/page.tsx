@@ -30,11 +30,11 @@ import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 const TAG_ICON_MATCHERS: Array<[RegExp, React.ReactNode]> = [
-  [/plumb/i, <MdPlumbing size={22} color="#b45309" />],
-  [/electric|wiring/i, <MdElectricalServices size={22} color="#b45309" />],
-  [/paint/i, <MdFormatPaint size={22} color="#b45309" />],
-  [/clean/i, <MdCleaningServices size={22} color="#b45309" />],
-  [/repair|handyman|appliance/i, <MdHandyman size={22} color="#b45309" />],
+  [/plumb/i, <MdPlumbing key="plumb" size={22} color="#b45309" />],
+  [/electric|wiring/i, <MdElectricalServices key="electric" size={22} color="#b45309" />],
+  [/paint/i, <MdFormatPaint key="paint" size={22} color="#b45309" />],
+  [/clean/i, <MdCleaningServices key="clean" size={22} color="#b45309" />],
+  [/repair|handyman|appliance/i, <MdHandyman key="repair" size={22} color="#b45309" />],
 ];
 
 function iconForTag(tag: string): React.ReactNode {

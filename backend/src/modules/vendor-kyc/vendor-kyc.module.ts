@@ -8,12 +8,8 @@ import { FileSanitizeService } from './upload/file_sanitize.service';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [ 
-    PrismaModule,
-    PhoneOtpModule,
-    NotificationsModule
-  ],
+  imports: [PrismaModule, PhoneOtpModule, NotificationsModule],
   providers: [VendorKycService, FileValidationService, FileSanitizeService],
-  controllers: [VendorKycController]
+  controllers: [VendorKycController],
 })
 export class VendorKycModule {}

@@ -11,7 +11,6 @@ export class MedicalQueryDto {
   @IsEnum(MedicalServiceType)
   specialty?: MedicalServiceType;
 
-
   @IsOptional()
   @IsString()
   doctorName?: string;

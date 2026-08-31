@@ -1,6 +1,13 @@
-import {IsOptional, IsString, IsNumber, IsEnum, Min, Max } from "class-validator";
-import { Type } from "class-transformer";
-import { ListingCategory } from "@prisma/client";
+import {
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsEnum,
+  Min,
+  Max,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { ListingCategory } from '@prisma/client';
 
 export class ListingSearchDto {
   @IsOptional()

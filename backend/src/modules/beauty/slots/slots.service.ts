@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateBeautySlotDto } from './dto/create_beauty_slot.dto';
 import { UpdateBeautySlotDto } from './dto/update_beauty_slot.dto';
@@ -39,7 +44,11 @@ export class BeautySlotsService {
     return listing;
   }
 
-  private assertOwnerOrAdmin(listingUserId: string, userId: string, role: string) {
+  private assertOwnerOrAdmin(
+    listingUserId: string,
+    userId: string,
+    role: string,
+  ) {
     if (role !== 'ADMIN' && listingUserId !== userId) {
       throw new ForbiddenException('You do not own this beauty listing');
     }
@@ -64,7 +73,9 @@ export class BeautySlotsService {
     });
 
     if (existing) {
-      throw new BadRequestException('Slot already exists for this day and time');
+      throw new BadRequestException(
+        'Slot already exists for this day and time',
+      );
     }
 
     try {
@@ -77,8 +88,13 @@ export class BeautySlotsService {
         },
       });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new BadRequestException('Slot already exists for this day and time');
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new BadRequestException(
+          'Slot already exists for this day and time',
+        );
       }
       throw e;
     }
@@ -161,7 +177,12 @@ export class BeautySlotsService {
     return slot;
   }
 
-  async update(id: string, dto: UpdateBeautySlotDto, userId: string, role: string) {
+  async update(
+    id: string,
+    dto: UpdateBeautySlotDto,
+    userId: string,
+    role: string,
+  ) {
     const slot = await this.findOneWithOwner(id);
     this.assertOwnerOrAdmin(slot.beauty.listing.userId, userId, role);
 

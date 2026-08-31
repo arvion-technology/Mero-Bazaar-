@@ -14,7 +14,19 @@ import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [PrismaModule, NotificationsModule],
-  controllers: [AdminUserController, AdminListingController, AdminReportController, AdminPaymentController, AdminFlagController],
-  providers: [AdminUserService, AdminListingService, AdminReportService, AdminPaymentService, AdminFlagService],
+  controllers: [
+    AdminUserController,
+    AdminListingController,
+    AdminReportController,
+    AdminPaymentController,
+    AdminFlagController,
+  ],
+  providers: [
+    AdminUserService,
+    AdminListingService,
+    AdminReportService,
+    AdminPaymentService,
+    AdminFlagService,
+  ],
 })
 export class AdminModule {}

@@ -13,7 +13,17 @@ import { SellerPaymentsController } from './payments.controller';
 
 @Module({
   imports: [PrismaModule, OrdersModule, AuthModule],
-  providers: [EsewaService, KhaltiService, ConnectipsService, SellerPaymentsService],
-  controllers: [EsewaController, KhaltiController, ConnectipsController, SellerPaymentsController], 
+  providers: [
+    EsewaService,
+    KhaltiService,
+    ConnectipsService,
+    SellerPaymentsService,
+  ],
+  controllers: [
+    EsewaController,
+    KhaltiController,
+    ConnectipsController,
+    SellerPaymentsController,
+  ],
 })
 export class PaymentsModule {}

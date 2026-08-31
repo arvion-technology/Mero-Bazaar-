@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -32,6 +32,8 @@ import {
   FiShield,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
+
+import { deleteAccountWithReauth, reauthFetch } from "@/lib/accountActions";
 
 const PRIMARY = "#C0392B";
 
@@ -168,7 +170,7 @@ export default function UserSettings() {
           await updateSession({ user: { ...session?.user, twoFactorEnabled: data.twoFactorEnabled } });
         }
       } catch {
-        // silent — non-critical background sync
+        // silent â€” non-critical background sync
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -198,10 +200,8 @@ export default function UserSettings() {
     setDeleting(true);
     setDeleteError("");
     try {
-      const res = await fetch("/api/user/delete-account", { 
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-       });
+      const res = await deleteAccountWithReauth(token);
+      if (res.status === 499) return; // user cancelled the confirmation
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.message || "Failed to delete account");
@@ -289,7 +289,7 @@ export default function UserSettings() {
   const profileFields = [
     { key: "name", icon: FiUser, label: "Full Name", value: profileForm.name, type: "text", editable: true },
     { key: "phone", icon: FiPhone, label: "Phone Number", value: profileForm.phone, type: "tel", editable: true },
-    { key: "email", icon: FiMail, label: "Email Address", value: session?.user?.email || "—", type: "email", editable: false },
+    { key: "email", icon: FiMail, label: "Email Address", value: session?.user?.email || "â€”", type: "email", editable: false },
     { key: "address", icon: FiMapPin, label: "Address", value: profileForm.address, type: "text", editable: true },
   ];
 
@@ -356,14 +356,12 @@ export default function UserSettings() {
       }
 
       if (phoneChanged && profileForm.phone) {
-        const phoneRes = await fetch("/api/user/profile/phone/request", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ phone: profileForm.phone }),
-        });
+        const phoneRes = await reauthFetch(
+          "/api/user/profile/phone/request",
+          token,
+          { phone: profileForm.phone },
+        );
+        if (phoneRes.status === 499) return; // user cancelled the confirmation
         if (!phoneRes.ok) {
           const data = await phoneRes.json().catch(() => null);
           setProfileForm((prev) => ({ ...prev, phone: session?.user?.phone || "" }));
@@ -510,14 +508,12 @@ async function handleConfirmEnable2FA() {
   }
 }
 
-// Disable — single call, no OTP needed since the user is already authenticated
+// Disable â€” requires step-up reauthentication (current password or OTP) per policy
 async function handleDisable2FA() {
   setTfaDisabling(true);
   try {
-    const res = await fetch("/api/user/2fa/disable", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await reauthFetch("/api/user/2fa/disable", token);
+    if (res.status === 499) return; // user cancelled the confirmation
     if (!res.ok) {
       const data = await res.json().catch(() => null);
       throw new Error(data?.message || "Failed to disable 2FA.");
@@ -551,7 +547,7 @@ async function handleDisable2FA() {
           font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
 
-        /* ── Sidebar ── */
+        /* â”€â”€ Sidebar â”€â”€ */
         .ud-sidebar {
           width: 260px;
           background: #ffffff;
@@ -766,7 +762,7 @@ async function handleDisable2FA() {
           max-width: 160px;
         }
 
-        /* ── Main Area ── */
+        /* â”€â”€ Main Area â”€â”€ */
         .ud-main-area {
           flex: 1;
           margin-left: 260px;
@@ -784,7 +780,7 @@ async function handleDisable2FA() {
           width: calc(100% - 72px);
         }
 
-        /* ── Top Header ── */
+        /* â”€â”€ Top Header â”€â”€ */
         .ud-topbar {
           background: #fff;
           border-bottom: 1px solid #e2e8f0;
@@ -885,7 +881,7 @@ async function handleDisable2FA() {
           border: 2px solid #fff;
         }
 
-        /* ── Profile Avatar Dropdown ── */
+        /* â”€â”€ Profile Avatar Dropdown â”€â”€ */
         .ud-profile-wrap {
           position: relative;
         }
@@ -1020,7 +1016,7 @@ async function handleDisable2FA() {
           margin: 0;
         }
 
-        /* ── Main Content ── */
+        /* â”€â”€ Main Content â”€â”€ */
         .ud-main {
           flex: 1;
           padding: 28px 32px;
@@ -1398,7 +1394,7 @@ async function handleDisable2FA() {
           color: #ef4444;
         }
 
-        /* ── Backdrop (mobile overlay) ── */
+        /* â”€â”€ Backdrop (mobile overlay) â”€â”€ */
         .ud-backdrop {
           display: none;
           position: fixed;
@@ -1462,7 +1458,7 @@ async function handleDisable2FA() {
           display: flex;
         }
 
-        /* ── Responsive ── */
+        /* â”€â”€ Responsive â”€â”€ */
 
         /* Tablet + Mobile: overlay sidebar */
         @media (max-width: 1023px) {
@@ -1612,7 +1608,7 @@ async function handleDisable2FA() {
           }
         }
 
-        /* ── Delete Account Modal ── */
+        /* â”€â”€ Delete Account Modal â”€â”€ */
         .ud-modal-overlay {
           position: fixed;
           inset: 0;
@@ -1719,7 +1715,7 @@ async function handleDisable2FA() {
         .ud-modal-delete:disabled { opacity: 0.7; cursor: not-allowed; }
       `}</style>
 
-      {/* ── Mobile Backdrop ── */}
+      {/* â”€â”€ Mobile Backdrop â”€â”€ */}
       <div
         className={`ud-backdrop ${sidebarOpen ? "active" : ""}`}
         onClick={() => setSidebarOpen(false)}
@@ -1727,7 +1723,7 @@ async function handleDisable2FA() {
       />
 
       <div className="ud-page">
-        {/* ── Sidebar ── */}
+        {/* â”€â”€ Sidebar â”€â”€ */}
         <aside className={`ud-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
           {/* Mobile close button */}
           <button
@@ -1809,7 +1805,7 @@ async function handleDisable2FA() {
           {/* Sidebar footer intentionally left empty */}
         </aside>
 
-        {/* ── Main Area ── */}
+        {/* â”€â”€ Main Area â”€â”€ */}
         <div className="ud-main-area">
           {/* Top Header */}
           <header className="ud-topbar">
@@ -1898,7 +1894,7 @@ async function handleDisable2FA() {
                       ))
                     ) : (
                       <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>
-                        You&apos;re all caught up ✓
+                        You&apos;re all caught up âœ“
                       </div>
                     )}
                   </div>
@@ -1981,7 +1977,7 @@ async function handleDisable2FA() {
 
               <div className="ud-profile-info">
                 <div className="ud-profile-name">{session?.user?.name || "User"}</div>
-                <div className="ud-profile-role">Member · Kathmandu, Nepal</div>
+                <div className="ud-profile-role">Member Â· Kathmandu, Nepal</div>
               </div>
               
               <div className="ud-profile-actions">
@@ -2004,7 +2000,7 @@ async function handleDisable2FA() {
               </div>
             </div>
 
-            {/* Account Details — Password field removed */}
+            {/* Account Details â€” Password field removed */}
             <div className="ud-section-header">
               <h3 className="ud-section-title">Account Information</h3>
             </div>
@@ -2171,7 +2167,7 @@ async function handleDisable2FA() {
         </div>
       </div>
 
-    {/* ── Delete Account Confirmation Modal ── */}
+    {/* â”€â”€ Delete Account Confirmation Modal â”€â”€ */}
     {showDeleteModal && (
       <div className="ud-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
         <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
@@ -2220,7 +2216,7 @@ async function handleDisable2FA() {
       </div>
     )}
 
-    {/* ── Active Sessions Modal ── */}
+    {/* â”€â”€ Active Sessions Modal â”€â”€ */}
     {showSessionsModal && (
       <div className="ud-modal-overlay" onClick={() => setShowSessionsModal(false)}>
         <div className="ud-modal" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
@@ -2259,7 +2255,7 @@ async function handleDisable2FA() {
                       )}
                     </div>
                     <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
-                      {s.ipAddress || "Unknown IP"} · Last active {new Date(s.lastActiveAt).toLocaleString()}
+                      {s.ipAddress || "Unknown IP"} Â· Last active {new Date(s.lastActiveAt).toLocaleString()}
                     </div>
                   </div>
                   {!s.isCurrent && (
@@ -2291,7 +2287,7 @@ async function handleDisable2FA() {
     )}
 
     
-        {/* ── Enable 2FA — Verify OTP Modal ── */}
+        {/* â”€â”€ Enable 2FA â€” Verify OTP Modal â”€â”€ */}
         {show2FAModal && (
           <div className="ud-modal-overlay" onClick={() => !tfaConfirming && setShow2FAModal(false)}>
             <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
@@ -2340,7 +2336,7 @@ async function handleDisable2FA() {
           </div>
         )}
 
-        {/* ── Disable 2FA Confirmation Modal ── */}
+        {/* â”€â”€ Disable 2FA Confirmation Modal â”€â”€ */}
         {showDisable2FAModal && (
           <div className="ud-modal-overlay" onClick={() => !tfaDisabling && setShowDisable2FAModal(false)}>
             <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
@@ -2374,7 +2370,7 @@ async function handleDisable2FA() {
           </div>
         )}
  
- {/* ── Phone OTP Verification Modal ── */}
+ {/* â”€â”€ Phone OTP Verification Modal â”€â”€ */}
         {showPhoneOtpModal && (
           <div className="ud-modal-overlay" onClick={() => !confirmingPhone && setShowPhoneOtpModal(false)}>
             <div className="ud-modal" onClick={(e) => e.stopPropagation()}>

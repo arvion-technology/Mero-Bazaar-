@@ -23,6 +23,7 @@ export function KycStatusProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!session?.accessToken) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- guard clause: no session yet, nothing to fetch; this is the correct terminal state, not a cascading re-render.
       setLoading(false);
       return;
     }

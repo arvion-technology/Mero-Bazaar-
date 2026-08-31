@@ -1,7 +1,9 @@
-import { Prisma } from "@prisma/client";
-import { VehicleSearchDto } from "../dto/vehicle_search.dto";
+import { Prisma } from '@prisma/client';
+import { VehicleSearchDto } from '../dto/vehicle_search.dto';
 
-export function buildVehicleFilter(dto: VehicleSearchDto): Prisma.ListingWhereInput {
+export function buildVehicleFilter(
+  dto: VehicleSearchDto,
+): Prisma.ListingWhereInput {
   const query = dto.query?.trim();
 
   return {
@@ -10,14 +12,14 @@ export function buildVehicleFilter(dto: VehicleSearchDto): Prisma.ListingWhereIn
         ...(dto.brand && {
           brand: {
             contains: dto.brand,
-            mode: "insensitive",
+            mode: 'insensitive',
           },
         }),
 
         ...(dto.model && {
           model: {
             contains: dto.model,
-            mode: "insensitive",
+            mode: 'insensitive',
           },
         }),
 
@@ -53,8 +55,8 @@ export function buildVehicleFilter(dto: VehicleSearchDto): Prisma.ListingWhereIn
 
         ...(query && {
           OR: [
-            { brand: { contains: query, mode: "insensitive" } },
-            { model: { contains: query, mode: "insensitive" } },
+            { brand: { contains: query, mode: 'insensitive' } },
+            { model: { contains: query, mode: 'insensitive' } },
           ],
         }),
       },

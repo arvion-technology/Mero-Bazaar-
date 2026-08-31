@@ -1,7 +1,23 @@
-import { Controller, Delete, Param, Patch, Get, Post, Body, UseGuards, Request, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Param,
+  Patch,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  UseInterceptors,
+  UploadedFiles,
+} from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import {
+  imageFileFilter,
+  serverFilename,
+  removeUploadedFiles,
+} from '../../common/uploads/upload.utils';
 import { HairBeautyAndWellnessService } from './beauty.service';
 import { CreateHairBeautyAndWellnessDto } from './dto/create_beauty.dto';
 import { UpdateHairBeautyAndWellnessDto } from './dto/update_beauty.dto';
@@ -29,7 +45,11 @@ export class HairBeautyAndWellnessController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateHairBeautyAndWellnessDto, @Request() req) {
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateHairBeautyAndWellnessDto,
+    @Request() req,
+  ) {
     return this.beautyService.update(id, dto, req.user.id);
   }
 
@@ -45,24 +65,22 @@ export class HairBeautyAndWellnessController {
     FilesInterceptor('images', 10, {
       storage: diskStorage({
         destination: './uploads/beauty',
-        filename: (req, file, cb) => {
-          const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          cb(null, `${unique}${extname(file.originalname)}`);
-        },
+        filename: serverFilename,
       }),
-      fileFilter: (req, file, cb) => {
-        if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-          return cb(new Error('Only JPG/PNG images allowed'), false);
-        }
-        cb(null, true);
-      },
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: imageFileFilter,
     }),
   )
-  addPhotos(
+  async addPhotos(
     @Param('id') id: string,
     @UploadedFiles() files: Express.Multer.File[],
     @Request() req,
   ) {
-    return this.beautyService.addPhotos(id, files, req.user.id);
+    try {
+      return await this.beautyService.addPhotos(id, files, req.user.id);
+    } catch (err) {
+      await removeUploadedFiles(files);
+      throw err;
+    }
   }
 }

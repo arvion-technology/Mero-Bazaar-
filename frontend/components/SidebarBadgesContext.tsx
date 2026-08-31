@@ -55,6 +55,7 @@ export function SidebarBadgesProvider({ children }: { children: React.ReactNode 
 
   // Baseline poll — keeps counts fresh even if the seller sits on one page with no navigation or actions.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchBadges is async; state updates happen after network I/O resolves, not synchronously in this effect (documented valid use: data-fetch/poll).
     fetchBadges();
     const interval = setInterval(fetchBadges, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
@@ -62,6 +63,7 @@ export function SidebarBadgesProvider({ children }: { children: React.ReactNode 
 
   // Refetch every time the seller navigates to a different page in the shell.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- see note above; async fetch on route change.
     fetchBadges();
   }, [pathname, fetchBadges]);
 

@@ -8,7 +8,12 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { PaymentVerificationService } from '../payments/payment-verification.service';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ScheduleModule.forRoot(), NotificationsModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    ScheduleModule.forRoot(),
+    NotificationsModule,
+  ],
   providers: [OrdersService, PaymentVerificationService],
   controllers: [OrdersController],
   exports: [OrdersService],

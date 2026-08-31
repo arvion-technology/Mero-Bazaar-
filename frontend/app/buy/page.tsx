@@ -208,6 +208,18 @@ export default function BuyPage() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastIdRef = useRef(0);
 
+  /* ─── TOAST HELPERS ─── */
+  const showToast = useCallback(
+    (message: string, type: "success" | "info" | "error" = "success") => {
+      const id = ++toastIdRef.current;
+      setToasts((prev) => [...prev, { id, message, type }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 2500);
+    },
+    [],
+  );
+
   /* ─── FETCH PRODUCTS ─── */
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -221,7 +233,7 @@ export default function BuyPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     fetchProducts();
@@ -236,15 +248,6 @@ export default function BuyPage() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  /* ─── TOAST HELPERS ─── */
-  const showToast = (message: string, type: "success" | "info" | "error" = "success") => {
-    const id = ++toastIdRef.current;
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 2500);
-  };
 
   /* ─── CART ACTIONS ─── */
   const addToCart = (item: BuyProduct, e: React.MouseEvent) => {

@@ -1,6 +1,14 @@
-import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, Min, Max } from "class-validator";
-import { FoodType, PriceUnit, WeekDay } from "@prisma/client";
-import { Type } from "class-transformer";
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  Min,
+  Max,
+} from 'class-validator';
+import { FoodType, PriceUnit, WeekDay } from '@prisma/client';
+import { Type } from 'class-transformer';
 
 export class QueryFoodsAndHomeDeliveryDto {
   @IsOptional()

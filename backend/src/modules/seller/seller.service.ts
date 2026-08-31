@@ -1,6 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 
+const MAX_PAGE_SIZE = 50;
+
+function clampPagination(page: number, take: number, defaultTake: number) {
+  const safePage = Number.isFinite(page) && page >= 1 ? Math.floor(page) : 1;
+  const safeTake =
+    Number.isFinite(take) && take >= 1
+      ? Math.min(Math.floor(take), MAX_PAGE_SIZE)
+      : defaultTake;
+  return { safePage, safeTake };
+}
+
 @Injectable()
 export class SellersService {
   constructor(private prisma: PrismaService) {}
@@ -59,12 +70,13 @@ export class SellersService {
   }
 
   async getSellerListings(sellerId: string, page = 1, take = 12) {
+    const { safePage, safeTake } = clampPagination(page, take, 12);
     const [listings, total] = await Promise.all([
       this.prisma.listing.findMany({
         where: { userId: sellerId },
         orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * take,
-        take,
+        skip: (safePage - 1) * safeTake,
+        take: safeTake,
         select: {
           id: true,
           title: true,
@@ -77,16 +89,17 @@ export class SellersService {
       this.prisma.listing.count({ where: { userId: sellerId } }),
     ]);
 
-    return { data: listings, total, page, pageSize: take };
+    return { data: listings, total, page: safePage, pageSize: safeTake };
   }
 
   async getSellerReviews(sellerId: string, page = 1, take = 10) {
+    const { safePage, safeTake } = clampPagination(page, take, 10);
     const [reviews, total] = await Promise.all([
       this.prisma.review.findMany({
         where: { listing: { userId: sellerId } },
         orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * take,
-        take,
+        skip: (safePage - 1) * safeTake,
+        take: safeTake,
         include: {
           user: { select: { name: true, image: true } },
           listing: { select: { id: true, title: true } },
@@ -107,8 +120,8 @@ export class SellersService {
         listingTitle: r.listing.title,
       })),
       total,
-      page,
-      pageSize: take,
+      page: safePage,
+      pageSize: safeTake,
     };
   }
 }

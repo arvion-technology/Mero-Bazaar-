@@ -1,4 +1,11 @@
-import { IsOptional, IsEnum, IsNumber, IsBoolean, IsString, IsInt } from 'class-validator';
+import {
+  IsOptional,
+  IsEnum,
+  IsNumber,
+  IsBoolean,
+  IsString,
+  IsInt,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { PropertyType, ListingType, OwnerType } from '@prisma/client';
 

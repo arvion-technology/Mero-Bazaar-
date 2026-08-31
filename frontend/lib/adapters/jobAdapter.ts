@@ -6,6 +6,9 @@ export function toContractType(label: string): string {
     "Full-time": "FULL_TIME",
     "Part-time": "PART_TIME",
     "Gig/Freelance": "GIG",
+    "Contract": "CONTRACT",
+    "Freelance": "FREELANCE",
+    "Internship": "INTERNSHIP",
     "Labour": "LABOUR",
     "Domestic": "DOMESTIC",
   };
@@ -14,9 +17,12 @@ export function toContractType(label: string): string {
 
 export function toTypeLabel(contractType: string): string {
   const map: Record<string, string> = {
-    FULL_TIME: "Full Time",
-    PART_TIME: "Part Time",
+    FULL_TIME: "Full-time",
+    PART_TIME: "Part-time",
     GIG: "Gig/Freelance",
+    CONTRACT: "Contract",
+    FREELANCE: "Freelance",
+    INTERNSHIP: "Internship",
     LABOUR: "Labour",
     DOMESTIC: "Domestic",
   };

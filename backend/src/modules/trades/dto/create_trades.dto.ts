@@ -1,5 +1,13 @@
-import { IsString, IsBoolean, IsOptional, IsArray, IsNumber, IsInt, ArrayNotEmpty, IsString as IsStringItem } from "class-validator";
-import { Type } from "class-transformer";
+import {
+  IsString,
+  IsBoolean,
+  IsOptional,
+  IsArray,
+  IsNumber,
+  IsInt,
+  ArrayNotEmpty,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateTradesDto {
   @IsString()

@@ -51,7 +51,7 @@ export class SearchController {
   }
 
   @Get('agriculture')
-  agriculture(@Query() filters: AgricultureSearchDto){
+  agriculture(@Query() filters: AgricultureSearchDto) {
     return this.searchService.agricultureSearch(filters);
   }
 

@@ -1,5 +1,5 @@
-import { IsBoolean, IsEnum, IsOptional, IsString } from "class-validator";
-import { BeautyServiceType } from "@prisma/client";
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
+import { BeautyServiceType } from '@prisma/client';
 
 export class QueryHairBeautyAndWellnessDto {
   @IsOptional()

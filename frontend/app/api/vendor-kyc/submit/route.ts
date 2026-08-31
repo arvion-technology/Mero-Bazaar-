@@ -14,10 +14,10 @@ export async function POST(req: NextRequest) {
     });
 
     const data = await res.json();
-    console.log("vendor-kyc/submit response:", res.status, data);
+    // Never log the KYC response: it contains PAN, bank, contact and document PII.
     return NextResponse.json(data, { status: res.status });
   } catch (err) {
-    console.error("vvendor-kyc/submit error:", err); 
+    console.error("vendor-kyc/submit error:", err instanceof Error ? err.message : err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

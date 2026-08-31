@@ -27,7 +27,10 @@ const DETAIL_SELECT = {
   beauty: true,
 } as const;
 
-const STATUS_MESSAGES: Record<ListingStatus, { title: string; description: (name: string) => string }> = {
+const STATUS_MESSAGES: Record<
+  ListingStatus,
+  { title: string; description: (name: string) => string }
+> = {
   ACTIVE: {
     title: 'Listing approved',
     description: (name) => `"${name}" is now live and visible to buyers.`,
@@ -42,7 +45,8 @@ const STATUS_MESSAGES: Record<ListingStatus, { title: string; description: (name
   },
   EXPIRED: {
     title: 'Listing taken down',
-    description: (name) => `"${name}" was removed or expired. Contact support if this looks wrong.`,
+    description: (name) =>
+      `"${name}" was removed or expired. Contact support if this looks wrong.`,
   },
 };
 
@@ -110,7 +114,13 @@ export class AdminListingService {
     if (!listing) throw new NotFoundException('Listing not found.');
 
     const categoryKey = listing.category.toLowerCase();
-    const { title, description, price, status, [categoryKey]: categoryData } = body;
+    const {
+      title,
+      description,
+      price,
+      status,
+      [categoryKey]: categoryData,
+    } = body;
 
     const data: Record<string, any> = {};
     if (title !== undefined) data.title = title;
@@ -118,7 +128,11 @@ export class AdminListingService {
     if (price !== undefined) data.price = price;
     if (status !== undefined) data.status = status;
 
-    if (categoryData && typeof categoryData === 'object' && !Array.isArray(categoryData)) {
+    if (
+      categoryData &&
+      typeof categoryData === 'object' &&
+      !Array.isArray(categoryData)
+    ) {
       data[categoryKey] = { update: categoryData };
     }
 

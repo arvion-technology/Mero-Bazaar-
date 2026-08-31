@@ -1,5 +1,5 @@
-import { Prisma } from "@prisma/client";
-import { JobSearchDto } from "../dto/job_search.dto";
+import { Prisma } from '@prisma/client';
+import { JobSearchDto } from '../dto/job_search.dto';
 
 export function buildJobFilter(dto: JobSearchDto): Prisma.ListingWhereInput {
   const query = dto.query?.trim();
@@ -23,7 +23,9 @@ export function buildJobFilter(dto: JobSearchDto): Prisma.ListingWhereInput {
         ...(city && { city: { contains: city, mode: 'insensitive' } }),
         ...(dto.minSalary && { salaryMin: { gte: dto.minSalary } }),
         ...(dto.skill?.trim() && { skillTags: { has: dto.skill.trim() } }),
-        ...(dto.contractType?.length && { contractType: { in: dto.contractType } }),
+        ...(dto.contractType?.length && {
+          contractType: { in: dto.contractType },
+        }),
       },
     },
   };

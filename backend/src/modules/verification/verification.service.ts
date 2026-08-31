@@ -1,13 +1,32 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { PrismaService } from "src/database/prisma.service";
-import { VerificationStatus } from "@prisma/client";
-import { UploadVerificationDto } from "./dto/upload_verification.dto";
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from 'src/database/prisma.service';
+import { VerificationStatus } from '@prisma/client';
+import { UploadVerificationDto } from './dto/upload_verification.dto';
 
 @Injectable()
 export class VerificationService {
   constructor(private prisma: PrismaService) {}
 
-  async upload(dto: UploadVerificationDto) {
+  async upload(dto: UploadVerificationDto, doctorUserId: string) {
+    // A doctor may only attach verification documents to their own medical listing.
+    const medical = await this.prisma.medicalAndDental.findUnique({
+      where: { id: dto.medicalId },
+      include: { listing: { select: { userId: true } } },
+    });
+
+    if (!medical) {
+      throw new NotFoundException('Medical listing not found');
+    }
+    if (medical.listing.userId !== doctorUserId) {
+      throw new ForbiddenException(
+        'You can only upload documents for your own medical listing',
+      );
+    }
+
     return this.prisma.verificationDocument.create({
       data: {
         medicalId: dto.medicalId,
@@ -23,7 +42,7 @@ export class VerificationService {
     });
 
     if (!doc) {
-      throw new NotFoundException("Verification document not found");
+      throw new NotFoundException('Verification document not found');
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -47,7 +66,7 @@ export class VerificationService {
     });
 
     if (!doc) {
-      throw new NotFoundException("Verification document not found");
+      throw new NotFoundException('Verification document not found');
     }
 
     return this.prisma.$transaction(async (tx) => {

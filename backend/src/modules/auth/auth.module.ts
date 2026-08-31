@@ -18,8 +18,12 @@ import { ActivityLogModule } from '../user/activity_log.module';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        secret: process.env.JWT_SECRET,
-        signOptions: { expiresIn: '7d' },
+        secret: config.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: '7d',
+          issuer: config.get<string>('JWT_ISSUER') ?? 'mero-bazaar-api',
+          audience: config.get<string>('JWT_AUDIENCE') ?? 'mero-bazaar-web',
+        },
       }),
       inject: [ConfigService],
     }),

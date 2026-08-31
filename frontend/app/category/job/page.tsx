@@ -17,7 +17,7 @@ import {
 } from "react-icons/fi";
 import { FaHeart, FaBriefcase } from "react-icons/fa";
 import { JOB_TYPES, CITIES, SKILLS, JobCard } from "../../types/jobs";
-import { toContractType, toJobCard } from "@/lib/adapter";
+import { toContractType, toJobCard, toTypeLabel } from "@/lib/adapter";
 import { api } from "@/lib/api";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
@@ -42,9 +42,34 @@ export default function JobsPage() {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [jobs, setJobs] = useState<JobCard[]>([]);
   const [loading, setLoading] = useState(false);
+  const [filterNonce, setFilterNonce] = useState(0);
   const { data: session } = useSession();
 
+  const [jobTypes, setJobTypes] = useState<string[]>(JOB_TYPES);
+  const [cities, setCities] = useState<string[]>(CITIES);
+  const [skills, setSkills] = useState<string[]>(SKILLS);
+
   const EXTRA_SKILLS_THRESHOLD = 2;
+
+  // Load dynamic filter options from the backend.
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await api.getJobFilters();
+        if (Array.isArray(data.contractTypes) && data.contractTypes.length) {
+          setJobTypes(data.contractTypes.map((t) => toTypeLabel(t)));
+        }
+        if (Array.isArray(data.cities) && data.cities.length) {
+          setCities(data.cities);
+        }
+        if (Array.isArray(data.skills) && data.skills.length) {
+          setSkills(data.skills);
+        }
+      } catch {
+        // Keep the static fallbacks; the page still works offline.
+      }
+    })();
+  }, []);
 
   // Close sort dropdown on outside click
   useEffect(() => {
@@ -208,13 +233,8 @@ export default function JobsPage() {
           params.append("contractType", toContractType(t)),
         );
 
-        console.log("Sending params:", params.toString());
         const data = await api.getJobs(params);
         const mapped = data.map(toJobCard);
-        console.log(
-          "Job IDs:",
-          mapped.map((j) => j.id),
-        );
         setJobs(mapped);
       } catch (err) {
         console.error(err);
@@ -224,7 +244,7 @@ export default function JobsPage() {
     };
 
     fetchJobs();
-  }, [debouncedSearch, city, skill, minSalary, selectedTypes]);
+  }, [debouncedSearch, city, skill, minSalary, selectedTypes, filterNonce]);
 
   // Parse salary string like "NPR 30,000 - 50,000/month" or "NPR 20,000/month"
   const parseSalaryNum = (salaryStr: string): number => {
@@ -459,7 +479,7 @@ export default function JobsPage() {
               <div className="jsb-section">
                 <p className="jsb-title">Job Type</p>
                 <div className="jsb-rows">
-                  {JOB_TYPES.map((t) => (
+                  {jobTypes.map((t) => (
                     <label
                       key={t}
                       className={`jsb-row${selectedTypes.includes(t) ? " checked" : ""}`}
@@ -482,7 +502,7 @@ export default function JobsPage() {
                   onChange={(e) => setCity(e.target.value)}
                 >
                   <option value="">Select city</option>
-                  {CITIES.map((c) => (
+                  {cities.map((c) => (
                     <option key={c} value={c}>
                       {c}
                     </option>
@@ -497,7 +517,7 @@ export default function JobsPage() {
                   onChange={(e) => setSkill(e.target.value)}
                 >
                   <option value="">Select skill</option>
-                  {SKILLS.map((s) => (
+                  {skills.map((s) => (
                     <option key={s} value={s}>
                       {s}
                     </option>
@@ -529,7 +549,12 @@ export default function JobsPage() {
                   </div>
                 </div>
               </div>
-              <button className="jsb-apply">Apply Filters</button>
+              <button
+                className="jsb-apply"
+                onClick={() => setFilterNonce((n) => n + 1)}
+              >
+                Apply Filters
+              </button>
             </aside>
 
             {/* RIGHT */}
@@ -646,7 +671,7 @@ export default function JobsPage() {
                         </button>
 
                         <div className="jp-card-body-row">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          { }
                           {/* <img src={j.thumb} alt={j.company} className="jp-thumb" /> */}
                           <div className="jp-card-main-content">
                             <p className="jp-card-title">{j.title}</p>

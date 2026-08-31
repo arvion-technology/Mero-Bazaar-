@@ -183,7 +183,7 @@ export default function SellerKYCPage() {
     };
 
     checkExisting();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [session, router, isEditMode]);
 
 

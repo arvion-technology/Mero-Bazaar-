@@ -1,5 +1,5 @@
-import { Prisma, ListingCategory } from "@prisma/client";
-import { TradesSearchDto } from "../dto/trade_search.dto";
+import { Prisma, ListingCategory } from '@prisma/client';
+import { TradesSearchDto } from '../dto/trade_search.dto';
 
 export function buildTradesFilter(
   dto: TradesSearchDto,
@@ -14,14 +14,14 @@ export function buildTradesFilter(
         ...(dto.city && {
           city: {
             contains: dto.city,
-            mode: "insensitive",
+            mode: 'insensitive',
           },
         }),
 
         ...(dto.ward && {
           ward: {
             contains: dto.ward,
-            mode: "insensitive",
+            mode: 'insensitive',
           },
         }),
 
@@ -50,13 +50,13 @@ export function buildTradesFilter(
             {
               city: {
                 contains: query,
-                mode: "insensitive",
+                mode: 'insensitive',
               },
             },
             {
               ward: {
                 contains: query,
-                mode: "insensitive",
+                mode: 'insensitive',
               },
             },
             {

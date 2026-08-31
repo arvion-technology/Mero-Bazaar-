@@ -144,6 +144,7 @@ enum OtpContext {
   PASSWORD_RESET
   LOGIN
   TWO_FA_SETUP
+  REAUTH
 }
 
 model DoctorProfile {
@@ -460,7 +461,6 @@ model MedicalAndDental {
   nmcLicenseNumber String
 
   verificationStatus VerificationStatus @default(PENDING)
-
   appointmentFee     Int
   homeVisitAvailable Boolean @default(false)
   onlineAppointments Boolean @default(false)
@@ -485,6 +485,7 @@ model MedicalAndDental {
   verificationDocuments VerificationDocument[]
   medicalSlots          MedicalSlot[]
 
+  @@unique([nmcLicenseNumber])
   @@index([city])
   @@index([homeVisitAvailable])
   @@index([verificationStatus])
@@ -837,6 +838,7 @@ model Review {
 
   reports   Report[]
 
+  @@unique([userId, listingId])
   @@index(userId)
   @@index([listingId])
 }

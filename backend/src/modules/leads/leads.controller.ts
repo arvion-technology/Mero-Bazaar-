@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Param, Patch, Query, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Query,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { LeadsService } from './leads.service';
 import { CreateLeadDto } from './dto/create_lead.dto';
@@ -19,9 +29,12 @@ export class LeadsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard) 
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  findAll(@Query('category') category?: ListingCategory, @Query('status') status?: LeadStatus) {
+  findAll(
+    @Query('category') category?: ListingCategory,
+    @Query('status') status?: LeadStatus,
+  ) {
     return this.leadsService.findAll({ category, status });
   }
 

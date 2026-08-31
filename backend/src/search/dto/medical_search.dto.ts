@@ -1,5 +1,5 @@
-import { IsOptional, IsString, IsBoolean, IsNumber } from "class-validator";
-import { Type } from "class-transformer";
+import { IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class MedicalSearchDto {
   @IsOptional()

@@ -1,4 +1,8 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ListingCategory } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 
@@ -6,12 +10,15 @@ import { CreateTradesDto } from './dto/create_trades.dto';
 import { QueryTradesDto } from './dto/query_trades.dto';
 import { CreateLeadDto } from '../leads/dto/create_lead.dto';
 import { UpdateTradesDto } from './dto/update_trades.dto';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
+import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
 @Injectable()
 export class TradesService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateTradesDto, userId: string) {
+    await assertVerifiedSeller(this.prisma, userId);
     return this.prisma.listing.create({
       data: {
         category: ListingCategory.TRADES,
@@ -85,48 +92,48 @@ export class TradesService {
   }
 
   async findOne(id: string) {
-  const listing = await this.prisma.listing.findUnique({
-    where: { id },
-    include: {
-      trades: true,
-      user: {
-        select: {
-          id: true,
-          name: true,
-          isVerified: true,
-          phone: true,
-          createdAt: true,
-          vendorProfile: {
-            select: { businessName: true, rating: true },
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      include: {
+        trades: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            isVerified: true,
+            phone: true,
+            createdAt: true,
+            vendorProfile: {
+              select: { businessName: true, rating: true },
+            },
           },
         },
+        reviews: {
+          orderBy: { createdAt: 'desc' },
+        },
       },
-      reviews: {
-        orderBy: { createdAt: 'desc' },
-      },
-    },
-  });
+    });
 
-  if (!listing || listing.category !== ListingCategory.TRADES) {
-    throw new NotFoundException('Trades listing not found');
+    if (!listing || listing.category !== ListingCategory.TRADES) {
+      throw new NotFoundException('Trades listing not found');
+    }
+
+    const [totalListing, reviewAgg] = await Promise.all([
+      this.prisma.listing.count({ where: { userId: listing.userId } }),
+      this.prisma.review.aggregate({
+        where: { listing: { userId: listing.userId } },
+        _avg: { rating: true },
+        _count: { rating: true },
+      }),
+    ]);
+
+    return {
+      ...listing,
+      sellerTotalListing: totalListing,
+      sellerRating: reviewAgg._avg.rating ?? 0,
+      sellerReviewCount: reviewAgg._count.rating,
+    };
   }
-
-  const [totalListing, reviewAgg] = await Promise.all([
-    this.prisma.listing.count({ where: { userId: listing.userId } }),
-    this.prisma.review.aggregate({
-      where: { listing: { userId: listing.userId } },
-      _avg: { rating: true },
-      _count: { rating: true },
-    }),
-  ]);
-
-  return {
-    ...listing,
-    sellerTotalListing: totalListing,
-    sellerRating: reviewAgg._avg.rating ?? 0,
-    sellerReviewCount: reviewAgg._count.rating,
-  };
-}
 
   async nearby(lat: number, lng: number, km: number) {
     return this.geoSearchNearby(lat, lng, km);
@@ -199,26 +206,35 @@ export class TradesService {
   }
 
   async addPhotos(id: string, files: Express.Multer.File[], userId: string) {
-  const listing = await this.prisma.listing.findUnique({
-    where: { id },
-    include: { trades: true },
-  });
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      include: { trades: true },
+    });
 
-  if (!listing || listing.userId !== userId) {
-    throw new ForbiddenException('Unauthorized');
+    if (!listing || listing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
+    if (!listing.trades) {
+      throw new NotFoundException('Trades listing not found');
+    }
+
+    const newPhotoNames: string[] = [];
+    for (const file of files) {
+      const finalName = await validateAndReencodeImage(
+        file.path,
+        './uploads/trades',
+      );
+      newPhotoNames.push(finalName);
+    }
+
+    const newPhotoUrls = newPhotoNames.map((name) => `/uploads/trades/${name}`);
+    const updatedImages = [...listing.images, ...newPhotoUrls];
+
+    return this.prisma.listing.update({
+      where: { id },
+      data: { images: updatedImages },
+      include: { trades: true },
+    });
   }
-
-  if (!listing.trades) {
-    throw new NotFoundException('Trades listing not found');
-  }
-
-  const newPhotoUrls = files.map((file) => `/uploads/trades/${file.filename}`);
-  const updatedImages = [...listing.images, ...newPhotoUrls];
-
-  return this.prisma.listing.update({
-    where: { id },
-    data: { images: updatedImages },
-    include: { trades: true },
-  });
-}
 }

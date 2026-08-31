@@ -1,4 +1,15 @@
-import { Controller, Query, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Query,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { ListingsService } from './listings.service';
 import { CreateListingDto } from './dto/create_listing.dto';
 import { UpdateListingDto } from './dto/update_listing.dto';
@@ -19,16 +30,16 @@ export class ListingsController {
   @Get()
   findAll(@Query() query: SearchListingDto) {
     return this.listingsService.search(query);
-  } 
-  
+  }
+
   @Get('related')
   getRelated(
-  @Query('category') category: ListingCategory,
-  @Query('exclude') exclude: string,
-  @Query('limit') limit: number = 8,
+    @Query('category') category: ListingCategory,
+    @Query('exclude') exclude: string,
+    @Query('limit') limit: number = 8,
   ) {
-  return this.listingsService.getRelated(category, exclude, Number(limit));
- }
+    return this.listingsService.getRelated(category, exclude, Number(limit));
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('mine')
@@ -49,7 +60,11 @@ export class ListingsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateListingDto, @Request() req) {
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateListingDto,
+    @Request() req,
+  ) {
     return this.listingsService.update(id, dto, req.user.id);
   }
 

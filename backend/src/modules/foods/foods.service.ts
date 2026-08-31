@@ -1,15 +1,22 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateFoodsAndHomeDeliveryDto } from './dto/create_foods.dto';
 import { ListingCategory } from '@prisma/client';
 import { QueryFoodsAndHomeDeliveryDto } from './dto/query_foods.dto';
 import { UpdateFoodsAndHomeDeliveryDto } from './dto/update_foods.dto';
+import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
+import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
 @Injectable()
 export class FoodsService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateFoodsAndHomeDeliveryDto, userId: string) {
+    await assertVerifiedSeller(this.prisma, userId);
     return this.prisma.listing.create({
       data: {
         title: dto.title,
@@ -143,7 +150,16 @@ export class FoodsService {
       throw new NotFoundException('Foods listing not found');
     }
 
-    const newPhotoUrls = files.map((file) => `/uploads/foods/${file.filename}`);
+    const newPhotoNames: string[] = [];
+    for (const file of files) {
+      const finalName = await validateAndReencodeImage(
+        file.path,
+        './uploads/foods',
+      );
+      newPhotoNames.push(finalName);
+    }
+
+    const newPhotoUrls = newPhotoNames.map((name) => `/uploads/foods/${name}`);
     const updatedImages = [...listing.images, ...newPhotoUrls];
 
     return this.prisma.listing.update({

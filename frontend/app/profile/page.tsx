@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FiUser, FiMail, FiPhone, FiMapPin, FiSettings, FiShield, FiLogOut, FiArrowLeft, FiCamera } from "react-icons/fi";
 import Footer from "@/components/Footer";
+import { reauthFetch } from "@/lib/accountActions";
 import { toast } from "react-toastify";
 
 const PRIMARY = "#C0392B";
@@ -141,14 +142,8 @@ export default function ProfilePage() {
     }
     setSendingPhoneOtp(true);
     try {
-      const res =  await fetch("/api/user/profile/phone/request", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ phone }),
-      });
+      const res = await reauthFetch("/api/user/profile/phone/request", token, { phone });
+      if (res.status === 499) return; // user cancelled the confirmation
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to send OTP");
       setPendingPhone(phone);

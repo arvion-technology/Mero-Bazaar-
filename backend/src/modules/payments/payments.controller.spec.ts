@@ -1,15 +1,17 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { PaymentsController } from './esewa.controller';
+﻿import { Test, TestingModule } from '@nestjs/testing';
+import { SellerPaymentsController } from './payments.controller';
+import { SellerPaymentsService } from './payments.service';
 
-describe('PaymentsController', () => {
-  let controller: PaymentsController;
+describe('SellerPaymentsController', () => {
+  let controller: SellerPaymentsController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [PaymentsController],
+      controllers: [SellerPaymentsController],
+      providers: [{ provide: SellerPaymentsService, useValue: {} }],
     }).compile();
 
-    controller = module.get<PaymentsController>(PaymentsController);
+    controller = module.get<SellerPaymentsController>(SellerPaymentsController);
   });
 
   it('should be defined', () => {
