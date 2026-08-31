@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -45,12 +46,23 @@ const listingTypes = [
 ];
 
 const units = ["KG", "HEAD", "Piece", "Litre", "Gram", "Bundle"];
-const seasons = ["March - June", "July - October", "November - February", "All Year"];
+const seasons = [
+  "March - June",
+  "July - October",
+  "November - February",
+  "All Year",
+];
 const animalTypes = ["Cow", "Dog", "Goat", "Buffalo", "Chicken", "Sheep"];
 const breeds = ["Jersey", "Holstein", "Local", "Hybrid", "Sahiwal"];
 const ages = ["1 Year", "2 Years", "3 Years", "4 Years", "5+ Years"];
 const healthStatuses = ["VACCINATED", "NOT VACCINATED", "PARTIALLY VACCINATED"];
-const serviceTypes = ["General Health Checkup", "Vaccination", "Surgery", "Deworming", "Consultation"];
+const serviceTypes = [
+  "General Health Checkup",
+  "Vaccination",
+  "Surgery",
+  "Deworming",
+  "Consultation",
+];
 const priceUnits = ["Per Visit", "Per Hour", "Per Day", "Per Service"];
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -80,7 +92,10 @@ function CustomSelect({
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     }
@@ -123,7 +138,10 @@ function CustomSelect({
         <FiChevronDown
           size={14}
           className="select-chevron"
-          style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+          style={{
+            transform: open ? "rotate(180deg)" : "none",
+            transition: "transform 0.2s",
+          }}
         />
       </button>
       {open && (
@@ -132,7 +150,10 @@ function CustomSelect({
             <div
               key={opt}
               className={`custom-option ${opt === value ? "selected" : ""} ${i === highlighted ? "highlighted" : ""}`}
-              onClick={() => { onChange(opt); setOpen(false); }}
+              onClick={() => {
+                onChange(opt);
+                setOpen(false);
+              }}
               onMouseEnter={() => setHighlighted(i)}
               role="option"
               aria-selected={opt === value}
@@ -149,172 +170,153 @@ function CustomSelect({
           required
           tabIndex={-1}
           aria-hidden="true"
-          style={{ position: "absolute", opacity: 0, pointerEvents: "none", height: 0, width: 0 }}
+          style={{
+            position: "absolute",
+            opacity: 0,
+            pointerEvents: "none",
+            height: 0,
+            width: 0,
+          }}
         >
           <option value="">{placeholder}</option>
-          {options.map((o) => <option key={o} value={o}>{o}</option>)}
+          {options.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
         </select>
       )}
     </div>
   );
 }
 
-export default function AgricultureListingPage() {
+
+export default function NewAgricultureListingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AgricultureListingContent />
+    </Suspense>
+  );
+}
+
+function AgricultureListingContent() {
   const router = useRouter();
-  
+
   const { agricultureData, setAgricultureData } = useDraft();
   const d = agricultureData;
-const searchParams = useSearchParams();
-const editId = searchParams.get("edit");
-const { data: session } = useSession();
-useEffect(() => {
-  if (!editId || !session?.accessToken) return;
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+  const { data: session } = useSession();
+  useEffect(() => {
+    if (!editId || !session?.accessToken) return;
 
-  const loadExistingAgriculture = async () => {
-    try {
-      const response = await fetch(`/api/listings/${editId}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
+    const loadExistingAgriculture = async () => {
+      try {
+        const response = await fetch(`/api/listings/${editId}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      console.log("EDIT AGRICULTURE FULL DATA:", result);
+        console.log("EDIT AGRICULTURE FULL DATA:", result);
 
-      if (!response.ok) {
-        throw new Error(
-          result?.message || "Failed to load agriculture listing"
-        );
+        if (!response.ok) {
+          throw new Error(
+            result?.message || "Failed to load agriculture listing",
+          );
+        }
+
+        // API response ko agriculture object
+        const agriculture =
+          result?.agriculture ??
+          result?.listing?.agriculture ??
+          result?.agricultureAndLivestock ??
+          result?.listing?.agricultureAndLivestock ??
+          result;
+
+        console.log("EDIT AGRICULTURE DATA:", agriculture);
+
+        setAgricultureData({
+          ...d,
+
+          district: agriculture?.district ?? d.district,
+
+          village: agriculture?.village ?? d.village,
+
+          location: agriculture?.location ?? agriculture?.area ?? d.location,
+
+          price:
+            agriculture?.price != null
+              ? String(agriculture.price).replace(/,/g, "")
+              : agriculture?.pricePerUnit != null
+                ? String(agriculture.pricePerUnit).replace(/,/g, "")
+                : agriculture?.unitPrice != null
+                  ? String(agriculture.unitPrice).replace(/,/g, "")
+                  : d.price,
+
+          unit: agriculture?.unit ?? d.unit,
+
+          itemName:
+            agriculture?.itemName ?? agriculture?.productName ?? d.itemName,
+
+          organicCertified: agriculture?.organicCertified ?? false,
+
+          organicVerified: agriculture?.organicVerified ?? false,
+
+          seasonalAvailability:
+            agriculture?.seasonalAvailability ?? d.seasonalAvailability,
+
+          animalType: agriculture?.animalType ?? d.animalType,
+
+          age: agriculture?.age ?? d.age,
+
+          breed: agriculture?.breed ?? d.breed,
+
+          healthVaccineStatus:
+            agriculture?.healthVaccineStatus ?? d.healthVaccineStatus,
+
+          serviceType: agriculture?.serviceType ?? d.serviceType,
+
+          servicePrice:
+            agriculture?.servicePrice != null
+              ? String(agriculture.servicePrice).replace(/,/g, "")
+              : d.servicePrice,
+
+          priceUnit: agriculture?.priceUnit ?? d.priceUnit,
+
+          experience: agriculture?.experience ?? d.experience,
+
+          mobileService: agriculture?.mobileService ?? false,
+
+          serviceArea: agriculture?.serviceArea ?? d.serviceArea,
+
+          serviceRadius:
+            agriculture?.serviceRadius != null
+              ? String(agriculture.serviceRadius)
+              : d.serviceRadius,
+
+          healthCertificate: agriculture?.healthCertificate ?? false,
+
+          vaccinationAvailable: agriculture?.vaccinationAvailable ?? false,
+
+          availabilityDays: Array.isArray(agriculture?.availabilityDays)
+            ? agriculture.availabilityDays
+            : Array.isArray(agriculture?.availableDays)
+              ? agriculture.availableDays
+              : d.availabilityDays,
+        });
+      } catch (error) {
+        console.error("Failed to load agriculture edit data:", error);
+        toast.error("Failed to load existing agriculture data.");
       }
+    };
 
-      // API response ko agriculture object
-      const agriculture =
-        result?.agriculture ??
-        result?.listing?.agriculture ??
-        result?.agricultureAndLivestock ??
-        result?.listing?.agricultureAndLivestock ??
-        result;
-
-      console.log("EDIT AGRICULTURE DATA:", agriculture);
-
-      setAgricultureData({
-  ...d,
-
-  district:
-    agriculture?.district ??
-    d.district,
-
-  village:
-    agriculture?.village ??
-    d.village,
-
-  location:
-    agriculture?.location ??
-    agriculture?.area ??
-    d.location,
-
-  price:
-    agriculture?.price != null
-      ? String(agriculture.price).replace(/,/g, "")
-      : agriculture?.pricePerUnit != null
-        ? String(agriculture.pricePerUnit).replace(/,/g, "")
-        : agriculture?.unitPrice != null
-          ? String(agriculture.unitPrice).replace(/,/g, "")
-          : d.price,
-
-  unit:
-    agriculture?.unit ??
-    d.unit,
-
-  itemName:
-    agriculture?.itemName ??
-    agriculture?.productName ??
-    d.itemName,
-
-  organicCertified:
-    agriculture?.organicCertified ??
-    false,
-
-  organicVerified:
-    agriculture?.organicVerified ??
-    false,
-
-  seasonalAvailability:
-    agriculture?.seasonalAvailability ??
-    d.seasonalAvailability,
-
-  animalType:
-    agriculture?.animalType ??
-    d.animalType,
-
-  age:
-    agriculture?.age ??
-    d.age,
-
-  breed:
-    agriculture?.breed ??
-    d.breed,
-
-  healthVaccineStatus:
-    agriculture?.healthVaccineStatus ??
-    d.healthVaccineStatus,
-
-  serviceType:
-    agriculture?.serviceType ??
-    d.serviceType,
-
-  servicePrice:
-    agriculture?.servicePrice != null
-      ? String(agriculture.servicePrice).replace(/,/g, "")
-      : d.servicePrice,
-
-  priceUnit:
-    agriculture?.priceUnit ??
-    d.priceUnit,
-
-  experience:
-    agriculture?.experience ??
-    d.experience,
-
-  mobileService:
-    agriculture?.mobileService ??
-    false,
-
-  serviceArea:
-    agriculture?.serviceArea ??
-    d.serviceArea,
-
-  serviceRadius:
-    agriculture?.serviceRadius != null
-      ? String(agriculture.serviceRadius)
-      : d.serviceRadius,
-
-  healthCertificate:
-    agriculture?.healthCertificate ??
-    false,
-
-  vaccinationAvailable:
-    agriculture?.vaccinationAvailable ??
-    false,
-
-  availabilityDays:
-    Array.isArray(agriculture?.availabilityDays)
-      ? agriculture.availabilityDays
-      : Array.isArray(agriculture?.availableDays)
-        ? agriculture.availableDays
-        : d.availabilityDays,
-});
-    } catch (error) {
-      console.error("Failed to load agriculture edit data:", error);
-      toast.error("Failed to load existing agriculture data.");
-    }
-  };
-
-  loadExistingAgriculture();
-}, [editId, session?.accessToken, setAgricultureData]);
+    loadExistingAgriculture();
+  }, [editId, session?.accessToken, setAgricultureData]);
   const isProduce = d.listingType === "Produce";
   const isLiveStock = d.listingType === "LiveStock";
   const isVetService = d.listingType === "Vet Service";
@@ -345,22 +347,29 @@ useEffect(() => {
 
     const finalData = {
       ...d,
-      itemName: d.itemName || (isVetService ? d.serviceType : "Fresh Organic Vegetable"),
-      price: formattedPrice || (isProduce ? "120" : isLiveStock ? "55,000" : "1,500"),
-      description: d.description || (isVetService
-        ? "Professional veterinary services at your doorstep. We provide general health checkup, vaccination, consultation and basic treatment for your pets."
-        : "Toyota Fortuner 2021 model in excellent condition. Well maintained, all documents are valid."),
+      itemName:
+        d.itemName ||
+        (isVetService ? d.serviceType : "Fresh Organic Vegetable"),
+      price:
+        formattedPrice ||
+        (isProduce ? "120" : isLiveStock ? "55,000" : "1,500"),
+      description:
+        d.description ||
+        (isVetService
+          ? "Professional veterinary services at your doorstep. We provide general health checkup, vaccination, consultation and basic treatment for your pets."
+          : "Toyota Fortuner 2021 model in excellent condition. Well maintained, all documents are valid."),
     };
 
     setAgricultureData(finalData);
     toast.success("Details saved! Now add photos.");
-if (editId) {
-  router.push(
-    `/seller/listing/agriculture-livestock/photos?edit=${editId}`
-  );
-} else {
-  router.push("/seller/listing/agriculture-livestock/photos");
-}  };
+    if (editId) {
+      router.push(
+        `/seller/listing/agriculture-livestock/photos?edit=${editId}`,
+      );
+    } else {
+      router.push("/seller/listing/agriculture-livestock/photos");
+    }
+  };
 
   return (
     <>
@@ -696,7 +705,11 @@ if (editId) {
       <div className="listing-page">
         <div className="listing-container">
           <div className="listing-header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={18} />
             </button>
             <div className="listing-header-text">
@@ -710,15 +723,28 @@ if (editId) {
 
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div
+                    className={`step-connector ${step.status === "done" ? "filled" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -727,7 +753,11 @@ if (editId) {
           <form onSubmit={handleSubmit} className="form-card">
             <div className="category-wrap">
               <label className="category-label">Category</label>
-              <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
+              <button
+                type="button"
+                className="category-pill"
+                onClick={() => router.push("/seller/dashboard")}
+              >
                 <FiBox size={16} />
                 Agriculture And Livestock
                 <span className="change-badge">Change</span>
@@ -745,14 +775,18 @@ if (editId) {
                     <label
                       key={type}
                       className={`radio-item ${d.listingType === type ? "active" : ""}`}
-                      onClick={() => setAgricultureData({ ...d, listingType: type })}
+                      onClick={() =>
+                        setAgricultureData({ ...d, listingType: type })
+                      }
                     >
                       <input
                         type="radio"
                         name="listingType"
                         value={type}
                         checked={d.listingType === type}
-                        onChange={() => setAgricultureData({ ...d, listingType: type })}
+                        onChange={() =>
+                          setAgricultureData({ ...d, listingType: type })
+                        }
                       />
                       <span className="radio-circle"></span>
                       <span className="radio-label">{type}</span>
@@ -766,36 +800,48 @@ if (editId) {
                   <div className="section-title">Location Information</div>
                   <div className="form-row two-col">
                     <div className="form-group">
-                      <label className="form-label">District <span className="required">*</span></label>
+                      <label className="form-label">
+                        District <span className="required">*</span>
+                      </label>
                       <input
                         type="text"
                         className="form-input"
                         placeholder="Enter district"
                         value={d.district}
-                        onChange={(e) => setAgricultureData({ ...d, district: e.target.value })}
+                        onChange={(e) =>
+                          setAgricultureData({ ...d, district: e.target.value })
+                        }
                         required
                       />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Village <span className="required">*</span></label>
+                      <label className="form-label">
+                        Village <span className="required">*</span>
+                      </label>
                       <input
                         type="text"
                         className="form-input"
                         placeholder="Enter village"
                         value={d.village}
-                        onChange={(e) => setAgricultureData({ ...d, village: e.target.value })}
+                        onChange={(e) =>
+                          setAgricultureData({ ...d, village: e.target.value })
+                        }
                         required
                       />
                     </div>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Location /Area <span className="required">*</span></label>
+                    <label className="form-label">
+                      Location /Area <span className="required">*</span>
+                    </label>
                     <input
                       type="text"
                       className="form-input"
                       placeholder="Enter location/area"
                       value={d.location}
-                      onChange={(e) => setAgricultureData({ ...d, location: e.target.value })}
+                      onChange={(e) =>
+                        setAgricultureData({ ...d, location: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -806,24 +852,43 @@ if (editId) {
                   <div className="form-row two-col">
                     <div className="form-group">
                       <label className="form-label">
-                        {isVetService ? "Service Price(NPR)" : "Price per Unit(NPR)"} <span className="required">*</span>
+                        {isVetService
+                          ? "Service Price(NPR)"
+                          : "Price per Unit(NPR)"}{" "}
+                        <span className="required">*</span>
                       </label>
                       <input
                         type="text"
                         inputMode="numeric"
                         className="form-input"
                         placeholder={isVetService ? "1,500" : "120"}
-                        value={isVetService ? (d.servicePrice ? Number(d.servicePrice).toLocaleString("en-IN") : "") : formattedPrice}
-                        onChange={(e) => handlePriceChange(e.target.value.replace(/,/g, ""))}
+                        value={
+                          isVetService
+                            ? d.servicePrice
+                              ? Number(d.servicePrice).toLocaleString("en-IN")
+                              : ""
+                            : formattedPrice
+                        }
+                        onChange={(e) =>
+                          handlePriceChange(e.target.value.replace(/,/g, ""))
+                        }
                         required
                       />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Unit <span className="required">*</span></label>
+                      <label className="form-label">
+                        Unit <span className="required">*</span>
+                      </label>
                       <CustomSelect
                         options={isVetService ? priceUnits : units}
                         value={isVetService ? d.priceUnit : d.unit}
-                        onChange={(val) => setAgricultureData(isVetService ? { ...d, priceUnit: val } : { ...d, unit: val })}
+                        onChange={(val) =>
+                          setAgricultureData(
+                            isVetService
+                              ? { ...d, priceUnit: val }
+                              : { ...d, unit: val },
+                          )
+                        }
                         required
                       />
                     </div>
@@ -833,24 +898,53 @@ if (editId) {
                 {isProduce && (
                   <div className="form-section">
                     <div className="section-title">Product /Animal Details</div>
-                    <div className="checkbox-group" style={{ marginBottom: "16px" }}>
+                    <div
+                      className="checkbox-group"
+                      style={{ marginBottom: "16px" }}
+                    >
                       <label className="checkbox-inline">
-                        <input type="checkbox" checked={d.organicCertified} onChange={(e) => setAgricultureData({ ...d, organicCertified: e.target.checked })} />
+                        <input
+                          type="checkbox"
+                          checked={d.organicCertified}
+                          onChange={(e) =>
+                            setAgricultureData({
+                              ...d,
+                              organicCertified: e.target.checked,
+                            })
+                          }
+                        />
                         <span className="check-box"></span>
                         <span>Organic Certified</span>
                       </label>
                       <label className="checkbox-inline">
-                        <input type="checkbox" checked={d.organicVerified} onChange={(e) => setAgricultureData({ ...d, organicVerified: e.target.checked })} />
+                        <input
+                          type="checkbox"
+                          checked={d.organicVerified}
+                          onChange={(e) =>
+                            setAgricultureData({
+                              ...d,
+                              organicVerified: e.target.checked,
+                            })
+                          }
+                        />
                         <span className="check-box"></span>
                         <span>Organic Verified</span>
                       </label>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Seasonal Availability <span className="optional">(Optional)</span></label>
+                      <label className="form-label">
+                        Seasonal Availability{" "}
+                        <span className="optional">(Optional)</span>
+                      </label>
                       <CustomSelect
                         options={seasons}
                         value={d.seasonalAvailability}
-                        onChange={(val) => setAgricultureData({ ...d, seasonalAvailability: val })}
+                        onChange={(val) =>
+                          setAgricultureData({
+                            ...d,
+                            seasonalAvailability: val,
+                          })
+                        }
                       />
                     </div>
                   </div>
@@ -859,51 +953,89 @@ if (editId) {
                 {isLiveStock && (
                   <div className="form-section">
                     <div className="section-title">Product /Animal Details</div>
-                    <div className="checkbox-group" style={{ marginBottom: "16px" }}>
+                    <div
+                      className="checkbox-group"
+                      style={{ marginBottom: "16px" }}
+                    >
                       <label className="checkbox-inline">
-                        <input type="checkbox" checked={d.organicCertified} onChange={(e) => setAgricultureData({ ...d, organicCertified: e.target.checked })} />
+                        <input
+                          type="checkbox"
+                          checked={d.organicCertified}
+                          onChange={(e) =>
+                            setAgricultureData({
+                              ...d,
+                              organicCertified: e.target.checked,
+                            })
+                          }
+                        />
                         <span className="check-box"></span>
                         <span>Organic Certified</span>
                       </label>
                       <label className="checkbox-inline">
-                        <input type="checkbox" checked={d.organicVerified} onChange={(e) => setAgricultureData({ ...d, organicVerified: e.target.checked })} />
+                        <input
+                          type="checkbox"
+                          checked={d.organicVerified}
+                          onChange={(e) =>
+                            setAgricultureData({
+                              ...d,
+                              organicVerified: e.target.checked,
+                            })
+                          }
+                        />
                         <span className="check-box"></span>
                         <span>Organic Verified</span>
                       </label>
                     </div>
                     <div className="form-row three-col">
                       <div className="form-group">
-                        <label className="form-label">Animal Type <span className="required">*</span></label>
+                        <label className="form-label">
+                          Animal Type <span className="required">*</span>
+                        </label>
                         <CustomSelect
                           options={animalTypes}
                           value={d.animalType}
-                          onChange={(val) => setAgricultureData({ ...d, animalType: val })}
+                          onChange={(val) =>
+                            setAgricultureData({ ...d, animalType: val })
+                          }
                           required
                         />
                       </div>
                       <div className="form-group">
-                        <label className="form-label">Age <span className="optional">(Optional)</span></label>
+                        <label className="form-label">
+                          Age <span className="optional">(Optional)</span>
+                        </label>
                         <CustomSelect
                           options={ages}
                           value={d.age}
-                          onChange={(val) => setAgricultureData({ ...d, age: val })}
+                          onChange={(val) =>
+                            setAgricultureData({ ...d, age: val })
+                          }
                         />
                       </div>
                       <div className="form-group">
-                        <label className="form-label">Breed <span className="optional">(Optional)</span></label>
+                        <label className="form-label">
+                          Breed <span className="optional">(Optional)</span>
+                        </label>
                         <CustomSelect
                           options={breeds}
                           value={d.breed}
-                          onChange={(val) => setAgricultureData({ ...d, breed: val })}
+                          onChange={(val) =>
+                            setAgricultureData({ ...d, breed: val })
+                          }
                         />
                       </div>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Health / Vaccine Status <span className="optional">(Optional)</span></label>
+                      <label className="form-label">
+                        Health / Vaccine Status{" "}
+                        <span className="optional">(Optional)</span>
+                      </label>
                       <CustomSelect
                         options={healthStatuses}
                         value={d.healthVaccineStatus}
-                        onChange={(val) => setAgricultureData({ ...d, healthVaccineStatus: val })}
+                        onChange={(val) =>
+                          setAgricultureData({ ...d, healthVaccineStatus: val })
+                        }
                       />
                     </div>
                   </div>
@@ -914,42 +1046,74 @@ if (editId) {
                     <div className="section-title">Details Information</div>
                     <div className="form-row two-col">
                       <div className="form-group">
-                        <label className="form-label">Service Type <span className="required">*</span></label>
+                        <label className="form-label">
+                          Service Type <span className="required">*</span>
+                        </label>
                         <CustomSelect
                           options={serviceTypes}
                           value={d.serviceType}
-                          onChange={(val) => setAgricultureData({ ...d, serviceType: val })}
+                          onChange={(val) =>
+                            setAgricultureData({ ...d, serviceType: val })
+                          }
                           required
                         />
                       </div>
                       <div className="form-group">
-                        <label className="form-label">Animal Type <span className="required">*</span></label>
+                        <label className="form-label">
+                          Animal Type <span className="required">*</span>
+                        </label>
                         <input
                           type="text"
                           className="form-input"
                           placeholder="e.g. Cow, Dog, Goat"
                           value={d.animalType}
-                          onChange={(e) => setAgricultureData({ ...d, animalType: e.target.value })}
+                          onChange={(e) =>
+                            setAgricultureData({
+                              ...d,
+                              animalType: e.target.value,
+                            })
+                          }
                           required
                         />
                       </div>
                     </div>
                     <div className="form-row two-col">
                       <div className="form-group">
-                        <label className="form-label">Experience(years) <span className="required">*</span></label>
+                        <label className="form-label">
+                          Experience(years) <span className="required">*</span>
+                        </label>
                         <input
                           type="text"
                           className="form-input"
                           placeholder="e.g. 5+ Years"
                           value={d.experience}
-                          onChange={(e) => setAgricultureData({ ...d, experience: e.target.value })}
+                          onChange={(e) =>
+                            setAgricultureData({
+                              ...d,
+                              experience: e.target.value,
+                            })
+                          }
                           required
                         />
                       </div>
                       <div className="form-group">
-                        <label className="form-label">Service Type <span className="required">*</span></label>
-                        <label className="checkbox-inline" style={{ padding: "8px 0" }}>
-                          <input type="checkbox" checked={d.mobileService} onChange={(e) => setAgricultureData({ ...d, mobileService: e.target.checked })} />
+                        <label className="form-label">
+                          Service Type <span className="required">*</span>
+                        </label>
+                        <label
+                          className="checkbox-inline"
+                          style={{ padding: "8px 0" }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={d.mobileService}
+                            onChange={(e) =>
+                              setAgricultureData({
+                                ...d,
+                                mobileService: e.target.checked,
+                              })
+                            }
+                          />
                           <span className="check-box"></span>
                           <span>Yes, I provide mobile service</span>
                         </label>
@@ -957,41 +1121,94 @@ if (editId) {
                     </div>
                     <div className="form-row two-col">
                       <div className="form-group">
-                        <label className="form-label">Service Area/Location <span className="required">*</span></label>
+                        <label className="form-label">
+                          Service Area/Location{" "}
+                          <span className="required">*</span>
+                        </label>
                         <input
                           type="text"
                           className="form-input"
                           placeholder="Enter service area/location"
                           value={d.serviceArea}
-                          onChange={(e) => setAgricultureData({ ...d, serviceArea: e.target.value })}
+                          onChange={(e) =>
+                            setAgricultureData({
+                              ...d,
+                              serviceArea: e.target.value,
+                            })
+                          }
                           required
                         />
                       </div>
                       <div className="form-group">
-                        <label className="form-label">Service Radius(KM) <span className="required">*</span></label>
-                        <input type="text" className="form-input" placeholder="10" value={d.serviceRadius} onChange={(e) => setAgricultureData({ ...d, serviceRadius: e.target.value })} required />
+                        <label className="form-label">
+                          Service Radius(KM) <span className="required">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="10"
+                          value={d.serviceRadius}
+                          onChange={(e) =>
+                            setAgricultureData({
+                              ...d,
+                              serviceRadius: e.target.value,
+                            })
+                          }
+                          required
+                        />
                       </div>
                     </div>
                     <div className="form-row two-col">
                       <div className="form-group">
-                        <label className="form-label">Health Certificate Available</label>
-                        <label className="checkbox-inline" style={{ padding: "8px 0" }}>
-                          <input type="checkbox" checked={d.healthCertificate} onChange={(e) => setAgricultureData({ ...d, healthCertificate: e.target.checked })} />
+                        <label className="form-label">
+                          Health Certificate Available
+                        </label>
+                        <label
+                          className="checkbox-inline"
+                          style={{ padding: "8px 0" }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={d.healthCertificate}
+                            onChange={(e) =>
+                              setAgricultureData({
+                                ...d,
+                                healthCertificate: e.target.checked,
+                              })
+                            }
+                          />
                           <span className="check-box"></span>
                           <span>Yes</span>
                         </label>
                       </div>
                       <div className="form-group">
-                        <label className="form-label">Vaccination Available <span className="required">*</span></label>
-                        <label className="checkbox-inline" style={{ padding: "8px 0" }}>
-                          <input type="checkbox" checked={d.vaccinationAvailable} onChange={(e) => setAgricultureData({ ...d, vaccinationAvailable: e.target.checked })} />
+                        <label className="form-label">
+                          Vaccination Available{" "}
+                          <span className="required">*</span>
+                        </label>
+                        <label
+                          className="checkbox-inline"
+                          style={{ padding: "8px 0" }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={d.vaccinationAvailable}
+                            onChange={(e) =>
+                              setAgricultureData({
+                                ...d,
+                                vaccinationAvailable: e.target.checked,
+                              })
+                            }
+                          />
                           <span className="check-box"></span>
                           <span>Yes</span>
                         </label>
                       </div>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Availability Day <span className="required">*</span></label>
+                      <label className="form-label">
+                        Availability Day <span className="required">*</span>
+                      </label>
                       <div className="day-selector">
                         {days.map((day) => (
                           <button
@@ -1015,7 +1232,12 @@ if (editId) {
                       className="form-textarea"
                       placeholder="Describe your item..."
                       value={d.description}
-                      onChange={(e) => setAgricultureData({ ...d, description: e.target.value })}
+                      onChange={(e) =>
+                        setAgricultureData({
+                          ...d,
+                          description: e.target.value,
+                        })
+                      }
                       rows={4}
                     />
                   </div>
@@ -1024,7 +1246,11 @@ if (editId) {
             </div>
 
             <div className="submit-wrap">
-              <button type="button" className="back-link" onClick={() => router.back()}>
+              <button
+                type="button"
+                className="back-link"
+                onClick={() => router.back()}
+              >
                 <FiArrowLeft size={16} />
                 Back
               </button>

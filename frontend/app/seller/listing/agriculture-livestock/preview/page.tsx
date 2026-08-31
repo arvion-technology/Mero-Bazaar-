@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";import {
+import { useRouter, useSearchParams } from "next/navigation";
+import {
   FiArrowLeft,
   FiCheck,
   FiMapPin,
@@ -35,11 +36,16 @@ const CARD_BG = "#ffffff";
 export default function PreviewPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-const editId = searchParams.get("edit");
-  const { agricultureData: data, setAgricultureData, images, setImages } = useDraft();
+  const editId = searchParams.get("edit");
+  const {
+    agricultureData: data,
+    setAgricultureData,
+    images,
+    setImages,
+  } = useDraft();
   const [isPublishing, setIsPublishing] = useState(false);
   const [mainImage, setMainImage] = useState<string>(
-    images.find((img) => img.isMain)?.preview || images[0]?.preview || ""
+    images.find((img) => img.isMain)?.preview || images[0]?.preview || "",
   );
   const { data: session } = useSession();
 
@@ -49,152 +55,203 @@ const editId = searchParams.get("edit");
 
   const detailRows = isProduce
     ? [
-        { label: "Listing Type", value: data.listingType, icon: <FiTag size={16} /> },
+        {
+          label: "Listing Type",
+          value: data.listingType,
+          icon: <FiTag size={16} />,
+        },
         { label: "Unit", value: data.unit, icon: <FiAward size={16} /> },
-        { label: "Organic Certified", value: data.organicCertified ? "Yes" : "No", icon: <FiCheckCircle size={16} /> },
-        { label: "Season", value: data.seasonalAvailability || "-", icon: <FiCalendar size={16} /> },
+        {
+          label: "Organic Certified",
+          value: data.organicCertified ? "Yes" : "No",
+          icon: <FiCheckCircle size={16} />,
+        },
+        {
+          label: "Season",
+          value: data.seasonalAvailability || "-",
+          icon: <FiCalendar size={16} />,
+        },
       ]
     : isLiveStock
-    ? [
-        { label: "Location / Area", value: data.location, icon: <FiMapPin size={16} /> },
-        { label: "Breed", value: data.breed || "-", icon: <FiAward size={16} /> },
-        { label: "Age", value: data.age || "-", icon: <FiCalendar size={16} /> },
-        { label: "Unit", value: data.unit, icon: <FiAward size={16} /> },
-        { label: "Organic Certified", value: data.organicCertified ? "Yes" : "No", icon: <FiCheckCircle size={16} /> },
-        { label: "Health / Vaccine Status", value: data.healthVaccineStatus || "-", icon: <FiShield size={16} /> },
-      ]
-    : [
-        { label: "Service Type", value: data.serviceType || "-", icon: <FiTag size={16} /> },
-        { label: "Animal Type", value: data.animalType || "-", icon: <FiHeart size={16} /> },
-        { label: "Experience", value: data.experience || "-", icon: <FiAward size={16} /> },
-        { label: "Mobile Vet", value: data.mobileService ? "Yes" : "No", icon: <FiTruck size={16} /> },
-        { label: "Vaccination", value: data.vaccinationAvailable ? "Yes" : "No", icon: <FiShield size={16} /> },
-        { label: "Service Radius", value: data.serviceRadius ? `${data.serviceRadius} KM` : "-", icon: <FiGlobe size={16} /> },
-        { label: "Health Certified", value: data.healthCertificate ? "Yes" : "No", icon: <FiCheckCircle size={16} /> },
-        { label: "Availability", value: data.availabilityDays?.join("-") || "-", icon: <FiClock size={16} /> },
-      ];
+      ? [
+          {
+            label: "Location / Area",
+            value: data.location,
+            icon: <FiMapPin size={16} />,
+          },
+          {
+            label: "Breed",
+            value: data.breed || "-",
+            icon: <FiAward size={16} />,
+          },
+          {
+            label: "Age",
+            value: data.age || "-",
+            icon: <FiCalendar size={16} />,
+          },
+          { label: "Unit", value: data.unit, icon: <FiAward size={16} /> },
+          {
+            label: "Organic Certified",
+            value: data.organicCertified ? "Yes" : "No",
+            icon: <FiCheckCircle size={16} />,
+          },
+          {
+            label: "Health / Vaccine Status",
+            value: data.healthVaccineStatus || "-",
+            icon: <FiShield size={16} />,
+          },
+        ]
+      : [
+          {
+            label: "Service Type",
+            value: data.serviceType || "-",
+            icon: <FiTag size={16} />,
+          },
+          {
+            label: "Animal Type",
+            value: data.animalType || "-",
+            icon: <FiHeart size={16} />,
+          },
+          {
+            label: "Experience",
+            value: data.experience || "-",
+            icon: <FiAward size={16} />,
+          },
+          {
+            label: "Mobile Vet",
+            value: data.mobileService ? "Yes" : "No",
+            icon: <FiTruck size={16} />,
+          },
+          {
+            label: "Vaccination",
+            value: data.vaccinationAvailable ? "Yes" : "No",
+            icon: <FiShield size={16} />,
+          },
+          {
+            label: "Service Radius",
+            value: data.serviceRadius ? `${data.serviceRadius} KM` : "-",
+            icon: <FiGlobe size={16} />,
+          },
+          {
+            label: "Health Certified",
+            value: data.healthCertificate ? "Yes" : "No",
+            icon: <FiCheckCircle size={16} />,
+          },
+          {
+            label: "Availability",
+            value: data.availabilityDays?.join("-") || "-",
+            icon: <FiClock size={16} />,
+          },
+        ];
 
   const handlePublish = async () => {
-  if (images.length === 0) {
-    toast.error("Please add at least one photo before publishing");
-    return;
-  }
-
-  setIsPublishing(true);
-
-  try {
-    // ============================================
-    // 1. CREATE for NEW
-    // 2. UPDATE for EDIT
-    // ============================================
-
-    const isEdit = Boolean(editId);
-
-    const listingRes = await fetch(
-      isEdit
-        ? `/api/agriculture/${editId}`
-        : "/api/agriculture",
-      {
-        method: isEdit ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify(data),
-      }
-    );
-
-    const listingResult = await listingRes.json().catch(() => null);
-
-    if (!listingRes.ok) {
-      throw new Error(
-        listingResult?.message ||
-          (isEdit
-            ? "Failed to update listing"
-            : "Failed to create listing")
-      );
+    if (images.length === 0) {
+      toast.error("Please add at least one photo before publishing");
+      return;
     }
 
-    // For edit use existing ID
-    // For new use newly created ID
-    const listingId = editId || listingResult?.id;
+    setIsPublishing(true);
 
-    if (!listingId) {
-      throw new Error("Listing ID not found");
-    }
+    try {
+      // ============================================
+      // 1. CREATE for NEW
+      // 2. UPDATE for EDIT
+      // ============================================
 
-    // ============================================
-    // 2. UPLOAD ONLY NEW PHOTOS
-    // ============================================
+      const isEdit = Boolean(editId);
 
-    const newImages = images.filter(
-      ({ file }) => file && file.size > 0
-    );
-
-    if (newImages.length > 0) {
-      const photoFormData = new FormData();
-
-      newImages.forEach(({ file }) => {
-        photoFormData.append("images", file);
-      });
-
-      const photosRes = await fetch(
-        `/api/agriculture/${listingId}/photos`,
+      const listingRes = await fetch(
+        isEdit ? `/api/agriculture/${editId}` : "/api/agriculture",
         {
+          method: isEdit ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+          body: JSON.stringify(data),
+        },
+      );
+
+      const listingResult = await listingRes.json().catch(() => null);
+
+      if (!listingRes.ok) {
+        throw new Error(
+          listingResult?.message ||
+            (isEdit ? "Failed to update listing" : "Failed to create listing"),
+        );
+      }
+
+      // For edit use existing ID
+      // For new use newly created ID
+      const listingId = editId || listingResult?.id;
+
+      if (!listingId) {
+        throw new Error("Listing ID not found");
+      }
+
+      // ============================================
+      // 2. UPLOAD ONLY NEW PHOTOS
+      // ============================================
+
+      const newImages = images.filter(({ file }) => file && file.size > 0);
+
+      if (newImages.length > 0) {
+        const photoFormData = new FormData();
+
+        newImages.forEach(({ file }) => {
+          photoFormData.append("images", file);
+        });
+
+        const photosRes = await fetch(`/api/agriculture/${listingId}/photos`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${session?.accessToken}`,
           },
           body: photoFormData,
+        });
+
+        if (!photosRes.ok) {
+          const err = await photosRes.json().catch(() => null);
+
+          throw new Error(
+            err?.message ||
+              (isEdit
+                ? "Listing updated but photo upload failed"
+                : "Listing created but photo upload failed"),
+          );
         }
+      }
+
+      // ============================================
+      // SUCCESS
+      // ============================================
+
+      toast.success(
+        isEdit
+          ? "Listing updated successfully!"
+          : "Listing published successfully!",
       );
 
-      if (!photosRes.ok) {
-        const err = await photosRes.json().catch(() => null);
+      setAgricultureData(defaultAgricultureData);
+      setImages([]);
 
-        throw new Error(
-          err?.message ||
-            (isEdit
-              ? "Listing updated but photo upload failed"
-              : "Listing created but photo upload failed")
-        );
-      }
+      router.push("/seller/products");
+    } catch (err: unknown) {
+      console.error("PUBLISH/UPDATE ERROR:", err);
+
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setIsPublishing(false);
     }
+  };
 
-    // ============================================
-    // SUCCESS
-    // ============================================
-
-    toast.success(
-      isEdit
-        ? "Listing updated successfully!"
-        : "Listing published successfully!"
-    );
-
-    setAgricultureData(defaultAgricultureData);
-    setImages([]);
-
-    router.push("/seller/products");
-  } catch (err: unknown) {
-    console.error("PUBLISH/UPDATE ERROR:", err);
-
-    toast.error(
-      err instanceof Error
-        ? err.message
-        : "Something went wrong"
-    );
-  } finally {
-    setIsPublishing(false);
-  }
-};
-
- const handleEdit = () => {
-  if (editId) {
-    router.push(`/seller/listing/agriculture-livestock?edit=${editId}`);
-  } else {
-    router.push("/seller/listing/agriculture-livestock");
-  }
-};
+  const handleEdit = () => {
+    if (editId) {
+      router.push(`/seller/listing/agriculture-livestock?edit=${editId}`);
+    } else {
+      router.push("/seller/listing/agriculture-livestock");
+    }
+  };
 
   return (
     <>
@@ -558,7 +615,9 @@ const editId = searchParams.get("edit");
 
           <div className="page-header">
             <h1 className="section-title">Preview your listing</h1>
-            <p className="section-subtitle">Review your listing details before publishing.</p>
+            <p className="section-subtitle">
+              Review your listing details before publishing.
+            </p>
           </div>
 
           <div className="listing-card">
@@ -582,7 +641,16 @@ const editId = searchParams.get("edit");
                       )}
                     </>
                   ) : (
-                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_MUTED }}>
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: TEXT_MUTED,
+                      }}
+                    >
                       📷 No Image
                     </div>
                   )}
@@ -606,7 +674,9 @@ const editId = searchParams.get("edit");
                 <h2 className="listing-title">{data.itemName}</h2>
                 <div className="listing-price">
                   NPR {data.price}
-                  <span className="price-unit">/ {isVetService ? data.priceUnit : data.unit}</span>
+                  <span className="price-unit">
+                    / {isVetService ? data.priceUnit : data.unit}
+                  </span>
                 </div>
 
                 <div className="listing-location">
@@ -646,8 +716,14 @@ const editId = searchParams.get("edit");
                   <div className="location-item">
                     <FiMapPin size={16} />
                     <div>
-                      <span className="location-label">{isVetService ? "Service Radius" : "Location"}</span>
-                      <span>{isVetService ? `${data.serviceRadius} KM` : data.location}</span>
+                      <span className="location-label">
+                        {isVetService ? "Service Radius" : "Location"}
+                      </span>
+                      <span>
+                        {isVetService
+                          ? `${data.serviceRadius} KM`
+                          : data.location}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -660,7 +736,11 @@ const editId = searchParams.get("edit");
               <FiEdit2 size={15} />
               Edit Listing
             </button>
-            <button className="btn btn-publish" onClick={handlePublish} disabled={isPublishing}>
+            <button
+              className="btn btn-publish"
+              onClick={handlePublish}
+              disabled={isPublishing}
+            >
               {isPublishing ? (
                 <>
                   <span className="spinner" />
