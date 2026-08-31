@@ -211,37 +211,37 @@ export default function NewTradesHomeRepairListingPage() {
           result?.listing ??
           result;
 
-        setData((prev) => ({
-          ...prev,
+        setData({
+          ...data,
 
           serviceTitle:
-            existing?.serviceTitle ?? existing?.title ?? prev.serviceTitle,
+            existing?.serviceTitle ?? existing?.title ?? data.serviceTitle,
 
           startingPrice:
             existing?.startingPrice != null
               ? String(existing.startingPrice)
               : existing?.price != null
                 ? String(existing.price)
-                : prev.startingPrice,
+                : data.startingPrice,
 
-          description: existing?.description ?? prev.description,
+          description: existing?.description ?? data.description,
 
           selectedService:
             existing?.selectedService ??
             existing?.serviceType ??
             existing?.service ??
-            prev.selectedService, 
+            data.selectedService,
 
-          city: existing?.city ?? prev.city,
+          city: existing?.city ?? data.city,
 
-          ward: existing?.ward ?? prev.ward,
+          ward: existing?.ward ?? data.ward,
 
           skills: Array.isArray(existing?.skills)
             ? existing.skills
             : Array.isArray(existing?.skillTags)
               ? existing.skillTags
-              : prev.skills,
-        }));
+              : data.skills,
+        });
       } catch (error) {
         console.error("TRADES EDIT LOAD ERROR:", error);
 

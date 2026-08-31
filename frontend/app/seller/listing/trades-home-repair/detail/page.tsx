@@ -191,7 +191,7 @@ function CustomSelect({
       )}
     </div>
   );
-} 
+}
 
 export default function TradesHomeRepairDetailPage() {
   const router = useRouter();
@@ -236,38 +236,42 @@ export default function TradesHomeRepairDetailPage() {
           result?.listing ??
           result;
 
-        setData((prev) => ({
-          ...prev,
+        setData({
+          ...data,
 
           serviceArea:
             existing?.serviceArea ??
             existing?.serviceRadius ??
-            prev.serviceArea,
+            data.serviceArea,
 
           calloutCharge:
             existing?.calloutCharge != null
               ? String(existing.calloutCharge)
-              : prev.calloutCharge,
+              : data.calloutCharge,
 
           warrantyGiven:
-            existing?.warrantyGiven ?? existing?.serviceWarranty ?? false,
+            existing?.warrantyGiven ??
+            existing?.serviceWarranty ??
+            data.warrantyGiven,
 
           emergencyService:
-            existing?.emergencyService ?? existing?.emergency ?? false,
+            existing?.emergencyService ??
+            existing?.emergency ??
+            data.emergencyService,
 
           avgResponseTime:
             existing?.avgResponseTime ??
             existing?.responseTime ??
-            prev.avgResponseTime,
+            data.avgResponseTime,
 
-          address: existing?.address ?? existing?.location ?? prev.address,
+          address: existing?.address ?? existing?.location ?? data.address,
 
           mapPosition: Array.isArray(existing?.mapPosition)
             ? existing.mapPosition
             : existing?.latitude != null && existing?.longitude != null
               ? [Number(existing.latitude), Number(existing.longitude)]
-              : prev.mapPosition,
-        }));
+              : data.mapPosition,
+        });
       } catch (error) {
         console.error("TRADES DETAIL EDIT ERROR:", error);
 
@@ -282,7 +286,6 @@ export default function TradesHomeRepairDetailPage() {
     loadExistingListing();
   }, [editId, session?.accessToken, setData]);
 
-  
   const setServiceArea = (v: string) => setData({ ...data, serviceArea: v });
   const setCalloutCharge = (v: string) =>
     setData({ ...data, calloutCharge: v });

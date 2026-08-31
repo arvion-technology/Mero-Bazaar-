@@ -73,11 +73,12 @@ export default function NewListingPage() {
 
     setVehicleData({ ...vehicleData, title, price, description });
     toast.success("Details saved! Now add photos.");
-router.push(
-  editId
-    ? `/seller/listing/vehicle/photos?edit=${editId}`
-    : "/seller/listing/vehicle/photos"
-);  };
+    router.push(
+      editId
+        ? `/seller/listing/vehicle/photos?edit=${editId}`
+        : "/seller/listing/vehicle/photos",
+    );
+  };
 
   const descLength = description.length;
   const descMax = 500;
@@ -123,23 +124,25 @@ router.push(
         setDescription(data.description ?? "");
 
         if (data.vehicle) {
-          setVehicleData((prev) => ({
-            ...prev,
+          setVehicleData({
+            ...vehicleData,
             ...data.vehicle,
 
             kmDriven:
               data.vehicle.kmDriven != null
                 ? String(data.vehicle.kmDriven)
-                : "",
+                : vehicleData.kmDriven,
 
             address:
-              data.vehicle.address != null ? String(data.vehicle.address) : "",
+              data.vehicle.address != null
+                ? String(data.vehicle.address)
+                : vehicleData.address,
 
             details: {
-              ...prev.details,
+              ...vehicleData.details,
               ...(data.vehicle.details ?? {}),
             },
-          }));
+          });
         }
       } catch (error) {
         console.error("Failed to load listing:", error);

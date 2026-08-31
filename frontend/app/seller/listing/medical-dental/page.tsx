@@ -79,8 +79,8 @@ function CustomSelect({
   placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);
-const triggerRef = useRef<HTMLButtonElement>(null);
-const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
   const updatePosition = useCallback(() => {
@@ -267,6 +267,7 @@ function LanguageSelector({
 }) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const toggleLang = (lang: string) => {
     if (selected.includes(lang)) {
@@ -427,10 +428,10 @@ export default function MedicalListingDetailsPage() {
 
   const { medicalData, setMedicalData } = useDraft();
   const update = (patch: Partial<MedicalData>) => {
-    setMedicalData((prev) => ({
-      ...prev,
+    setMedicalData({
+      ...medicalData,
       ...patch,
-    }));
+    });
   };
   const bioMax = 300;
   const bioLength = medicalData.shortBio.length;
@@ -498,10 +499,9 @@ export default function MedicalListingDetailsPage() {
 
         const medical = result.medical ?? result;
 
-        setMedicalData((prev) => ({
-          ...prev,
+        setMedicalData({
+          ...medicalData,
 
-          // Backend -> frontend mapping
           serviceTitle: medical.serviceType
             ? medical.serviceType
                 .toLowerCase()
@@ -511,7 +511,6 @@ export default function MedicalListingDetailsPage() {
 
           servicesOffered: medical.serviceOffered ?? "",
           doctorName: medical.doctorName ?? "",
-
           licenseNumber: medical.nmcLicenseNumber ?? "",
 
           appointmentFee:
@@ -520,19 +519,13 @@ export default function MedicalListingDetailsPage() {
               : "",
 
           homeVisit: medical.homeVisitAvailable ?? false,
-
           onlineAppointments: medical.onlineAppointments ?? false,
-
           clinicAddress: medical.clinicAddress ?? "",
-
           city: medical.city ?? "",
-
           shortBio: medical.shortBio ?? "",
-
           languages: Array.isArray(medical.languages) ? medical.languages : [],
-
           experience: medical.experience ?? "",
-        }));
+        });
       } catch (error) {
         console.error("Failed to load medical listing:", error);
         toast.error("Failed to load listing data.");

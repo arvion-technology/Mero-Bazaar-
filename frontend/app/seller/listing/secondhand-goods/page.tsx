@@ -55,13 +55,13 @@ const conditions = ["Like New", "Good", "Fair", "Poor"];
 
 export default function NewSecondHandListingPage() {
   const router = useRouter();
-const searchParams = useSearchParams();
-const editId = searchParams.get("edit");
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
 
-const { data: session } = useSession();
+  const { data: session } = useSession();
 
-const [status] = useState("Active");
-const { data, setData } = useDraft();
+  const [status] = useState("Active");
+  const { data, setData } = useDraft();
 
   useEffect(() => {
     if (!editId || !session?.accessToken) return;
@@ -90,55 +90,55 @@ const { data, setData } = useDraft();
           result?.listing ??
           result;
 
-        setData((prev) => ({
-          ...prev,
+        setData({
+          ...data,
 
           listingType:
-            existing?.listingType ?? existing?.type ?? prev.listingType,
+            existing?.listingType ?? existing?.type ?? data.listingType,
 
-          itemName: existing?.itemName ?? existing?.title ?? prev.itemName,
+          itemName: existing?.itemName ?? existing?.title ?? data.itemName,
 
-          condition: existing?.condition ?? prev.condition,
+          condition: existing?.condition ?? data.condition,
 
-          price: existing?.price != null ? String(existing.price) : prev.price,
+          price: existing?.price != null ? String(existing.price) : data.price,
 
-          negotiable: existing?.negotiable ?? false,
+          negotiable: existing?.negotiable ?? data.negotiable,
 
-          description: existing?.description ?? prev.description,
+          description: existing?.description ?? data.description,
 
-          brand: existing?.brand ?? prev.brand,
+          brand: existing?.brand ?? data.brand,
 
           quantity:
             existing?.quantity != null
               ? String(existing.quantity)
-              : prev.quantity,
+              : data.quantity,
 
-          gender: existing?.gender ?? prev.gender,
+          gender: existing?.gender ?? data.gender,
 
-          availability: existing?.availability ?? prev.availability,
+          availability: existing?.availability ?? data.availability,
 
-          location: existing?.location ?? existing?.address ?? prev.location,
+          location: existing?.location ?? existing?.address ?? data.location,
 
-          color: existing?.color ?? prev.color,
+          color: existing?.color ?? data.color,
 
-          material: existing?.material ?? prev.material,
+          material: existing?.material ?? data.material,
 
           weight:
-            existing?.weight != null ? String(existing.weight) : prev.weight,
+            existing?.weight != null ? String(existing.weight) : data.weight,
 
-          deliveryOption: existing?.deliveryOption ?? prev.deliveryOption,
+          deliveryOption: existing?.deliveryOption ?? data.deliveryOption,
 
           deliveryCharge:
             existing?.deliveryCharge != null
               ? String(existing.deliveryCharge)
-              : prev.deliveryCharge,
+              : data.deliveryCharge,
 
-          city: existing?.city ?? prev.city,
+          city: existing?.city ?? data.city,
 
           expiresAt: existing?.expiresAt
             ? String(existing.expiresAt).slice(0, 10)
-            : prev.expiresAt,
-        }));
+            : data.expiresAt,
+        });
       } catch (error) {
         console.error("SECONDHAND EDIT LOAD ERROR:", error);
         toast.error("Failed to load existing listing");
@@ -149,7 +149,7 @@ const { data, setData } = useDraft();
   }, [editId, session?.accessToken, setData]);
 
   const isBaby = data.listingType === "Baby";
- 
+
   const {
     listingType,
     itemName,
