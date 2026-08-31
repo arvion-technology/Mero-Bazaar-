@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useDraft, ServiceCategory } from "../layout";
 import { formToCreateBeautyPayload } from "@/lib/adapters/beautyAdapter";
-
+import { Suspense } from "react";
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
 const SUCCESS = "#10b981";
@@ -26,6 +26,14 @@ const categoryConfig: Record<ServiceCategory, { endpoint: string }> = {
 };
 
 export default function PreviewServicePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HairBeautyWellnessListingContent />
+    </Suspense>
+  );
+}
+
+function HairBeautyWellnessListingContent() {
   const router = useRouter();
   const { category, setCategory, data, images, setImages } = useDraft();
   const { data: session } = useSession();
@@ -74,14 +82,18 @@ export default function PreviewServicePage() {
 
       if (!photosRes.ok) {
         const err = await photosRes.json().catch(() => null);
-        throw new Error(err?.message || "Listing created but photo upload failed");
+        throw new Error(
+          err?.message || "Listing created but photo upload failed",
+        );
       }
 
       toast.success("Listing published successfully!");
       setCategory(category);
       router.push("/seller/products");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong publishing");
+      toast.error(
+        err instanceof Error ? err.message : "Something went wrong publishing",
+      );
     } finally {
       setIsPublishing(false);
     }
@@ -172,7 +184,9 @@ export default function PreviewServicePage() {
 
           <div className="page-header">
             <h1 className="page-title">Preview your listing</h1>
-            <p className="page-subtitle">Review your listing details before publishing.</p>
+            <p className="page-subtitle">
+              Review your listing details before publishing.
+            </p>
           </div>
 
           <div className="listing-card">
@@ -181,9 +195,14 @@ export default function PreviewServicePage() {
                 <div className="gallery-section">
                   <div className="main-image">
                     {mainImage ? (
-                      <img src={mainImage.preview} alt={data.serviceTitle || "Listing"} />
+                      <img
+                        src={mainImage.preview}
+                        alt={data.serviceTitle || "Listing"}
+                      />
                     ) : (
-                      <span style={{ color: "#94a3b8", fontSize: 13 }}>No photo added</span>
+                      <span style={{ color: "#94a3b8", fontSize: 13 }}>
+                        No photo added
+                      </span>
                     )}
                   </div>
                   {sideImages.length > 0 && (
@@ -201,7 +220,11 @@ export default function PreviewServicePage() {
               <div className="card-right">
                 <div className="service-details">
                   <div className="service-header">
-                    <div><h2 className="service-title">{data.serviceTitle || "Untitled Service"}</h2></div>
+                    <div>
+                      <h2 className="service-title">
+                        {data.serviceTitle || "Untitled Service"}
+                      </h2>
+                    </div>
                     <span className="verified-badge">Verified</span>
                   </div>
 
@@ -241,7 +264,11 @@ export default function PreviewServicePage() {
             <div className="service-left">
               <div className="about-section">
                 <h2>About</h2>
-                <p>{data.detailedDescription || data.shortDescription || "No description provided."}</p>
+                <p>
+                  {data.detailedDescription ||
+                    data.shortDescription ||
+                    "No description provided."}
+                </p>
               </div>
 
               {data.tags.length > 0 && (
@@ -263,7 +290,11 @@ export default function PreviewServicePage() {
                 <FiEdit2 size={15} />
                 Edit Listing
               </button>
-              <button className="btn btn-publish" onClick={handlePublish} disabled={isPublishing}>
+              <button
+                className="btn btn-publish"
+                onClick={handlePublish}
+                disabled={isPublishing}
+              >
                 {isPublishing ? (
                   <>
                     <span className="spinner" />

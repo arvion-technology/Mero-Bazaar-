@@ -55,29 +55,31 @@ export const defaultMedicalData: MedicalData = {
   doctorName: "",
   licenseNumber: "",
   appointmentFee: "",
-  homeVisit: true,
+  homeVisit: false,
   onlineAppointments: false,
 
   clinicAddress: "",
-  city: "Kathmandu",
+  city: " ",
 
   shortBio: "",
-  languages: ["English", "Nepali", "Hindi"],
-  experience: "7+ Years",
+  languages: [],
 
-  selectedDays: ["MON", "TUE", "WED", "THU", "FRI"],
+  // languages: ["English", "Nepali", "Hindi"],
+  experience: " ",
+  selectedDays: [],
+  // selectedDays: ["MON", "TUE", "WED", "THU", "FRI"],
   slots: {
     MON: [
       { id: "1", start: "", end: "" },
-      { id: "2", start: "", end: "" },
+      // { id: "2", start: "", end: "" },
     ],
-    TUE: [{ id: "3", start: "", end: "" }],
-    WED: [{ id: "4", start: "", end: "" }],
-    THU: [{ id: "5", start: "", end: "" }],
-    FRI: [{ id: "6", start: "", end: "" }],
+    TUE: [{ id: "2", start: "", end: "" }],
+    WED: [{ id: "3", start: "", end: "" }],
+    THU: [{ id: "4", start: "", end: "" }],
+    FRI: [{ id: "5", start: "", end: "" }],
   },
-  slotDuration: "",
-  bufferTime: "10 minutes",
+  slotDuration: " ",
+  bufferTime: " ",
   sameDayBooking: false,
 };
 
@@ -85,16 +87,26 @@ const DraftContext = createContext<DraftContextType | null>(null);
 
 export function useDraft() {
   const ctx = useContext(DraftContext);
-  if (!ctx) throw new Error("useDraft must be used within medical-dental listing layout");
+  if (!ctx)
+    throw new Error(
+      "useDraft must be used within medical-dental listing layout",
+    );
   return ctx;
 }
 
-export default function MedicalListingLayout({ children }: { children: ReactNode }) {
-  const [medicalData, setMedicalData] = useState<MedicalData>(defaultMedicalData);
+export default function MedicalListingLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const [medicalData, setMedicalData] =
+    useState<MedicalData>(defaultMedicalData);
   const [images, setImages] = useState<MedicalImageItem[]>([]);
 
   return (
-    <DraftContext.Provider value={{ medicalData, setMedicalData, images, setImages }}>
+    <DraftContext.Provider
+      value={{ medicalData, setMedicalData, images, setImages }}
+    >
       {children}
     </DraftContext.Provider>
   );

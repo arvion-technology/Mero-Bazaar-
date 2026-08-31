@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -47,14 +48,22 @@ interface CustomSelectProps {
   placeholder?: string;
 }
 
-function CustomSelect({ options, value, onChange, placeholder }: CustomSelectProps) {
+function CustomSelect({
+  options,
+  value,
+  onChange,
+  placeholder,
+}: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -84,7 +93,9 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
         break;
       case "ArrowUp":
         e.preventDefault();
-        setHighlightedIndex((prev) => (prev - 1 + options.length) % options.length);
+        setHighlightedIndex(
+          (prev) => (prev - 1 + options.length) % options.length,
+        );
         break;
       case "Enter":
         e.preventDefault();
@@ -100,12 +111,27 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
   };
 
   return (
-    <div ref={containerRef} className="custom-select-container" tabIndex={0} onKeyDown={handleKeyDown}>
-      <div className={`custom-select-trigger ${isOpen ? "open" : ""}`} onClick={() => setIsOpen(!isOpen)}>
-        <span className={value ? "custom-select-value" : "custom-select-placeholder"}>
+    <div
+      ref={containerRef}
+      className="custom-select-container"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
+      <div
+        className={`custom-select-trigger ${isOpen ? "open" : ""}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span
+          className={
+            value ? "custom-select-value" : "custom-select-placeholder"
+          }
+        >
           {value || placeholder || "Select..."}
         </span>
-        <FiChevronDown size={16} className={`custom-select-chevron ${isOpen ? "rotated" : ""}`} />
+        <FiChevronDown
+          size={16}
+          className={`custom-select-chevron ${isOpen ? "rotated" : ""}`}
+        />
       </div>
       {isOpen && (
         <div className="custom-select-dropdown">
@@ -131,6 +157,14 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
 }
 
 export default function ServiceDetailsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HairBeautyWellnessListingContent />
+    </Suspense>
+  );
+}
+
+function HairBeautyWellnessListingContent() {
   const router = useRouter();
   const { category, data, setField } = useDraft();
   const [showAvailability, setShowAvailability] = useState(false);
@@ -142,7 +176,12 @@ export default function ServiceDetailsPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!data.whoIsThisFor || !data.genderPreference || !data.preparationTime || !data.experienceLevel) {
+    if (
+      !data.whoIsThisFor ||
+      !data.genderPreference ||
+      !data.preparationTime ||
+      !data.experienceLevel
+    ) {
       toast.error("Please fill all required fields.");
       return;
     }
@@ -152,7 +191,9 @@ export default function ServiceDetailsPage() {
     }
 
     toast.success(`${category} service saved successfully!`);
-    router.push(`/seller/listing/hair-beauty-wellness/photos?category=${category.toLowerCase()}`);
+    router.push(
+      `/seller/listing/hair-beauty-wellness/photos?category=${category.toLowerCase()}`,
+    );
   };
 
   const addTag = () => {
@@ -167,7 +208,10 @@ export default function ServiceDetailsPage() {
   };
 
   const removeTag = (tag: string) => {
-    setField("tags", data.tags.filter((t) => t !== tag));
+    setField(
+      "tags",
+      data.tags.filter((t) => t !== tag),
+    );
   };
 
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -277,40 +321,67 @@ export default function ServiceDetailsPage() {
       <div className="listing-page">
         <div className="listing-container">
           <div className="listing-header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={18} />
             </button>
             <div className="listing-header-text">
               <h1 className="listing-title">New Listing</h1>
               <p className="listing-subtitle">Select › Create Listing</p>
             </div>
-            <div className="draft-badge">Draft Saved <FiCheck size={16} /></div>
+            <div className="draft-badge">
+              Draft Saved <FiCheck size={16} />
+            </div>
           </div>
 
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
-                {idx < steps.length - 1 && <div className={`step-connector ${step.status === "active" ? "filled" : ""}`} />}
+                {idx < steps.length - 1 && (
+                  <div
+                    className={`step-connector ${step.status === "active" ? "filled" : ""}`}
+                  />
+                )}
               </div>
             ))}
           </div>
 
           <form onSubmit={handleSubmit} className="form-card">
             <div className="section-header">
-              <div className="section-icon blue"><FiFileText size={18} color="#fff" /></div>
-              <div className="section-title-wrap"><h2>Additional Information</h2></div>
+              <div className="section-icon blue">
+                <FiFileText size={18} color="#fff" />
+              </div>
+              <div className="section-title-wrap">
+                <h2>Additional Information</h2>
+              </div>
             </div>
 
             <div className="two-column">
               <div className="left-col">
                 <div className="form-group full-width">
-                  <label className="form-label">Who is this for <span className="required">*</span></label>
+                  <label className="form-label">
+                    Who is this for <span className="required">*</span>
+                  </label>
                   <CustomSelect
                     options={whoIsThisForOptions}
                     value={data.whoIsThisFor}
@@ -320,7 +391,9 @@ export default function ServiceDetailsPage() {
                 </div>
 
                 <div className="form-group full-width">
-                  <label className="form-label">Gender Preference <span className="required">*</span></label>
+                  <label className="form-label">
+                    Gender Preference <span className="required">*</span>
+                  </label>
                   <CustomSelect
                     options={genderPreferenceOptions}
                     value={data.genderPreference}
@@ -329,36 +402,49 @@ export default function ServiceDetailsPage() {
                 </div>
 
                 <div className="form-group full-width">
-                  <label className="form-label">Experience Level <span className="required">*</span></label>
+                  <label className="form-label">
+                    Experience Level <span className="required">*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-input"
                     placeholder="e.g. 5+ Years"
                     value={data.experienceLevel}
-                    onChange={(e) => setField("experienceLevel", e.target.value)}
+                    onChange={(e) =>
+                      setField("experienceLevel", e.target.value)
+                    }
                   />
                 </div>
               </div>
 
               <div className="right-col">
                 <div className="form-group full-width">
-                  <label className="form-label">Preparation Time <span className="required">*</span></label>
+                  <label className="form-label">
+                    Preparation Time <span className="required">*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-input"
                     placeholder="e.g. 30 minutes"
                     value={data.preparationTime}
-                    onChange={(e) => setField("preparationTime", e.target.value)}
+                    onChange={(e) =>
+                      setField("preparationTime", e.target.value)
+                    }
                   />
                 </div>
 
                 <div className="form-group full-width">
-                  <label className="form-label">Tags <span style={{ color: "#94a3b8" }}>(Optional)</span></label>
+                  <label className="form-label">
+                    Tags <span style={{ color: "#94a3b8" }}>(Optional)</span>
+                  </label>
                   <div className="skills-wrap">
                     {data.tags.map((tag) => (
                       <span key={tag} className="skill-tag">
                         {tag}
-                        <span className="remove-skill" onClick={() => removeTag(tag)}>
+                        <span
+                          className="remove-skill"
+                          onClick={() => removeTag(tag)}
+                        >
                           <FiX size={12} />
                         </span>
                       </span>
@@ -378,7 +464,11 @@ export default function ServiceDetailsPage() {
               <div className="availability-left">
                 <h2>Availability</h2>
                 <p>Select days and times when you are available.</p>
-                <button type="button" className="set-btn" onClick={() => setShowAvailability(true)}>
+                <button
+                  type="button"
+                  className="set-btn"
+                  onClick={() => setShowAvailability(true)}
+                >
                   <FiCalendar size={16} />
                   Set Availability
                 </button>
@@ -388,7 +478,9 @@ export default function ServiceDetailsPage() {
                 <div className="availability-right">
                   <div className="availability-card">
                     <div className="availability-info">
-                      <div className="icon-box"><FiCalendar size={22} /></div>
+                      <div className="icon-box">
+                        <FiCalendar size={22} />
+                      </div>
                       <div className="availability-text">
                         <h3>Availability</h3>
                         <input
@@ -397,12 +489,24 @@ export default function ServiceDetailsPage() {
                           placeholder="Mon - Sat"
                           onChange={(e) => setWorkingDays(e.target.value)}
                         />
-                        <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-                        <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+                        <input
+                          type="time"
+                          value={startTime}
+                          onChange={(e) => setStartTime(e.target.value)}
+                        />
+                        <input
+                          type="time"
+                          value={endTime}
+                          onChange={(e) => setEndTime(e.target.value)}
+                        />
                       </div>
                     </div>
                   </div>
-                  <button type="button" className="cancel-btn" onClick={() => setShowAvailability(false)}>
+                  <button
+                    type="button"
+                    className="cancel-btn"
+                    onClick={() => setShowAvailability(false)}
+                  >
                     Cancel
                   </button>
                 </div>
@@ -412,7 +516,11 @@ export default function ServiceDetailsPage() {
             <div className="divider" />
 
             <div className="submit-wrap">
-              <button type="button" className="back-link" onClick={() => router.back()}>
+              <button
+                type="button"
+                className="back-link"
+                onClick={() => router.back()}
+              >
                 <FiArrowLeft size={16} />
                 Back
               </button>

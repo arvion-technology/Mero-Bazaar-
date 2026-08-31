@@ -1,7 +1,7 @@
 "use client";
-
-import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -41,7 +41,16 @@ const steps = [
 ];
 
 export default function NewListingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewListingContent />
+    </Suspense>
+  );
+}
+function NewListingContent() {
   const router = useRouter();
+  const { data: session } = useSession();
+
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
@@ -72,11 +81,85 @@ export default function NewListingPage() {
 
     setVehicleData({ ...vehicleData, title, price, description });
     toast.success("Details saved! Now add photos.");
-    router.push("/seller/listing/vehicle/photos");
+    router.push(
+      editId
+        ? `/seller/listing/vehicle/photos?edit=${editId}`
+        : "/seller/listing/vehicle/photos",
+    );
   };
 
   const descLength = description.length;
   const descMax = 500;
+
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+
+  useEffect(() => {
+    if (!editId || !session?.accessToken) return;
+
+    const loadListing = async () => {
+      try {
+        const response = await fetch(`/api/listings/${editId}`, {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.message || "Failed to load listing");
+        }
+
+        console.log("EDIT DATA JSON:", JSON.stringify(data, null, 2));
+
+        console.log(
+          "ADDRESS:",
+          JSON.stringify(
+            {
+              vehicleAddress: data.vehicle?.address,
+              mainAddress: data.address,
+              location: data.location,
+              kmDriven: data.vehicle?.kmDriven,
+            },
+            null,
+            2,
+          ),
+        );
+
+        setTitle(data.title ?? "");
+        setPrice(data.price != null ? String(data.price) : "");
+        setDescription(data.description ?? "");
+
+        if (data.vehicle) {
+          setVehicleData({
+            ...vehicleData,
+            ...data.vehicle,
+
+            kmDriven:
+              data.vehicle.kmDriven != null
+                ? String(data.vehicle.kmDriven)
+                : vehicleData.kmDriven,
+
+            address:
+              data.vehicle.address != null
+                ? String(data.vehicle.address)
+                : vehicleData.address,
+
+            details: {
+              ...vehicleData.details,
+              ...(data.vehicle.details ?? {}),
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load listing:", error);
+        toast.error("Failed to load listing data.");
+      }
+    };
+
+    loadListing();
+  }, [editId, session?.accessToken]);
 
   return (
     <>
@@ -570,27 +653,46 @@ export default function NewListingPage() {
       <div className="listing-page">
         <div className="listing-container">
           <div className="listing-header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={18} />
             </button>
             <div className="listing-header-text">
               <h1 className="listing-title">New Vehicle Listing</h1>
-              <p className="listing-subtitle">Fill in the details below — buyers see this first.</p>
+              <p className="listing-subtitle">
+                Fill in the details below — buyers see this first.
+              </p>
             </div>
           </div>
 
           {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div
+                    className={`step-connector ${step.status === "done" ? "filled" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -603,17 +705,34 @@ export default function NewListingPage() {
                 <FiTruck size={20} />
               </div>
               <div className="preview-strip-text">
-                <div className="preview-strip-title">{title || "Untitled listing"}</div>
+                <div className="preview-strip-title">
+                  {title || "Untitled listing"}
+                </div>
                 <div className="preview-strip-sub">
-                  {vehicleData.brand} · {vehicleData.vehicleType} · {vehicleData.modelYear}
+                  {vehicleData.brand} · {vehicleData.vehicleType} ·{" "}
+                  {vehicleData.modelYear}
                 </div>
               </div>
-              {price && <div className="preview-strip-price">NPR {formattedPrice}</div>}
+              {price && (
+                <div className="preview-strip-price">NPR {formattedPrice}</div>
+              )}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="form-card">
             {/* Section: Basic Information */}
+            <div className="category-wrap">
+              <label className="category-label">Category</label>
+              <button
+                type="button"
+                className="category-pill"
+                onClick={() => router.push("/seller/dashboard")}
+              >
+                <FiTruck size={16} />
+                Vehicle
+                <FiChevronDown size={14} />
+              </button>
+            </div>
             <div className="section-header">
               <div className="section-icon blue">
                 <FiFileText size={18} color="#fff" />
@@ -626,11 +745,22 @@ export default function NewListingPage() {
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Title<span className="required">*</span></label>
-                <input type="text" className="form-input" placeholder="e.g. Toyota Corolla 2021" value={title} onChange={(e) => setTitle(e.target.value)} required />
+                <label className="form-label">
+                  Title<span className="required">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. Toyota Corolla 2021"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                />
               </div>
               <div className="form-group">
-                <label className="form-label">Price (NPR)<span className="required">*</span></label>
+                <label className="form-label">
+                  Price (NPR)<span className="required">*</span>
+                </label>
                 <div className="price-input-wrap">
                   <span className="price-prefix">Rs.</span>
                   <input
@@ -645,7 +775,9 @@ export default function NewListingPage() {
                 </div>
               </div>
               <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                <label className="form-label">Description<span className="required">*</span></label>
+                <label className="form-label">
+                  Description<span className="required">*</span>
+                </label>
                 <textarea
                   className="form-textarea"
                   placeholder="Describe your vehicle — condition, features, why it's a great buy..."
@@ -654,19 +786,12 @@ export default function NewListingPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   required
                 />
-                <div className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}>
+                <div
+                  className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}
+                >
                   {descLength}/{descMax}
                 </div>
               </div>
-            </div>
-
-            <div className="category-wrap">
-              <label className="category-label">Category</label>
-              <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
-                <FiTruck size={16} />
-                Vehicle
-                <FiChevronDown size={14} />
-              </button>
             </div>
 
             <div className="divider" />
@@ -684,8 +809,19 @@ export default function NewListingPage() {
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Vehicle Type<span className="required">*</span></label>
-                <select className="form-select" value={vehicleData.vehicleType} onChange={(e) => setVehicleData({ ...vehicleData, vehicleType: e.target.value })}>
+                <label className="form-label">
+                  Vehicle Type<span className="required">*</span>
+                </label>
+                <select
+                  className="form-select"
+                  value={vehicleData.vehicleType}
+                  onChange={(e) =>
+                    setVehicleData({
+                      ...vehicleData,
+                      vehicleType: e.target.value,
+                    })
+                  }
+                >
                   <option value="car">Car</option>
                   <option value="bike">Bike</option>
                   <option value="scooter">Scooter</option>
@@ -695,55 +831,110 @@ export default function NewListingPage() {
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Brand<span className="required">*</span></label>
+                <label className="form-label">
+                  Brand<span className="required">*</span>
+                </label>
                 <input
                   type="text"
                   className="form-input"
                   placeholder="e.g. Toyota, Bajaj, Royal Enfield"
                   value={vehicleData.brand}
-                  onChange={(e) => setVehicleData({ ...vehicleData, brand: e.target.value })}
+                  onChange={(e) =>
+                    setVehicleData({ ...vehicleData, brand: e.target.value })
+                  }
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Model<span className="required">*</span></label>
+                <label className="form-label">
+                  Model<span className="required">*</span>
+                </label>
                 <input
                   type="text"
                   className="form-input"
                   placeholder="e.g. Corolla, Civic"
                   value={vehicleData.model}
-                  onChange={(e) => setVehicleData({ ...vehicleData, model: e.target.value })}
+                  onChange={(e) =>
+                    setVehicleData({ ...vehicleData, model: e.target.value })
+                  }
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Model Year<span className="required">*</span></label>
-                <select className="form-select" value={vehicleData.modelYear} onChange={(e) => setVehicleData({ ...vehicleData, modelYear: e.target.value })}>
-                  {Array.from({ length: 25 }, (_, i) => 2025 - i).map((year) => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
+                <label className="form-label">
+                  Model Year<span className="required">*</span>
+                </label>
+                <select
+                  className="form-select"
+                  value={vehicleData.modelYear}
+                  onChange={(e) =>
+                    setVehicleData({
+                      ...vehicleData,
+                      modelYear: e.target.value,
+                    })
+                  }
+                >
+                  {Array.from({ length: 25 }, (_, i) => 2025 - i).map(
+                    (year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ),
+                  )}
                 </select>
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">KM Driven<span className="required">*</span></label>
-                <input type="number" className="form-input" placeholder="35,000" value={vehicleData.kmDriven} onChange={(e) => setVehicleData({ ...vehicleData, kmDriven: e.target.value })} />
+                <label className="form-label">
+                  KM Driven<span className="required">*</span>
+                </label>
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder="35,000"
+                  value={vehicleData.kmDriven}
+                  onChange={(e) =>
+                    setVehicleData({ ...vehicleData, kmDriven: e.target.value })
+                  }
+                />
               </div>
               <div className="form-group">
-                <label className="form-label">Condition<span className="required">*</span></label>
-                <select className="form-select" value={vehicleData.condition} onChange={(e) => setVehicleData({ ...vehicleData, condition: e.target.value })}>
+                <label className="form-label">
+                  Condition<span className="required">*</span>
+                </label>
+                <select
+                  className="form-select"
+                  value={vehicleData.condition}
+                  onChange={(e) =>
+                    setVehicleData({
+                      ...vehicleData,
+                      condition: e.target.value,
+                    })
+                  }
+                >
                   <option value="used">Used</option>
                   <option value="new">New</option>
                   <option value="like-new">Like New</option>
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Bluebook Status<span className="required">*</span></label>
-                <select className="form-select" value={vehicleData.bluebookStatus} onChange={(e) => setVehicleData({ ...vehicleData, bluebookStatus: e.target.value })}>
+                <label className="form-label">
+                  Bluebook Status<span className="required">*</span>
+                </label>
+                <select
+                  className="form-select"
+                  value={vehicleData.bluebookStatus}
+                  onChange={(e) =>
+                    setVehicleData({
+                      ...vehicleData,
+                      bluebookStatus: e.target.value,
+                    })
+                  }
+                >
                   <option value="verified">Verified</option>
                   <option value="pending">Pending</option>
                   <option value="not-available">Not Available</option>
@@ -753,8 +944,16 @@ export default function NewListingPage() {
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Fuel Type<span className="required">*</span></label>
-                <select className="form-select" value={vehicleData.fuelType} onChange={(e) => setVehicleData({ ...vehicleData, fuelType: e.target.value })}>
+                <label className="form-label">
+                  Fuel Type<span className="required">*</span>
+                </label>
+                <select
+                  className="form-select"
+                  value={vehicleData.fuelType}
+                  onChange={(e) =>
+                    setVehicleData({ ...vehicleData, fuelType: e.target.value })
+                  }
+                >
                   <option value="petrol">Petrol</option>
                   <option value="diesel">Diesel</option>
                   <option value="electric">Electric</option>
@@ -762,20 +961,57 @@ export default function NewListingPage() {
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Ownership Transfer Ready<span className="required">*</span></label>
+                <label className="form-label">
+                  Ownership Transfer Ready<span className="required">*</span>
+                </label>
                 <div className="radio-group">
                   <label className="radio-label">
-                    <input type="radio" className="radio-input" checked={vehicleData.ownershipTransfer} onChange={() => setVehicleData({ ...vehicleData, ownershipTransfer: true })} /> Yes
+                    <input
+                      type="radio"
+                      className="radio-input"
+                      checked={vehicleData.ownershipTransfer}
+                      onChange={() =>
+                        setVehicleData({
+                          ...vehicleData,
+                          ownershipTransfer: true,
+                        })
+                      }
+                    />{" "}
+                    Yes
                   </label>
                   <label className="radio-label">
-                    <input type="radio" className="radio-input" checked={!vehicleData.ownershipTransfer} onChange={() => setVehicleData({ ...vehicleData, ownershipTransfer: false })} /> No
+                    <input
+                      type="radio"
+                      className="radio-input"
+                      checked={!vehicleData.ownershipTransfer}
+                      onChange={() =>
+                        setVehicleData({
+                          ...vehicleData,
+                          ownershipTransfer: false,
+                        })
+                      }
+                    />{" "}
+                    No
                   </label>
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Address / Location<span className="required">*</span></label>
+                <label className="form-label">
+                  Address / Location<span className="required">*</span>
+                </label>
                 <div className="address-wrap">
-                  <input type="text" className="form-input" placeholder="Kathmandu, Nepal" value={vehicleData.address} onChange={(e) => setVehicleData({ ...vehicleData, address: e.target.value })} />
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Kathmandu, Nepal"
+                    value={vehicleData.address}
+                    onChange={(e) =>
+                      setVehicleData({
+                        ...vehicleData,
+                        address: e.target.value,
+                      })
+                    }
+                  />
                   <FiMapPin size={16} className="address-icon" />
                 </div>
               </div>
@@ -783,37 +1019,42 @@ export default function NewListingPage() {
 
             <div className="divider" />
 
-              <div className="section-header">
-                <div className="section-icon blue">
-                  <FiTruck size={18} color="#fff" />
-                </div>
-                <div className="section-title-wrap">
-                  <h2>Specifications</h2>
-                  <p>Fields specific to {vehicleData.vehicleType}</p>
-                </div>
+            <div className="section-header">
+              <div className="section-icon blue">
+                <FiTruck size={18} color="#fff" />
               </div>
+              <div className="section-title-wrap">
+                <h2>Specifications</h2>
+                <p>Fields specific to {vehicleData.vehicleType}</p>
+              </div>
+            </div>
 
-              <div className="form-row">
-                {Object.entries(VEHICLE_DETAILS_LABELS[vehicleData.vehicleType as keyof typeof VEHICLE_DETAILS_LABELS] ?? {}).map(
-                  ([key, label]) => (
-                    <div className="form-group" key={key}>
-                      <label className="form-label">{label}</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder={label}
-                        value={vehicleData.details[key] ?? ""}
-                        onChange={(e) =>
-                          setVehicleData({
-                            ...vehicleData,
-                            details: { ...vehicleData.details, [key]: e.target.value },
-                          })
-                        }
-                      />
-                    </div>
-                  )
-                )}
-              </div>
+            <div className="form-row">
+              {Object.entries(
+                VEHICLE_DETAILS_LABELS[
+                  vehicleData.vehicleType as keyof typeof VEHICLE_DETAILS_LABELS
+                ] ?? {},
+              ).map(([key, label]) => (
+                <div className="form-group" key={key}>
+                  <label className="form-label">{label}</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder={label}
+                    value={vehicleData.details[key] ?? ""}
+                    onChange={(e) =>
+                      setVehicleData({
+                        ...vehicleData,
+                        details: {
+                          ...vehicleData.details,
+                          [key]: e.target.value,
+                        },
+                      })
+                    }
+                  />
+                </div>
+              ))}
+            </div>
 
             <div className="submit-wrap">
               <button type="submit" className="submit-btn">
