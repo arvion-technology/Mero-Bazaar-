@@ -66,7 +66,7 @@ export default function SellerProductPage() {
         </div>
       ) : products.length === 0 ? (
         <div style={{ padding: "40px 0", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
-          You haven't listed any products yet.
+          You haven&apos;t listed any products yet.
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>

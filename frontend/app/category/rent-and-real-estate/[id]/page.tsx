@@ -181,7 +181,7 @@ export default function PropertyDetailPage() {
         }}
       >
         <p style={{ fontWeight: 700, color: "#1a1a1a" }}>
-          Couldn't load this listing
+          Couldn&apos;t load this listing
         </p>
         <span style={{ color: "#888", fontSize: "14px" }}>
           {loadError ?? "Listing not found"}

@@ -520,7 +520,7 @@ export default function SellerDashboard() {
         }}>
           <div>
             <div style={{ fontWeight: 700, marginBottom: kycRejectionReason ? 4 : 0 }}>
-              Your KYC was rejected. You can't list products until this is resolved.
+              Your KYC was rejected. You can&apos;t list products until this is resolved.
             </div>
             {kycRejectionReason && <div style={{ fontSize: 12.5 }}><strong>Reason:</strong> {kycRejectionReason}</div>}
           </div>

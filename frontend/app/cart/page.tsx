@@ -85,7 +85,7 @@ export default function CartPage() {
             textAlign: "center",
           }}
         >
-          Looks like you haven't added anything to your cart yet.
+          Looks like you haven&apos;t added anything to your cart yet.
         </p>
         <Link
           href="/"

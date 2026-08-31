@@ -351,7 +351,7 @@ export default function ForgotPasswordPage() {
               <>
                 <h2 className="forgot-right-title">Forgot Password?</h2>
                 <p className="forgot-right-sub">
-                  Enter your email address and we'll send you a recovery link
+                  Enter your email address and we&apos;ll send you a recovery link
                 </p>
                 <div className="forgot-divider-line" />
 
