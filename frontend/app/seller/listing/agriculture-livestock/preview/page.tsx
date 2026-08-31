@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiCheck,
@@ -33,7 +34,16 @@ const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 
+
 export default function PreviewPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AgricultureListingContent />
+    </Suspense>
+  );
+}
+
+function AgricultureListingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
