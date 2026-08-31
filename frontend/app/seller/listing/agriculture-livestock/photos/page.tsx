@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 
 import { FiArrowLeft, FiCheck, FiUploadCloud, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
@@ -25,84 +26,92 @@ interface ImageItem {
   preview: string;
   isMain: boolean;
 }
-
 export default function AddPhotosPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AgricultureListingContent />
+    </Suspense>
+  );
+}
+
+function AgricultureListingContent() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { images, setImages } = useDraft();
   const [isDragging, setIsDragging] = useState(false);
-  const { data: session } = useSession();
+   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
-  useEffect(() => {
-    if (!editId || !session?.accessToken) return;
+   useEffect(() => {
+      if (!editId || !session?.accessToken) return;
+  
+      const loadExistingPhotos = async () => {
+        try {
+          const response = await fetch(`/api/listings/${editId}`, {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`,
+            },
+          });
+  
+          const data = await response.json();
+  
+          if (!response.ok) {
+            throw new Error(data?.message || "Failed to load listing");
+          }
+  
+          console.log("EDIT FULL DATA:", data);
+  
+          // Find existing images wherever the API returns them
+          const rawImages =
+            data.images ??
+            data.listing?.images ??
+            data.vehicle?.images ??
+            data.photos ??
+            data.listing?.photos ??
+            [];
+  
+          console.log("EDIT EXISTING IMAGES:", rawImages);
+  
+          if (!Array.isArray(rawImages) || rawImages.length === 0) {
+            console.log("NO EXISTING IMAGES FOUND");
+            return;
+          }
+  
+          const existingImages: ImageItem[] = rawImages
+            .map((image: any, index: number) => {
+              const url =
+                typeof image === "string"
+                  ? image
+                  : (image?.url ??
+                    image?.imageUrl ??
+                    image?.secure_url ??
+                    image?.src ??
+                    image?.path);
+  
+              if (!url) return null;
+  
+              return {
+                file: new File([], `existing-${index}.jpg`, {
+                  type: "image/jpeg",
+                }),
+                preview: url,
+                  isMain: index === 0,
 
-    const loadExistingPhotos = async () => {
-      try {
-        const response = await fetch(`/api/listings/${editId}`, {
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`,
-          },
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data?.message || "Failed to load listing");
+              };
+            })
+            .filter((item): item is ImageItem => item !== null);
+  
+          console.log("FINAL EXISTING IMAGES:", existingImages);
+  
+          setImages(existingImages);
+        } catch (error) {
+          console.error("Failed to load existing photos:", error);
+          toast.error("Failed to load existing photos.");
         }
-
-        console.log("EDIT FULL DATA:", data);
-
-        // Find existing images wherever the API returns them
-        const rawImages =
-          data.images ??
-          data.listing?.images ??
-          data.vehicle?.images ??
-          data.photos ??
-          data.listing?.photos ??
-          [];
-
-        console.log("EDIT EXISTING IMAGES:", rawImages);
-
-        if (!Array.isArray(rawImages) || rawImages.length === 0) {
-          console.log("NO EXISTING IMAGES FOUND");
-          return;
-        }
-
-        const existingImages: ImageItem[] = rawImages
-          .map((image: any, index: number) => {
-            const url =
-              typeof image === "string"
-                ? image
-                : (image?.url ??
-                  image?.imageUrl ??
-                  image?.secure_url ??
-                  image?.src ??
-                  image?.path);
-
-            if (!url) return null;
-
-            return {
-              file: new File([], `existing-${index}.jpg`, {
-                type: "image/jpeg",
-              }),
-              preview: url,
-              isMain: index === 0,
-            };
-          })
-          .filter((item): item is ImageItem => item !== null);
-
-        console.log("FINAL EXISTING IMAGES:", existingImages);
-
-        setImages(existingImages);
-      } catch (error) {
-        console.error("Failed to load existing photos:", error);
-        toast.error("Failed to load existing photos.");
-      }
-    };
-
-    loadExistingPhotos();
-  }, [editId, session?.accessToken, setImages]);
+      };
+  
+      loadExistingPhotos();
+    }, [editId, session?.accessToken, setImages]);
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
@@ -166,13 +175,13 @@ export default function AddPhotosPage() {
     }
     toast.success("Photos saved! Proceeding to preview...");
     if (editId) {
-      router.push(
-        `/seller/listing/agriculture-livestock/preview?edit=${editId}`,
-      );
-    } else {
-      router.push("/seller/listing/agriculture-livestock/preview");
-    }
-  };
+  router.push(
+    `/seller/listing/agriculture-livestock/preview?edit=${editId}`
+  );
+} else {
+  router.push("/seller/listing/agriculture-livestock/preview");
+}  };
+  
 
   const canAddMore = images.length < MAX_IMAGES;
 
@@ -212,101 +221,46 @@ export default function AddPhotosPage() {
       <div className="photos-page">
         <div className="photos-container">
           <div className="photos-header">
-            <button
-              type="button"
-              className="back-btn"
-              onClick={() => router.back()}
-            >
+            <button type="button" className="back-btn" onClick={() => router.back()}>
               <FiArrowLeft size={18} />
             </button>
-            <div className="draft-badge">
-              Draft Saved <FiCheck size={16} />
-            </div>
+            <div className="draft-badge">Draft Saved <FiCheck size={16} /></div>
           </div>
 
           <div className="title-section">
             <h1 className="page-title">Add Photos</h1>
-            <p className="page-subtitle">
-              Add up to 10 photos. First photo will be your main photo.
-            </p>
+            <p className="page-subtitle">Add up to 10 photos. First photo will be your main photo.</p>
           </div>
 
           {images.length === 0 ? (
-            <div
-              className="drop-zone"
-              onClick={() => fileInputRef.current?.click()}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-            >
+            <div className="drop-zone" onClick={() => fileInputRef.current?.click()} onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
               <FiUploadCloud size={36} />
               <span>Drag & Drop images here or</span>
-              <button
-                type="button"
-                className="upload-btn-inline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fileInputRef.current?.click();
-                }}
-              >
-                Upload Images
-              </button>
-              <span style={{ fontSize: "12.5px", color: TEXT_MUTED }}>
-                You can upload up to 10 images (JPG, PNG)
-              </span>
+              <button type="button" className="upload-btn-inline" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>Upload Images</button>
+              <span style={{ fontSize: "12.5px", color: TEXT_MUTED }}>You can upload up to 10 images (JPG, PNG)</span>
             </div>
           ) : (
             <>
               <div className="image-grid">
                 {images.map((img, idx) => (
-                  <div
-                    key={idx}
-                    className={`image-card ${img.isMain ? "main" : ""}`}
-                    onClick={() => !img.isMain && setMainImage(idx)}
-                  >
+                  <div key={idx} className={`image-card ${img.isMain ? "main" : ""}`} onClick={() => !img.isMain && setMainImage(idx)}>
                     <img src={img.preview} alt={img.file.name} />
                     {img.isMain && <div className="main-badge">MAIN</div>}
-                    <button
-                      type="button"
-                      className="remove-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeImage(idx);
-                      }}
-                    >
-                      <FiX size={14} />
-                    </button>
+                    <button type="button" className="remove-btn" onClick={(e) => { e.stopPropagation(); removeImage(idx); }}><FiX size={14} /></button>
                   </div>
                 ))}
                 {canAddMore && (
-                  <div
-                    className="add-more-card"
-                    onClick={() => fileInputRef.current?.click()}
-                    onDrop={handleDrop}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                  >
+                  <div className="add-more-card" onClick={() => fileInputRef.current?.click()} onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
                     <FiUploadCloud size={28} />
-                    <span style={{ fontSize: "14px", color: TEXT_MUTED }}>
-                      Add More
-                    </span>
+                    <span style={{ fontSize: "14px", color: TEXT_MUTED }}>Add More</span>
                   </div>
                 )}
               </div>
-              <div className="photo-count">
-                <span>{images.length}</span>/{MAX_IMAGES} photos
-              </div>
+              <div className="photo-count"><span>{images.length}</span>/{MAX_IMAGES} photos</div>
             </>
           )}
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/jpeg,image/png,image/jpg"
-            style={{ display: "none" }}
-            onChange={(e) => handleFileSelect(e.target.files)}
-          />
+          <input ref={fileInputRef} type="file" multiple accept="image/jpeg,image/png,image/jpg" style={{ display: "none" }} onChange={(e) => handleFileSelect(e.target.files)} />
 
           <div className="tips-section">
             <h3 className="tips-title">Photo Tips</h3>
@@ -318,12 +272,7 @@ export default function AddPhotosPage() {
           </div>
 
           <div className="submit-wrap">
-            <button
-              type="button"
-              className="submit-btn"
-              onClick={handleSubmit}
-              disabled={images.length === 0}
-            >
+            <button type="button" className="submit-btn" onClick={handleSubmit} disabled={images.length === 0}>
               <FiCheck size={18} /> Save & Continue
             </button>
           </div>
