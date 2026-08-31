@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -54,6 +55,14 @@ const listingTypes = [
 const conditions = ["Like New", "Good", "Fair", "Poor"];
 
 export default function NewSecondHandListingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewSecondHandListingContent />
+    </Suspense>
+  );
+}
+
+function NewSecondHandListingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");

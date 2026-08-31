@@ -9,6 +9,7 @@ import { ToastContainer } from "react-toastify";
 import { useDraft } from "../layout";
 import { VEHICLE_DETAILS_LABELS } from "@/app/category/vehicles/[id]/components/shared/vehicleDetailsMap";
 import { forwardGeocode } from "@/lib/fetcher";
+import { Suspense } from "react";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -21,6 +22,14 @@ const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 
 export default function PreviewListingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PreviewListingContent />
+    </Suspense>
+  );
+}
+
+function PreviewListingContent() {
   const router = useRouter();
   const { data: session } = useSession();
   const searchParams = useSearchParams();
@@ -61,126 +70,113 @@ export default function PreviewListingPage() {
   };
 
   const handlePublish = async () => {
-  if (images.length === 0) {
-    toast.error("Please add at least one photo before publishing");
-    return;
-  }
-
-  if (!session?.accessToken) {
-    toast.error("Please login again");
-    return;
-  }
-
-  setIsPublishing(true);
-
-  try {
-    const { latitude, longitude } = await forwardGeocode(
-      vehicleData.address
-    );
-
-    const isEdit = Boolean(editId);
-
-    const vehicleRes = await fetch(
-      isEdit
-        ? `/api/vehicles/${editId}`
-        : "/api/vehicles",
-      {
-        method: isEdit ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
-        },
-        body: JSON.stringify({
-          type: vehicleData.vehicleType,
-          brand: vehicleData.brand,
-          model: vehicleData.model,
-          year: vehicleData.modelYear,
-          km_driven: vehicleData.kmDriven,
-          condition: vehicleData.condition,
-          bluebook_status: vehicleData.bluebookStatus,
-          fuel_type: vehicleData.fuelType,
-          ownership_transfer_ready: vehicleData.ownershipTransfer,
-          price: vehicleData.price,
-          description: vehicleData.description,
-          address: vehicleData.address,
-          latitude,
-          longitude,
-          details: vehicleData.details,
-        }),
-      }
-    );
-
-    const result = await vehicleRes.json().catch(() => null);
-
-    if (!vehicleRes.ok) {
-      throw new Error(
-        result?.message ||
-          (isEdit
-            ? "Failed to update vehicle listing"
-            : "Failed to create vehicle listing")
-      );
+    if (images.length === 0) {
+      toast.error("Please add at least one photo before publishing");
+      return;
     }
 
-    const vehicleId = editId || result?.id;
-
-    if (!vehicleId) {
-      throw new Error("Vehicle ID not found");
+    if (!session?.accessToken) {
+      toast.error("Please login again");
+      return;
     }
 
-    // Upload only newly selected files
-    const newImages = images.filter(
-      ({ file }) => file && file.size > 0
-    );
+    setIsPublishing(true);
 
-    if (newImages.length > 0) {
-      const photoFormData = new FormData();
+    try {
+      const { latitude, longitude } = await forwardGeocode(vehicleData.address);
 
-      newImages.forEach(({ file }) => {
-        photoFormData.append("images", file);
-      });
+      const isEdit = Boolean(editId);
 
-      const photosRes = await fetch(
-        `/api/vehicles/${vehicleId}/photos`,
+      const vehicleRes = await fetch(
+        isEdit ? `/api/vehicles/${editId}` : "/api/vehicles",
         {
+          method: isEdit ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            type: vehicleData.vehicleType,
+            brand: vehicleData.brand,
+            model: vehicleData.model,
+            year: vehicleData.modelYear,
+            km_driven: vehicleData.kmDriven,
+            condition: vehicleData.condition,
+            bluebook_status: vehicleData.bluebookStatus,
+            fuel_type: vehicleData.fuelType,
+            ownership_transfer_ready: vehicleData.ownershipTransfer,
+            price: vehicleData.price,
+            description: vehicleData.description,
+            address: vehicleData.address,
+            latitude,
+            longitude,
+            details: vehicleData.details,
+          }),
+        },
+      );
+
+      const result = await vehicleRes.json().catch(() => null);
+
+      if (!vehicleRes.ok) {
+        throw new Error(
+          result?.message ||
+            (isEdit
+              ? "Failed to update vehicle listing"
+              : "Failed to create vehicle listing"),
+        );
+      }
+
+      const vehicleId = editId || result?.id;
+
+      if (!vehicleId) {
+        throw new Error("Vehicle ID not found");
+      }
+
+      // Upload only newly selected files
+      const newImages = images.filter(({ file }) => file && file.size > 0);
+
+      if (newImages.length > 0) {
+        const photoFormData = new FormData();
+
+        newImages.forEach(({ file }) => {
+          photoFormData.append("images", file);
+        });
+
+        const photosRes = await fetch(`/api/vehicles/${vehicleId}/photos`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${session.accessToken}`,
           },
           body: photoFormData,
+        });
+
+        if (!photosRes.ok) {
+          const err = await photosRes.json().catch(() => null);
+
+          throw new Error(
+            err?.message ||
+              (isEdit
+                ? "Vehicle updated but photo upload failed"
+                : "Vehicle created but photo upload failed"),
+          );
         }
+      }
+
+      toast.success(
+        isEdit
+          ? "Vehicle listing updated successfully!"
+          : "Vehicle listing published successfully!",
       );
 
-      if (!photosRes.ok) {
-        const err = await photosRes.json().catch(() => null);
+      router.push("/seller/products");
+    } catch (err: unknown) {
+      console.error("VEHICLE PUBLISH/UPDATE ERROR:", err);
 
-        throw new Error(
-          err?.message ||
-            (isEdit
-              ? "Vehicle updated but photo upload failed"
-              : "Vehicle created but photo upload failed")
-        );
-      }
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setIsPublishing(false);
     }
-
-    toast.success(
-      isEdit
-        ? "Vehicle listing updated successfully!"
-        : "Vehicle listing published successfully!"
-    );
-
-    router.push("/seller/products");
-  } catch (err: unknown) {
-    console.error("VEHICLE PUBLISH/UPDATE ERROR:", err);
-
-    toast.error(
-      err instanceof Error
-        ? err.message
-        : "Something went wrong"
-    );
-  } finally {
-    setIsPublishing(false);
-  }
-};
+  };
 
   if (!listing) {
     return (

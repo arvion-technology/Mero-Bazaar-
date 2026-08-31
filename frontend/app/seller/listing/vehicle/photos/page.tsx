@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiUploadCloud,
@@ -33,8 +34,15 @@ interface ImageItem {
   file: File;
   preview: string;
 }
-
 export default function AddPhotosPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AddPhotosContent />
+    </Suspense>
+  );
+}
+
+function AddPhotosContent() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();

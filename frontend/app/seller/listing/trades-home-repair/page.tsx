@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -175,8 +176,14 @@ function CustomSelect({
     </div>
   );
 }
-
 export default function NewTradesHomeRepairListingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewTradesHomeRepairListingContent />
+    </Suspense>
+  );
+}
+function NewTradesHomeRepairListingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");

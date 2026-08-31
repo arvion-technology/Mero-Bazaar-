@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiCheck,
@@ -53,8 +54,14 @@ function MapSkeleton() {
     </div>
   );
 }
-
 export default function PreviewTradesHomeRepairPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PreviewTradesHomeRepairContent />
+    </Suspense>
+  );
+}
+function PreviewTradesHomeRepairContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");

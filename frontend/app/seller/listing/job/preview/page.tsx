@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiCheck,
@@ -46,6 +47,14 @@ function toCity(location: string) {
 }
 
 export default function PreviewListingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PreviewListingContent />
+    </Suspense>
+  );
+}
+
+function PreviewListingContent() {
   const router = useRouter();
   const { data: session } = useSession();
   const { data } = useJobDraft();

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiCheck,
@@ -39,6 +40,14 @@ const steps = [
 ];
 
 export default function MedicalPreviewPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MedicalPreviewContent />
+    </Suspense>
+  );
+}
+
+function MedicalPreviewContent() {
   const router = useRouter();
   const { medicalData, setMedicalData, images, setImages } = useDraft();
   const [submitting, setSubmitting] = useState(false);

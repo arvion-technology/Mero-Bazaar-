@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiCheck,
@@ -164,8 +165,15 @@ function Dropdown({
     </div>
   );
 }
-
 export default function MedicalAvailabilityPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MedicalAvailabilityContent />
+    </Suspense>
+  );
+}
+
+function MedicalAvailabilityContent() {
   const router = useRouter();
   const { data: session } = useSession();
 

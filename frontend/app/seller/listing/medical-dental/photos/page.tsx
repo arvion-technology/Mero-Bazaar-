@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiCheck,
@@ -47,6 +48,14 @@ const steps = [
 ];
 
 export default function AddMedicalPhotosPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AddMedicalPhotosContent />
+    </Suspense>
+  );
+}
+
+function AddMedicalPhotosContent() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
    const { data: session } = useSession();

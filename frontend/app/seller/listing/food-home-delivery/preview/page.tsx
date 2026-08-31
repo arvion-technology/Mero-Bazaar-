@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiCheck,
@@ -39,6 +40,14 @@ const steps = [
 const formatFoodType = (type: string) => type.replace(/_/g, " ").toLowerCase();
 
 export default function PreviewFoodDeliveryPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FoodDeliveryListingPage />
+    </Suspense>
+  );
+}
+
+function FoodDeliveryListingPage() {
   const router = useRouter();
   const { foodData, images, setFoodData, setImages } = useDraft();
   const [isPublishing, setIsPublishing] = useState(false);
@@ -52,14 +61,16 @@ export default function PreviewFoodDeliveryPage() {
 
   const formatDeliveryDays = (days: string[]) => {
     if (days.length === 7) return "Mon - Sun";
-    if (days.length === 5 && days.includes("MON") && days.includes("FRI")) return "Mon - Fri";
+    if (days.length === 5 && days.includes("MON") && days.includes("FRI"))
+      return "Mon - Fri";
     if (days.length === 0) return "Not specified";
     return days.map((d) => d.charAt(0) + d.slice(1).toLowerCase()).join(", ");
   };
 
   const formatUnit = (unit: string) => unit.replace(/_/g, " ").toLowerCase();
 
-  const mainImage = images.find((img) => img.isMain)?.preview || images[0]?.preview || "";
+  const mainImage =
+    images.find((img) => img.isMain)?.preview || images[0]?.preview || "";
 
   const handlePublish = async () => {
     if (isPublishing) return;
@@ -92,7 +103,10 @@ export default function PreviewFoodDeliveryPage() {
       const photoFormData = new FormData();
       images.forEach(({ file }) => photoFormData.append("images", file));
       const mainIndex = images.findIndex((i) => i.isMain);
-      photoFormData.append("mainImageIndex", String(mainIndex >= 0 ? mainIndex : 0));
+      photoFormData.append(
+        "mainImageIndex",
+        String(mainIndex >= 0 ? mainIndex : 0),
+      );
 
       const photosRes = await fetch(`/api/foods/${listing.id}/photos`, {
         method: "POST",
@@ -102,7 +116,9 @@ export default function PreviewFoodDeliveryPage() {
 
       if (!photosRes.ok) {
         const err = await photosRes.json().catch(() => null);
-        throw new Error(err?.message || "Listing created but photo upload failed");
+        throw new Error(
+          err?.message || "Listing created but photo upload failed",
+        );
       }
 
       toast.success("Listing published successfully!");
@@ -113,11 +129,13 @@ export default function PreviewFoodDeliveryPage() {
 
       router.push("/seller/products");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong publishing");
+      toast.error(
+        err instanceof Error ? err.message : "Something went wrong publishing",
+      );
     } finally {
       setIsPublishing(false);
     }
-  }; 
+  };
 
   const handleEdit = () => {
     router.push("/seller/listing/food-home-delivery");
@@ -504,15 +522,28 @@ export default function PreviewFoodDeliveryPage() {
 
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div
+                    className={`step-connector ${step.status === "done" ? "filled" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -520,7 +551,9 @@ export default function PreviewFoodDeliveryPage() {
 
           <div className="page-header">
             <h1 className="section-title">Preview your listing</h1>
-            <p className="section-subtitle">Review your listing details before publishing.</p>
+            <p className="section-subtitle">
+              Review your listing details before publishing.
+            </p>
           </div>
 
           <div className="listing-card">
@@ -533,12 +566,17 @@ export default function PreviewFoodDeliveryPage() {
             </div>
 
             <div className="listing-content">
-              <h2 className="listing-title">{foodData.title || "Untitled Listing"}</h2>
+              <h2 className="listing-title">
+                {foodData.title || "Untitled Listing"}
+              </h2>
 
-              <div className="food-type-badge">{formatFoodType(foodData.foodType)}</div>
+              <div className="food-type-badge">
+                {formatFoodType(foodData.foodType)}
+              </div>
 
               <div className="listing-price">
-                NPR {formatPrice(foodData.price)} / {formatUnit(foodData.priceUnit)}
+                NPR {formatPrice(foodData.price)} /{" "}
+                {formatUnit(foodData.priceUnit)}
               </div>
 
               <div className="location-row">
@@ -548,14 +586,18 @@ export default function PreviewFoodDeliveryPage() {
 
               <div className="description-section">
                 <div className="description-title">Description</div>
-                <p className="description-text">{foodData.description || "No description provided."}</p>
+                <p className="description-text">
+                  {foodData.description || "No description provided."}
+                </p>
               </div>
 
               <div className="details-section">
                 <div className="details-grid">
                   <div className="detail-item">
                     <span className="detail-label">Delivery Days</span>
-                    <span className="detail-value">{formatDeliveryDays(foodData.deliveryDays)}</span>
+                    <span className="detail-value">
+                      {formatDeliveryDays(foodData.deliveryDays)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -567,7 +609,11 @@ export default function PreviewFoodDeliveryPage() {
               <FiEdit2 size={15} />
               Edit Listing
             </button>
-            <button className="btn btn-publish" onClick={handlePublish} disabled={isPublishing}>
+            <button
+              className="btn btn-publish"
+              onClick={handlePublish}
+              disabled={isPublishing}
+            >
               {isPublishing ? (
                 <>
                   <span className="spinner" />

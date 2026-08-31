@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -422,7 +423,16 @@ function LanguageSelector({
   );
 }
 
+
 export default function MedicalListingDetailsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MedicalListingDetailsPage />
+    </Suspense>
+  );
+}
+
+function MedicalListingDetailsContent() {
   const router = useRouter();
   const { data: session } = useSession();
 

@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -238,6 +238,14 @@ function CustomSelect({
 }
 
 export default function NewFoodDeliveryListingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FoodDeliveryListingPage />
+    </Suspense>
+  );
+}
+
+function FoodDeliveryListingPage() {
   const router = useRouter();
   const { foodData, setFoodData } = useDraft();
   const searchParams = useSearchParams();

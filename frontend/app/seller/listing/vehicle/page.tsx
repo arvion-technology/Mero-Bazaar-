@@ -1,6 +1,7 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -40,6 +41,13 @@ const steps = [
 ];
 
 export default function NewListingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewListingContent />
+    </Suspense>
+  );
+}
+function NewListingContent() {
   const router = useRouter();
   const { data: session } = useSession();
 

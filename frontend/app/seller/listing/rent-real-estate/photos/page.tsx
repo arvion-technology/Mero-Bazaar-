@@ -3,6 +3,7 @@
 import { useRef, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -43,7 +44,15 @@ interface ImageItem {
   isMain: boolean;
 }
 
+
 export default function RealEstatePhotosPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RealEstatePhotosContent />
+    </Suspense>
+  );
+}
+function RealEstatePhotosContent() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { formData, updateForm } = useListingForm();

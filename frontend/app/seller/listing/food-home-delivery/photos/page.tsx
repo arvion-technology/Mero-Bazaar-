@@ -3,7 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiCheck,
@@ -43,6 +43,13 @@ interface ImageItem {
 }
 
 export default function AddFoodPhotosPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FoodDeliveryListingPage />
+    </Suspense>
+  );
+}
+function FoodDeliveryListingPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { images, setImages } = useDraft();
@@ -108,8 +115,7 @@ export default function AddFoodPhotosPage() {
               isMain: image?.isMain ?? index === 0,
             };
           })
-.filter(
-    (item): item is FoodDeliveryImageItem => item !== null);
+          .filter((item): item is FoodDeliveryImageItem => item !== null);
 
         setImages(existingImages);
       } catch (error) {
