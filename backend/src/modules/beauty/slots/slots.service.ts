@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateBeautySlotDto } from './dto/create_beauty_slot.dto';
 import { UpdateBeautySlotDto } from './dto/update_beauty_slot.dto';
-import { WeekDay } from '@prisma/client';
+import { Prisma, WeekDay } from '@prisma/client';
 
 @Injectable()
 export class BeautySlotsService {
@@ -26,8 +26,29 @@ export class BeautySlotsService {
     return listing.beauty;
   }
 
-  async create(dto: CreateBeautySlotDto) {
-    const beauty = await this.resolveBeautyByListingId(dto.beautyId);
+  private async resolveListingWithBeauty(listingId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      include: { beauty: true },
+    });
+
+    if (!listing?.beauty) {
+      throw new NotFoundException('Beauty service not found');
+    }
+
+    return listing;
+  }
+
+  private assertOwnerOrAdmin(listingUserId: string, userId: string, role: string) {
+    if (role !== 'ADMIN' && listingUserId !== userId) {
+      throw new ForbiddenException('You do not own this beauty listing');
+    }
+  }
+
+  async create(dto: CreateBeautySlotDto, userId: string, role: string) {
+    const listing = await this.resolveListingWithBeauty(dto.beautyId);
+    this.assertOwnerOrAdmin(listing.userId, userId, role);
+    const beauty = listing.beauty!;
 
     if (this.toMinutes(dto.startTime) >= this.toMinutes(dto.endTime)) {
       throw new BadRequestException('startTime must be before endTime');
@@ -46,14 +67,21 @@ export class BeautySlotsService {
       throw new BadRequestException('Slot already exists for this day and time');
     }
 
-    return this.prisma.beautySlot.create({
-      data: {
-        beautyId: beauty.id,
-        day: dto.day as WeekDay,
-        startTime: dto.startTime,
-        endTime: dto.endTime,
-      },
-    });
+    try {
+      return await this.prisma.beautySlot.create({
+        data: {
+          beautyId: beauty.id,
+          day: dto.day as WeekDay,
+          startTime: dto.startTime,
+          endTime: dto.endTime,
+        },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new BadRequestException('Slot already exists for this day and time');
+      }
+      throw e;
+    }
   }
 
   async findAll() {
@@ -114,6 +142,7 @@ export class BeautySlotsService {
       },
     });
   }
+
   async findOne(id: string) {
     const slot = await this.prisma.beautySlot.findUnique({ where: { id } });
 
@@ -122,30 +151,50 @@ export class BeautySlotsService {
     return slot;
   }
 
-  async update(id: string, dto: UpdateBeautySlotDto) {
-    const slot = await this.findOne(id);
-
-    if (slot.isBooked) {
-      throw new BadRequestException('Cannot update a booked slot');
-    }
-
-    return this.prisma.beautySlot.update({
+  private async findOneWithOwner(id: string) {
+    const slot = await this.prisma.beautySlot.findUnique({
       where: { id },
-      data: {
-        day: dto.day,
-        startTime: dto.startTime,
-        endTime: dto.endTime,
-      },
+      include: { beauty: { include: { listing: true } } },
+    });
+
+    if (!slot) throw new NotFoundException('Slot not found');
+    return slot;
+  }
+
+  async update(id: string, dto: UpdateBeautySlotDto, userId: string, role: string) {
+    const slot = await this.findOneWithOwner(id);
+    this.assertOwnerOrAdmin(slot.beauty.listing.userId, userId, role);
+
+    return this.prisma.$transaction(async (tx) => {
+      const result = await tx.beautySlot.updateMany({
+        where: { id, isBooked: false },
+        data: {
+          day: dto.day,
+          startTime: dto.startTime,
+          endTime: dto.endTime,
+        },
+      });
+
+      if (result.count === 0) {
+        throw new BadRequestException('Cannot update a booked slot');
+      }
+
+      return tx.beautySlot.findUniqueOrThrow({ where: { id } });
     });
   }
 
-  async remove(id: string) {
-    const slot = await this.findOne(id);
+  async remove(id: string, userId: string, role: string) {
+    const slot = await this.findOneWithOwner(id);
+    this.assertOwnerOrAdmin(slot.beauty.listing.userId, userId, role);
 
-    if (slot.isBooked) {
+    const result = await this.prisma.beautySlot.deleteMany({
+      where: { id, isBooked: false },
+    });
+
+    if (result.count === 0) {
       throw new BadRequestException('Cannot delete a booked slot');
     }
 
-    return this.prisma.beautySlot.delete({ where: { id } });
+    return { id, deleted: true };
   }
 }
