@@ -1,6 +1,10 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 const nextConfig = {
+  experimental: {
+    cpus: 1,
+  },
+
   images: {
     remotePatterns: [
       {
@@ -13,7 +17,8 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/:path((?!auth(?:/|$)|otp(?:/|$)|vendor-kyc(?:/|$)|user(?:/|$)).*)",
+        source:
+          "/api/:path((?!auth(?:/|$)|otp(?:/|$)|vendor-kyc(?:/|$)|user(?:/|$)).*)",
         destination: `${API_URL}/api/:path`,
       },
     ];
