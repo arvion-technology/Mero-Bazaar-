@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -34,8 +36,23 @@ const steps = [
   { label: "Preview", icon: FiInfo, status: "upcoming" as const },
 ];
 
-const foodTypes = ["TIFFIN", "FAST_FOOD", "BAKERY", "GROCERY", "HOMEMADE", "BEVERAGE", "OTHER"];
-const priceUnits = ["PER_MEAL", "PER_PERSON", "PER_ITEM", "PER_KG", "PER_PLATE", "PER_DAY"];
+const foodTypes = [
+  "TIFFIN",
+  "FAST_FOOD",
+  "BAKERY",
+  "GROCERY",
+  "HOMEMADE",
+  "BEVERAGE",
+  "OTHER",
+];
+const priceUnits = [
+  "PER_MEAL",
+  "PER_PERSON",
+  "PER_ITEM",
+  "PER_KG",
+  "PER_PLATE",
+  "PER_DAY",
+];
 const weekDays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 function CustomSelect({
@@ -95,7 +112,8 @@ function CustomSelect({
     }
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [open]);
 
@@ -128,13 +146,22 @@ function CustomSelect({
           position: "relative",
         }}
         onMouseEnter={(e) => {
-          if (!open) (e.currentTarget as HTMLButtonElement).style.borderColor = "#cbd5e1";
+          if (!open)
+            (e.currentTarget as HTMLButtonElement).style.borderColor =
+              "#cbd5e1";
         }}
         onMouseLeave={(e) => {
-          if (!open) (e.currentTarget as HTMLButtonElement).style.borderColor = BORDER;
+          if (!open)
+            (e.currentTarget as HTMLButtonElement).style.borderColor = BORDER;
         }}
       >
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
           {value || placeholder}
         </span>
         <FiChevronDown
@@ -158,7 +185,8 @@ function CustomSelect({
             background: CARD_BG,
             border: `1.5px solid ${BORDER}`,
             borderRadius: "12px",
-            boxShadow: "0 12px 40px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08)",
+            boxShadow:
+              "0 12px 40px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08)",
             overflowY: "auto",
             padding: "6px",
           }}
@@ -190,10 +218,14 @@ function CustomSelect({
                 display: "block",
               }}
               onMouseEnter={(e) => {
-                if (value !== opt) (e.currentTarget as HTMLButtonElement).style.background = "#f8fafc";
+                if (value !== opt)
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "#f8fafc";
               }}
               onMouseLeave={(e) => {
-                if (value !== opt) (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                if (value !== opt)
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "transparent";
               }}
             >
               {opt.replace(/_/g, " ")}
@@ -206,10 +238,25 @@ function CustomSelect({
 }
 
 export default function NewFoodDeliveryListingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FoodDeliveryListingPage />
+    </Suspense>
+  );
+}
+
+function FoodDeliveryListingPage() {
   const router = useRouter();
   const { foodData, setFoodData } = useDraft();
+  const searchParams = useSearchParams();
 
-  const update = <K extends keyof typeof foodData>(key: K, value: (typeof foodData)[K]) => {
+  const editId = searchParams.get("edit");
+  const { data: session } = useSession();
+
+  const update = <K extends keyof typeof foodData>(
+    key: K,
+    value: (typeof foodData)[K],
+  ) => {
     setFoodData({ ...foodData, [key]: value });
   };
 
@@ -219,7 +266,8 @@ export default function NewFoodDeliveryListingPage() {
     return isNaN(num) ? foodData.price : num.toLocaleString("en-IN");
   }, [foodData.price]);
 
-  const handlePriceChange = (val: string) => update("price", val.replace(/[^0-9]/g, ""));
+  const handlePriceChange = (val: string) =>
+    update("price", val.replace(/[^0-9]/g, ""));
 
   const toggleDeliveryDay = (day: string) => {
     const days = foodData.deliveryDays.includes(day)
@@ -254,7 +302,11 @@ export default function NewFoodDeliveryListingPage() {
     }
 
     toast.success("Details saved! Now add photos.");
-    router.push("/seller/listing/food-home-delivery/photos");
+    if (editId) {
+      router.push(`/seller/listing/food-home-delivery/photos?edit=${editId}`);
+    } else {
+      router.push("/seller/listing/food-home-delivery/photos");
+    }
   };
 
   const descLength = foodData.description.length;
@@ -702,7 +754,11 @@ export default function NewFoodDeliveryListingPage() {
       <div className="listing-page">
         <div className="listing-container">
           <div className="listing-header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={18} />
             </button>
             <div className="listing-header-text">
@@ -716,15 +772,28 @@ export default function NewFoodDeliveryListingPage() {
 
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div
+                    className={`step-connector ${step.status === "done" ? "filled" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -733,10 +802,25 @@ export default function NewFoodDeliveryListingPage() {
           <form onSubmit={handleSubmit} className="form-card">
             <div className="category-wrap">
               <label className="category-label">Category</label>
-              <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
+              <button
+                type="button"
+                className="category-pill"
+                onClick={() => router.push("/seller/dashboard")}
+              >
                 <FiBriefcase size={16} />
                 Food & Home Delivery
-                <span style={{ fontSize: "12px", fontWeight: 500, color: "#2563eb", background: "#dbeafe", padding: "2px 8px", borderRadius: "6px" }}>Change</span>
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    color: "#2563eb",
+                    background: "#dbeafe",
+                    padding: "2px 8px",
+                    borderRadius: "6px",
+                  }}
+                >
+                  Change
+                </span>
               </button>
             </div>
 
@@ -753,7 +837,9 @@ export default function NewFoodDeliveryListingPage() {
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Food Title<span className="required">*</span></label>
+                <label className="form-label">
+                  Food Title<span className="required">*</span>
+                </label>
                 <input
                   type="text"
                   className="form-input"
@@ -764,14 +850,22 @@ export default function NewFoodDeliveryListingPage() {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Food type<span className="required">*</span></label>
-                <CustomSelect value={foodData.foodType} options={foodTypes} onChange={(v) => update("foodType", v)} />
+                <label className="form-label">
+                  Food type<span className="required">*</span>
+                </label>
+                <CustomSelect
+                  value={foodData.foodType}
+                  options={foodTypes}
+                  onChange={(v) => update("foodType", v)}
+                />
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group full-width">
-                <label className="form-label">Description<span className="required">*</span></label>
+                <label className="form-label">
+                  Description<span className="required">*</span>
+                </label>
                 <textarea
                   className="form-textarea"
                   placeholder="Enter Description"
@@ -780,7 +874,9 @@ export default function NewFoodDeliveryListingPage() {
                   onChange={(e) => update("description", e.target.value)}
                   required
                 />
-                <div className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}>
+                <div
+                  className={`char-counter ${descLength > descMax * 0.9 ? "near-limit" : ""}`}
+                >
                   {descLength}/{descMax}
                 </div>
               </div>
@@ -788,7 +884,9 @@ export default function NewFoodDeliveryListingPage() {
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Price(NPR)<span className="required">*</span></label>
+                <label className="form-label">
+                  Price(NPR)<span className="required">*</span>
+                </label>
                 <div className="price-input-wrap">
                   <span className="price-prefix">Rs.</span>
                   <input
@@ -803,14 +901,22 @@ export default function NewFoodDeliveryListingPage() {
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Price Unit<span className="required">*</span></label>
-                <CustomSelect value={foodData.priceUnit} options={priceUnits} onChange={(v) => update("priceUnit", v)} />
+                <label className="form-label">
+                  Price Unit<span className="required">*</span>
+                </label>
+                <CustomSelect
+                  value={foodData.priceUnit}
+                  options={priceUnits}
+                  onChange={(v) => update("priceUnit", v)}
+                />
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group full-width">
-                <label className="form-label">Delivery Days<span className="required">*</span></label>
+                <label className="form-label">
+                  Delivery Days<span className="required">*</span>
+                </label>
                 <div className="days-row">
                   {weekDays.map((day) => (
                     <button
@@ -819,7 +925,9 @@ export default function NewFoodDeliveryListingPage() {
                       className={`day-chip ${foodData.deliveryDays.includes(day) ? "active" : ""}`}
                       onClick={() => toggleDeliveryDay(day)}
                     >
-                      {foodData.deliveryDays.includes(day) && <FiCheck size={12} />}
+                      {foodData.deliveryDays.includes(day) && (
+                        <FiCheck size={12} />
+                      )}
                       {day}
                     </button>
                   ))}
@@ -840,7 +948,9 @@ export default function NewFoodDeliveryListingPage() {
 
             <div className="form-row">
               <div className="form-group full-width">
-                <label className="form-label">Location<span className="required">*</span></label>
+                <label className="form-label">
+                  Location<span className="required">*</span>
+                </label>
                 <input
                   type="text"
                   className="form-input"
@@ -853,7 +963,11 @@ export default function NewFoodDeliveryListingPage() {
             </div>
 
             <div className="submit-wrap">
-              <button type="button" className="back-link" onClick={() => router.back()}>
+              <button
+                type="button"
+                className="back-link"
+                onClick={() => router.back()}
+              >
                 <FiArrowLeft size={16} />
                 Back
               </button>

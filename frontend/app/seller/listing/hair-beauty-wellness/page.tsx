@@ -15,7 +15,7 @@ import { FaSpa } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import { useState, useRef, useEffect } from "react";
 import { useDraft, ServiceCategory } from "./layout";
-
+import { Suspense } from "react";
 const ACCENT = "#2563eb";
 const ACCENT_LIGHT = "#eff6ff";
 const DANGER = "#dc2626";
@@ -35,7 +35,12 @@ const steps = [
   { label: "Preview", icon: FiEye, status: "upcoming" as const },
 ];
 
-const serviceLocationOptions = ["At studio", "At Salon", "At Home", "Online Consultation"];
+const serviceLocationOptions = [
+  "At studio",
+  "At Salon",
+  "At Home",
+  "Online Consultation",
+];
 const categoryOptions: ServiceCategory[] = ["Beauty", "Hair", "Wellness"];
 
 interface CustomSelectProps {
@@ -45,14 +50,22 @@ interface CustomSelectProps {
   placeholder?: string;
 }
 
-function CustomSelect({ options, value, onChange, placeholder }: CustomSelectProps) {
+function CustomSelect({
+  options,
+  value,
+  onChange,
+  placeholder,
+}: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -82,7 +95,9 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
         break;
       case "ArrowUp":
         e.preventDefault();
-        setHighlightedIndex((prev) => (prev - 1 + options.length) % options.length);
+        setHighlightedIndex(
+          (prev) => (prev - 1 + options.length) % options.length,
+        );
         break;
       case "Enter":
         e.preventDefault();
@@ -98,12 +113,27 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
   };
 
   return (
-    <div ref={containerRef} className="custom-select-container" onKeyDown={handleKeyDown} tabIndex={0}>
-      <div className={`custom-select-trigger ${isOpen ? "open" : ""}`} onClick={() => setIsOpen(!isOpen)}>
-        <span className={value ? "custom-select-value" : "custom-select-placeholder"}>
+    <div
+      ref={containerRef}
+      className="custom-select-container"
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+    >
+      <div
+        className={`custom-select-trigger ${isOpen ? "open" : ""}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span
+          className={
+            value ? "custom-select-value" : "custom-select-placeholder"
+          }
+        >
           {value || placeholder || "Select..."}
         </span>
-        <FiChevronDown size={16} className={`custom-select-chevron ${isOpen ? "rotated" : ""}`} />
+        <FiChevronDown
+          size={16}
+          className={`custom-select-chevron ${isOpen ? "rotated" : ""}`}
+        />
       </div>
       {isOpen && (
         <div className="custom-select-dropdown">
@@ -131,6 +161,14 @@ function CustomSelect({ options, value, onChange, placeholder }: CustomSelectPro
 }
 
 export default function NewHairBeautyWellnessListingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HairBeautyWellnessListingContent />
+    </Suspense>
+  );
+}
+
+function HairBeautyWellnessListingContent() {
   const router = useRouter();
   const { category, setCategory, data, setField } = useDraft();
 
@@ -146,7 +184,9 @@ export default function NewHairBeautyWellnessListingPage() {
     e.preventDefault();
     const newErrors = {
       serviceTitle: data.serviceTitle ? "" : "Service title is required.",
-      shortDescription: data.shortDescription ? "" : "Short description is required.",
+      shortDescription: data.shortDescription
+        ? ""
+        : "Short description is required.",
       price: data.price ? "" : "Price is required.",
       serviceType: data.serviceType ? "" : "Select a service type.",
       duration: data.duration ? "" : "Duration is required.",
@@ -160,7 +200,9 @@ export default function NewHairBeautyWellnessListingPage() {
     }
 
     toast.success(`${category} service saved successfully!`);
-    router.push(`/seller/listing/hair-beauty-wellness/details?category=${category.toLowerCase()}`);
+    router.push(
+      `/seller/listing/hair-beauty-wellness/details?category=${category.toLowerCase()}`,
+    );
   };
 
   return (
@@ -251,7 +293,11 @@ export default function NewHairBeautyWellnessListingPage() {
       <div className="listing-page">
         <div className="listing-container">
           <div className="listing-header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={18} />
             </button>
             <div className="listing-header-text">
@@ -265,14 +311,29 @@ export default function NewHairBeautyWellnessListingPage() {
 
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "active" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "active" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
-                {idx < steps.length - 1 && <div className={`step-connector ${step.status === "active" ? "filled" : ""}`} />}
+                {idx < steps.length - 1 && (
+                  <div
+                    className={`step-connector ${step.status === "active" ? "filled" : ""}`}
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -307,12 +368,18 @@ export default function NewHairBeautyWellnessListingPage() {
             <div className="two-col-layout">
               <div className="left-col">
                 <div className="section-header">
-                  <div className="section-icon blue"><FiFileText size={18} color="#fff" /></div>
-                  <div className="section-title-wrap"><h2>Basic Information</h2></div>
+                  <div className="section-icon blue">
+                    <FiFileText size={18} color="#fff" />
+                  </div>
+                  <div className="section-title-wrap">
+                    <h2>Basic Information</h2>
+                  </div>
                 </div>
 
                 <div className="form-group full-width">
-                  <label className="form-label">Service Title <span className="required">*</span></label>
+                  <label className="form-label">
+                    Service Title <span className="required">*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-input"
@@ -324,18 +391,24 @@ export default function NewHairBeautyWellnessListingPage() {
                 </div>
 
                 <div className="form-group full-width">
-                  <label className="form-label">Description <span className="required">*</span></label>
+                  <label className="form-label">
+                    Description <span className="required">*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-input"
                     placeholder="Enter short description"
                     value={data.shortDescription}
-                    onChange={(e) => setField("shortDescription", e.target.value)}
+                    onChange={(e) =>
+                      setField("shortDescription", e.target.value)
+                    }
                   />
                 </div>
 
                 <div className="form-group full-width">
-                  <label className="form-label">Duration <span className="required">*</span></label>
+                  <label className="form-label">
+                    Duration <span className="required">*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-input"
@@ -348,12 +421,18 @@ export default function NewHairBeautyWellnessListingPage() {
 
               <div className="right-col">
                 <div className="section-header">
-                  <div className="section-icon red"><FiBriefcase size={18} color="#fff" /></div>
-                  <div className="section-title-wrap"><h2>Service Details</h2></div>
+                  <div className="section-icon red">
+                    <FiBriefcase size={18} color="#fff" />
+                  </div>
+                  <div className="section-title-wrap">
+                    <h2>Service Details</h2>
+                  </div>
                 </div>
 
                 <div className="form-group full-width">
-                  <label className="form-label">Price (NPR) <span className="required">*</span></label>
+                  <label className="form-label">
+                    Price (NPR) <span className="required">*</span>
+                  </label>
                   <input
                     type="number"
                     className="form-input"
@@ -364,7 +443,9 @@ export default function NewHairBeautyWellnessListingPage() {
                 </div>
 
                 <div className="form-group full-width">
-                  <label className="form-label">Service Location Type <span className="required">*</span></label>
+                  <label className="form-label">
+                    Service Location Type <span className="required">*</span>
+                  </label>
                   <CustomSelect
                     options={serviceLocationOptions}
                     value={data.serviceType}
@@ -374,7 +455,9 @@ export default function NewHairBeautyWellnessListingPage() {
                 </div>
 
                 <div className="form-group full-width">
-                  <label className="form-label">Studio Location <span className="required">*</span></label>
+                  <label className="form-label">
+                    Studio Location <span className="required">*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-input"
@@ -390,7 +473,11 @@ export default function NewHairBeautyWellnessListingPage() {
           <div className="divider" />
 
           <div className="submit-wrap">
-            <button type="button" className="back-link" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-link"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={16} />
               Back
             </button>

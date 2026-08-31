@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiCheck,
@@ -29,6 +31,13 @@ const CARD_BG = "#ffffff";
 
 const MAX_IMAGES = 10;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"];
+interface ImageItem {
+  id: string;
+  file: File;
+  preview: string;
+  isMain: boolean;
+}
+
 
 const steps = [
   { label: "Category", icon: FiFileText, status: "done" as const },
@@ -39,10 +48,95 @@ const steps = [
 ];
 
 export default function AddMedicalPhotosPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AddMedicalPhotosContent />
+    </Suspense>
+  );
+}
+
+function AddMedicalPhotosContent() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
   const { images, setImages } = useDraft();
   const [isDragging, setIsDragging] = useState(false);
+  useEffect(() => {
+  if (!editId || !session?.accessToken) return;
+
+  const loadExistingPhotos = async () => {
+    try {
+      const response = await fetch(`/api/listings/${editId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      console.log("EDIT API RESPONSE:", data);
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Failed to load listing");
+      }
+
+      // Try all possible locations
+      const rawImages =
+        data?.medical?.images ??
+        data?.medical?.photos ??
+        data?.images ??
+        data?.photos ??
+        data?.listing?.images ??
+        data?.listing?.photos ??
+        [];
+
+      console.log("EDIT RAW IMAGES:", rawImages);
+
+      if (!Array.isArray(rawImages) || rawImages.length === 0) {
+        console.log("No existing images found");
+        setImages([]);
+        return;
+      }
+
+      const existingImages: ImageItem[] = rawImages
+        .map((image: any, index: number) => {
+          const url =
+            typeof image === "string"
+              ? image
+              : image?.url ??
+                image?.imageUrl ??
+                image?.secure_url ??
+                image?.src ??
+                image?.path;
+
+          if (!url) return null;
+
+          return {
+            id: `existing-${index}`,
+            file: new File([], `existing-${index}.jpg`, {
+              type: "image/jpeg",
+            }),
+            preview: url,
+            isMain: index === 0,
+          };
+        })
+        .filter(Boolean) as ImageItem[];
+
+      console.log("FINAL EDIT IMAGES:", existingImages);
+
+      setImages(existingImages);
+    } catch (error) {
+      console.error("Failed to load existing photos:", error);
+      toast.error("Failed to load existing photos.");
+    }
+  };
+
+  loadExistingPhotos();
+}, [editId, session?.accessToken, setImages]);
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
@@ -79,12 +173,15 @@ export default function AddMedicalPhotosPage() {
     setImages(images.map((img) => ({ ...img, isMain: img.id === id })));
   };
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    handleFileSelect(e.dataTransfer.files);
-  }, [images]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      handleFileSelect(e.dataTransfer.files);
+    },
+    [images],
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -105,11 +202,19 @@ export default function AddMedicalPhotosPage() {
       return;
     }
     toast.success("Photos saved! Proceeding to preview...");
-    router.push("/seller/listing/medical-dental/preview");
+
+    if (editId) {
+      router.push(`/seller/listing/medical-dental/preview?edit=${editId}`);
+    } else {
+      router.push("/seller/listing/medical-dental/preview");
+    }
+    
   };
 
   const canAddMore = images.length < MAX_IMAGES;
-  
+
+ 
+
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />
@@ -507,7 +612,11 @@ export default function AddMedicalPhotosPage() {
       <div className="photos-page">
         <div className="photos-container">
           <div className="photos-header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={18} />
             </button>
             <div className="draft-badge">
@@ -518,15 +627,28 @@ export default function AddMedicalPhotosPage() {
           {/* Stepper */}
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div
+                    className={`step-connector ${step.status === "done" ? "filled" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -534,7 +656,9 @@ export default function AddMedicalPhotosPage() {
 
           <div className="title-section">
             <h1 className="page-title">Add Photos</h1>
-            <p className="page-subtitle">Add up to 10 photos. First photo will be your main photo.</p>
+            <p className="page-subtitle">
+              Add up to 10 photos. First photo will be your main photo.
+            </p>
           </div>
 
           {images.length === 0 ? (
@@ -550,11 +674,16 @@ export default function AddMedicalPhotosPage() {
               <button
                 type="button"
                 className="upload-btn-inline"
-                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
               >
                 Upload Images
               </button>
-              <span className="drop-zone-hint">You can upload up to 10 images (JPG, PNG)</span>
+              <span className="drop-zone-hint">
+                You can upload up to 10 images (JPG, PNG)
+              </span>
             </div>
           ) : (
             <>
@@ -570,7 +699,10 @@ export default function AddMedicalPhotosPage() {
                     <button
                       type="button"
                       className="remove-btn"
-                      onClick={(e) => { e.stopPropagation(); removeImage(img.id); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeImage(img.id);
+                      }}
                     >
                       <FiX size={14} />
                     </button>
@@ -610,7 +742,9 @@ export default function AddMedicalPhotosPage() {
               Photo Tips
             </h3>
             <ul className="tips-list">
-              <li>Use a clear, professional headshot for your main profile photo</li>
+              <li>
+                Use a clear, professional headshot for your main profile photo
+              </li>
               <li>Include photos of your clinic or hospital environment</li>
               <li>Upload certificates or credentials to build patient trust</li>
               <li>Avoid blurry or dark images — use good lighting</li>

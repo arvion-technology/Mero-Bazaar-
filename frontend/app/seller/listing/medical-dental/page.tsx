@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -49,8 +51,22 @@ const serviceTitles = [
   "Other",
 ];
 
-const languagesList = ["English", "Nepali", "Hindi", "Newari", "Maithili", "Bhojpuri"];
-const experienceOptions = ["1-2 Years", "3-5 Years", "5-7 Years", "7+ Years", "10+ Years", "15+ Years"];
+const languagesList = [
+  "English",
+  "Nepali",
+  "Hindi",
+  "Newari",
+  "Maithili",
+  "Bhojpuri",
+];
+const experienceOptions = [
+  "1-2 Years",
+  "3-5 Years",
+  "5-7 Years",
+  "7+ Years",
+  "10+ Years",
+  "15+ Years",
+];
 
 function CustomSelect({
   value,
@@ -65,6 +81,7 @@ function CustomSelect({
 }) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
   const updatePosition = useCallback(() => {
@@ -99,13 +116,23 @@ function CustomSelect({
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+
+      if (
+        triggerRef.current &&
+        !triggerRef.current.contains(target) &&
+        menuRef.current &&
+        !menuRef.current.contains(target)
+      ) {
         setOpen(false);
       }
     }
+
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [open]);
 
@@ -138,13 +165,22 @@ function CustomSelect({
           position: "relative",
         }}
         onMouseEnter={(e) => {
-          if (!open) (e.currentTarget as HTMLButtonElement).style.borderColor = "#cbd5e1";
+          if (!open)
+            (e.currentTarget as HTMLButtonElement).style.borderColor =
+              "#cbd5e1";
         }}
         onMouseLeave={(e) => {
-          if (!open) (e.currentTarget as HTMLButtonElement).style.borderColor = BORDER;
+          if (!open)
+            (e.currentTarget as HTMLButtonElement).style.borderColor = BORDER;
         }}
       >
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
           {value || placeholder}
         </span>
         <FiChevronDown
@@ -162,12 +198,14 @@ function CustomSelect({
 
       {open && (
         <div
+          ref={menuRef}
           style={{
             ...menuStyle,
             background: CARD_BG,
             border: `1.5px solid ${BORDER}`,
             borderRadius: "12px",
-            boxShadow: "0 12px 40px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08)",
+            boxShadow:
+              "0 12px 40px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08)",
             overflowY: "auto",
             padding: "6px",
           }}
@@ -199,10 +237,14 @@ function CustomSelect({
                 display: "block",
               }}
               onMouseEnter={(e) => {
-                if (value !== opt) (e.currentTarget as HTMLButtonElement).style.background = "#f8fafc";
+                if (value !== opt)
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "#f8fafc";
               }}
               onMouseLeave={(e) => {
-                if (value !== opt) (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                if (value !== opt)
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "transparent";
               }}
             >
               {opt}
@@ -226,6 +268,7 @@ function LanguageSelector({
 }) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const toggleLang = (lang: string) => {
     if (selected.includes(lang)) {
@@ -237,13 +280,23 @@ function LanguageSelector({
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+
+      if (
+        triggerRef.current &&
+        !triggerRef.current.contains(target) &&
+        menuRef.current &&
+        !menuRef.current.contains(target)
+      ) {
         setOpen(false);
       }
     }
+
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [open]);
 
@@ -267,7 +320,9 @@ function LanguageSelector({
         }}
       >
         {selected.length === 0 && (
-          <span style={{ color: "#a1a8b5", fontSize: "14px" }}>Select languages...</span>
+          <span style={{ color: "#a1a8b5", fontSize: "14px" }}>
+            Select languages...
+          </span>
         )}
         {selected.map((lang) => (
           <span
@@ -298,12 +353,18 @@ function LanguageSelector({
         <FiChevronDown
           size={16}
           color={TEXT_MUTED}
-          style={{ marginLeft: "auto", flexShrink: 0, transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+          style={{
+            marginLeft: "auto",
+            flexShrink: 0,
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.2s",
+          }}
         />
       </div>
 
       {open && (
         <div
+          ref={menuRef}
           style={{
             position: "absolute",
             top: "calc(100% + 6px)",
@@ -342,10 +403,14 @@ function LanguageSelector({
                 justifyContent: "space-between",
               }}
               onMouseEnter={(e) => {
-                if (!selected.includes(opt)) (e.currentTarget as HTMLButtonElement).style.background = "#f8fafc";
+                if (!selected.includes(opt))
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "#f8fafc";
               }}
               onMouseLeave={(e) => {
-                if (!selected.includes(opt)) (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                if (!selected.includes(opt))
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "transparent";
               }}
             >
               {opt}
@@ -358,13 +423,30 @@ function LanguageSelector({
   );
 }
 
-export default function MedicalListingDetailsPage() {
-  const router = useRouter();
-  const { medicalData, setMedicalData } = useDraft();
-  const update = (patch: Partial<MedicalData>) => setMedicalData({ ...medicalData, ...patch });
 
+export default function MedicalListingDetailsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MedicalListingDetailsPage />
+    </Suspense>
+  );
+}
+
+function MedicalListingDetailsContent() {
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  const { medicalData, setMedicalData } = useDraft();
+  const update = (patch: Partial<MedicalData>) => {
+    setMedicalData({
+      ...medicalData,
+      ...patch,
+    });
+  };
   const bioMax = 300;
   const bioLength = medicalData.shortBio.length;
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -379,7 +461,13 @@ export default function MedicalListingDetailsPage() {
       languages,
     } = medicalData;
 
-    if (!serviceTitle || !servicesOffered || !doctorName || !licenseNumber || !appointmentFee) {
+    if (
+      !serviceTitle ||
+      !servicesOffered ||
+      !doctorName ||
+      !licenseNumber ||
+      !appointmentFee
+    ) {
       toast.error("Please fill all required fields in Service Information");
       return;
     }
@@ -393,8 +481,69 @@ export default function MedicalListingDetailsPage() {
     }
 
     toast.success("Details saved! Now set your availability.");
-    router.push("/seller/listing/medical-dental/availability");
+    if (editId) {
+      router.push(`/seller/listing/medical-dental/availability?edit=${editId}`);
+    } else {
+      router.push("/seller/listing/medical-dental/availability");
+    }
   };
+
+  useEffect(() => {
+    if (!editId || !session?.accessToken) return;
+
+    const loadListing = async () => {
+      try {
+        const response = await fetch(`/api/listings/${editId}`, {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result?.message || "Failed to load listing");
+        }
+
+        console.log("EDIT MEDICAL DATA:", result);
+
+        const medical = result.medical ?? result;
+
+        setMedicalData({
+          ...medicalData,
+
+          serviceTitle: medical.serviceType
+            ? medical.serviceType
+                .toLowerCase()
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, (c: string) => c.toUpperCase())
+            : "",
+
+          servicesOffered: medical.serviceOffered ?? "",
+          doctorName: medical.doctorName ?? "",
+          licenseNumber: medical.nmcLicenseNumber ?? "",
+
+          appointmentFee:
+            medical.appointmentFee != null
+              ? String(medical.appointmentFee)
+              : "",
+
+          homeVisit: medical.homeVisitAvailable ?? false,
+          onlineAppointments: medical.onlineAppointments ?? false,
+          clinicAddress: medical.clinicAddress ?? "",
+          city: medical.city ?? "",
+          shortBio: medical.shortBio ?? "",
+          languages: Array.isArray(medical.languages) ? medical.languages : [],
+          experience: medical.experience ?? "",
+        });
+      } catch (error) {
+        console.error("Failed to load medical listing:", error);
+        toast.error("Failed to load listing data.");
+      }
+    };
+
+    loadListing();
+  }, [editId, session?.accessToken]);
 
   return (
     <>
@@ -672,11 +821,7 @@ export default function MedicalListingDetailsPage() {
         .form-textarea {
           padding: 12px 16px;
           border: 1.5px solid ${BORDER};
-<<<<<<< HEAD
-          borderRadius: 12px;
-=======
           border-radius: 12px;
->>>>>>> 2eb666c5a516ad5badfca97490d38fc4615759a8
           font-size: 14px;
           color: ${TEXT_PRIMARY};
           background: ${CARD_BG};
@@ -833,7 +978,11 @@ export default function MedicalListingDetailsPage() {
       <div className="listing-page">
         <div className="listing-container">
           <div className="listing-header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={18} />
             </button>
             <div className="listing-header-text">
@@ -847,15 +996,28 @@ export default function MedicalListingDetailsPage() {
 
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div
+                    className={`step-connector ${step.status === "done" ? "filled" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -864,10 +1026,25 @@ export default function MedicalListingDetailsPage() {
           <form onSubmit={handleSubmit} className="form-card">
             <div className="category-wrap">
               <label className="category-label">Category</label>
-              <button type="button" className="category-pill" onClick={() => router.push("/seller/dashboard")}>
+              <button
+                type="button"
+                className="category-pill"
+                onClick={() => router.push("/seller/dashboard")}
+              >
                 <FiBriefcase size={16} />
                 Medical & Dental
-                <span style={{ fontSize: "12px", fontWeight: 500, color: "#2563eb", background: "#dbeafe", padding: "2px 8px", borderRadius: "6px" }}>Change</span>
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    color: "#2563eb",
+                    background: "#dbeafe",
+                    padding: "2px 8px",
+                    borderRadius: "6px",
+                  }}
+                >
+                  Change
+                </span>
               </button>
             </div>
 
@@ -884,9 +1061,14 @@ export default function MedicalListingDetailsPage() {
                   </div>
                 </div>
 
-                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                <div
+                  className="form-row"
+                  style={{ gridTemplateColumns: "1fr" }}
+                >
                   <div className="form-group">
-                    <label className="form-label">Service Title <span className="required">*</span></label>
+                    <label className="form-label">
+                      Service Title <span className="required">*</span>
+                    </label>
                     <CustomSelect
                       value={medicalData.serviceTitle}
                       options={serviceTitles}
@@ -895,23 +1077,35 @@ export default function MedicalListingDetailsPage() {
                   </div>
                 </div>
 
-                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                <div
+                  className="form-row"
+                  style={{ gridTemplateColumns: "1fr" }}
+                >
                   <div className="form-group">
-                    <label className="form-label">Services Offered <span className="required">*</span></label>
+                    <label className="form-label">
+                      Services Offered <span className="required">*</span>
+                    </label>
                     <input
                       type="text"
                       className="form-input"
                       placeholder="e.g. General Checkup, Blood Test, Vaccination, Minor Surgery"
                       value={medicalData.servicesOffered}
-                      onChange={(e) => update({ servicesOffered: e.target.value })}
+                      onChange={(e) =>
+                        update({ servicesOffered: e.target.value })
+                      }
                       required
                     />
                   </div>
                 </div>
 
-                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                <div
+                  className="form-row"
+                  style={{ gridTemplateColumns: "1fr" }}
+                >
                   <div className="form-group">
-                    <label className="form-label">Doctor Name <span className="required">*</span></label>
+                    <label className="form-label">
+                      Doctor Name <span className="required">*</span>
+                    </label>
                     <input
                       type="text"
                       className="form-input"
@@ -923,34 +1117,50 @@ export default function MedicalListingDetailsPage() {
                   </div>
                 </div>
 
-                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                <div
+                  className="form-row"
+                  style={{ gridTemplateColumns: "1fr" }}
+                >
                   <div className="form-group">
-                    <label className="form-label">NMC License Number <span className="required">*</span></label>
+                    <label className="form-label">
+                      NMC License Number <span className="required">*</span>
+                    </label>
                     <input
                       type="text"
                       className="form-input"
                       placeholder="NMC-123456"
                       value={medicalData.licenseNumber}
-                      onChange={(e) => update({ licenseNumber: e.target.value })}
+                      onChange={(e) =>
+                        update({ licenseNumber: e.target.value })
+                      }
                       required
                     />
                   </div>
                 </div>
 
-                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                <div
+                  className="form-row"
+                  style={{ gridTemplateColumns: "1fr" }}
+                >
                   <div className="form-group">
-                    <label className="form-label">Appointment Fee <span className="required">*</span></label>
+                    <label className="form-label">
+                      Appointment Fee <span className="required">*</span>
+                    </label>
                     <div style={{ position: "relative" }}>
-                      <span style={{
-                        position: "absolute",
-                        left: "16px",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        fontSize: "14px",
-                        fontWeight: 700,
-                        color: SITE_PRIMARY,
-                        pointerEvents: "none",
-                      }}>Rs.</span>
+                      <span
+                        style={{
+                          position: "absolute",
+                          left: "16px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          fontSize: "14px",
+                          fontWeight: 700,
+                          color: SITE_PRIMARY,
+                          pointerEvents: "none",
+                        }}
+                      >
+                        Rs.
+                      </span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -958,21 +1168,33 @@ export default function MedicalListingDetailsPage() {
                         style={{ paddingLeft: "46px" }}
                         placeholder="800"
                         value={medicalData.appointmentFee}
-                        onChange={(e) => update({ appointmentFee: e.target.value.replace(/[^0-9]/g, "") })}
+                        onChange={(e) =>
+                          update({
+                            appointmentFee: e.target.value.replace(
+                              /[^0-9]/g,
+                              "",
+                            ),
+                          })
+                        }
                         required
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="form-row" style={{ gridTemplateColumns: "1fr", marginBottom: 0 }}>
+                <div
+                  className="form-row"
+                  style={{ gridTemplateColumns: "1fr", marginBottom: 0 }}
+                >
                   <div className="form-group">
                     <label className="checkbox-label">
                       <input
                         type="checkbox"
                         className="checkbox-input"
                         checked={medicalData.homeVisit}
-                        onChange={(e) => update({ homeVisit: e.target.checked })}
+                        onChange={(e) =>
+                          update({ homeVisit: e.target.checked })
+                        }
                       />
                       Home Visit Available
                     </label>
@@ -981,7 +1203,9 @@ export default function MedicalListingDetailsPage() {
                         type="checkbox"
                         className="checkbox-input"
                         checked={medicalData.onlineAppointments}
-                        onChange={(e) => update({ onlineAppointments: e.target.checked })}
+                        onChange={(e) =>
+                          update({ onlineAppointments: e.target.checked })
+                        }
                       />
                       Accept Online Appointments
                     </label>
@@ -999,23 +1223,35 @@ export default function MedicalListingDetailsPage() {
                   </div>
                 </div>
 
-                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                <div
+                  className="form-row"
+                  style={{ gridTemplateColumns: "1fr" }}
+                >
                   <div className="form-group">
-                    <label className="form-label">Clinic address <span className="required">*</span></label>
+                    <label className="form-label">
+                      Clinic address <span className="required">*</span>
+                    </label>
                     <input
                       type="text"
                       className="form-input"
                       placeholder="Shankhamul Marg, Opp, Civil Hospital"
                       value={medicalData.clinicAddress}
-                      onChange={(e) => update({ clinicAddress: e.target.value })}
+                      onChange={(e) =>
+                        update({ clinicAddress: e.target.value })
+                      }
                       required
                     />
                   </div>
                 </div>
 
-                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                <div
+                  className="form-row"
+                  style={{ gridTemplateColumns: "1fr" }}
+                >
                   <div className="form-group">
-                    <label className="form-label">City <span className="required">*</span></label>
+                    <label className="form-label">
+                      City <span className="required">*</span>
+                    </label>
                     <input
                       type="text"
                       className="form-input"
@@ -1042,9 +1278,17 @@ export default function MedicalListingDetailsPage() {
 
             <div className="two-col-section">
               <div>
-                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                <div
+                  className="form-row"
+                  style={{ gridTemplateColumns: "1fr" }}
+                >
                   <div className="form-group">
-                    <label className="form-label">Short Bio / About <span style={{ color: TEXT_MUTED, fontWeight: 400 }}>(optional)</span></label>
+                    <label className="form-label">
+                      Short Bio / About{" "}
+                      <span style={{ color: TEXT_MUTED, fontWeight: 400 }}>
+                        (optional)
+                      </span>
+                    </label>
                     <textarea
                       className="form-textarea"
                       placeholder="I am a General Physician with 7+ Years of experience in treating acute and chronic medical conditions. Patient care and satisfaction is my priority."
@@ -1052,7 +1296,9 @@ export default function MedicalListingDetailsPage() {
                       maxLength={bioMax}
                       onChange={(e) => update({ shortBio: e.target.value })}
                     />
-                    <div className={`char-counter ${bioLength > bioMax * 0.9 ? "near-limit" : ""}`}>
+                    <div
+                      className={`char-counter ${bioLength > bioMax * 0.9 ? "near-limit" : ""}`}
+                    >
                       {bioLength}/{bioMax}
                     </div>
                   </div>
@@ -1060,7 +1306,10 @@ export default function MedicalListingDetailsPage() {
               </div>
 
               <div>
-                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                <div
+                  className="form-row"
+                  style={{ gridTemplateColumns: "1fr" }}
+                >
                   <div className="form-group">
                     <label className="form-label">Language Known</label>
                     <LanguageSelector
@@ -1071,9 +1320,14 @@ export default function MedicalListingDetailsPage() {
                   </div>
                 </div>
 
-                <div className="form-row" style={{ gridTemplateColumns: "1fr" }}>
+                <div
+                  className="form-row"
+                  style={{ gridTemplateColumns: "1fr" }}
+                >
                   <div className="form-group">
-                    <label className="form-label">Experience <span className="required">*</span></label>
+                    <label className="form-label">
+                      Experience <span className="required">*</span>
+                    </label>
                     <CustomSelect
                       value={medicalData.experience}
                       options={experienceOptions}
@@ -1085,7 +1339,11 @@ export default function MedicalListingDetailsPage() {
             </div>
 
             <div className="submit-wrap">
-              <button type="button" className="back-link" onClick={() => router.back()}>
+              <button
+                type="button"
+                className="back-link"
+                onClick={() => router.back()}
+              >
                 <FiArrowLeft size={16} />
                 Back
               </button>

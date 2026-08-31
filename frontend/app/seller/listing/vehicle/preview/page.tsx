@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { FiArrowLeft, FiCheck, FiSend } from "react-icons/fi";
 import { toast } from "react-toastify";
@@ -9,26 +9,39 @@ import { ToastContainer } from "react-toastify";
 import { useDraft } from "../layout";
 import { VEHICLE_DETAILS_LABELS } from "@/app/category/vehicles/[id]/components/shared/vehicleDetailsMap";
 import { forwardGeocode } from "@/lib/fetcher";
+import { Suspense } from "react";
 
-const ACCENT       = "#2563eb";
+const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
-const SUCCESS      = "#10b981";
-const BORDER       = "#e2e8f0";
+const SUCCESS = "#10b981";
+const BORDER = "#e2e8f0";
 const TEXT_HEADING = "#0f172a";
 const TEXT_PRIMARY = "#1e293b";
 const TEXT_SECONDARY = "#64748b";
-const BG           = "#f8fafc";
-const CARD_BG      = "#ffffff";
+const BG = "#f8fafc";
+const CARD_BG = "#ffffff";
 
 export default function PreviewListingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PreviewListingContent />
+    </Suspense>
+  );
+}
+
+function PreviewListingContent() {
   const router = useRouter();
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
   const { vehicleData, images } = useDraft();
   const [isPublishing, setIsPublishing] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
 
   const typeSpecificDetails = Object.entries(
-    VEHICLE_DETAILS_LABELS[vehicleData.vehicleType as keyof typeof VEHICLE_DETAILS_LABELS] ?? {}
+    VEHICLE_DETAILS_LABELS[
+      vehicleData.vehicleType as keyof typeof VEHICLE_DETAILS_LABELS
+    ] ?? {},
   ).map(([key, label]) => ({
     label,
     value: vehicleData.details[key] || "-",
@@ -38,7 +51,9 @@ export default function PreviewListingPage() {
     category: "Vehicle",
     title: vehicleData.title || "Untitled listing",
     price: `NPR ${Number(vehicleData.price || 0).toLocaleString("en-IN")}`,
-    images: images.length ? images.map((img) => img.preview) : ["/placeholder.png"],
+    images: images.length
+      ? images.map((img) => img.preview)
+      : ["/placeholder.png"],
     details: [
       { label: "Vehicle Type", value: vehicleData.vehicleType },
       { label: "Condition", value: vehicleData.condition },
@@ -54,79 +69,126 @@ export default function PreviewListingPage() {
     description: vehicleData.description,
   };
 
-const handlePublish = async () => {
-  if (images.length === 0) {
-    toast.error("Please add at least one photo before publishing");
-    router.push("/seller/listing/vehicle/photos");
-    return;
-  }
-
-  setIsPublishing(true);
-  try {
-    const { latitude, longitude } = await forwardGeocode(vehicleData.address);
-
-    const vehicleRes = await fetch("/api/vehicles", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session?.accessToken}`,
-      },
-      body: JSON.stringify({
-        type: vehicleData.vehicleType,
-        brand: vehicleData.brand,
-        model: vehicleData.model,
-        year: vehicleData.modelYear,
-        km_driven: vehicleData.kmDriven,
-        condition: vehicleData.condition,
-        bluebook_status: vehicleData.bluebookStatus,
-        fuel_type: vehicleData.fuelType,
-        ownership_transfer_ready: vehicleData.ownershipTransfer,
-        price: vehicleData.price,
-        description: vehicleData.description,
-        address: vehicleData.address,
-        latitude,
-        longitude,
-        details: vehicleData.details,
-      }),
-    });
-
-    if (!vehicleRes.ok) {
-      const err = await vehicleRes.json().catch(() => null);
-      throw new Error(err?.message || "Failed to create listing");
+  const handlePublish = async () => {
+    if (images.length === 0) {
+      toast.error("Please add at least one photo before publishing");
+      return;
     }
 
-    const vehicle = await vehicleRes.json();
-
-    const photoFormData = new FormData();
-    images.forEach(({ file }) => photoFormData.append("images", file));
-
-    const photosRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/vehicles/${vehicle.id}/photos`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${session?.accessToken}` },
-      body: photoFormData,
-    });
-
-    if (!photosRes.ok) {
-      const err = await photosRes.json().catch(() => null);
-      throw new Error(err?.message || "Vehicle created but photo upload failed");
+    if (!session?.accessToken) {
+      toast.error("Please login again");
+      return;
     }
 
-    toast.success("Listing published successfully!");
-    router.push("/seller/products");
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      toast.error(err.message);
-    }else {
-    toast.error("Something went wrong publishing");
-  } 
-  }finally {
-    setIsPublishing(false);
-  }
-};
+    setIsPublishing(true);
+
+    try {
+      const { latitude, longitude } = await forwardGeocode(vehicleData.address);
+
+      const isEdit = Boolean(editId);
+
+      const vehicleRes = await fetch(
+        isEdit ? `/api/vehicles/${editId}` : "/api/vehicles",
+        {
+          method: isEdit ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({
+            type: vehicleData.vehicleType,
+            brand: vehicleData.brand,
+            model: vehicleData.model,
+            year: vehicleData.modelYear,
+            km_driven: vehicleData.kmDriven,
+            condition: vehicleData.condition,
+            bluebook_status: vehicleData.bluebookStatus,
+            fuel_type: vehicleData.fuelType,
+            ownership_transfer_ready: vehicleData.ownershipTransfer,
+            price: vehicleData.price,
+            description: vehicleData.description,
+            address: vehicleData.address,
+            latitude,
+            longitude,
+            details: vehicleData.details,
+          }),
+        },
+      );
+
+      const result = await vehicleRes.json().catch(() => null);
+
+      if (!vehicleRes.ok) {
+        throw new Error(
+          result?.message ||
+            (isEdit
+              ? "Failed to update vehicle listing"
+              : "Failed to create vehicle listing"),
+        );
+      }
+
+      const vehicleId = editId || result?.id;
+
+      if (!vehicleId) {
+        throw new Error("Vehicle ID not found");
+      }
+
+      // Upload only newly selected files
+      const newImages = images.filter(({ file }) => file && file.size > 0);
+
+      if (newImages.length > 0) {
+        const photoFormData = new FormData();
+
+        newImages.forEach(({ file }) => {
+          photoFormData.append("images", file);
+        });
+
+        const photosRes = await fetch(`/api/vehicles/${vehicleId}/photos`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: photoFormData,
+        });
+
+        if (!photosRes.ok) {
+          const err = await photosRes.json().catch(() => null);
+
+          throw new Error(
+            err?.message ||
+              (isEdit
+                ? "Vehicle updated but photo upload failed"
+                : "Vehicle created but photo upload failed"),
+          );
+        }
+      }
+
+      toast.success(
+        isEdit
+          ? "Vehicle listing updated successfully!"
+          : "Vehicle listing published successfully!",
+      );
+
+      router.push("/seller/products");
+    } catch (err: unknown) {
+      console.error("VEHICLE PUBLISH/UPDATE ERROR:", err);
+
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   if (!listing) {
     return (
-      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SECONDARY }}>
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: TEXT_SECONDARY,
+        }}
+      >
         Loading preview...
       </div>
     );
@@ -484,14 +546,19 @@ const handlePublish = async () => {
 
           <div className="page-header">
             <h1 className="section-title">Preview your listing</h1>
-            <p className="section-subtitle">Review your listing details before publishing.</p>
+            <p className="section-subtitle">
+              Review your listing details before publishing.
+            </p>
           </div>
 
           <div className="listing-card">
             <div className="card-layout">
               <div className="card-images">
                 <div className="main-image">
-                  <img src={listing.images[selectedImage]} alt={listing.title} />
+                  <img
+                    src={listing.images[selectedImage]}
+                    alt={listing.title}
+                  />
                 </div>
                 <div className="gallery">
                   {listing.images.map((img, idx) => (
@@ -531,7 +598,13 @@ const handlePublish = async () => {
           <div className="actions">
             <button
               className="btn btn-edit"
-              onClick={() => router.push("/seller/listing/vehicle/photos")}
+              onClick={() => {
+                if (editId) {
+                  router.push(`/seller/listing/vehicle/photos?edit=${editId}`);
+                } else {
+                  router.push("/seller/listing/vehicle/photos");
+                }
+              }}
             >
               Edit Listing
             </button>

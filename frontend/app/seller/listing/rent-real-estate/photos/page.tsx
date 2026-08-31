@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRef, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -35,38 +37,129 @@ const steps = [
 ];
 
 const MAX_PHOTOS = 10;
+interface ImageItem {
+  id: string;
+  file: File;
+  preview: string;
+  isMain: boolean;
+}
+
 
 export default function RealEstatePhotosPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RealEstatePhotosContent />
+    </Suspense>
+  );
+}
+function RealEstatePhotosContent() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { formData, updateForm } = useListingForm();
   const [isDragging, setIsDragging] = useState(false);
+  const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+  useEffect(() => {
+    if (!editId || !session?.accessToken) return;
+
+    const loadExistingPhotos = async () => {
+      try {
+        const response = await fetch(`/api/listings/${editId}`, {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.message || "Failed to load listing");
+        }
+
+        console.log("EDIT FULL DATA:", data);
+
+        // Find existing images wherever the API returns them
+        const rawImages =
+          data.images ??
+          data.listing?.images ??
+          data.vehicle?.images ??
+          data.photos ??
+          data.listing?.photos ??
+          [];
+
+        console.log("EDIT EXISTING IMAGES:", rawImages);
+
+        if (!Array.isArray(rawImages) || rawImages.length === 0) {
+          console.log("NO EXISTING IMAGES FOUND");
+          return;
+        }
+
+        const existingImages: ImageItem[] = rawImages
+          .map((image: any, index: number) => {
+            const url =
+              typeof image === "string"
+                ? image
+                : (image?.url ??
+                  image?.imageUrl ??
+                  image?.secure_url ??
+                  image?.src ??
+                  image?.path);
+
+            if (!url) return null;
+
+            return {
+              id: `existing-${index}`,
+              file: new File([], `existing-${index}.jpg`, {
+                type: "image/jpeg",
+              }),
+              preview: url,
+              isMain: index === 0,
+            };
+          })
+          .filter((item): item is ImageItem => item !== null);
+
+        console.log("FINAL EXISTING IMAGES:", existingImages);
+
+updateForm({
+  photos: existingImages,
+});      } catch (error) {
+        console.error("Failed to load existing photos:", error);
+        toast.error("Failed to load existing photos.");
+      }
+    };
+
+    loadExistingPhotos();
+  }, [editId, session?.accessToken, updateForm]);
 
   const photos = formData.photos;
 
-  const handleFiles = useCallback((files: FileList | null) => {
-    if (!files) return;
-    const remaining = MAX_PHOTOS - photos.length;
-    const filesToProcess = Array.from(files).slice(0, remaining);
-    if (files.length > remaining)
-      toast.warning(`Only ${remaining} more photo(s) can be added.`);
-    filesToProcess.forEach((file) => {
-      if (!file.type.startsWith("image/")) {
-        toast.error(`${file.name} is not an image.`);
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const newPhoto = {
-          id: Math.random().toString(36).slice(2),
-          preview: e.target?.result as string,
-          file, 
+  const handleFiles = useCallback(
+    (files: FileList | null) => {
+      if (!files) return;
+      const remaining = MAX_PHOTOS - photos.length;
+      const filesToProcess = Array.from(files).slice(0, remaining);
+      if (files.length > remaining)
+        toast.warning(`Only ${remaining} more photo(s) can be added.`);
+      filesToProcess.forEach((file) => {
+        if (!file.type.startsWith("image/")) {
+          toast.error(`${file.name} is not an image.`);
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const newPhoto = {
+            id: Math.random().toString(36).slice(2),
+            preview: e.target?.result as string,
+            file,
+          };
+          updateForm((prev) => ({ photos: [...prev.photos, newPhoto] }));
         };
-        updateForm((prev) => ({ photos: [...prev.photos, newPhoto] }));
-      };
-      reader.readAsDataURL(file);
-    });
-  }, [photos.length, updateForm]);
+        reader.readAsDataURL(file);
+      });
+    },
+    [photos.length, updateForm],
+  );
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -74,7 +167,7 @@ export default function RealEstatePhotosPage() {
       setIsDragging(false);
       handleFiles(e.dataTransfer.files);
     },
-    [handleFiles]
+    [handleFiles],
   );
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -155,7 +248,11 @@ export default function RealEstatePhotosPage() {
       <div className="listing-page">
         <div className="listing-container">
           <div className="listing-header">
-            <button type="button" className="back-btn" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={18} />
             </button>
             <div className="listing-header-text">
@@ -169,15 +266,28 @@ export default function RealEstatePhotosPage() {
 
           <div className="stepper">
             {steps.map((step, idx) => (
-              <div key={step.label} style={{ display: "flex", alignItems: "center", flex: idx < steps.length - 1 ? 1 : "0 0 auto" }}>
+              <div
+                key={step.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: idx < steps.length - 1 ? 1 : "0 0 auto",
+                }}
+              >
                 <div className={`step ${step.status}`}>
                   <div className="step-icon-wrap">
-                    {step.status === "done" ? <FiCheck size={16} /> : <step.icon size={14} />}
+                    {step.status === "done" ? (
+                      <FiCheck size={16} />
+                    ) : (
+                      <step.icon size={14} />
+                    )}
                   </div>
                   <span className="step-label">{step.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector ${step.status === "done" ? "filled" : ""}`} />
+                  <div
+                    className={`step-connector ${step.status === "done" ? "filled" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -185,20 +295,58 @@ export default function RealEstatePhotosPage() {
 
           <div className="upload-card">
             <h2 className="upload-title">Add Photos</h2>
-            <p className="upload-subtitle">Add up to {MAX_PHOTOS} photos. First photo will be your main photo.</p>
-            <div className={`drop-zone ${isDragging ? "dragging" : ""}`} onClick={() => fileInputRef.current?.click()} onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
-              <div className="upload-icon"><FiUploadCloud size={40} /></div>
+            <p className="upload-subtitle">
+              Add up to {MAX_PHOTOS} photos. First photo will be your main
+              photo.
+            </p>
+            <div
+              className={`drop-zone ${isDragging ? "dragging" : ""}`}
+              onClick={() => fileInputRef.current?.click()}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+            >
+              <div className="upload-icon">
+                <FiUploadCloud size={40} />
+              </div>
               <p className="upload-text">Drag &amp; Drop images here or</p>
-              <button type="button" className="upload-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>Upload Images</button>
-              <p className="upload-hint">You can upload up to {MAX_PHOTOS} images (JPG, PNG)</p>
+              <button
+                type="button"
+                className="upload-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+              >
+                Upload Images
+              </button>
+              <p className="upload-hint">
+                You can upload up to {MAX_PHOTOS} images (JPG, PNG)
+              </p>
             </div>
-            <input ref={fileInputRef} type="file" multiple accept="image/*" style={{ display: "none" }} onChange={(e) => handleFiles(e.target.files)} />
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => handleFiles(e.target.files)}
+            />
             {photos.length > 0 && (
               <div className="photo-grid">
                 {photos.map((photo, idx) => (
-                  <div key={photo.id} className={`photo-item ${idx === 0 ? "main-photo" : ""}`}>
+                  <div
+                    key={photo.id}
+                    className={`photo-item ${idx === 0 ? "main-photo" : ""}`}
+                  >
                     <img src={photo.preview} alt={`Photo ${idx + 1}`} />
-                    <button type="button" className="photo-remove" onClick={() => removePhoto(photo.id)}><FiX size={14} /></button>
+                    <button
+                      type="button"
+                      className="photo-remove"
+                      onClick={() => removePhoto(photo.id)}
+                    >
+                      <FiX size={14} />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -215,7 +363,11 @@ export default function RealEstatePhotosPage() {
           </div>
 
           <div className="submit-wrap">
-            <button type="button" className="back-link" onClick={() => router.back()}>
+            <button
+              type="button"
+              className="back-link"
+              onClick={() => router.back()}
+            >
               <FiArrowLeft size={16} /> Back
             </button>
             <button type="button" className="submit-btn" onClick={handleSubmit}>
