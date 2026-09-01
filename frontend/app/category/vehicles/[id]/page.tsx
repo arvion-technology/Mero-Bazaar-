@@ -10,6 +10,7 @@ import VehicleDetails from "./components/category-detail/VehicleDetails";
 import BuyNowButton from "@/components/BuyNowButton";
 
 import { notFound } from "next/navigation";
+import ReportListingButton from "./components/shared/ReportListingButton";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -47,7 +48,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
             </span>
           </nav>
 
-          <a href="#report" className="ld-report">Report this listing</a>
+          <ReportListingButton listingId={listing.id} />
         </div>
       </div>
 

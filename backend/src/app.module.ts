@@ -31,6 +31,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { ContentReportsModule } from './modules/content-reports/content-reports.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { AdminModule } from './modules/admin/admin.module';
     OrdersModule,
     PaymentsModule,
     ReportsModule,
+    ContentReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
