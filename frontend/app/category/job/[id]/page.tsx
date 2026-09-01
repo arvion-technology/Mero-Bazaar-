@@ -31,6 +31,7 @@ export default function JobDetailPage() {
       : Array.isArray(params?.id)
         ? params.id[0]
         : "";
+
   const [job, setJob] = useState<JobDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [similarJobs, setSimilarJobs] = useState<JobCard[]>([]);
@@ -45,6 +46,11 @@ export default function JobDetailPage() {
   const { data: session } = useSession();
   const [favLoading, setFavLoading] = useState(false);
 
+  /* ── seller extracted RAW from API (adapter strips it) ── */
+  const [seller, setSeller] = useState<any>(null);
+  const [sellerId, setSellerId] = useState<string>("");
+  const [reviews, setReviews] = useState<any[]>([]);
+
   useEffect(() => {
     if (!session?.accessToken || !id) return;
 
@@ -55,9 +61,7 @@ export default function JobDetailPage() {
     })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data) {
-          setIsFav(data.favorited);
-        }
+        if (data) setIsFav(data.favorited);
       })
       .catch(() => {});
   }, [id, session?.accessToken]);
@@ -96,19 +100,68 @@ export default function JobDetailPage() {
 
   useEffect(() => {
     if (!id) return;
+    let cancelled = false;
+
     const load = async () => {
       try {
-        const raw = (await api.getJob(id)) as unknown as JobListing;
-        setJob(toJobDetail(raw));
+        /* 1️⃣  fetch raw backend payload */
+        const raw: any = await api.getJob(id);
 
-        const similarParams = new URLSearchParams({
-          city: raw.job?.city ?? "",
-          limit: "5",
+        /* 2️⃣  adapt job fields for display */
+        const mapped = toJobDetail(raw as JobListing);
+        if (cancelled) return;
+        setJob(mapped);
+
+        /* 3️⃣  extract seller from RAW response (before adapter strips it) */
+        const rawSeller =
+          raw?.postedBy ??
+          raw?.seller ??
+          raw?.user ??
+          raw?.data?.postedBy ??
+          raw?.data?.seller ??
+          raw?.data?.user ??
+          {};
+
+        // MongoDB uses _id; never fall back to job.id (causes 404)
+        const extractedId = rawSeller?._id ?? rawSeller?.id ?? "";
+        setSellerId(extractedId);
+
+        setSeller({
+          ...rawSeller,
+          name:
+            rawSeller.name ??
+            rawSeller.fullName ??
+            rawSeller.username ??
+            rawSeller.email ??
+            "Unknown",
+          avatar:
+            rawSeller.avatar ??
+            rawSeller.image ??
+            rawSeller.profilePicture ??
+            rawSeller.photo ??
+            null,
+          isPro: rawSeller.isPro ?? false,
+          isTrusted: rawSeller.isTrusted ?? false,
+          memberSince:
+            rawSeller.memberSince ?? rawSeller.createdAt ?? "N/A",
+          totalListing:
+            rawSeller.totalListing ?? rawSeller.listingCount ?? 0,
+          responseRate: rawSeller.responseRate ?? "N/A",
+          avgResponseTime: rawSeller.avgResponseTime ?? "N/A",
+          phone: rawSeller.phone ?? "N/A",
         });
 
+        setReviews(raw?.reviews ?? raw?.data?.reviews ?? []);
+
+        /* 4️⃣  similar jobs */
+        const similarParams = new URLSearchParams({
+          city: raw?.job?.city ?? raw?.city ?? "",
+          limit: "5",
+        });
         const similar = (await api.getJobs(
           similarParams,
         )) as unknown as JobListing[];
+        if (cancelled) return;
         setSimilarJobs(
           similar
             .filter((j) => j.job != null)
@@ -118,10 +171,14 @@ export default function JobDetailPage() {
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
+
     load();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (loading)
@@ -145,11 +202,9 @@ export default function JobDetailPage() {
       toast.error("Please log in to save jobs");
       return;
     }
-
     setFavLoading(true);
     const previousState = isFav;
     setIsFav(!previousState);
-
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
@@ -159,19 +214,12 @@ export default function JobDetailPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.accessToken}`,
           },
-          body: JSON.stringify({
-            listingId: id,
-          }),
+          body: JSON.stringify({ listingId: id }),
         },
       );
-
-      if (!res.ok) {
-        throw new Error("Failed to update wishlist");
-      }
-
+      if (!res.ok) throw new Error("Failed to update wishlist");
       const data = await res.json();
       setIsFav(data.favorited);
-
       toast.success(
         data.favorited ? "Added to wishlist" : "Removed from wishlist",
       );
@@ -182,19 +230,6 @@ export default function JobDetailPage() {
     } finally {
       setFavLoading(false);
     }
-  };
-
-  // Build a complete seller object that SellerCard expects,
-  // filling missing fields with sensible defaults.
-  const sellerForCard = {
-    ...(job.postedBy as any),
-    isPro: (job.postedBy as any)?.isPro ?? false,
-    isTrusted: (job.postedBy as any)?.isTrusted ?? false,
-    memberSince: (job.postedBy as any)?.memberSince ?? "N/A",
-    totalListing: (job.postedBy as any)?.totalListing ?? 0,
-    responseRate: (job.postedBy as any)?.responseRate ?? "N/A",
-    avgResponseTime: (job.postedBy as any)?.avgResponseTime ?? "N/A",
-    phone: (job.postedBy as any)?.phone ?? "N/A",
   };
 
   return (
@@ -218,7 +253,6 @@ export default function JobDetailPage() {
         }
         .jd-main { flex: 1; }
 
-        /* TOP BAR */
         .jd-topbar { background: #fff; border-bottom: 1px solid #ececec; padding: 11px 0; }
         .jd-topbar-inner {
           max-width: 1200px; margin: 0 auto; padding: 0 24px;
@@ -234,15 +268,13 @@ export default function JobDetailPage() {
         .jd-report { font-size: 12px; color: #e74c3c; font-weight: 600; text-decoration: none; transition: opacity 0.18s; cursor: pointer; }
         .jd-report:hover { opacity: 0.75; text-decoration: underline; }
 
-        /* LAYOUT */
         .jd-container {
           max-width: 1200px; margin: 22px auto 0; padding: 0 24px;
-          display: grid; grid-template-columns: 1fr 330px;
+          display: grid; grid-template-columns: 1fr 340px;
           gap: 22px; align-items: start;
         }
         .jd-left { display: flex; flex-direction: column; gap: 16px; }
 
-        /* INFO CARD */
         .jd-info-card {
           background: #fff; border-radius: 16px;
           padding: 20px 22px 22px; box-shadow: 0 2px 14px rgba(0,0,0,0.07);
@@ -292,16 +324,7 @@ export default function JobDetailPage() {
           background: #fff5f5;
         }
         .jd-salary { font-size: 22px; font-weight: 900; color: #1a1a1a; margin: 6px 0 2px; }
-        .jd-meta-row {
-          display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-          padding-bottom: 14px; border-bottom: 1px solid #f0f0f0;
-          margin-bottom: 16px; font-size: 13px;
-        }
-        .jd-meta-item { display: flex; align-items: center; gap: 5px; color: #555; font-weight: 500; }
-        .jd-meta-item svg { flex-shrink: 0; }
-        .jd-meta-dot { width: 4px; height: 4px; background: #ddd; border-radius: 50%; }
 
-        /* APPLY BUTTONS */
         .jd-cta-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
         .jd-btn-apply {
           flex: 1; min-width: 140px; padding: 12px 20px;
@@ -324,7 +347,6 @@ export default function JobDetailPage() {
         }
         .jd-btn-chat:hover { background: #eef2ff; }
 
-        /* JOB DETAILS CHIPS */
         .jd-specs-bar {
           display: grid; grid-template-columns: repeat(2, 1fr);
           gap: 8px; margin-bottom: 0;
@@ -344,7 +366,6 @@ export default function JobDetailPage() {
         .jd-spec-val { font-size: 12px; font-weight: 800; color: #1a1a1a; line-height: 1.2; }
         .jd-spec-label { font-size: 10px; color: #999; font-weight: 500; }
 
-        /* DESCRIPTION CARD */
         .jd-desc-card {
           background: #fff; border-radius: 16px;
           padding: 20px 22px; box-shadow: 0 2px 14px rgba(0,0,0,0.07);
@@ -363,7 +384,6 @@ export default function JobDetailPage() {
         }
         .jd-see-more:hover { opacity: 0.72; }
 
-        /* SIMILAR JOBS */
         .jd-similar-card {
           background: #fff; border-radius: 16px;
           padding: 0 0 20px; box-shadow: 0 2px 14px rgba(0,0,0,0.07);
@@ -391,7 +411,6 @@ export default function JobDetailPage() {
         .jd-sim-title { font-size: 12px; font-weight: 700; color: #1a1a1a; margin: 0 0 4px; line-height: 1.3; }
         .jd-sim-type { font-size: 10px; font-weight: 600; color: #3b5bdb; background: #eef2ff; padding: 2px 6px; border-radius: 10px; }
 
-        /* RIGHT COLUMN */
         .jd-right {
           display: flex;
           flex-direction: column;
@@ -401,7 +420,6 @@ export default function JobDetailPage() {
           align-self: start;
         }
 
-        /* MAP CARD */
         .jd-map-card {
           background: #fff; border-radius: 16px;
           overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,0.08);
@@ -420,25 +438,15 @@ export default function JobDetailPage() {
         .jd-map-link:hover { opacity: 0.75; }
         .jd-map-unavailable { padding: 16px 18px; font-size: 13px; color: #888; }
 
-        /* ── SELLER / COMPANY CARD (from Trade page) ── */
-        .cd-seller-card { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border: 1px solid #e8e8e8; overflow: hidden; }
-        .cd-company-card { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border: 1px solid #e8e8e8; }
-        .cd-company-card-title { font-size: 13px; font-weight: 800; color: #1a1a1a; margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
-        .cd-company-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .cd-company-logo { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 1px solid #eee; background: #f8f8f8; flex-shrink: 0; display: block; }
-        .cd-company-name { font-size: 15px; font-weight: 800; color: #1a1a1a; margin: 0 0 3px; }
-        .cd-company-rating { display: flex; align-items: center; gap: 5px; }
-        .cd-company-rnum { font-size: 13px; font-weight: 700; color: #1a1a1a; }
-        .cd-company-rcount { font-size: 11.5px; color: #888; }
-        .cd-ci-row {
-          display: flex; align-items: flex-start; justify-content: space-between;
-          padding: 7px 0; border-bottom: 1px solid #f8f8f8; font-size: 12px; gap: 8px;
+        .jd-seller-card {
+          background: #fff;
+          border-radius: 16px;
+          padding: 22px 20px;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+          border: 1px solid #e8e8e8;
+          overflow: hidden;
         }
-        .cd-ci-row:last-child { border-bottom: none; }
-        .cd-ci-label { color: #888; font-weight: 500; flex-shrink: 0; }
-        .cd-ci-val { color: #1a1a1a; font-weight: 600; text-align: right; word-break: break-all; }
 
-        /* RESPONSIVE */
         @media (max-width: 900px) {
           .jd-container { grid-template-columns: 1fr; }
           .jd-right { position: static; }
@@ -486,11 +494,9 @@ export default function JobDetailPage() {
         </div>
 
         <div className="jd-main">
-          {/* MAIN LAYOUT */}
           <div className="jd-container">
-            {/* LEFT */}
+            {/* LEFT COLUMN */}
             <div className="jd-left">
-              {/* INFO */}
               <div className="jd-info-card">
                 <div className="jd-title-row">
                   <h1 className="jd-title">{job.title}</h1>
@@ -567,7 +573,6 @@ export default function JobDetailPage() {
                 </div>
               </div>
 
-              {/* DESCRIPTION */}
               <div className="jd-desc-card">
                 <h2 className="jd-section-title">Job Description</h2>
                 <p className={`jd-desc-text${showFull ? "" : " clamped"}`}>
@@ -581,7 +586,6 @@ export default function JobDetailPage() {
                 </button>
               </div>
 
-              {/* SIMILAR JOBS */}
               <div className="jd-similar-card">
                 <div className="jd-similar-head">
                   <p className="jd-similar-title">Similar Jobs</p>
@@ -605,9 +609,9 @@ export default function JobDetailPage() {
               </div>
             </div>
 
-            {/* RIGHT */}
+            {/* RIGHT COLUMN */}
             <div className="jd-right">
-              {/* MAP CARD */}
+              {/* MAP */}
               <div className="jd-map-card">
                 <p className="jd-map-card-title">Location</p>
                 {geoLoading ? (
@@ -645,13 +649,13 @@ export default function JobDetailPage() {
                 )}
               </div>
 
-              {/* SELLER CARD */}
-              <div className="cd-seller-card">
+              {/* SELLER CARD – raw extracted seller, correct _id */}
+              <div className="jd-seller-card">
                 <SellerCard
-                  seller={sellerForCard}
-                  reviews={(job as any).reviews ?? []}
+                  seller={seller}
+                  reviews={reviews}
                   listingId={job.id}
-                  sellerId={(job.postedBy as any)?.id || job.id}
+                  sellerId={sellerId}
                 />
               </div>
             </div>

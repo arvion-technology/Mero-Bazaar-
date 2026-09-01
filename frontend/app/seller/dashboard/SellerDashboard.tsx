@@ -58,7 +58,7 @@ const categories = [
 
 export default function SellerDashboard() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { kycStatus, kycRejectionReason } = useKycStatus();
   const isKycLocked = kycStatus !== "VERIFIED";
 
@@ -76,33 +76,54 @@ export default function SellerDashboard() {
   } | null>(null);
   const [orderStats, setOrderStats] = useState<{ totalOrders: number; pendingOrders: number } | null>(null);
 
+  const isAuthenticated = status === "authenticated";
+  const accessToken = session?.accessToken;
+
   useEffect(() => {
-    if (!session?.accessToken) return;
+    if (!isAuthenticated || !accessToken) return;
     fetch("/api/vendor-sales-overview?months=6", {
-      headers: { Authorization: `Bearer ${session.accessToken}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
     })
       .then((r) => r.json())
-      .then((d) => setChartData(d))
+      .then((d) => {
+        if (Array.isArray(d)) {
+          setChartData(d);
+        } else if (Array.isArray(d?.data)) {
+          setChartData(d.data);
+        } else {
+          console.warn("Unexpected chart response:", d);
+          setChartData([]);
+        }
+      })
       .catch(() => setChartData([]))
       .finally(() => setChartLoading(false));
-  }, [session?.accessToken]);
-
+  }, [isAuthenticated, accessToken]);
 
   useEffect(() => {
-    if (!session?.accessToken) return;
+    if (!isAuthenticated || !accessToken) return;
     fetch("/api/orders/seller/stats", {
-      headers: { Authorization: `Bearer ${session.accessToken}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
     })
       .then((r) => {
-        if (!r.ok) throw new Error(`Order stats fetch failed: ${r.status}`);
+        if (r.status === 401) {
+          console.warn("Order stats 401 — redirecting to login");
+          router.push("/login");
+          return null;
+        }
+        if (!r.ok) {
+          console.warn(`Order stats fetch failed: ${r.status}`);
+          return null;
+        }
         return r.json();
       })
-      .then((d) => setOrderStats(d))
+      .then((d) => {
+        if (d) setOrderStats(d);
+      })
       .catch((err) => {
         console.error(err);
         setOrderStats(null);
       });
-  }, [session?.accessToken]);
+  }, [isAuthenticated, accessToken, router]);
 
   // lock page scroll while modal is open
   useEffect(() => {
@@ -110,10 +131,12 @@ export default function SellerDashboard() {
     return () => { document.body.style.overflow = ""; };
   }, [showCategoryModal]);
 
-  const dataWithProfit = chartData.map((d) => ({
-    ...d,
-    profit: d.revenue - d.loss,
-  }));
+  const dataWithProfit = Array.isArray(chartData)
+    ? chartData.map((d) => ({
+        ...d,
+        profit: d.revenue - d.loss,
+      }))
+    : [];
 
   const maxVal = (() => {
     if (dataWithProfit.length === 0) return 1;
@@ -123,8 +146,12 @@ export default function SellerDashboard() {
     return Math.max(...dataWithProfit.map((d) => Math.max(d.revenue, d.loss)), 1);
   })();
 
-  const totalRevenue = chartData.reduce((sum, d) => sum + d.revenue, 0);
-  const totalExpenses = chartData.reduce((sum, d) => sum + d.loss, 0);
+  const totalRevenue = Array.isArray(chartData)
+    ? chartData.reduce((sum, d) => sum + d.revenue, 0)
+    : 0;
+  const totalExpenses = Array.isArray(chartData)
+    ? chartData.reduce((sum, d) => sum + d.loss, 0)
+    : 0;
   const netProfit = totalRevenue - totalExpenses;
   const isProfit = netProfit >= 0;
 
@@ -182,20 +209,30 @@ export default function SellerDashboard() {
   }
 
   useEffect(() => {
-    if (!session?.accessToken) return;
+    if (!isAuthenticated || !accessToken) return;
     fetch("/api/listings/mine/stats", {
-      headers: { Authorization: `Bearer ${session.accessToken}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
     })
     .then((r) => {
-      if (!r.ok) throw new Error(`Stats fetch failed: ${r.status}`);
+      if (r.status === 401) {
+        console.warn("Stats fetch 401 — redirecting to login");
+        router.push("/login");
+        return null;
+      }
+      if (!r.ok) {
+        console.warn(`Stats fetch failed: ${r.status}`);
+        return null;
+      }
       return r.json();
     })
-    .then((d) => setStatsData(d))
+    .then((d) => {
+      if (d) setStatsData(d);
+    })
     .catch((err) => {
       console.error(err);
       setStatsData(null);
-  });
-  }, [session?.accessToken]);
+    });
+  }, [isAuthenticated, accessToken, router]);
 
   return (
     <>
@@ -662,7 +699,7 @@ export default function SellerDashboard() {
             <div style={{ padding: "40px 0", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
               Loading chart...
             </div>
-          ) : chartData.length === 0 ? (
+          ) : !Array.isArray(chartData) || chartData.length === 0 ? (
             <div style={{ padding: "40px 0", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
               No sales data yet.
             </div>
@@ -709,7 +746,12 @@ export default function SellerDashboard() {
                 </svg>
               </div>
               <div className="dash-chart-months">
-                {chartData.map((d) => <div key={d.month} className="dash-chart-month">{d.month}</div>)}
+                {Array.isArray(chartData) &&
+                  chartData.map((d) => (
+                    <div key={d.month} className="dash-chart-month">
+                      {d.month}
+                    </div>
+                  ))}
               </div>
             </>
           )}
