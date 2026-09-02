@@ -6,6 +6,8 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import SellerCard from "@/components/SellerCard";
 import type { BuyCard, BuyProduct } from "@/app/types/buy";
+import { useRouter } from "next/navigation";
+import { useFoodCart } from "@/app/context/FoodCartContext"; 
 import {
   FiArrowLeft,
   FiMapPin,
@@ -201,6 +203,8 @@ export default function BuyDetailPage() {
   const [isFav, setIsFav] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastIdRef = useRef(0);
+  const router = useRouter();
+  const { addItem } = useFoodCart(); 
 
   /* ─── TOAST HELPERS ─── */
   const showToast = useCallback(
@@ -213,6 +217,45 @@ export default function BuyDetailPage() {
     },
     [],
   );
+
+  const buyNow = () => {
+  if (!product) return;
+
+  addItem({
+    id: product.id,
+    listingId: product.id,
+    name: product.title,
+    description: product.detailedDescription || "",
+    variant: "",
+    price: typeof product.price === "number"
+      ? product.price
+      : parseFloat(String(product.priceDisplay).replace(/[^0-9.]/g, "")) || 0,
+    quantity: 1,
+    image: product.images[0] || "",
+  });
+
+  router.push("/cart");
+};
+
+  const addToCart = () => {
+    if (!product) return;
+
+    addItem({
+      id: product.id,
+      listingId: product.id,
+      name: product.title,
+      description: product.detailedDescription || "",
+      variant: "",
+      price: typeof product.price === "number"
+        ? product.price
+        : parseFloat(String(product.priceDisplay).replace(/[^0-9.]/g, "")) || 0,
+      quantity: 1,
+      image: product.images[0] || "",
+    });
+
+    showToast(`${product.title} added to cart`);
+    // no navigation — matches "Add to Cart" staying on page vs "Buy Now" jumping to cart
+  };
 
   /* ─── FETCH PRODUCT ─── */
   const fetchProduct = useCallback(async () => {
@@ -249,16 +292,6 @@ export default function BuyDetailPage() {
   useEffect(() => {
     fetchProduct();
   }, [fetchProduct]);
-
-  const addToCart = () => {
-    if (!product) return;
-    showToast(`${product.title} added to cart`);
-  };
-
-  const buyNow = () => {
-    if (!product) return;
-    showToast(`${product.title} added to cart — Proceeding to checkout...`);
-  };
 
   const makeOffer = () => {
     if (!product) return;
