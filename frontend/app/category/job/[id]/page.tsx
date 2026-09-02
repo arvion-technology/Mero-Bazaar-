@@ -23,6 +23,18 @@ import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+type SellerLike = {
+  id?: string;
+  isPro?: boolean;
+  isTrusted?: boolean;
+  memberSince?: string;
+  totalListing?: number;
+  responseRate?: string;
+  avgResponseTime?: string;
+  phone?: string;
+  [key: string]: unknown;
+};
+
 export default function JobDetailPage() {
   const params = useParams();
   const id =
@@ -136,9 +148,13 @@ export default function JobDetailPage() {
   const hasCoords = mapLat != null && mapLng != null;
 
   const handleShare = () => {
-    navigator.clipboard?.writeText(window.location.href).catch(() => {});
-    toast.success("Link copied to clipboard");
-  };
+    if (navigator.share) {
+      navigator.share({ title: job.title, url: window.location.href }).catch(() => {});
+    } else {
++     navigator.clipboard?.writeText(window.location.href).catch(() => {});
++     toast.success("Link copied to clipboard");
+   }
+};
 
   const handleToggleFavorite = async () => {
     if (!session?.accessToken) {
@@ -186,16 +202,17 @@ export default function JobDetailPage() {
 
   // Build a complete seller object that SellerCard expects,
   // filling missing fields with sensible defaults.
-  const sellerForCard = {
-    ...(job.postedBy as any),
-    isPro: (job.postedBy as any)?.isPro ?? false,
-    isTrusted: (job.postedBy as any)?.isTrusted ?? false,
-    memberSince: (job.postedBy as any)?.memberSince ?? "N/A",
-    totalListing: (job.postedBy as any)?.totalListing ?? 0,
-    responseRate: (job.postedBy as any)?.responseRate ?? "N/A",
-    avgResponseTime: (job.postedBy as any)?.avgResponseTime ?? "N/A",
-    phone: (job.postedBy as any)?.phone ?? "N/A",
-  };
+ const postedBy = (job.postedBy ?? {}) as SellerLike;
+ const sellerForCard = {
+   ...postedBy,
+   isPro: postedBy.isPro ?? false,
+   isTrusted: postedBy.isTrusted ?? false,
+   memberSince: postedBy.memberSince ?? "N/A",
+   totalListing: postedBy.totalListing ?? 0,
+   responseRate: postedBy.responseRate ?? "N/A",
+   avgResponseTime: postedBy.avgResponseTime ?? "N/A",
+   phone: postedBy.phone ?? "N/A",
+ };
 
   return (
     <>
@@ -497,14 +514,7 @@ export default function JobDetailPage() {
                   <div className="jd-action-btns">
                     <button
                       className="jd-action-btn"
-                      onClick={() => {
-                        if (navigator.share)
-                          navigator.share({
-                            title: job.title,
-                            url: window.location.href,
-                          });
-                      }}
-                    >
+                      onClick={handleShare}>
                       <FiShare2 size={16} />
                     </button>
                     <button
@@ -649,9 +659,9 @@ export default function JobDetailPage() {
               <div className="cd-seller-card">
                 <SellerCard
                   seller={sellerForCard}
-                  reviews={(job as any).reviews ?? []}
+                  reviews={(job as unknown as { reviews?: unknown[] }).reviews ?? []}
                   listingId={job.id}
-                  sellerId={(job.postedBy as any)?.id || job.id}
+                  sellerId={postedBy.id || job.id}
                 />
               </div>
             </div>
