@@ -16,14 +16,6 @@ export interface WishlistSeller {
   avgResponseTime?: string;
 }
 
-export interface WishlistReview {
-  id?: string;
-  reviewerName: string;
-  rating: number;
-  comment?: string;
-  createdAt?: string;
-}
-
 export interface WishlistProduct {
   id: string;
   title: string;
@@ -38,6 +30,8 @@ export interface WishlistProduct {
   area?: string;
   postedDaysAgo?: number;
   negotiable?: boolean;
+  deliveryAvailable?: boolean;
+  warrantyAvailable?: boolean;
   isFavorited?: boolean;
   seller?: WishlistSeller;
   sellerId?: string;
@@ -45,7 +39,6 @@ export interface WishlistProduct {
   features?: string[];
   tags?: string[];
   details?: { label: string; value: string }[];
-  reviews?: WishlistReview[];
   [key: string]: unknown;
 }
 

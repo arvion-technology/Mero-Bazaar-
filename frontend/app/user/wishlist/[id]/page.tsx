@@ -675,30 +675,30 @@ export default function WishlistItemDetail() {
                   {categoryLabel} Details
                 </h2>
                 <div className="pd-details-grid">
-                  <div className="pd-details-col-left">
-                    {leftDetails.map((d) => (
-                      <div className="pd-detail-row" key={d.label}>
-                        <span className="pd-detail-label">
-                          {d.label}
-                        </span>
-                        <span className="pd-detail-val">
-                          {d.value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pd-details-col-right">
-                    {rightDetails.map((d) => (
-                      <div className="pd-detail-row" key={d.label}>
-                        <span className="pd-detail-label">
-                          {d.label}
-                        </span>
-                        <span className="pd-detail-val">
-                          {d.value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                <div className="pd-details-col-left">
+                  {leftDetails.map((d) => (
+                    <div className="pd-detail-row" key={d.label}>
+                      <span className="pd-detail-label">
+                        {d.label}
+                      </span>
+                      <span className="pd-detail-val">
+                        {String(d.value)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="pd-details-col-right">
+                  {rightDetails.map((d) => (
+                    <div className="pd-detail-row" key={d.label}>
+                      <span className="pd-detail-label">
+                        {d.label}
+                      </span>
+                      <span className="pd-detail-val">
+                        {String(d.value)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
                 </div>
               </div>
             )}
@@ -786,7 +786,7 @@ export default function WishlistItemDetail() {
                   {(product.details ?? []).slice(0, 4).map((d) => (
                     <div key={d.label} className="pd-detail-item">
                       <p className="pd-detail-label">{d.label}</p>
-                      <p className="pd-detail-val">{d.value}</p>
+                      <p className="pd-detail-val">{String(d.value)}</p>
                     </div>
                   ))}
                 </div>

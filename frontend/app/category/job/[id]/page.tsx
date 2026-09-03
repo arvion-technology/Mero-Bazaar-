@@ -17,7 +17,7 @@ import { FaHeart } from "react-icons/fa";
 import { api } from "@/lib/api";
 import { toJobDetail, toJobCard } from "@/lib/adapter";
 import type { JobDetail } from "@/app/types/listing";
-import type { JobCard, JobListing, RawSeller, SellerLike, Review, RawJobResponse } from "../../../types/jobs";
+import type { JobCard, JobListing, RawSeller, SellerLike, Review, RawJobResponse, SellerReview } from "../../../types/jobs";
 import SellerCard from "@/components/SellerCard";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
@@ -235,17 +235,34 @@ export default function JobDetailPage() {
   };
 
 
-  const postedBy = (job.postedBy ?? {}) as SellerLike;
-  const sellerForCard = {
-    ...postedBy,
-    isPro: postedBy.isPro ?? false,
-    isTrusted: postedBy.isTrusted ?? false,
-    memberSince: postedBy.memberSince ?? "N/A",
-    totalListing: postedBy.totalListing ?? 0,
-    responseRate: postedBy.responseRate ?? "N/A",
-    avgResponseTime: postedBy.avgResponseTime ?? "N/A",
-    phone: postedBy.phone ?? "N/A",
+const postedBy = (job.postedBy ?? {}) as SellerLike;
+const sellerForCard = {
+  ...postedBy,
+  name: postedBy.name ?? "Unknown",
+  avatar: postedBy.avatar ?? "",
+  rating: postedBy.rating ?? 0,
+  reviewCount: postedBy.reviewCount ?? 0,
+  isVerified: postedBy.isVerified ?? false,
+  isPro: postedBy.isPro ?? false,
+  isTrusted: postedBy.isTrusted ?? false,
+  memberSince: postedBy.memberSince ?? "N/A",
+  totalListing: postedBy.totalListing ?? 0,
+  responseRate: postedBy.responseRate ?? "N/A",
+  avgResponseTime: postedBy.avgResponseTime ?? "N/A",
+  phone: postedBy.phone ?? "N/A",
+};
+
+const sellerReviews: SellerReview[] = (
+  (job as unknown as { reviews?: unknown[] }).reviews ?? []
+).map((r) => {
+  const rv = r as Partial<SellerReview>;
+  return {
+    reviewerName: rv.reviewerName ?? "Anonymous",
+    rating: rv.rating ?? 0,
+    comment: rv.comment ?? null,
+    createdAt: rv.createdAt ?? "",
   };
+});
 
   return (
     <>
@@ -661,7 +678,7 @@ export default function JobDetailPage() {
               <div className="jd-seller-card">
                 <SellerCard
                   seller={sellerForCard}
-                  reviews={(job as unknown as { reviews?: unknown[] }).reviews ?? []}
+                  reviews={sellerReviews}
                   listingId={job.id}
                   sellerId={postedBy.id || job.id}
                 />

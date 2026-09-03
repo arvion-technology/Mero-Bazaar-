@@ -57,8 +57,14 @@ export interface JobCard {
   isVerified?: boolean;
   isFeatured?: boolean;
 }
+
 export type SellerLike = {
   id?: string;
+  name?: string;
+  avatar?: string;
+  rating?: number;
+  reviewCount?: number;
+  isVerified?: boolean;
   isPro?: boolean;
   isTrusted?: boolean;
   memberSince?: string;
@@ -67,6 +73,13 @@ export type SellerLike = {
   avgResponseTime?: string;
   phone?: string;
   [key: string]: unknown;
+};
+
+export type SellerReview = {
+  reviewerName: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
 };
 
 export type RawSeller = {
