@@ -57,3 +57,59 @@ export interface JobCard {
   isVerified?: boolean;
   isFeatured?: boolean;
 }
+export type SellerLike = {
+  id?: string;
+  isPro?: boolean;
+  isTrusted?: boolean;
+  memberSince?: string;
+  totalListing?: number;
+  responseRate?: string;
+  avgResponseTime?: string;
+  phone?: string;
+  [key: string]: unknown;
+};
+
+export type RawSeller = {
+  _id?: string;
+  id?: string;
+  name?: string;
+  fullName?: string;
+  username?: string;
+  email?: string;
+  avatar?: string | null;
+  image?: string;
+  profilePicture?: string;
+  photo?: string;
+  isPro?: boolean;
+  isTrusted?: boolean;
+  memberSince?: string;
+  createdAt?: string;
+  totalListing?: number;
+  listingCount?: number;
+  responseRate?: string;
+  avgResponseTime?: string;
+  phone?: string;
+  [key: string]: unknown;
+};
+
+export type Review = {
+  id?: string;
+  rating?: number;
+  comment?: string;
+  [key: string]: unknown;
+};
+
+export type RawJobResponse = JobListing & {
+  postedBy?: RawSeller;
+  seller?: RawSeller;
+  user?: RawSeller;
+  reviews?: Review[];
+  job?: { city?: string };
+  city?: string;
+  data?: {
+    postedBy?: RawSeller;
+    seller?: RawSeller;
+    user?: RawSeller;
+    reviews?: Review[];
+  };
+};

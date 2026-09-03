@@ -17,23 +17,11 @@ import { FaHeart } from "react-icons/fa";
 import { api } from "@/lib/api";
 import { toJobDetail, toJobCard } from "@/lib/adapter";
 import type { JobDetail } from "@/app/types/listing";
-import type { JobCard, JobListing } from "../../../types/jobs";
+import type { JobCard, JobListing, RawSeller, SellerLike, Review, RawJobResponse } from "../../../types/jobs";
 import SellerCard from "@/components/SellerCard";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-type SellerLike = {
-  id?: string;
-  isPro?: boolean;
-  isTrusted?: boolean;
-  memberSince?: string;
-  totalListing?: number;
-  responseRate?: string;
-  avgResponseTime?: string;
-  phone?: string;
-  [key: string]: unknown;
-};
 
 export default function JobDetailPage() {
   const params = useParams();
@@ -59,9 +47,9 @@ export default function JobDetailPage() {
   const [favLoading, setFavLoading] = useState(false);
 
   /* ── seller extracted RAW from API (adapter strips it) ── */
-  const [seller, setSeller] = useState<any>(null);
+  const [seller, setSeller] = useState<RawSeller | null>(null);
   const [sellerId, setSellerId] = useState<string>("");
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   useEffect(() => {
     if (!session?.accessToken || !id) return;
@@ -116,15 +104,13 @@ export default function JobDetailPage() {
 
     const load = async () => {
       try {
-        /* 1️⃣  fetch raw backend payload */
-        const raw: any = await api.getJob(id);
+      const raw = (await api.getJob(id)) as RawJobResponse;
 
-        /* 2️⃣  adapt job fields for display */
-        const mapped = toJobDetail(raw as JobListing);
+      const mapped = toJobDetail(raw as JobListing);
         if (cancelled) return;
         setJob(mapped);
 
-        /* 3️⃣  extract seller from RAW response (before adapter strips it) */
+
         const rawSeller =
           raw?.postedBy ??
           raw?.seller ??
@@ -248,19 +234,18 @@ export default function JobDetailPage() {
     }
   };
 
-  // Build a complete seller object that SellerCard expects,
-  // filling missing fields with sensible defaults.
- const postedBy = (job.postedBy ?? {}) as SellerLike;
- const sellerForCard = {
-   ...postedBy,
-   isPro: postedBy.isPro ?? false,
-   isTrusted: postedBy.isTrusted ?? false,
-   memberSince: postedBy.memberSince ?? "N/A",
-   totalListing: postedBy.totalListing ?? 0,
-   responseRate: postedBy.responseRate ?? "N/A",
-   avgResponseTime: postedBy.avgResponseTime ?? "N/A",
-   phone: postedBy.phone ?? "N/A",
- };
+
+  const postedBy = (job.postedBy ?? {}) as SellerLike;
+  const sellerForCard = {
+    ...postedBy,
+    isPro: postedBy.isPro ?? false,
+    isTrusted: postedBy.isTrusted ?? false,
+    memberSince: postedBy.memberSince ?? "N/A",
+    totalListing: postedBy.totalListing ?? 0,
+    responseRate: postedBy.responseRate ?? "N/A",
+    avgResponseTime: postedBy.avgResponseTime ?? "N/A",
+    phone: postedBy.phone ?? "N/A",
+  };
 
   return (
     <>
