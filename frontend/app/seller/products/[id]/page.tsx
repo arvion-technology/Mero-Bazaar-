@@ -3,6 +3,7 @@
 import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
   FiArrowLeft,
   FiCheck,
@@ -319,19 +320,13 @@ export default function SellerProductDetailPage() {
         }
 
         .main-image {
+          position: relative;
           width: 100%;
           aspect-ratio: 4 / 3;
           border-radius: 12px;
           overflow: hidden;
           border: 1.5px solid ${BORDER};
           background: #f8fafc;
-        }
-
-        .main-image img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
         }
 
         .thumbnail-row {
@@ -341,6 +336,7 @@ export default function SellerProductDetailPage() {
         }
 
         .thumbnail {
+          position: relative;
           width: 60px;
           height: 60px;
           border-radius: 8px;
@@ -357,12 +353,6 @@ export default function SellerProductDetailPage() {
 
         .thumbnail.active {
           border-color: ${ACCENT};
-        }
-
-        .thumbnail img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
         }
 
         .card-info {
@@ -578,7 +568,15 @@ export default function SellerProductDetailPage() {
               <div className="image-section">
                 <div className="main-image">
                   {mainImage ? (
-                    <img src={mainImage} alt={getDisplayTitle(listing)} />
+                    <Image
+                      src={mainImage}
+                      alt={getDisplayTitle(listing)}
+                      fill
+                      sizes="(max-width: 900px) 100vw, 420px"
+                      style={{ objectFit: "cover" }}
+                      priority
+                      unoptimized
+                    />
                   ) : (
                     <div
                       style={{
@@ -606,7 +604,14 @@ export default function SellerProductDetailPage() {
                         className={`thumbnail ${url === mainImage ? "active" : ""}`}
                         onClick={() => setMainImage(url)}
                       >
-                        <img src={url} alt={`Thumbnail ${idx + 1}`} />
+                        <Image
+                          src={url}
+                          alt={`Thumbnail ${idx + 1}`}
+                          fill
+                          sizes="60px"
+                          style={{ objectFit: "cover" }}
+                          unoptimized
+                        />
                       </div>
                     ))}
                   </div>
