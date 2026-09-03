@@ -137,8 +137,7 @@ export default function WishlistItemDetail() {
           : json.listings ?? json.data ?? [];
         setRelated(
           list
-            .filter((r: any) => r.id !== product.id)
-            .slice(0, 8)
+            .filter((r: { id: string }) => r.id !== product.id)            .slice(0, 8)
             .map(toWishlistCard)
         );
       })

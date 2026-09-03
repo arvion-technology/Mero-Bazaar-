@@ -86,6 +86,7 @@ function CustomSelect({
   useEffect(() => {
     if (open) {
       const idx = options.indexOf(value);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHighlighted(idx >= 0 ? idx : 0);
     }
   }, [open, options, value]);

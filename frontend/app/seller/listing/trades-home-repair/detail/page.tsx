@@ -110,6 +110,7 @@ function CustomSelect({
   useEffect(() => {
     if (isOpen) {
       const idx = options.findIndex((o) => o === value);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHighlightedIndex(idx >= 0 ? idx : 0);
     }
   }, [isOpen, options, value]);

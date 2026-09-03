@@ -85,6 +85,7 @@ export default function MedicalDetailPage() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     api
       .getMedicalListing(id)

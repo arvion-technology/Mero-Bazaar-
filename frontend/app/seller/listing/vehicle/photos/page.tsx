@@ -34,6 +34,11 @@ interface ImageItem {
   file: File;
   preview: string;
 }
+
+type RawListingImage =
+  | string
+  | { url?: string; imageUrl?: string; secure_url?: string; src?: string; path?: string };
+  
 export default function AddPhotosPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -89,8 +94,8 @@ function AddPhotosContent() {
           return;
         }
 
-        const existingImages: ImageItem[] = rawImages
-          .map((image: any, index: number) => {
+        const existingImages: ImageItem[] = (rawImages as RawListingImage[])
+           .map((image, index) => {
             const url =
               typeof image === "string"
                 ? image

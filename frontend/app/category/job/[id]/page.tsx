@@ -208,8 +208,8 @@ export default function JobDetailPage() {
     if (navigator.share) {
       navigator.share({ title: job.title, url: window.location.href }).catch(() => {});
     } else {
-+     navigator.clipboard?.writeText(window.location.href).catch(() => {});
-+     toast.success("Link copied to clipboard");
+     navigator.clipboard?.writeText(window.location.href).catch(() => {});
+     toast.success("Link copied to clipboard");
    }
 };
 

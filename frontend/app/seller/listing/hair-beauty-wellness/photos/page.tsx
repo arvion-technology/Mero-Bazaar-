@@ -40,6 +40,11 @@ const steps = [
 
 const MAX_IMAGES = 10;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"];
+
+type RawListingImage =
+  | string
+  | { url?: string; imageUrl?: string; secure_url?: string; src?: string; path?: string };
+
 interface ImageItem {
   id: string;
   file: File;
@@ -98,8 +103,8 @@ function HairBeautyWellnessListingContent() {
           return;
         }
 
-        const existingImages: ImageItem[] = rawImages
-          .map((image: any, index: number) => {
+          const existingImages: ImageItem[] = (rawImages as RawListingImage[])
+            .map((image, index) => {
             const url =
               typeof image === "string"
                 ? image
@@ -111,12 +116,12 @@ function HairBeautyWellnessListingContent() {
 
             if (!url) return null;
 
-            return {
-              file: new File([], `existing-${index}.jpg`, {
-                type: "image/jpeg",
-              }),
-              preview: url,
-            };
+          return {
+            id: `existing-${index}`,
+            file: new File([], `existing-${index}.jpg`, { type: "image/jpeg" }),
+            preview: url,
+            isMain: index === 0,
+          };
           })
           .filter((item): item is ImageItem => item !== null);
 

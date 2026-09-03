@@ -290,6 +290,7 @@ export default function BuyDetailPage() {
   }, [id, showToast]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect 
     fetchProduct();
   }, [fetchProduct]);
 

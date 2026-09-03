@@ -18,6 +18,7 @@ import {
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useDraft } from "../layout";
+import type { RawListingImage } from "@/app/types/listingImage";
 
 const ACCENT = "#2563eb";
 const DANGER = "#dc2626";
@@ -102,8 +103,8 @@ function AddMedicalPhotosContent() {
         return;
       }
 
-      const existingImages: ImageItem[] = rawImages
-        .map((image: any, index: number) => {
+      const existingImages: ImageItem[] = (rawImages as RawListingImage[])
+        .map((image, index) => {
           const url =
             typeof image === "string"
               ? image
