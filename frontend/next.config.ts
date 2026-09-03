@@ -10,6 +10,10 @@ const nextConfig = {
     ],
   },
 
+  experimental: {
+    cpus: 1,
+  },
+
   async rewrites() {
     return [
       {
