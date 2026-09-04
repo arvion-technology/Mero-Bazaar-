@@ -17,7 +17,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useDraft } from "../layout";
+import { useDraft } from "../DraftContext";
 import type { RawListingImage } from "@/app/types/listingImage";
 
 const ACCENT = "#2563eb";

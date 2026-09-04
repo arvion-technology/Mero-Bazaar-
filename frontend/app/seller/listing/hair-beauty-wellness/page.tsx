@@ -14,7 +14,7 @@ import {
 import { FaSpa } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import { useState, useRef, useEffect } from "react";
-import { useDraft, ServiceCategory } from "./layout";
+import { useDraft, ServiceCategory } from "./DraftContext";
 import { Suspense } from "react";
 const ACCENT = "#2563eb";
 const ACCENT_LIGHT = "#eff6ff";

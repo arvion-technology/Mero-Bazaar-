@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { FiArrowLeft, FiCheck, FiEdit2, FiSend } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useDraft, ServiceCategory } from "../layout";
+import { useDraft, ServiceCategory } from "../DraftContext";
 import { formToCreateBeautyPayload } from "@/lib/adapters/beautyAdapter";
 import { Suspense } from "react";
 const ACCENT = "#2563eb";

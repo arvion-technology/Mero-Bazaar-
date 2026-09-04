@@ -18,7 +18,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useJobDraft } from "./layout";
+import { useJobDraft } from "./DraftContext";
 import { useSession } from "next-auth/react";
 
 const ACCENT = "#2563eb";

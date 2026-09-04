@@ -14,7 +14,7 @@ import {
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useSession } from "next-auth/react";
-import { useDraft } from "../layout";
+import { useDraft } from "../DraftContext";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";

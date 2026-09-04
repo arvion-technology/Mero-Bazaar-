@@ -8,7 +8,7 @@ import { Suspense } from "react";
 import { FiArrowLeft, FiCheck, FiUploadCloud, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useDraft } from "../layout";
+import { useDraft } from "../DraftContext";
 
 const ACCENT = "#2563eb";
 const SUCCESS = "#10b981";
