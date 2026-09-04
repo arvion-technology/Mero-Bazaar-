@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { FiArrowLeft, FiCheck, FiSend } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useDraft } from "../layout";
+import { useDraft } from "../DraftContext";
 import { VEHICLE_DETAILS_LABELS } from "@/app/category/vehicles/[id]/components/shared/vehicleDetailsMap";
 import { forwardGeocode } from "@/lib/fetcher";
 import { Suspense } from "react";

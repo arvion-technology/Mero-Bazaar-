@@ -35,6 +35,7 @@ export default function AgriDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
   const [favLoading, setFavLoading] = useState(false);
+
   useEffect(() => {
     if (!session?.accessToken || !id) return;
 
@@ -55,6 +56,7 @@ export default function AgriDetailPage() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect 
     setLoading(true);
     api
       .getAgricultureListing(id)

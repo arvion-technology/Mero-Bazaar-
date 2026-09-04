@@ -17,7 +17,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { MedicalData, useDraft } from "./layout";
+import { MedicalData, useDraft } from "./DraftContext";
 
 const ACCENT = "#2563eb";
 const ACCENT_LIGHT = "#eff6ff";
@@ -427,7 +427,7 @@ function LanguageSelector({
 export default function MedicalListingDetailsPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <MedicalListingDetailsPage />
+      <MedicalListingDetailsContent />
     </Suspense>
   );
 }

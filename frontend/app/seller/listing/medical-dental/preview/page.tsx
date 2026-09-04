@@ -18,7 +18,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useDraft, defaultMedicalData } from "../layout";
+import { useDraft, defaultMedicalData } from "../DraftContext";
 import { draftToCreateMedicalPayload } from "@/lib/adapters/medicalAdapter";
 import { useSession } from "next-auth/react";
 

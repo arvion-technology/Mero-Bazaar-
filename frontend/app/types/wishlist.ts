@@ -38,15 +38,17 @@ export interface WishlistProduct {
   area?: string;
   postedDaysAgo?: number;
   negotiable?: boolean;
+  deliveryAvailable?: boolean;
+  warrantyAvailable?: boolean;
   isFavorited?: boolean;
   seller?: WishlistSeller;
   sellerId?: string;
-  specs?: Record<string, any>;
+  specs?: Record<string, unknown>;
   features?: string[];
   tags?: string[];
   details?: { label: string; value: string }[];
   reviews?: WishlistReview[];
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface WishlistCard {

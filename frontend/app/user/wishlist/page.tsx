@@ -118,6 +118,7 @@ export default function UserWishlist() {
 
   useEffect(() => {
     if (!token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingWishlist(true);
 
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`, {

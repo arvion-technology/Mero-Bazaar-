@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Suspense } from "react";
@@ -8,7 +8,7 @@ import { Suspense } from "react";
 import { FiArrowLeft, FiCheck, FiUploadCloud, FiX } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useDraft } from "../layout";
+import { useDraft } from "../DraftContext";
 
 const ACCENT = "#2563eb";
 const SUCCESS = "#10b981";
@@ -21,11 +21,17 @@ const CARD_BG = "#ffffff";
 
 const MAX_IMAGES = 10;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"];
+
+type RawListingImage =
+  | string
+  | { url?: string; imageUrl?: string; secure_url?: string; src?: string; path?: string };
+
 interface ImageItem {
   file: File;
   preview: string;
   isMain: boolean;
 }
+
 export default function AddPhotosPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -77,8 +83,7 @@ function AgricultureListingContent() {
             return;
           }
   
-          const existingImages: ImageItem[] = rawImages
-            .map((image: any, index: number) => {
+          const existingImages: ImageItem[] = (rawImages as RawListingImage[])            .map((image, index) => {
               const url =
                 typeof image === "string"
                   ? image

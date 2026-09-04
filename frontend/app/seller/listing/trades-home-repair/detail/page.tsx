@@ -16,7 +16,7 @@ import {
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import dynamic from "next/dynamic";
-import { useTradesDraft } from "../layout";
+import { useTradesDraft } from "../DraftContext";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -110,6 +110,7 @@ function CustomSelect({
   useEffect(() => {
     if (isOpen) {
       const idx = options.findIndex((o) => o === value);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHighlightedIndex(idx >= 0 ? idx : 0);
     }
   }, [isOpen, options, value]);

@@ -19,7 +19,7 @@ import {
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import dynamic from "next/dynamic";
-import { useTradesDraft } from "../layout";
+import { useTradesDraft } from "../DraftContext";
 import { formToCreateTradesPayload } from "@/lib/adapters/tradesAdapter";
 
 const ACCENT = "#2563eb";

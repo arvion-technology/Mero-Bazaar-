@@ -29,7 +29,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import SellerCard from "@/components/SellerCard";
-import type { WishlistProduct, WishlistCard } from "@/app/types/wishlist";
+import type { WishlistProduct, WishlistCard, WishlistReview } from "@/app/types/wishlist";
 import {
   toWishlistDetail,
   toWishlistCard,
@@ -137,8 +137,7 @@ export default function WishlistItemDetail() {
           : json.listings ?? json.data ?? [];
         setRelated(
           list
-            .filter((r: any) => r.id !== product.id)
-            .slice(0, 8)
+            .filter((r: { id: string }) => r.id !== product.id)            .slice(0, 8)
             .map(toWishlistCard)
         );
       })
@@ -676,30 +675,30 @@ export default function WishlistItemDetail() {
                   {categoryLabel} Details
                 </h2>
                 <div className="pd-details-grid">
-                  <div className="pd-details-col-left">
-                    {leftDetails.map((d) => (
-                      <div className="pd-detail-row" key={d.label}>
-                        <span className="pd-detail-label">
-                          {d.label}
-                        </span>
-                        <span className="pd-detail-val">
-                          {d.value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pd-details-col-right">
-                    {rightDetails.map((d) => (
-                      <div className="pd-detail-row" key={d.label}>
-                        <span className="pd-detail-label">
-                          {d.label}
-                        </span>
-                        <span className="pd-detail-val">
-                          {d.value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                <div className="pd-details-col-left">
+                  {leftDetails.map((d) => (
+                    <div className="pd-detail-row" key={d.label}>
+                      <span className="pd-detail-label">
+                        {d.label}
+                      </span>
+                      <span className="pd-detail-val">
+                        {String(d.value)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="pd-details-col-right">
+                  {rightDetails.map((d) => (
+                    <div className="pd-detail-row" key={d.label}>
+                      <span className="pd-detail-label">
+                        {d.label}
+                      </span>
+                      <span className="pd-detail-val">
+                        {String(d.value)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
                 </div>
               </div>
             )}
@@ -752,7 +751,7 @@ export default function WishlistItemDetail() {
                 <div style={{ marginBottom: 12 }}>
                   <StarRating
                     rating={seller.rating ?? 0}
-                    count={product.reviews?.length ?? 0}
+                    count={(product.reviews as WishlistReview[] | undefined)?.length ?? 0}
                   />
                 </div>
               )}
@@ -787,7 +786,7 @@ export default function WishlistItemDetail() {
                   {(product.details ?? []).slice(0, 4).map((d) => (
                     <div key={d.label} className="pd-detail-item">
                       <p className="pd-detail-label">{d.label}</p>
-                      <p className="pd-detail-val">{d.value}</p>
+                      <p className="pd-detail-val">{String(d.value)}</p>
                     </div>
                   ))}
                 </div>
@@ -865,36 +864,34 @@ export default function WishlistItemDetail() {
             </div>
 
           
-{seller ? (
-  <SellerCard
-    seller={{
-      name: seller.name,
-      avatar: seller.avatar ?? seller.image ?? "/default-avatar.png",
-      phone: seller.phone,
-      isVerified: seller.isVerified,
-      isPro: seller.isPro ?? false,
-      isTrusted: seller.isTrusted ?? false,
-      rating: seller.rating,
-      reviewCount: seller.reviewCount,
-      memberSince: seller.memberSince,
-      totalListing: seller.totalListings,
-      responseRate: seller.responseRate ?? "N/A",
-      avgResponseTime: seller.avgResponseTime ?? "N/A",
-    }}
-    reviews={(product.reviews ?? []).map((r) => ({
-      reviewerName: r.reviewerName,
-      rating: r.rating,
-      comment: r.comment ?? null,
-      createdAt: r.createdAt ?? "",
-    }))}
-    listingId={product.id}
-    sellerId={seller.id}
-  />
-) : null}
-
-
-  </div>
-</div>
+          {seller ? (
+            <SellerCard
+              seller={{
+                name: seller.name,
+                avatar: seller.avatar ?? seller.image ?? "/default-avatar.png",
+                phone: seller.phone,
+                isVerified: seller.isVerified,
+                isPro: seller.isPro ?? false,
+                isTrusted: seller.isTrusted ?? false,
+                rating: seller.rating,
+                reviewCount: seller.reviewCount,
+                memberSince: seller.memberSince,
+                totalListing: seller.totalListings,
+                responseRate: seller.responseRate ?? "N/A",
+                avgResponseTime: seller.avgResponseTime ?? "N/A",
+              }}
+              reviews={((product.reviews as WishlistReview[] | undefined) ?? []).map((r) => ({
+                reviewerName: r.reviewerName,
+                rating: r.rating,
+                comment: r.comment ?? null,
+                createdAt: r.createdAt ?? "",
+              }))}
+              listingId={product.id}
+              sellerId={seller.id}
+            />
+          ) : null}
+            </div>
+          </div>
 
         {/* ═══════════════ RELATED LISTINGS ═══════════════ */}
         {related.length > 0 && (

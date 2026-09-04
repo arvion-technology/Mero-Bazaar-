@@ -21,7 +21,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useDraft, defaultAgricultureData } from "../layout";
+import { useDraft, defaultAgricultureData } from "../DraftContext";
 import { useSession } from "next-auth/react";
 
 const ACCENT = "#2563eb";
@@ -163,11 +163,6 @@ function AgricultureListingContent() {
     setIsPublishing(true);
 
     try {
-      // ============================================
-      // 1. CREATE for NEW
-      // 2. UPDATE for EDIT
-      // ============================================
-
       const isEdit = Boolean(editId);
 
       const listingRes = await fetch(

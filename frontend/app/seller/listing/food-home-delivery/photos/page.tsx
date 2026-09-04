@@ -16,7 +16,8 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useDraft, FoodDeliveryImageItem } from "../layout";
+import { useDraft, FoodDeliveryImageItem } from "../Draftcontext";
+import type { RawListingImage } from "@/app/types/listingImage";
 
 const ACCENT = "#2563eb";
 const DANGER = "#dc2626";
@@ -92,30 +93,33 @@ function FoodDeliveryListingPage() {
           return;
         }
 
-        const existingImages: FoodDeliveryImageItem[] = rawImages
-          .map((image: any, index: number) => {
-            const url =
-              typeof image === "string"
-                ? image
-                : (image?.url ??
-                  image?.imageUrl ??
-                  image?.secure_url ??
-                  image?.src ??
-                  image?.path);
+        type RawImageObj = RawListingImage extends string
+  ? never
+  : RawListingImage & { id?: string; isMain?: boolean };
 
-            if (!url) return null;
+    const existingImages: FoodDeliveryImageItem[] = (rawImages as (string | RawImageObj)[])
+      .map((image, index) => {
+        const isStringImg = typeof image === "string";
+        const url = isStringImg
+          ? image
+          : (image?.url ??
+            image?.imageUrl ??
+            image?.secure_url ??
+            image?.src ??
+            image?.path);
 
-            return {
-              id: image?.id ?? `existing-${index}`,
+        if (!url) return null;
 
-              file: new File([], `existing-${index}.jpg`, {
-                type: "image/jpeg",
-              }),
-              preview: url,
-              isMain: image?.isMain ?? index === 0,
-            };
-          })
-          .filter((item): item is FoodDeliveryImageItem => item !== null);
+        return {
+          id: isStringImg ? `existing-${index}` : (image?.id ?? `existing-${index}`),
+          file: new File([], `existing-${index}.jpg`, {
+            type: "image/jpeg",
+          }),
+          preview: url,
+          isMain: isStringImg ? index === 0 : (image?.isMain ?? index === 0),
+        };
+      })
+      .filter((item): item is FoodDeliveryImageItem => item !== null);
 
         setImages(existingImages);
       } catch (error) {

@@ -42,7 +42,7 @@ export default function ReportListingButton({ listingId }: Props) {
     setSubmitting(true);
     try {
       const session = await getSession();
-      const token = (session as any)?.accessToken;
+      const token = (session as { accessToken?: string } | null)?.accessToken;
 
       if (!token) {
         toast.error("Please log in to report a listing.");
@@ -71,8 +71,8 @@ export default function ReportListingButton({ listingId }: Props) {
 
       toast.success("Report submitted. Our team will review it.");
       resetAndClose();
-    } catch (err: any) {
-      toast.error(err.message || "Something went wrong. Please try again.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
