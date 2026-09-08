@@ -205,7 +205,7 @@ export default function SellerProductPage() {
             >
               Are you sure you want to delete{" "}
               <strong style={{ color: PRIMARY }}>
-                "{getDisplayTitle(deleteItem)}"
+                &quot;{getDisplayTitle(deleteItem)}&quot;
               </strong>
               ? This action cannot be undone.
             </p>

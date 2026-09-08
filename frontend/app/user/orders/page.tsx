@@ -197,7 +197,10 @@ export default function UserOrders() {
   const paginated = filtered.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
 
   // Reset page when filter/search changes
-  useEffect(() => { setPage(1); }, [activeFilter, search]);
+  useEffect(() => { 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPage(1); 
+  }, [activeFilter, search]);
 
   if (loadingOrders) {
     return (

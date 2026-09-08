@@ -17,7 +17,7 @@ import { FaHeart } from "react-icons/fa";
 import { api } from "@/lib/api";
 import { toJobDetail, toJobCard } from "@/lib/adapter";
 import type { JobDetail } from "@/app/types/listing";
-import type { JobCard, JobListing } from "../../../types/jobs";
+import type { JobCard, JobListing, RawSeller, SellerLike, Review, RawJobResponse, SellerReview } from "../../../types/jobs";
 import SellerCard from "@/components/SellerCard";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
@@ -47,9 +47,9 @@ export default function JobDetailPage() {
   const [favLoading, setFavLoading] = useState(false);
 
   /* ── seller extracted RAW from API (adapter strips it) ── */
-  const [seller, setSeller] = useState<any>(null);
+  const [seller, setSeller] = useState<RawSeller | null>(null);
   const [sellerId, setSellerId] = useState<string>("");
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   useEffect(() => {
     if (!session?.accessToken || !id) return;
@@ -104,15 +104,13 @@ export default function JobDetailPage() {
 
     const load = async () => {
       try {
-        /* 1️⃣  fetch raw backend payload */
-        const raw: any = await api.getJob(id);
+      const raw = (await api.getJob(id)) as RawJobResponse;
 
-        /* 2️⃣  adapt job fields for display */
-        const mapped = toJobDetail(raw as JobListing);
+      const mapped = toJobDetail(raw as JobListing);
         if (cancelled) return;
         setJob(mapped);
 
-        /* 3️⃣  extract seller from RAW response (before adapter strips it) */
+
         const rawSeller =
           raw?.postedBy ??
           raw?.seller ??
@@ -193,9 +191,13 @@ export default function JobDetailPage() {
   const hasCoords = mapLat != null && mapLng != null;
 
   const handleShare = () => {
-    navigator.clipboard?.writeText(window.location.href).catch(() => {});
-    toast.success("Link copied to clipboard");
-  };
+    if (navigator.share) {
+      navigator.share({ title: job.title, url: window.location.href }).catch(() => {});
+    } else {
+     navigator.clipboard?.writeText(window.location.href).catch(() => {});
+     toast.success("Link copied to clipboard");
+   }
+};
 
   const handleToggleFavorite = async () => {
     if (!session?.accessToken) {
@@ -231,6 +233,36 @@ export default function JobDetailPage() {
       setFavLoading(false);
     }
   };
+
+
+const postedBy = (job.postedBy ?? {}) as SellerLike;
+const sellerForCard = {
+  ...postedBy,
+  name: postedBy.name ?? "Unknown",
+  avatar: postedBy.avatar ?? "",
+  rating: postedBy.rating ?? 0,
+  reviewCount: postedBy.reviewCount ?? 0,
+  isVerified: postedBy.isVerified ?? false,
+  isPro: postedBy.isPro ?? false,
+  isTrusted: postedBy.isTrusted ?? false,
+  memberSince: postedBy.memberSince ?? "N/A",
+  totalListing: postedBy.totalListing ?? 0,
+  responseRate: postedBy.responseRate ?? "N/A",
+  avgResponseTime: postedBy.avgResponseTime ?? "N/A",
+  phone: postedBy.phone ?? "N/A",
+};
+
+const sellerReviews: SellerReview[] = (
+  (job as unknown as { reviews?: unknown[] }).reviews ?? []
+).map((r) => {
+  const rv = r as Partial<SellerReview>;
+  return {
+    reviewerName: rv.reviewerName ?? "Anonymous",
+    rating: rv.rating ?? 0,
+    comment: rv.comment ?? null,
+    createdAt: rv.createdAt ?? "",
+  };
+});
 
   return (
     <>
@@ -503,14 +535,7 @@ export default function JobDetailPage() {
                   <div className="jd-action-btns">
                     <button
                       className="jd-action-btn"
-                      onClick={() => {
-                        if (navigator.share)
-                          navigator.share({
-                            title: job.title,
-                            url: window.location.href,
-                          });
-                      }}
-                    >
+                      onClick={handleShare}>
                       <FiShare2 size={16} />
                     </button>
                     <button
@@ -652,10 +677,10 @@ export default function JobDetailPage() {
               {/* SELLER CARD – raw extracted seller, correct _id */}
               <div className="jd-seller-card">
                 <SellerCard
-                  seller={seller}
-                  reviews={reviews}
+                  seller={sellerForCard}
+                  reviews={sellerReviews}
                   listingId={job.id}
-                  sellerId={sellerId}
+                  sellerId={postedBy.id || job.id}
                 />
               </div>
             </div>

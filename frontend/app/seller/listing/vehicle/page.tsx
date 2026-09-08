@@ -16,7 +16,7 @@ import {
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useSession } from "next-auth/react";
-import { useDraft } from "./layout";
+import { useDraft } from "./DraftContext";
 import { VEHICLE_DETAILS_LABELS } from "@/app/category/vehicles/[id]/components/shared/vehicleDetailsMap";
 
 const ACCENT = "#2563eb";

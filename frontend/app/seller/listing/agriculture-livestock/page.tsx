@@ -14,7 +14,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useDraft } from "./layout";
+import { useDraft } from "./DraftContext";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -86,6 +86,7 @@ function CustomSelect({
   useEffect(() => {
     if (open) {
       const idx = options.indexOf(value);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHighlighted(idx >= 0 ? idx : 0);
     }
   }, [open, options, value]);

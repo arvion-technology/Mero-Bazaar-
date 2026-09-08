@@ -162,6 +162,7 @@ export default function AdminListingDetailPage() {
   }, [accessToken, id]);
 
   useEffect(() => {
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- initial load on mount, not a cascading-render risk
     fetchListing();
   }, [fetchListing]);
 

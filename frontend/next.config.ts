@@ -10,6 +10,12 @@ const nextConfig = {
     ],
   },
 
+  productionBrowserSourceMaps: false,
+
+  experimental: {
+    cpus: 1,
+  },
+
   async rewrites() {
     return [
       {

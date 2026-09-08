@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useListingForm } from "../ListingFormContext";
 import { useState } from "react";
+import type { RawListingImage } from "@/app/types/listingImage";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -95,8 +96,8 @@ function RealEstatePhotosContent() {
           return;
         }
 
-        const existingImages: ImageItem[] = rawImages
-          .map((image: any, index: number) => {
+        const existingImages: ImageItem[] = (rawImages as RawListingImage[])
+          .map((image, index) => {
             const url =
               typeof image === "string"
                 ? image

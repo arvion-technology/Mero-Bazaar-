@@ -17,7 +17,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useDraft } from "../layout";
+import { useDraft } from "../DraftContext";
 
 const ACCENT = "#2563eb";
 const DANGER = "#dc2626";
@@ -28,6 +28,8 @@ const TEXT_SECONDARY = "#64748b";
 const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
+
+type RawAvailabilitySlot = { id?: string | number; start?: string; end?: string };
 
 const steps = [
   { label: "Category", icon: FiFileText, status: "done" as const },
@@ -176,7 +178,8 @@ export default function MedicalAvailabilityPage() {
 function MedicalAvailabilityContent() {
   const router = useRouter();
   const { data: session } = useSession();
-
+  const idCounter = useRef(0);
+  const nextSlotId = () => `slot-${idCounter.current++}`;
   const { medicalData, setMedicalData } = useDraft();
   const update = (patch: Partial<typeof medicalData>) =>
     setMedicalData({
@@ -196,7 +199,7 @@ function MedicalAvailabilityContent() {
         ? medicalData.slots
         : {
             ...medicalData.slots,
-            [day]: [{ id: Date.now().toString(), start: "", end: "" }],
+            [day]: [{ id: nextSlotId(), start: "", end: "" }],
           };
       setActiveDay(day);
       update({
@@ -213,7 +216,7 @@ function MedicalAvailabilityContent() {
         [day]: [
           ...(medicalData.slots[day] || []),
           {
-            id: Date.now().toString() + Math.random().toString(36).slice(2),
+            id: nextSlotId(),
             start: "",
             end: "",
           },
@@ -348,17 +351,14 @@ function MedicalAvailabilityContent() {
           const daySlots = availableSlots?.[day.key];
 
           if (Array.isArray(daySlots)) {
-            slots[day.key] = daySlots.map((slot: any, index: number) => ({
-              id: slot?.id?.toString() ?? `${day.key}-${index}-${Date.now()}`,
+            slots[day.key] = (daySlots as RawAvailabilitySlot[]).map((slot, index) => ({
+              id: slot?.id?.toString() ?? `${day.key}-${index}-${idCounter.current++}`,
               start: slot?.start ?? "",
               end: slot?.end ?? "",
             }));
           }
         }
 
-        // -----------------------------
-        // SETTINGS
-        // -----------------------------
         const slotDuration =
           medical?.slotDuration ?? availableSlots?.slotDuration ?? "";
 
@@ -374,9 +374,6 @@ function MedicalAvailabilityContent() {
         console.log("BUFFER TIME:", bufferTime);
         console.log("SAME DAY:", sameDayBooking);
 
-        // -----------------------------
-        // FILL FORM
-        // -----------------------------
         setMedicalData({
           ...medicalData,
           selectedDays,

@@ -54,8 +54,7 @@ export default function OrderDetailPage() {
   const orderId = params?.id as string;
   const router = useRouter();
   const { data: session } = useSession();
-  const accessToken = (session as any)?.accessToken;
-
+  const accessToken = (session as { accessToken?: string } | null)?.accessToken;
   const [order, setOrder] = useState<ApiOrderDetail | null>(null);
   const [loadingOrder, setLoadingOrder] = useState(true);
   const [orderError, setOrderError] = useState<string | null>(null);
