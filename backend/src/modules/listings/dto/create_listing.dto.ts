@@ -38,4 +38,8 @@ export class CreateListingDto {
   @Type(() => Number)
   @IsNumber()
   longitude?: number;
+
+  @IsOptional()
+  @IsString()
+  location?: string;
 }

@@ -21,6 +21,7 @@ export class ListingsService {
         images: dto.images,
         latitude: dto.latitude,
         longitude: dto.longitude,
+        location: dto.location,
       },
     });
   }
@@ -114,6 +115,7 @@ export class ListingsService {
         ...(dto.images !== undefined && { images: dto.images }),
         ...(dto.latitude !== undefined && { latitude: dto.latitude }),
         ...(dto.longitude !== undefined && { longitude: dto.longitude }),
+        ...(dto.location !== undefined && { location: dto.location }),
       },
     });
   }

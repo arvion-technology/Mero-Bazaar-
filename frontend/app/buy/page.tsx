@@ -16,7 +16,6 @@ import {
 } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 
-/* ─────────── CONFIG ─────────── */
 const CATEGORIES = [
   { id: "all", label: "All Items" },
   { id: "mobiles-tablets", label: "Mobiles & Tablets" },
@@ -39,14 +38,12 @@ const SORT_OPTIONS = [
 
 const MAX_PRICE = 1000000;
 
-/* ─────────── TOAST TYPE ─────────── */
 interface Toast {
   id: number;
   message: string;
   type: "success" | "info" | "error";
 }
 
-/* ─────────── STYLES ─────────── */
 const pageStyles = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 * { box-sizing: border-box; }
@@ -184,7 +181,6 @@ const pageStyles = `
 }
 `;
 
-/* ─────────── COMPONENT ─────────── */
 export default function BuyPage() {
   const [products, setProducts] = useState<BuyProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -220,7 +216,6 @@ export default function BuyPage() {
     [],
   );
 
-  /* ─── FETCH PRODUCTS ─── */
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
@@ -250,7 +245,7 @@ export default function BuyPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  /* ─── CART ACTIONS ─── */
+  // cart actions
   const addToCart = (item: BuyProduct, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -265,7 +260,7 @@ export default function BuyPage() {
     showToast(`${item.title} added to cart — Proceeding to checkout...`);
   };
 
-  /* ─── WISHLIST ACTIONS ─── */
+  /*  WISHLIST ACTIONS */
   const toggleFav = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -516,7 +511,14 @@ export default function BuyPage() {
                       return (
                         <Link key={item.id} href={`/buy/${item.id}`} className="buy-card">
                           <div className="buy-card-img-wrap">
-                            <img src={item.thumb} alt={item.title} className="buy-card-img" />
+                            <img src={
+                                item.images?.[0]
+                                  ? `${process.env.NEXT_PUBLIC_API_URL}${item.images[0]}`
+                                  : "/placeholder.png"
+                              }
+                              alt={item.title}
+                              className="buy-card-img"
+                            />
                             {item.badge && (
                               <span className="buy-card-badge" style={{ background: item.badgeColor }}>
                                 {item.badge}
