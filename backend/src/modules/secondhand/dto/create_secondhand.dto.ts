@@ -12,7 +12,7 @@ import { Type } from 'class-transformer';
 import { SecondHandCategory, SecondHandCondition } from '@prisma/client';
 
 export class CreateSecondHandDto {
-  @IsOptional()
+  @IsOptional()s
   @IsEnum(SecondHandCategory)
   category: SecondHandCategory;
 

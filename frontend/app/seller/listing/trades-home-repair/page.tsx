@@ -990,7 +990,6 @@ function NewTradesHomeRepairListingContent() {
                     value={formattedPrice}
                     onChange={(e) => handlePriceChange(e.target.value)}
                   />
-                  <p className="price-hint">Charge applied per unit</p>
                 </div>
 
                 <div className="form-group full-width">
@@ -1086,9 +1085,6 @@ function NewTradesHomeRepairListingContent() {
                       onKeyDown={handleSkillKeyDown}
                     />
                   </div>
-                  <p className="skill-input-hint">
-                    Type and press Enter to add more
-                  </p>
                 </div>
               </div>
             </div>
