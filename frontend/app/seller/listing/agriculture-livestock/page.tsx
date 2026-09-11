@@ -1,9 +1,11 @@
-"use client";
 
+"use client";
+ 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -15,7 +17,8 @@ import {
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useDraft } from "./DraftContext";
-
+import LocationPicker from "@/components/LocationPicker";
+ 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
 const ACCENT_LIGHT = "#eff6ff";
@@ -28,13 +31,41 @@ const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 const SITE_PRIMARY = "#2563eb";
-
+ 
+const DEFAULT_MAP_POSITION: [number, number] = [27.7172, 85.324];
+ 
+const MapWithNoSSR = dynamic(() => import("@/components/MapComponent"), {
+  ssr: false,
+  loading: () => <MapSkeleton />,
+});
+ 
+function MapSkeleton() {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "200px",
+        background: "#e5e7eb",
+        borderRadius: "12px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: "1.5px solid #e2e8f0",
+      }}
+    >
+      <span style={{ color: "#94a3b8", fontSize: "14px" }}>
+        Loading map...
+      </span>
+    </div>
+  );
+}
+ 
 const steps = [
   { label: "Category", icon: FiFileText, status: "done" as const },
   { label: "Photos", icon: FiBox, status: "active" as const },
   { label: "Preview", icon: FiBox, status: "upcoming" as const },
 ];
-
+ 
 const listingTypes = [
   "Produce",
   "LiveStock",
@@ -44,7 +75,7 @@ const listingTypes = [
   "Vet Service",
   "Farm Labour",
 ];
-
+ 
 const units = ["KG", "HEAD", "Piece", "Litre", "Gram", "Bundle"];
 const seasons = [
   "March - June",
@@ -65,7 +96,7 @@ const serviceTypes = [
 ];
 const priceUnits = ["Per Visit", "Per Hour", "Per Day", "Per Service"];
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
+ 
 function CustomSelect({
   options,
   value,
@@ -82,7 +113,7 @@ function CustomSelect({
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-
+ 
   useEffect(() => {
     if (open) {
       const idx = options.indexOf(value);
@@ -90,7 +121,7 @@ function CustomSelect({
       setHighlighted(idx >= 0 ? idx : 0);
     }
   }, [open, options, value]);
-
+ 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (
@@ -105,7 +136,7 @@ function CustomSelect({
       return () => document.removeEventListener("mousedown", handleClick);
     }
   }, [open]);
-
+ 
   useEffect(() => {
     if (!open) return;
     function handleKey(e: KeyboardEvent) {
@@ -126,7 +157,7 @@ function CustomSelect({
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [open, highlighted, options, onChange]);
-
+ 
   return (
     <div className="select-wrap" ref={containerRef}>
       <button
@@ -150,7 +181,9 @@ function CustomSelect({
           {options.map((opt, i) => (
             <div
               key={opt}
-              className={`custom-option ${opt === value ? "selected" : ""} ${i === highlighted ? "highlighted" : ""}`}
+              className={`custom-option ${opt === value ? "selected" : ""} ${
+                i === highlighted ? "highlighted" : ""
+              }`}
               onClick={() => {
                 onChange(opt);
                 setOpen(false);
@@ -190,8 +223,7 @@ function CustomSelect({
     </div>
   );
 }
-
-
+ 
 export default function NewAgricultureListingPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -199,18 +231,19 @@ export default function NewAgricultureListingPage() {
     </Suspense>
   );
 }
-
+ 
 function AgricultureListingContent() {
   const router = useRouter();
-
+ 
   const { agricultureData, setAgricultureData } = useDraft();
   const d = agricultureData;
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
   const { data: session } = useSession();
+ 
   useEffect(() => {
     if (!editId || !session?.accessToken) return;
-
+ 
     const loadExistingAgriculture = async () => {
       try {
         const response = await fetch(`/api/listings/${editId}`, {
@@ -220,17 +253,17 @@ function AgricultureListingContent() {
             "Content-Type": "application/json",
           },
         });
-
+ 
         const result = await response.json();
-
+ 
         console.log("EDIT AGRICULTURE FULL DATA:", result);
-
+ 
         if (!response.ok) {
           throw new Error(
             result?.message || "Failed to load agriculture listing",
           );
         }
-
+ 
         // API response ko agriculture object
         const agriculture =
           result?.agriculture ??
@@ -238,18 +271,28 @@ function AgricultureListingContent() {
           result?.agricultureAndLivestock ??
           result?.listing?.agricultureAndLivestock ??
           result;
-
+ 
         console.log("EDIT AGRICULTURE DATA:", agriculture);
-
+ 
+        // latitude/longitude can live at the top-level listing object
+        // (see toAgricultureDetail adapter) rather than nested under `agriculture`
+        const rawLat = result?.latitude ?? result?.listing?.latitude;
+        const rawLng = result?.longitude ?? result?.listing?.longitude;
+ 
         setAgricultureData({
           ...d,
-
+ 
           district: agriculture?.district ?? d.district,
-
+ 
           village: agriculture?.village ?? d.village,
-
+ 
           location: agriculture?.location ?? agriculture?.area ?? d.location,
-
+ 
+          mapPosition:
+            rawLat != null && rawLng != null
+              ? [Number(rawLat), Number(rawLng)]
+              : d.mapPosition,
+ 
           price:
             agriculture?.price != null
               ? String(agriculture.price).replace(/,/g, "")
@@ -258,52 +301,52 @@ function AgricultureListingContent() {
                 : agriculture?.unitPrice != null
                   ? String(agriculture.unitPrice).replace(/,/g, "")
                   : d.price,
-
+ 
           unit: agriculture?.unit ?? d.unit,
-
+ 
           itemName:
             agriculture?.itemName ?? agriculture?.productName ?? d.itemName,
-
+ 
           organicCertified: agriculture?.organicCertified ?? false,
-
+ 
           organicVerified: agriculture?.organicVerified ?? false,
-
+ 
           seasonalAvailability:
             agriculture?.seasonalAvailability ?? d.seasonalAvailability,
-
+ 
           animalType: agriculture?.animalType ?? d.animalType,
-
+ 
           age: agriculture?.age ?? d.age,
-
+ 
           breed: agriculture?.breed ?? d.breed,
-
+ 
           healthVaccineStatus:
             agriculture?.healthVaccineStatus ?? d.healthVaccineStatus,
-
+ 
           serviceType: agriculture?.serviceType ?? d.serviceType,
-
+ 
           servicePrice:
             agriculture?.servicePrice != null
               ? String(agriculture.servicePrice).replace(/,/g, "")
               : d.servicePrice,
-
+ 
           priceUnit: agriculture?.priceUnit ?? d.priceUnit,
-
+ 
           experience: agriculture?.experience ?? d.experience,
-
+ 
           mobileService: agriculture?.mobileService ?? false,
-
+ 
           serviceArea: agriculture?.serviceArea ?? d.serviceArea,
-
+ 
           serviceRadius:
             agriculture?.serviceRadius != null
               ? String(agriculture.serviceRadius)
               : d.serviceRadius,
-
+ 
           healthCertificate: agriculture?.healthCertificate ?? false,
-
+ 
           vaccinationAvailable: agriculture?.vaccinationAvailable ?? false,
-
+ 
           availabilityDays: Array.isArray(agriculture?.availabilityDays)
             ? agriculture.availabilityDays
             : Array.isArray(agriculture?.availableDays)
@@ -315,13 +358,14 @@ function AgricultureListingContent() {
         toast.error("Failed to load existing agriculture data.");
       }
     };
-
+ 
     loadExistingAgriculture();
   }, [editId, session?.accessToken, setAgricultureData]);
+ 
   const isProduce = d.listingType === "Produce";
   const isLiveStock = d.listingType === "LiveStock";
   const isVetService = d.listingType === "Vet Service";
-
+ 
   const formattedPrice = useMemo(() => {
     const val = isVetService ? d.servicePrice : d.price;
     if (!val) return "";
@@ -329,23 +373,32 @@ function AgricultureListingContent() {
     if (isNaN(num)) return val;
     return num.toLocaleString("en-IN");
   }, [d.price, d.servicePrice, isVetService]);
-
+ 
   const handlePriceChange = (val: string) => {
     const cleaned = val.replace(/[^0-9]/g, "");
     if (isVetService) setAgricultureData({ ...d, servicePrice: cleaned });
     else setAgricultureData({ ...d, price: cleaned });
   };
-
+ 
   const toggleDay = (day: string) => {
     const next = d.availabilityDays.includes(day)
       ? d.availabilityDays.filter((x) => x !== day)
       : [...d.availabilityDays, day];
     setAgricultureData({ ...d, availabilityDays: next });
   };
-
+ 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+ 
+    const hasPickedLocation =
+      d.mapPosition[0] !== DEFAULT_MAP_POSITION[0] ||
+      d.mapPosition[1] !== DEFAULT_MAP_POSITION[1];
+ 
+    if (!d.location || !hasPickedLocation) {
+      toast.error("Please search and select your exact location on the map");
+      return;
+    }
+ 
     const finalData = {
       ...d,
       itemName:
@@ -360,7 +413,7 @@ function AgricultureListingContent() {
           ? "Professional veterinary services at your doorstep. We provide general health checkup, vaccination, consultation and basic treatment for your pets."
           : "Toyota Fortuner 2021 model in excellent condition. Well maintained, all documents are valid."),
     };
-
+ 
     setAgricultureData(finalData);
     toast.success("Details saved! Now add photos.");
     if (editId) {
@@ -371,31 +424,31 @@ function AgricultureListingContent() {
       router.push("/seller/listing/agriculture-livestock/photos");
     }
   };
-
+ 
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
+ 
         .listing-page {
           min-height: 100vh;
           background: ${BG};
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
           -webkit-font-smoothing: antialiased;
         }
-
+ 
         .listing-container {
           max-width: 1100px;
           margin: 0 auto;
           padding: 32px 24px 64px;
         }
-
+ 
         .listing-header {
           display: flex; align-items: center; gap: 16px;
           margin-bottom: 24px;
         }
-
+ 
         .back-btn {
           width: 40px; height: 40px; border-radius: 12px;
           border: 1.5px solid ${BORDER}; background: ${CARD_BG};
@@ -403,60 +456,60 @@ function AgricultureListingContent() {
           cursor: pointer; color: ${TEXT_PRIMARY};
           transition: all 0.25s ease; flex-shrink: 0;
         }
-
+ 
         .back-btn:hover { background: #f1f5f9; transform: translateX(-2px); }
-
+ 
         .listing-header-text { flex: 1; }
-
+ 
         .listing-title { font-size: 26px; font-weight: 800; color: ${TEXT_PRIMARY}; letter-spacing: -0.5px; }
-
+ 
         .listing-subtitle { font-size: 13.5px; color: ${TEXT_SECONDARY}; margin-top: 3px; }
-
+ 
         .draft-badge {
           display: flex; align-items: center; gap: 6px;
           font-size: 14px; font-weight: 600; color: ${SUCCESS}; flex-shrink: 0;
         }
-
+ 
         .stepper {
           display: flex; align-items: center; background: ${CARD_BG};
           border: 1px solid ${BORDER}; border-radius: 16px;
           padding: 18px 22px; margin-bottom: 24px; overflow-x: auto;
         }
-
+ 
         .step { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-
+ 
         .step-icon-wrap {
           width: 32px; height: 32px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
           font-size: 13px; font-weight: 700; flex-shrink: 0;
         }
-
+ 
         .step.done .step-icon-wrap { background: ${SUCCESS}; color: #fff; }
         .step.active .step-icon-wrap { background: ${SITE_PRIMARY}; color: #fff; }
         .step.upcoming .step-icon-wrap { background: #f1f5f9; color: ${TEXT_MUTED}; }
-
+ 
         .step-label { font-size: 13.5px; font-weight: 600; white-space: nowrap; }
         .step.done .step-label { color: ${SUCCESS}; }
         .step.active .step-label { color: ${SITE_PRIMARY}; }
         .step.upcoming .step-label { color: ${TEXT_MUTED}; }
-
+ 
         .step-connector {
           flex: 1; height: 2px; background: #e2e8f0;
           margin: 0 14px; min-width: 24px;
         }
-
+ 
         .step-connector.filled { background: ${SUCCESS}; }
-
+ 
         .form-card {
           background: ${CARD_BG}; border-radius: 20px; padding: 32px;
           border: 1px solid ${BORDER};
           box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.03);
         }
-
+ 
         .category-wrap { margin-bottom: 20px; }
-
+ 
         .category-label { font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px; display: block; }
-
+ 
         .category-pill {
           display: inline-flex; align-items: center; gap: 10px;
           padding: 8px 16px; background: #f1f5f9;
@@ -464,112 +517,115 @@ function AgricultureListingContent() {
           font-size: 14px; font-weight: 600; color: ${TEXT_PRIMARY};
           font-family: inherit; cursor: pointer;
         }
-
+ 
         .change-badge {
           font-size: 12px; font-weight: 500; color: #7c3aed;
           background: #ede9fe; padding: 2px 8px; border-radius: 6px;
         }
-
+ 
         .form-layout {
           display: grid;
           grid-template-columns: 240px 1fr;
           gap: 32px;
         }
-
+ 
         .section-header {
           display: flex; align-items: center; gap: 8px;
           margin-bottom: 16px;
         }
-
+ 
         .section-header h2 {
           font-size: 16px; font-weight: 700; color: ${SITE_PRIMARY};
         }
-
+ 
         .radio-group {
           display: flex; flex-direction: column; gap: 4px;
         }
-
+ 
         .radio-item {
           display: flex; align-items: center; gap: 10px;
           padding: 10px 12px; border-radius: 10px;
           cursor: pointer; transition: all 0.2s;
           border: 1.5px solid transparent;
         }
-
+ 
         .radio-item:hover { background: #f8fafc; }
-
+ 
         .radio-item.active {
           background: linear-gradient(135deg, #eff6ff, #dbeafe);
           border-color: #bfdbfe;
         }
-
+ 
         .radio-item input[type="radio"] { display: none; }
-
+ 
         .radio-circle {
           width: 16px; height: 16px; border-radius: 50%;
           border: 2px solid #cbd5e1; display: flex;
           align-items: center; justify-content: center;
           flex-shrink: 0; transition: all 0.2s;
         }
-
+ 
         .radio-item.active .radio-circle {
           border-color: ${SITE_PRIMARY}; background: ${SITE_PRIMARY};
         }
-
+ 
         .radio-item.active .radio-circle::after {
           content: ''; width: 5px; height: 5px;
           border-radius: 50%; background: #fff;
         }
-
+ 
         .radio-label { font-size: 14px; font-weight: 500; color: ${TEXT_PRIMARY}; }
         .radio-item.active .radio-label { color: ${SITE_PRIMARY}; font-weight: 600; }
-
+ 
         .right-section {
           display: flex; flex-direction: column; gap: 24px;
         }
-
+ 
         .form-section {
           border: 1px solid ${BORDER}; border-radius: 12px; padding: 20px;
         }
-
+ 
         .section-title {
           font-size: 15px; font-weight: 700; color: ${SITE_PRIMARY};
           margin-bottom: 16px;
         }
-
+ 
         .form-row {
           display: grid; gap: 16px; margin-bottom: 16px;
         }
-
+ 
         .form-row.two-col { grid-template-columns: 1fr 1fr; }
         .form-row.three-col { grid-template-columns: 1fr 1fr 1fr; }
-
+ 
         .form-group {
           display: flex; flex-direction: column; gap: 6px;
+          margin-bottom: 16px;
         }
-
+ 
+        .form-group:last-child { margin-bottom: 0; }
+ 
         .form-label {
           font-size: 13px; font-weight: 600; color: #334155;
           display: flex; align-items: center; gap: 3px;
         }
-
+ 
         .form-label .required { color: ${DANGER}; font-weight: 700; }
         .form-label .optional { color: ${TEXT_MUTED}; font-weight: 500; font-size: 11px; }
-
+ 
         .form-input, .form-select, .form-textarea {
           padding: 10px 14px; border: 1.5px solid ${BORDER};
           border-radius: 10px; font-size: 14px; color: ${TEXT_PRIMARY};
           background: ${CARD_BG}; font-family: inherit;
           transition: all 0.2s; width: 100%; outline: none;
         }
-
+ 
         .form-input:focus, .form-select:focus, .form-textarea:focus {
           border-color: ${ACCENT};
           box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
         }
-
+ 
         .select-wrap { position: relative; }
-
+ 
         .form-select-trigger {
           cursor: pointer; padding-right: 36px;
           padding: 10px 14px; border: 1.5px solid #e2e8f0;
@@ -579,12 +635,12 @@ function AgricultureListingContent() {
           display: flex; align-items: center; justify-content: space-between;
           text-align: left;
         }
-
+ 
         .form-select-trigger:focus {
           border-color: #2563eb;
           box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
         }
-
+ 
         .custom-dropdown {
           position: absolute;
           top: calc(100% + 4px);
@@ -598,7 +654,7 @@ function AgricultureListingContent() {
           max-height: 240px;
           overflow-y: auto;
         }
-
+ 
         .custom-option {
           padding: 10px 14px;
           font-size: 14px;
@@ -606,72 +662,83 @@ function AgricultureListingContent() {
           cursor: pointer;
           transition: all 0.15s;
         }
-
+ 
         .custom-option:hover, .custom-option.highlighted {
           background: #eff6ff;
           color: #2563eb;
         }
-
+ 
         .custom-option.selected {
           background: #2563eb;
           color: #fff;
         }
-
+ 
         .select-chevron {
           position: absolute; right: 12px; top: 50%;
           transform: translateY(-50%); color: ${TEXT_MUTED};
           pointer-events: none;
         }
-
+ 
         .checkbox-group {
           display: flex; flex-direction: column; gap: 10px;
         }
-
+ 
         .checkbox-inline {
           display: flex; align-items: center; gap: 8px;
           font-size: 14px; color: #334155; cursor: pointer;
           font-weight: 500;
         }
-
+ 
         .checkbox-inline input[type="checkbox"] { display: none; }
-
+ 
         .check-box {
           width: 16px; height: 16px; border-radius: 4px;
           border: 2px solid ${ACCENT}; display: flex;
           align-items: center; justify-content: center;
           flex-shrink: 0; transition: all 0.2s;
         }
-
+ 
         .checkbox-inline input[type="checkbox"]:checked + .check-box {
           background: ${ACCENT};
         }
-
+ 
         .checkbox-inline input[type="checkbox"]:checked + .check-box::after {
           content: ''; width: 4px; height: 7px;
           border: solid #fff; border-width: 0 2px 2px 0;
           transform: rotate(45deg); margin-top: -1px;
         }
-
+ 
         .day-selector {
           display: flex; gap: 6px; flex-wrap: wrap;
         }
-
+ 
         .day-pill {
           padding: 6px 12px; border-radius: 6px;
           border: 1.5px solid ${BORDER}; background: ${CARD_BG};
           font-size: 12px; font-weight: 500; color: ${TEXT_SECONDARY};
           cursor: pointer; transition: all 0.2s; font-family: inherit;
         }
-
+ 
         .day-pill.active {
           background: ${ACCENT}; color: #fff; border-color: ${ACCENT};
         }
-
+ 
+        .map-wrapper {
+          width: 100%; height: 200px; border-radius: 12px;
+          overflow: hidden; border: 1.5px solid ${BORDER};
+        }
+ 
+        .map-wrapper .leaflet-container {
+          width: 100%; height: 100%; border-radius: 12px;
+        }
+ 
+        .hint-text { font-size: 11.5px; color: ${TEXT_MUTED}; margin-top: 4px; }
+ 
         .submit-wrap {
           display: flex; justify-content: space-between;
           align-items: center; margin-top: 24px; gap: 16px;
         }
-
+ 
         .back-link {
           display: flex; align-items: center; gap: 6px;
           font-size: 14px; font-weight: 600; color: ${ACCENT};
@@ -679,9 +746,9 @@ function AgricultureListingContent() {
           border-radius: 10px; padding: 10px 24px;
           cursor: pointer; transition: all 0.2s; font-family: inherit;
         }
-
+ 
         .back-link:hover { border-color: ${ACCENT}; background: ${ACCENT_LIGHT}; }
-
+ 
         .submit-btn {
           padding: 12px 32px;
           background: linear-gradient(135deg, ${ACCENT}, #1d4ed8);
@@ -691,18 +758,19 @@ function AgricultureListingContent() {
           display: flex; align-items: center; gap: 8px;
           box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
         }
-
+ 
         .submit-btn:hover { transform: translateY(-1px); }
-
+ 
         @media (max-width: 768px) {
           .listing-container { padding: 20px 16px 48px; }
           .form-layout { grid-template-columns: 1fr; }
           .form-row.two-col, .form-row.three-col { grid-template-columns: 1fr; }
           .submit-wrap { flex-direction: column-reverse; }
           .back-link, .submit-btn { width: 100%; justify-content: center; }
+          .map-wrapper { height: 160px; }
         }
       `}</style>
-
+ 
       <div className="listing-page">
         <div className="listing-container">
           <div className="listing-header">
@@ -721,7 +789,7 @@ function AgricultureListingContent() {
               Draft Saved <FiCheck size={16} />
             </div>
           </div>
-
+ 
           <div className="stepper">
             {steps.map((step, idx) => (
               <div
@@ -750,7 +818,7 @@ function AgricultureListingContent() {
               </div>
             ))}
           </div>
-
+ 
           <form onSubmit={handleSubmit} className="form-card">
             <div className="category-wrap">
               <label className="category-label">Category</label>
@@ -764,13 +832,13 @@ function AgricultureListingContent() {
                 <span className="change-badge">Change</span>
               </button>
             </div>
-
+ 
             <div className="form-layout">
               <div className="left-col">
                 <div className="section-header">
                   <h2>Listing Type</h2>
                 </div>
-
+ 
                 <div className="radio-group">
                   {listingTypes.map((type) => (
                     <label
@@ -795,59 +863,46 @@ function AgricultureListingContent() {
                   ))}
                 </div>
               </div>
-
+ 
               <div className="right-section">
                 <div className="form-section">
                   <div className="section-title">Location Information</div>
                   <div className="form-row two-col">
-                    <div className="form-group">
-                      <label className="form-label">
-                        District <span className="required">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="Enter district"
-                        value={d.district}
-                        onChange={(e) =>
-                          setAgricultureData({ ...d, district: e.target.value })
-                        }
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">
-                        Village <span className="required">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="Enter village"
-                        value={d.village}
-                        onChange={(e) =>
-                          setAgricultureData({ ...d, village: e.target.value })
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
                   <div className="form-group">
                     <label className="form-label">
                       Location /Area <span className="required">*</span>
                     </label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Enter location/area"
-                      value={d.location}
-                      onChange={(e) =>
-                        setAgricultureData({ ...d, location: e.target.value })
-                      }
-                      required
+                    <LocationPicker
+                      initialValue={d.location}
+                      onSelect={({ location, latitude, longitude }) => {
+                        setAgricultureData({
+                          ...d,
+                          location,
+                          mapPosition: [latitude, longitude],
+                        });
+                      }}
                     />
+                    <p className="hint-text">
+                      Search and select your exact location
+                    </p>
+                  </div>
+ 
+                  <div className="form-group">
+                    <label className="form-label">Fine-tune on map</label>
+                    <div className="map-wrapper">
+                      <MapWithNoSSR
+                        position={d.mapPosition}
+                        onMapClick={(lat, lng) =>
+                          setAgricultureData({ ...d, mapPosition: [lat, lng] })
+                        }
+                      />
+                    </div>
+                    <p className="hint-text">
+                      Click the map to adjust the pin if needed
+                    </p>
                   </div>
                 </div>
-
+ 
                 <div className="form-section">
                   <div className="section-title">Pricing Information</div>
                   <div className="form-row two-col">
@@ -895,7 +950,7 @@ function AgricultureListingContent() {
                     </div>
                   </div>
                 </div>
-
+ 
                 {isProduce && (
                   <div className="form-section">
                     <div className="section-title">Product /Animal Details</div>
@@ -950,7 +1005,7 @@ function AgricultureListingContent() {
                     </div>
                   </div>
                 )}
-
+ 
                 {isLiveStock && (
                   <div className="form-section">
                     <div className="section-title">Product /Animal Details</div>
@@ -1041,7 +1096,7 @@ function AgricultureListingContent() {
                     </div>
                   </div>
                 )}
-
+ 
                 {isVetService && (
                   <div className="form-section">
                     <div className="section-title">Details Information</div>
@@ -1225,7 +1280,7 @@ function AgricultureListingContent() {
                     </div>
                   </div>
                 )}
-
+ 
                 <div className="form-section">
                   <div className="section-title">Description</div>
                   <div className="form-group">
@@ -1245,7 +1300,8 @@ function AgricultureListingContent() {
                 </div>
               </div>
             </div>
-
+            </div>
+ 
             <div className="submit-wrap">
               <button
                 type="button"
@@ -1261,8 +1317,10 @@ function AgricultureListingContent() {
               </button>
             </div>
           </form>
+          
         </div>
       </div>
     </>
   );
 }
+ 

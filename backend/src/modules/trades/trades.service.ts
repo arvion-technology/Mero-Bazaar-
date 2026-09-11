@@ -24,6 +24,7 @@ export class TradesService {
         category: ListingCategory.TRADES,
         title: dto.title,
         description: dto.description,
+        location: dto.city,
         latitude: dto.latitude,
         longitude: dto.longitude,
         images: [],
@@ -174,6 +175,7 @@ export class TradesService {
       data: {
         title: dto.title,
         description: dto.description,
+        location: dto.city,
         trades: {
           update: {
             city: dto.city,

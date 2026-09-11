@@ -267,6 +267,7 @@ model Listing {
   price       Int?
   category    ListingCategory @default(VEHICLE)
 
+  location  String?
   latitude  Float?
   longitude Float?
 

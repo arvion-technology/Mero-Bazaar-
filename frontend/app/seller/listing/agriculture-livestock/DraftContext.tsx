@@ -11,6 +11,7 @@ export interface AgricultureData {
   district: string;
   village: string;
   location: string;
+  mapPosition: [number, number];
 
   // Pricing (common)
   price: string;
@@ -61,6 +62,7 @@ export const defaultAgricultureData: AgricultureData = {
   district: "",
   village: "",
   location: "",
+  mapPosition: [27.7172, 85.324],
 
   price: "",
   unit: "KG",

@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import dynamic from "next/dynamic";
 import { useTradesDraft } from "../DraftContext";
+import LocationPicker from "@/components/LocationPicker";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -51,7 +52,7 @@ const responseTimes = [
 const DEFAULT_LAT = 27.7172;
 const DEFAULT_LNG = 85.324;
 
-const MapWithNoSSR = dynamic(() => import("./MapComponent"), {
+const MapWithNoSSR = dynamic(() => import("../../../../../components/MapComponent"), {
   ssr: false,
   loading: () => <MapSkeleton />,
 });
@@ -663,14 +664,31 @@ function TradesHomeRepairDetailContent() {
                 <h2 className="section-title">Location</h2>
 
                 <div className="form-group">
-                  <label className="form-label">Address</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Enter address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                  <label className="form-label">
+                    Address <span className="required">*</span>
+                  </label>
+                  <LocationPicker
+                    initialValue={address}
+                    onSelect={({ location, latitude, longitude }) => {
+                      setData({
+                        ...data,
+                        address: location,
+                        mapPosition: [latitude, longitude],
+                      });
+                    }}
                   />
+                  <p className="hint-text">Search and select your exact location</p>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Fine-tune on map</label>
+                  <div className="map-wrapper">
+                    <MapWithNoSSR
+                      position={mapPosition}
+                      onMapClick={handleMapClick}
+                    />
+                  </div>
+                  <p className="hint-text">Click the map to adjust the pin if needed</p>
                 </div>
               </div>
             </div>

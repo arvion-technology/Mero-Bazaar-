@@ -32,7 +32,7 @@ const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 
-const MapWithNoSSR = dynamic(() => import("../detail/MapComponent"), {
+const MapWithNoSSR = dynamic(() => import("../../../../../components/MapComponent"), {
   ssr: false,
   loading: () => <MapSkeleton />,
 });
@@ -321,13 +321,8 @@ function PreviewTradesHomeRepairContent() {
 
           <div className="listing-card">
             <div className="card-layout">
-              <div className="card-right">
+              <div className="card-right" style={{ flex: 1 }}>
                 <h2 className="service-title">{data.serviceTitle}</h2>
-
-                <div className="location-row">
-                  <FiMapPin size={14} />
-                  {data.city}, Nepal
-                </div>
 
                 <div className="info-grid">
                   <div className="info-cell">
@@ -343,8 +338,7 @@ function PreviewTradesHomeRepairContent() {
                       Callout Charge
                     </div>
                     <div className="info-cell-value">
-                      NPR{" "}
-                      {Number(data.calloutCharge || 0).toLocaleString("en-IN")}
+                      NPR {Number(data.calloutCharge || 0).toLocaleString("en-IN")}
                     </div>
                   </div>
                   <div className="info-cell">
@@ -365,18 +359,29 @@ function PreviewTradesHomeRepairContent() {
                       {data.emergencyService ? "Available" : "Not Available"}
                     </div>
                   </div>
-                  <div
-                    className="info-cell"
-                    style={{ gridColumn: "span 2", borderRight: "none" }}
-                  >
+                  <div className="info-cell">
                     <div className="info-cell-label">
                       <FiClock size={14} />
                       Avg Response
                     </div>
+                    <div className="info-cell-value">{data.avgResponseTime}</div>
+                  </div>
+                  <div className="info-cell" style={{ borderRight: "none" }}>
+                    <div className="info-cell-label">
+                      <FiMapPin size={14} />
+                      Location
+                    </div>
                     <div className="info-cell-value">
-                      {data.avgResponseTime}
+                      {data.address || `${data.city}, Nepal`}
                     </div>
                   </div>
+                </div>
+
+                <div className="map-wrapper" style={{ marginTop: 20, height: 200 }}>
+                  <MapWithNoSSR
+                    position={data.mapPosition}
+                    onMapClick={() => {}}
+                  />
                 </div>
               </div>
             </div>
