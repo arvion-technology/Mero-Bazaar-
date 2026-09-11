@@ -52,7 +52,7 @@ const responseTimes = [
 const DEFAULT_LAT = 27.7172;
 const DEFAULT_LNG = 85.324;
 
-const MapWithNoSSR = dynamic(() => import("./MapComponent"), {
+const MapWithNoSSR = dynamic(() => import("../../../../../components/MapComponent"), {
   ssr: false,
   loading: () => <MapSkeleton />,
 });

@@ -32,7 +32,7 @@ const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 
-const MapWithNoSSR = dynamic(() => import("../detail/MapComponent"), {
+const MapWithNoSSR = dynamic(() => import("../../../../../components/MapComponent"), {
   ssr: false,
   loading: () => <MapSkeleton />,
 });
