@@ -43,7 +43,8 @@ const CONTRACT_TYPE_MAP: Record<string, string> = {
 };
 
 function toCity(location: string) {
-  return location.replace(/,\s*Nepal$/i, "").trim();
+  const [first] = location.split(",");
+  return (first ?? "").trim();
 }
 
 export default function PreviewListingPage() {
@@ -75,6 +76,9 @@ function PreviewListingContent() {
       const payload = {
         role: data.role,
         city: toCity(data.location),
+        location: data.location,
+        latitude: data.mapPosition[0],
+        longitude: data.mapPosition[1],
         salaryMin: Number(data.salaryMin.replace(/,/g, "")),
         salaryMax: Number(data.salaryMax.replace(/,/g, "")),
         payPeriod: PAY_PERIOD_MAP[data.payPeriod] ?? "MONTHLY",

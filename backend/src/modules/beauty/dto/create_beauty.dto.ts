@@ -5,6 +5,8 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  IsLatitude,
+  IsLongitude,
   Min,
 } from 'class-validator';
 import { BeautyServiceType } from '@prisma/client';
@@ -37,6 +39,20 @@ export class CreateHairBeautyAndWellnessDto {
   @IsOptional()
   @IsString()
   studioLocation?: string;
+
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @Type(() => Number)
+  @IsOptional()
+  @IsLatitude()
+  latitude?: number;
+
+  @Type(() => Number)
+  @IsOptional()
+  @IsLongitude()
+  longitude?: number;
 
   @IsOptional()
   @IsString()

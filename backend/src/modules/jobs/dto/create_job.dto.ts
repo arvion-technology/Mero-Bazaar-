@@ -5,6 +5,8 @@ import {
   IsBoolean,
   IsOptional,
   IsArray,
+  IsLatitude,
+  IsLongitude,
   Min,
   Max,
 } from 'class-validator';
@@ -35,6 +37,20 @@ export class CreateJobDto {
 
   @IsString()
   city: string;
+
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @Type(() => Number)
+  @IsOptional()
+  @IsLatitude()
+  latitude?: number;
+
+  @Type(() => Number)
+  @IsOptional()
+  @IsLongitude()
+  longitude?: number;
 
   @IsArray()
   @IsOptional()

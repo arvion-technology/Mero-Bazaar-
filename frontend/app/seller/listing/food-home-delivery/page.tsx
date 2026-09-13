@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -16,6 +17,7 @@ import {
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useDraft } from "./Draftcontext";
+import LocationPicker from "@/components/LocationPicker";
 
 const ACCENT = "#2563eb";
 const ACCENT_LIGHT = "#eff6ff";
@@ -28,6 +30,34 @@ const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 const SITE_PRIMARY = "#2563eb";
+
+const DEFAULT_MAP_POSITION: [number, number] = [27.7172, 85.324];
+
+const MapWithNoSSR = dynamic(() => import("@/components/MapComponent"), {
+  ssr: false,
+  loading: () => <MapSkeleton />,
+});
+
+function MapSkeleton() {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "200px",
+        background: "#e5e7eb",
+        borderRadius: "12px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: "1.5px solid #e2e8f0",
+      }}
+    >
+      <span style={{ color: "#94a3b8", fontSize: "14px" }}>
+        Loading map...
+      </span>
+    </div>
+  );
+}
 
 const steps = [
   { label: "Category", icon: FiFileText, status: "done" as const },
@@ -286,16 +316,23 @@ function FoodDeliveryListingPage() {
       priceUnit,
       deliveryDays,
       location,
+      mapPosition,
     } = foodData;
 
     if (!title || !description || !price || !foodType || !priceUnit) {
       toast.error("Please fill all required fields");
       return;
     }
-    if (!location.trim()) {
-      toast.error("Please enter a location");
+
+    const hasPickedLocation =
+      mapPosition[0] !== DEFAULT_MAP_POSITION[0] ||
+      mapPosition[1] !== DEFAULT_MAP_POSITION[1];
+
+    if (!location.trim() || !hasPickedLocation) {
+      toast.error("Please search and select your exact location on the map");
       return;
     }
+
     if (deliveryDays.length === 0) {
       toast.error("Please select at least one delivery day");
       return;
@@ -674,6 +711,26 @@ function FoodDeliveryListingPage() {
           box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
         }
 
+        .map-wrapper {
+          width: 100%;
+          height: 200px;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1.5px solid ${BORDER};
+        }
+
+        .map-wrapper .leaflet-container {
+          width: 100%;
+          height: 100%;
+          border-radius: 12px;
+        }
+
+        .hint-text {
+          font-size: 11.5px;
+          color: ${TEXT_MUTED};
+          margin-top: 4px;
+        }
+
         .submit-wrap {
           display: flex;
           justify-content: space-between;
@@ -743,6 +800,7 @@ function FoodDeliveryListingPage() {
           .step-connector { margin: 0 6px; min-width: 16px; }
           .submit-wrap { flex-direction: column-reverse; }
           .back-link, .submit-btn { width: 100%; justify-content: center; }
+          .map-wrapper { height: 160px; }
         }
 
         @media (max-width: 480px) {
@@ -951,14 +1009,33 @@ function FoodDeliveryListingPage() {
                 <label className="form-label">
                   Location<span className="required">*</span>
                 </label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="e.g. Lalitpur, Nepal"
-                  value={foodData.location}
-                  onChange={(e) => update("location", e.target.value)}
-                  required
+                <LocationPicker
+                  initialValue={foodData.location}
+                  onSelect={({ location, latitude, longitude }) => {
+                    setFoodData({
+                      ...foodData,
+                      location,
+                      mapPosition: [latitude, longitude],
+                    });
+                  }}
                 />
+                <p className="hint-text">
+                  Search and select your exact location
+                </p>
+              </div>
+              <div className="form-group full-width">
+                <label className="form-label">Fine-tune on map</label>
+                <div className="map-wrapper">
+                  <MapWithNoSSR
+                    position={foodData.mapPosition}
+                    onMapClick={(lat, lng) =>
+                      setFoodData({ ...foodData, mapPosition: [lat, lng] })
+                    }
+                  />
+                </div>
+                <p className="hint-text">
+                  Click the map to adjust the pin if needed
+                </p>
               </div>
             </div>
 

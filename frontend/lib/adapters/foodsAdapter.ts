@@ -16,6 +16,8 @@ interface RawFoodsForm {
   price?: string | number;
   priceUnit?: string;
   deliveryDays?: string[];
+  location?: string;
+  mapPosition?: [number, number];
 }
 
 function toNumber(value: unknown): number | undefined {
@@ -53,6 +55,9 @@ export function formToCreateFoodsPayload(raw: RawFoodsForm): CreateFoodsPayload 
     price: toNumber(raw.price) ?? 0,
     priceUnit: PRICE_UNIT_MAP[raw.priceUnit ?? ""] ?? "PER_MEAL",
     deliveryDays: raw.deliveryDays?.map((d) => DAY_MAP[d]).filter(Boolean) as WeekDay[] ?? [],
+    location: raw.location?.trim() || undefined,
+    latitude: raw.mapPosition?.[0],
+    longitude: raw.mapPosition?.[1],
   };
 }
 

@@ -26,6 +26,9 @@ export class HairBeautyAndWellnessService {
             ? `${dto.serviceType} available in ${dto.city}`
             : `${dto.serviceType} service`),
         price: dto.price,
+        location: dto.location,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
         images: dto.portfolioUrls ?? [],
         user: {
           connect: { id: userId },
@@ -125,6 +128,9 @@ export class HairBeautyAndWellnessService {
             ? `${dto.serviceType ?? ''} available in ${dto.city}`
             : undefined),
         price: dto.price,
+        location: dto.location,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
         images: dto.portfolioUrls ?? undefined,
         beauty: {
           update: {

@@ -5,6 +5,9 @@ import {
   IsInt,
   IsString,
   IsNotEmpty,
+  IsOptional,
+  IsLatitude,
+  IsLongitude,
   Min,
 } from 'class-validator';
 import { FoodType, PriceUnit, WeekDay } from '@prisma/client';
@@ -32,4 +35,19 @@ export class CreateFoodsAndHomeDeliveryDto {
   @IsArray()
   @IsEnum(WeekDay, { each: true })
   deliveryDays: WeekDay[];
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  location?: string;
+
+  @Type(() => Number)
+  @IsOptional()
+  @IsLatitude()
+  latitude?: number;
+
+  @Type(() => Number)
+  @IsOptional()
+  @IsLongitude()s
+  longitude?: number;
 }

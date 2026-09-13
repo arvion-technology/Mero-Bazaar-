@@ -23,6 +23,9 @@ export class FoodsService {
         category: ListingCategory.FOODS,
         description: dto.description,
         price: dto.price,
+        location: dto.location,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
         images: [],
         user: {
           connect: { id: userId },
