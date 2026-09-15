@@ -18,6 +18,8 @@ interface RawMedicalDetailsForm {
   onlineAppointments?: boolean;
   clinicAddress?: string;
   city?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   shortBio?: string;
   languages?: string[];
   experience?: string;
@@ -111,6 +113,8 @@ export function draftToCreateMedicalPayload(
     onlineAppointments: details.onlineAppointments ?? false,
     clinicAddress: details.clinicAddress?.trim() ?? "",
     city: details.city?.trim() ?? "",
+    latitude: details.latitude ?? undefined,
+    longitude: details.longitude ?? undefined,
     shortBio: details.shortBio?.trim(),
     languages: details.languages ?? [],
     experience: details.experience,

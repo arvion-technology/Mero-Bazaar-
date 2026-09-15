@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -14,7 +15,8 @@ import {
 import { FaSpa } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import { useState, useRef, useEffect } from "react";
-import { useDraft, ServiceCategory } from "./DraftContext";
+import { useDraft, ServiceCategory, DEFAULT_MAP_POSITION } from "./DraftContext";
+import LocationPicker from "@/components/LocationPicker";
 import { Suspense } from "react";
 const ACCENT = "#2563eb";
 const ACCENT_LIGHT = "#eff6ff";
@@ -27,6 +29,32 @@ const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 const SITE_PRIMARY = "#C0392B";
+
+const MapWithNoSSR = dynamic(() => import("@/components/MapComponent"), {
+  ssr: false,
+  loading: () => <MapSkeleton />,
+});
+
+function MapSkeleton() {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "200px",
+        background: "#e5e7eb",
+        borderRadius: "12px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: "1.5px solid #e2e8f0",
+      }}
+    >
+      <span style={{ color: "#94a3b8", fontSize: "14px" }}>
+        Loading map...
+      </span>
+    </div>
+  );
+}
 
 const steps = [
   { label: "Category", icon: FiFileText, status: "active" as const },
@@ -171,7 +199,7 @@ export default function NewHairBeautyWellnessListingPage() {
 
 function HairBeautyWellnessListingContent() {
   const router = useRouter();
-  const { category, setCategory, data, setField } = useDraft();
+  const { category, setCategory, data, setField, setData } = useDraft();
 
   const [errors, setErrors] = useState({
     serviceTitle: "",
@@ -197,6 +225,15 @@ function HairBeautyWellnessListingContent() {
 
     if (Object.values(newErrors).some(Boolean)) {
       toast.error("Please fill all required fields.");
+      return;
+    }
+
+    const hasPickedLocation =
+      data.mapPosition[0] !== DEFAULT_MAP_POSITION[0] ||
+      data.mapPosition[1] !== DEFAULT_MAP_POSITION[1];
+
+    if (!data.studioLocation || !hasPickedLocation) {
+      toast.error("Please search and select your exact location on the map");
       return;
     }
 
@@ -269,6 +306,9 @@ function HairBeautyWellnessListingContent() {
         .custom-select-option { padding: 10px 14px; border-radius: 8px; font-size: 14px; color: ${TEXT_PRIMARY}; cursor: pointer; transition: all 0.15s ease; }
         .custom-select-option:hover, .custom-select-option.highlighted { background: ${ACCENT_LIGHT}; color: ${ACCENT}; }
         .custom-select-option.selected { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: ${ACCENT}; font-weight: 600; }
+        .map-wrapper { width: 100%; height: 200px; border-radius: 12px; overflow: hidden; border: 1.5px solid ${BORDER}; }
+        .map-wrapper .leaflet-container { width: 100%; height: 100%; border-radius: 12px; }
+        .hint-text { font-size: 11.5px; color: ${TEXT_MUTED}; margin-top: 4px; }
         .submit-wrap { display: flex; justify-content: space-between; align-items: center; margin-top: 36px; padding-top: 8px; gap: 16px; }
         .back-link { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: ${ACCENT}; background: none; border: 1.5px solid ${BORDER}; border-radius: 12px; padding: 12px 28px; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); font-family: inherit; }
         .back-link:hover { border-color: ${ACCENT}; background: ${ACCENT_LIGHT}; transform: translateX(-2px); }
@@ -283,6 +323,7 @@ function HairBeautyWellnessListingContent() {
           .step-label { display: none; }
           .submit-wrap { flex-direction: column-reverse; gap: 12px; margin-top: 24px; }
           .back-link, .submit-btn { width: 100%; justify-content: center; padding: 14px 28px; }
+          .map-wrapper { height: 160px; }
         }
         @media (max-width: 480px) {
           .listing-container { padding: 12px; }
@@ -459,13 +500,34 @@ function HairBeautyWellnessListingContent() {
                   <label className="form-label">
                     Studio Location <span className="required">*</span>
                   </label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={data.studioLocation}
-                    onChange={(e) => setField("studioLocation", e.target.value)}
-                    placeholder="Enter Studio Location"
+                  <LocationPicker
+                    initialValue={data.studioLocation}
+                    onSelect={({ location, latitude, longitude }) => {
+                      setData({
+                        ...data,
+                        studioLocation: location,
+                        mapPosition: [latitude, longitude],
+                      });
+                    }}
                   />
+                  <p className="hint-text">
+                    Search and select your exact location
+                  </p>
+                </div>
+
+                <div className="form-group full-width">
+                  <label className="form-label">Fine-tune on map</label>
+                  <div className="map-wrapper">
+                    <MapWithNoSSR
+                      position={data.mapPosition}
+                      onMapClick={(lat, lng) =>
+                        setData({ ...data, mapPosition: [lat, lng] })
+                      }
+                    />
+                  </div>
+                  <p className="hint-text">
+                    Click the map to adjust the pin if needed
+                  </p>
                 </div>
               </div>
             </div>

@@ -21,6 +21,7 @@ export interface FoodDeliveryData {
   // Additional
   shortDescription: string;
   location: string;
+  mapPosition: [number, number];
 }
 
 export interface FoodDeliveryImageItem {
@@ -52,7 +53,8 @@ export const defaultFoodDeliveryData: FoodDeliveryData = {
   deliveryDays: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
 
   shortDescription: "",
-  location: "Kathmandu, Nepal",
+  location: "",
+  mapPosition: [27.7172, 85.324],
 };
 
 export const DraftContext = createContext<DraftContextType | null>(null);

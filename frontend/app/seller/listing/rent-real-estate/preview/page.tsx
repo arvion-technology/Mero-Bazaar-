@@ -22,6 +22,7 @@ import { LuBed } from "react-icons/lu";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useListingForm, AMENITIES_LIST } from "../ListingFormContext";
+import { formToCreateRentalPayload } from "@/lib/adapters/realEstateAdapter"; 
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -72,16 +73,22 @@ export default function PreviewListingPage() {
 
     setIsPublishing(true);
     try {
+      const payload = formToCreateRentalPayload({
+        ...formData,
+        monthlyRent: formData.monthlyRentMin,
+        squareFeet: formData.sqft,
+        nearbyLandmarks: formData.landmarks,
+        rules: formData.houseRules,
+        depositAmount: 0, // TODO: no deposit input exists in the form yet — see flag above
+      });
+
       const res = await fetch("/api/realestate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: session?.accessToken ? `Bearer ${session.accessToken}` : "",
         },
-        body: JSON.stringify({
-          ...formData,
-          monthlyRent: formData.monthlyRentMin,
-        }),
+        body: JSON.stringify(payload),
       });
       const created = await res.json();
       if (!res.ok) throw new Error(created?.message || "Failed to publish listing");

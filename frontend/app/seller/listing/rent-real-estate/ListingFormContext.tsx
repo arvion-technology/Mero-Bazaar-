@@ -36,6 +36,8 @@ export const AMENITIES_LIST = [
   { id: "pet", label: "Pet friendly" },
 ];
 
+export const DEFAULT_MAP_POSITION: [number, number] = [27.7172, 85.324];
+
 const STORAGE_KEY = "rentRealEstateListingForm";
 
 const defaultFormData: ListingFormData = {

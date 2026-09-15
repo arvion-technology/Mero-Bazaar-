@@ -11,6 +11,7 @@ export interface ServiceData {
   price: string;
   serviceType: string;
   studioLocation: string;
+  mapPosition: [number, number];
   duration: string;
   mobileService: boolean;
 
@@ -38,6 +39,8 @@ export interface DraftContextType {
   setImages: (i: ImageItem[]) => void;
 }
 
+export const DEFAULT_MAP_POSITION: [number, number] = [27.7172, 85.324];
+
 export const emptyData: ServiceData = {
   serviceTitle: "",
   shortDescription: "",
@@ -45,6 +48,7 @@ export const emptyData: ServiceData = {
   price: "",
   serviceType: "",
   studioLocation: "",
+  mapPosition: DEFAULT_MAP_POSITION,
   duration: "",
   mobileService: false,
   whoIsThisFor: "",

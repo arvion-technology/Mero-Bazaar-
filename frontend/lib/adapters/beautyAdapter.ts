@@ -16,6 +16,7 @@ interface RawBeautyForm {
   priceStartingFrom?: boolean;
   serviceLocationType?: string;
   studioLocation?: string;
+  mapPosition?: [number, number];
   duration?: string;
   homeVisit?: boolean;
   whoisthisfor?: string;
@@ -43,6 +44,7 @@ export function formToCreateBeautyPayload(raw: RawBeautyForm): CreateBeautyPaylo
     ? (raw.beautyServiceType as BeautyServiceType)
     : "SALON";
 
+
   return {
     serviceTitle: String(raw.serviceTitle ?? ""),
     serviceType,
@@ -52,6 +54,9 @@ export function formToCreateBeautyPayload(raw: RawBeautyForm): CreateBeautyPaylo
     priceStartingFrom: !!raw.priceStartingFrom,
     serviceLocationType: raw.serviceLocationType || undefined,
     studioLocation: raw.studioLocation || undefined,
+    location: raw.studioLocation || undefined,
+    latitude: raw.mapPosition?.[0],
+    longitude: raw.mapPosition?.[1],
     duration: raw.duration || undefined,
     homeVisit: !!raw.homeVisit,
     whoIsThisFor: raw.whoisthisfor || undefined,

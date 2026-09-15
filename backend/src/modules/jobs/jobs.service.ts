@@ -19,6 +19,9 @@ export class JobsService {
           dto.description?.trim() ||
           `Hiring for ${dto.role} position in ${dto.city}`,
         category: ListingCategory.JOB,
+        location: dto.location,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
         images: [],
         user: {
           connect: {
@@ -93,10 +96,6 @@ export class JobsService {
     return listing;
   }
 
-  /**
-   * Dynamic filter options derived from the live job listings, so the frontend
-   * filter sidebar is never hard-coded to stale categories.
-   */
   async getFilterOptions() {
     const [types, cities, skillsRows] = await Promise.all([
       this.prisma.job.findMany({
@@ -142,6 +141,9 @@ export class JobsService {
             title: `${dto.role} in ${dto.city}`,
             description: `Hiring for ${dto.role} position in ${dto.city}`,
           }),
+        ...(dto.location !== undefined && { location: dto.location }),
+        ...(dto.latitude !== undefined && { latitude: dto.latitude }),
+        ...(dto.longitude !== undefined && { longitude: dto.longitude }),
         job: {
           update: {
             ...(dto.role && { role: dto.role }),

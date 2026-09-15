@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import {
   FiArrowLeft,
   FiChevronRight,
@@ -13,7 +14,8 @@ import {
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import CustomDropdown from "./CustomDropdown";
-import { useListingForm } from "./ListingFormContext";
+import { useListingForm, DEFAULT_MAP_POSITION } from "./ListingFormContext";
+import LocationPicker from "@/components/LocationPicker";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -24,6 +26,32 @@ const TEXT_SECONDARY = "#64748b";
 const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
+
+const MapWithNoSSR = dynamic(() => import("@/components/MapComponent"), {
+  ssr: false,
+  loading: () => <MapSkeleton />,
+});
+
+function MapSkeleton() {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "200px",
+        background: "#e5e7eb",
+        borderRadius: "12px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: "1.5px solid #e2e8f0",
+      }}
+    >
+      <span style={{ color: "#94a3b8", fontSize: "14px" }}>
+        Loading map...
+      </span>
+    </div>
+  );
+}
 
 const steps = [
   { label: "Category", icon: FiFileText, status: "done" as const },
@@ -42,6 +70,11 @@ export default function RealEstateDetailsPage() {
 
   const descMax = 500;
   const descLength = formData.description.length;
+
+  const mapPosition: [number, number] = [
+    formData.latitude ? Number(formData.latitude) : DEFAULT_MAP_POSITION[0],
+    formData.longitude ? Number(formData.longitude) : DEFAULT_MAP_POSITION[1],
+  ];
 
   const handleCityChange = (val: string) => {
     updateForm({ city: val });
@@ -123,6 +156,9 @@ export default function RealEstateDetailsPage() {
         .custom-dropdown-item:hover { background: #f0f7ff; color: ${ACCENT}; }
         .custom-dropdown-item.selected { background: #eff6ff; color: ${ACCENT}; font-weight: 600; }
         .leaflet-container { border-radius: 12px; border: 1.5px solid ${BORDER}; width: 100%; height: 200px; z-index: 1; }
+        .map-wrapper { width: 100%; height: 200px; border-radius: 12px; overflow: hidden; border: 1.5px solid ${BORDER}; }
+        .map-wrapper .leaflet-container { width: 100%; height: 100%; border-radius: 12px; }
+        .hint-text { font-size: 11.5px; color: ${TEXT_MUTED}; margin-top: 4px; }
         @media (max-width: 900px) {
           .form-layout { grid-template-columns: 1fr; }
           .listing-container { padding: 20px 20px 48px; }
@@ -288,15 +324,33 @@ export default function RealEstateDetailsPage() {
                       required
                     />
                   </div>
-                  <div className="form-group">
+                  <div className="form-group full-width">
                     <label className="form-label">Address (Optional)</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Kalanki, Kathmandu, Nepal"
-                      value={formData.address}
-                      onChange={(e) => updateForm({ address: e.target.value })}
+                    <LocationPicker
+                      initialValue={formData.address}
+                      onSelect={({ location: loc, latitude, longitude }) => {
+                        updateForm({
+                          address: loc,
+                          latitude: String(latitude),
+                          longitude: String(longitude),
+                        });
+                      }}
                     />
+                    <p className="hint-text">Search to drop a pin — optional, but recommended so buyers can see the exact spot on the map</p>
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label className="form-label">Fine-tune on map</label>
+                    <div className="map-wrapper">
+                      <MapWithNoSSR
+                        position={mapPosition}
+                        onMapClick={(lat, lng) =>
+                          updateForm({ latitude: String(lat), longitude: String(lng) })
+                        }
+                      />
+                    </div>
+                    <p className="hint-text">Click the map to adjust the pin if needed</p>
                   </div>
                 </div>
               </div>

@@ -18,6 +18,7 @@ import {
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { MedicalData, useDraft } from "./DraftContext";
+import LocationPicker from "@/components/LocationPicker";
 
 const ACCENT = "#2563eb";
 const ACCENT_LIGHT = "#eff6ff";
@@ -1231,15 +1232,16 @@ function MedicalListingDetailsContent() {
                     <label className="form-label">
                       Clinic address <span className="required">*</span>
                     </label>
-                    <input
-                      type="text"
-                      className="form-input"
+                    <LocationPicker
+                      initialValue={medicalData.clinicAddress}
                       placeholder="Shankhamul Marg, Opp, Civil Hospital"
-                      value={medicalData.clinicAddress}
-                      onChange={(e) =>
-                        update({ clinicAddress: e.target.value })
+                      onSelect={(loc) =>
+                        update({
+                          clinicAddress: loc.location,
+                          latitude: loc.latitude,
+                          longitude: loc.longitude,
+                        })
                       }
-                      required
                     />
                   </div>
                 </div>

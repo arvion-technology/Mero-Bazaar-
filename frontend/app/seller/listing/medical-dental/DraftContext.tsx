@@ -21,6 +21,8 @@ export interface MedicalData {
   // Clinic Information
   clinicAddress: string;
   city: string;
+  latitude: number | null;
+  longitude: number | null;
 
   // Additional Information
   shortBio: string;
@@ -60,6 +62,8 @@ export const defaultMedicalData: MedicalData = {
 
   clinicAddress: "",
   city: " ",
+  latitude: null,
+  longitude: null,
 
   shortBio: "",
   languages: [],

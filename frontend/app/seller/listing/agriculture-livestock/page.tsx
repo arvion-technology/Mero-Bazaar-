@@ -834,11 +834,11 @@ function AgricultureListingContent() {
             </div>
  
             <div className="form-layout">
-              <div className="left-col">
+                           <div className="left-col">
                 <div className="section-header">
                   <h2>Listing Type</h2>
                 </div>
- 
+
                 <div className="radio-group">
                   {listingTypes.map((type) => (
                     <label
@@ -863,46 +863,8 @@ function AgricultureListingContent() {
                   ))}
                 </div>
               </div>
- 
+
               <div className="right-section">
-                <div className="form-section">
-                  <div className="section-title">Location Information</div>
-                  <div className="form-row two-col">
-                  <div className="form-group">
-                    <label className="form-label">
-                      Location /Area <span className="required">*</span>
-                    </label>
-                    <LocationPicker
-                      initialValue={d.location}
-                      onSelect={({ location, latitude, longitude }) => {
-                        setAgricultureData({
-                          ...d,
-                          location,
-                          mapPosition: [latitude, longitude],
-                        });
-                      }}
-                    />
-                    <p className="hint-text">
-                      Search and select your exact location
-                    </p>
-                  </div>
- 
-                  <div className="form-group">
-                    <label className="form-label">Fine-tune on map</label>
-                    <div className="map-wrapper">
-                      <MapWithNoSSR
-                        position={d.mapPosition}
-                        onMapClick={(lat, lng) =>
-                          setAgricultureData({ ...d, mapPosition: [lat, lng] })
-                        }
-                      />
-                    </div>
-                    <p className="hint-text">
-                      Click the map to adjust the pin if needed
-                    </p>
-                  </div>
-                </div>
- 
                 <div className="form-section">
                   <div className="section-title">Pricing Information</div>
                   <div className="form-row two-col">
@@ -950,7 +912,7 @@ function AgricultureListingContent() {
                     </div>
                   </div>
                 </div>
- 
+
                 {isProduce && (
                   <div className="form-section">
                     <div className="section-title">Product /Animal Details</div>
@@ -1005,7 +967,7 @@ function AgricultureListingContent() {
                     </div>
                   </div>
                 )}
- 
+
                 {isLiveStock && (
                   <div className="form-section">
                     <div className="section-title">Product /Animal Details</div>
@@ -1096,7 +1058,7 @@ function AgricultureListingContent() {
                     </div>
                   </div>
                 )}
- 
+
                 {isVetService && (
                   <div className="form-section">
                     <div className="section-title">Details Information</div>
@@ -1280,7 +1242,7 @@ function AgricultureListingContent() {
                     </div>
                   </div>
                 )}
- 
+
                 <div className="form-section">
                   <div className="section-title">Description</div>
                   <div className="form-group">
@@ -1298,8 +1260,46 @@ function AgricultureListingContent() {
                     />
                   </div>
                 </div>
+
+                <div className="form-section">
+                  <div className="section-title">Location Information</div>
+                  <div className="form-row two-col">
+                    <div className="form-group">
+                      <label className="form-label">
+                        Location /Area <span className="required">*</span>
+                      </label>
+                      <LocationPicker
+                        initialValue={d.location}
+                        onSelect={({ location, latitude, longitude }) => {
+                          setAgricultureData({
+                            ...d,
+                            location,
+                            mapPosition: [latitude, longitude],
+                          });
+                        }}
+                      />
+                      <p className="hint-text">
+                        Search and select your exact location
+                      </p>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Fine-tune on map</label>
+                      <div className="map-wrapper">
+                        <MapWithNoSSR
+                          position={d.mapPosition}
+                          onMapClick={(lat, lng) =>
+                            setAgricultureData({ ...d, mapPosition: [lat, lng] })
+                          }
+                        />
+                      </div>
+                      <p className="hint-text">
+                        Click the map to adjust the pin if needed
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
             </div>
  
             <div className="submit-wrap">

@@ -16,6 +16,9 @@ export interface CreateFoodsPayload {
   price: number;
   priceUnit: PriceUnit;
   deliveryDays: WeekDay[];
+  location?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface FoodsListing {

@@ -3,14 +3,12 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import {
   FiArrowLeft,
   FiChevronRight,
-  FiChevronDown,
-  FiMapPin,
   FiFileText,
   FiBriefcase,
-  FiImage,
   FiEye,
   FiCheck,
   FiX,
@@ -18,8 +16,9 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
-import { useJobDraft } from "./DraftContext";
+import { useJobDraft, DEFAULT_MAP_POSITION } from "./DraftContext";
 import { useSession } from "next-auth/react";
+import LocationPicker from "@/components/LocationPicker";
 
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
@@ -34,6 +33,32 @@ const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 const SITE_PRIMARY = "#C0392B";
+
+const MapWithNoSSR = dynamic(() => import("@/components/MapComponent"), {
+  ssr: false,
+  loading: () => <MapSkeleton />,
+});
+
+function MapSkeleton() {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "200px",
+        background: "#e5e7eb",
+        borderRadius: "12px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: "1.5px solid #e2e8f0",
+      }}
+    >
+      <span style={{ color: "#94a3b8", fontSize: "14px" }}>
+        Loading map...
+      </span>
+    </div>
+  );
+}
 
 const steps = [
   { label: "Category", icon: FiFileText, status: "done" as const },
@@ -56,12 +81,6 @@ const contractTypes = [
   "Freelance",
   "Internship",
 ];
-function AgricultureListingContent() {
-  const searchParams = useSearchParams();
-
-  // यहाँ अहिलेको component को सबै existing code राख्ने
-  // बाकी code...
-}
 
 export default function NewJobListingPage() {
   return (
@@ -84,6 +103,7 @@ function NewJobListingContent() {
     salaryMax,
     payPeriod,
     location,
+    mapPosition,
     contractType,
     skillTags,
     urgentHiring,
@@ -96,7 +116,6 @@ function NewJobListingContent() {
   const setSalaryMin = (v: string) => setData({ ...data, salaryMin: v });
   const setSalaryMax = (v: string) => setData({ ...data, salaryMax: v });
   const setPayPeriod = (v: string) => setData({ ...data, payPeriod: v });
-  const setLocation = (v: string) => setData({ ...data, location: v });
   const setContractType = (v: string) => setData({ ...data, contractType: v });
   const setSkillTags = (tags: string[]) =>
     setData({ ...data, skillTags: tags });
@@ -150,6 +169,15 @@ function NewJobListingContent() {
       return;
     }
 
+    const hasPickedLocation =
+      mapPosition[0] !== DEFAULT_MAP_POSITION[0] ||
+      mapPosition[1] !== DEFAULT_MAP_POSITION[1];
+
+    if (!location || !hasPickedLocation) {
+      toast.error("Please search and select your exact location on the map");
+      return;
+    }
+
     if (editId) {
       router.push(`/seller/listing/job/preview?edit=${editId}`);
     } else {
@@ -195,6 +223,11 @@ function NewJobListingContent() {
           throw new Error(result?.message || "Failed to load listing");
         }
 
+        const loadedLat =
+          result.latitude ?? result.job?.latitude ?? DEFAULT_MAP_POSITION[0];
+        const loadedLng =
+          result.longitude ?? result.job?.longitude ?? DEFAULT_MAP_POSITION[1];
+
         setTitle(result.title ?? "");
         setData({
           ...data,
@@ -225,6 +258,8 @@ function NewJobListingContent() {
             result.job?.location ??
             result.job?.address ??
             "",
+
+          mapPosition: [loadedLat, loadedLng] as [number, number],
 
           contractType: result.contractType ?? result.job?.contractType ?? "",
 
@@ -746,6 +781,27 @@ function NewJobListingContent() {
 
         .address-wrap:focus-within .address-icon { color: ${ACCENT}; }
 
+        /* ── Map picker ── */
+        .map-wrapper {
+          width: 100%;
+          height: 200px;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1.5px solid ${BORDER};
+        }
+
+        .map-wrapper .leaflet-container {
+          width: 100%;
+          height: 100%;
+          border-radius: 12px;
+        }
+
+        .hint-text {
+          font-size: 11.5px;
+          color: ${TEXT_MUTED};
+          margin-top: 4px;
+        }
+
         /* ── Submit Button ── */
         .submit-wrap {
           display: flex;
@@ -1066,17 +1122,29 @@ function NewJobListingContent() {
                 <label className="form-label">
                   Address / Location<span className="required">*</span>
                 </label>
-                <div className="address-wrap">
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Enter location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    required
+                <LocationPicker
+                  initialValue={location}
+                  onSelect={({ location: loc, latitude, longitude }) => {
+                    setData({
+                      ...data,
+                      location: loc,
+                      mapPosition: [latitude, longitude],
+                    });
+                  }}
+                />
+                <p className="hint-text">Search and select your exact location</p>
+              </div>
+              <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                <label className="form-label">Fine-tune on map</label>
+                <div className="map-wrapper">
+                  <MapWithNoSSR
+                    position={mapPosition}
+                    onMapClick={(lat, lng) =>
+                      setData({ ...data, mapPosition: [lat, lng] })
+                    }
                   />
-                  <FiMapPin size={16} className="address-icon" />
                 </div>
+                <p className="hint-text">Click the map to adjust the pin if needed</p>
               </div>
             </div>
 

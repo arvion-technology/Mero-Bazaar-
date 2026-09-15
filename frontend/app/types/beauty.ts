@@ -1,6 +1,6 @@
 export type BeautyServiceType =
   | "SALON" | "BARBER" | "MAKEUP_ARTIST" | "SKINCARE" | "SPA" | "COSMETICS" | "BRIDAL";
-
+  
 export interface CreateBeautyPayload {
   serviceTitle: string;
   serviceType: BeautyServiceType;
@@ -10,6 +10,9 @@ export interface CreateBeautyPayload {
   priceStartingFrom?: boolean;
   serviceLocationType?: string;
   studioLocation?: string;
+  location?: string;
+  latitude?: number;
+  longitude?: number;
   duration?: string;
   homeVisit?: boolean;
   whoIsThisFor?: string;
