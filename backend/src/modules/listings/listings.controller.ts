@@ -73,4 +73,9 @@ export class ListingsController {
   remove(@Param('id') id: string, @Request() req) {
     return this.listingsService.remove(id, req.user.id);
   }
+
+  @Get(':id/similar')
+  async getSimilarListings(@Param('id') id: string, @Query('limit') limit?: string) {
+    return this.listingsService.getSimilarListings(id, limit ? parseInt(limit) : 6);
+  }
 }

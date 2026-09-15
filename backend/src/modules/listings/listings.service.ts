@@ -6,6 +6,60 @@ import { SearchListingDto } from './dto/search_listing.dto';
 import { buildListingFilter } from '../../search/builders/listings_filter.builder';
 import { ListingCategory } from '@prisma/client';
 
+//categorical assumed weights
+type CategoryWeights = {
+  price: number;
+  subCategory: number;
+  location: number;
+};
+
+const CATEGORY_WEIGHTS: Partial<Record<ListingCategory, CategoryWeights>> = {
+  VEHICLE:     { price: 40, subCategory: 30, location: 30 },
+  RENTAL:      { price: 35, subCategory: 20, location: 45 },
+  AGRICULTURE: { price: 30, subCategory: 25, location: 45 },
+  SECONDHAND:  { price: 45, subCategory: 35, location: 20 },
+  JOB:         { price: 30, subCategory: 50, location: 20 },
+  TRADES:      { price: 25, subCategory: 35, location: 40 },
+  MEDICAL:     { price: 20, subCategory: 50, location: 30 },
+  BEAUTY:      { price: 25, subCategory: 45, location: 30 },
+  FOODS:       { price: 20, subCategory: 30, location: 50 },
+};
+
+const DEFAULT_WEIGHTS: CategoryWeights = { price: 35, subCategory: 30, location: 35 };
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+//for subcategories
+function getSubCategoryValue(listing: any): string | string[] | null {
+  switch (listing.category) {
+    case 'VEHICLE':     return listing.vehicle?.type ?? null;
+    case 'JOB':         return listing.job?.contractType ?? null;
+    case 'MEDICAL':     return listing.medical?.serviceType ?? null;
+    case 'TRADES':      return listing.trades?.skillTags ?? null;
+    case 'RENTAL':      return listing.rental?.propertyType ?? null;
+    case 'AGRICULTURE': return listing.agriculture?.listingType ?? null;
+    case 'SECONDHAND':  return listing.secondhand?.category ?? null;
+    case 'FOODS':       return listing.foods?.foodType ?? null;
+    case 'BEAUTY':      return listing.beauty?.serviceType ?? null;
+    default:            return null;
+  }
+}
+
+function subCategoryMatch(a: string | string[] | null, b: string | string[] | null): number {
+  if (!a || !b) return 0;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    const overlap = a.filter((tag) => b.includes(tag)).length;
+    return overlap / Math.max(a.length, b.length, 1);
+  }
+  return a === b ? 1 : 0;
+}
+
 @Injectable()
 export class ListingsService {
   constructor(private prisma: PrismaService) {}
@@ -198,4 +252,65 @@ export class ListingsService {
       },
     });
   }
+   
+ async getSimilarListings(listingId: string, limit = 6) {
+  const listing = await this.prisma.listing.findUnique({
+    where: { id: listingId },
+    include: {
+      vehicle: true,
+      job: true,
+      medical: true,
+      trades: true,
+      rental: true,
+      agriculture: true,
+      secondhand: true,
+      foods: true,
+      beauty: true,
+    },
+  });
+  if (!listing) return [];
+
+  const weights = CATEGORY_WEIGHTS[listing.category] ?? DEFAULT_WEIGHTS;
+  const refSubCat = getSubCategoryValue(listing);
+
+  const candidates = await this.prisma.listing.findMany({
+    where: {
+      category: listing.category,
+      id: { not: listingId },
+    },
+    include: {
+      vehicle: true,
+      job: true,
+      medical: true,
+      trades: true,
+      rental: true,
+      agriculture: true,
+      secondhand: true,
+      foods: true,
+      beauty: true,
+    },
+    take: 50,
+  });
+
+  const scored = candidates.map((c) => {
+    let score = 0;
+
+    if (listing.price && c.price) {
+      const priceDiff = Math.abs(c.price - listing.price) / listing.price;
+      score += Math.max(0, 1 - priceDiff) * weights.price;
+    }
+
+    const candSubCat = getSubCategoryValue(c);
+    score += subCategoryMatch(refSubCat, candSubCat) * weights.subCategory;
+
+    if (listing.latitude && listing.longitude && c.latitude && c.longitude) {
+      const dist = haversineKm(listing.latitude, listing.longitude, c.latitude, c.longitude);
+      score += Math.max(0, 1 - dist / 50) * weights.location;
+    }
+
+    return { ...c, score };
+  });
+
+  return scored.sort((a, b) => b.score - a.score).slice(0, limit);
+}
 }
