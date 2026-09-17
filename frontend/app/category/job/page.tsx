@@ -14,6 +14,7 @@ import {
   FiBriefcase,
   FiShare2,
   FiHeart,
+  FiCheck
 } from "react-icons/fi";
 import { FaHeart, FaBriefcase } from "react-icons/fa";
 import { JOB_TYPES, CITIES, SKILLS, JobCard } from "../../types/jobs";
@@ -48,6 +49,7 @@ export default function JobsPage() {
   const [jobTypes, setJobTypes] = useState<string[]>(JOB_TYPES);
   const [cities, setCities] = useState<string[]>(CITIES);
   const [skills, setSkills] = useState<string[]>(SKILLS);
+  const [applied, setApplied] = useState<Record<string, boolean>>({});
 
   const EXTRA_SKILLS_THRESHOLD = 2;
 
@@ -169,6 +171,35 @@ export default function JobsPage() {
       toast.error("Something went wrong. Please try again.");
     }
   };
+
+  //apply handler
+  const handleApply = async (id: string, e: React.MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (!session?.accessToken) {
+    toast.error("Please log in to apply");
+    return;
+  }
+
+  if (applied[id]) return; // already applied, no-op
+
+  try {
+    const res = await fetch(`/api/jobs/${id}/apply`, {
+      method: "POST",
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? "Failed to apply");
+    }
+
+    setApplied((prev) => ({ ...prev, [id]: true }));
+    toast.success("Application submitted");
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "Something went wrong, please try again");
+  }
+};
 
   const shareJob = async (job: JobCard, e: React.MouseEvent) => {
     e.preventDefault();
@@ -701,9 +732,21 @@ export default function JobsPage() {
                           </div>
                         </div>
                         <div className="jp-card-actions">
-                          {/* Apply — span, not Link, because card is already a Link */}
-                          <span className="jp-btn jp-btn-apply">
-                            <FiTarget size={14} /> Apply
+                          {/* Apply for jobs*/}
+                          <span
+                            className="jp-btn jp-btn-apply"
+                            onClick={(e) => handleApply(j.id, e)}
+                            style={applied[j.id] ? { background: "#27ae60", borderColor: "#27ae60" } : undefined}
+                          >
+                            {applied[j.id] ? (
+                              <>
+                                <FiCheck size={14} /> Applied
+                              </>
+                            ) : (
+                              <>
+                                <FiTarget size={14} /> Apply
+                              </>
+                            )}
                           </span>
 
                           {/* Call — span with onClick, not <a>, because card is already a Link */}

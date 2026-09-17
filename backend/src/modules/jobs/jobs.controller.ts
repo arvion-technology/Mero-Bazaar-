@@ -53,4 +53,16 @@ export class JobsController {
   remove(@Param('id') id: string, @Request() req) {
     return this.jobsService.remove(id, req.user.id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/apply')
+  async apply (@Param('id') id: string, @Request() req) {
+    return this.jobsService.applyJob(id, req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/has-applied')
+  async checkApplied(@Param('id') id: string, @Request() req) {
+    return this.jobsService.hasApplied(id, req.user.id);
+  }
 }

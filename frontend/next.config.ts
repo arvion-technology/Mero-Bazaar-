@@ -20,7 +20,7 @@ const nextConfig = {
     return [
       {
         source:
-          "/api/:path((?!auth(?:/|$)|otp(?:/|$)|vendor-kyc(?:/|$)|user(?:/|$)).*)",
+          "/api/:path((?!auth(?:/|$)|otp(?:/|$)|vendor-kyc(?:/|$)|user(?:/|$)|jobs/[^/]+/apply(?:$)|jobs/[^/]+/has-applied(?:$)|leads(?:/|$)).*)",
         destination: `${API_URL}/api/:path`,
       },
     ];

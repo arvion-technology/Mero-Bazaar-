@@ -22,6 +22,7 @@ import SellerCard from "@/components/SellerCard";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useRouter } from "next/navigation";
 
 export default function JobDetailPage() {
   const params = useParams();
@@ -45,8 +46,8 @@ export default function JobDetailPage() {
   const [applied, setApplied] = useState(false);
   const { data: session } = useSession();
   const [favLoading, setFavLoading] = useState(false);
+  const router = useRouter();
 
-  /* ── seller extracted RAW from API (adapter strips it) ── */
   const [seller, setSeller] = useState<RawSeller | null>(null);
   const [sellerId, setSellerId] = useState<string>("");
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -65,6 +66,17 @@ export default function JobDetailPage() {
       })
       .catch(() => {});
   }, [id, session?.accessToken]);
+
+  //for already applied jobs
+  useEffect(() => {
+    if (!id) return;
+    fetch(`/api/jobs/${id}/has-applied`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setApplied(data.applied);
+      })
+      .catch(() => {});
+  }, [id]);
 
   useEffect(() => {
     if (!job) return;
@@ -120,7 +132,6 @@ export default function JobDetailPage() {
           raw?.data?.user ??
           {};
 
-        // MongoDB uses _id; never fall back to job.id (causes 404)
         const extractedId = rawSeller?._id ?? rawSeller?.id ?? "";
         setSellerId(extractedId);
 
@@ -151,7 +162,7 @@ export default function JobDetailPage() {
 
         setReviews(raw?.reviews ?? raw?.data?.reviews ?? []);
 
-        /* 4️⃣  similar jobs */
+        /*  similar jobs */
         const similar = await api.getSimilarListings<JobListing>(id, 5);
         if (cancelled) return;
         setSimilarJobs(
@@ -181,6 +192,7 @@ export default function JobDetailPage() {
   const mapLng = job.lng ?? geoCoords?.lng ?? null;
   const hasCoords = mapLat != null && mapLng != null;
 
+  //share handler
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({ title: job.title, url: window.location.href }).catch(() => {});
@@ -190,6 +202,8 @@ export default function JobDetailPage() {
    }
 };
 
+
+//favorite handler
   const handleToggleFavorite = async () => {
     if (!session?.accessToken) {
       toast.error("Please log in to save jobs");
@@ -225,35 +239,56 @@ export default function JobDetailPage() {
     }
   };
 
-
-const postedBy = (job.postedBy ?? {}) as SellerLike;
-const sellerForCard = {
-  ...postedBy,
-  name: postedBy.name ?? "Unknown",
-  avatar: postedBy.avatar ?? "",
-  rating: postedBy.rating ?? 0,
-  reviewCount: postedBy.reviewCount ?? 0,
-  isVerified: postedBy.isVerified ?? false,
-  isPro: postedBy.isPro ?? false,
-  isTrusted: postedBy.isTrusted ?? false,
-  memberSince: postedBy.memberSince ?? "N/A",
-  totalListing: postedBy.totalListing ?? 0,
-  responseRate: postedBy.responseRate ?? "N/A",
-  avgResponseTime: postedBy.avgResponseTime ?? "N/A",
-  phone: postedBy.phone ?? "N/A",
-};
-
-const sellerReviews: SellerReview[] = (
-  (job as unknown as { reviews?: unknown[] }).reviews ?? []
-).map((r) => {
-  const rv = r as Partial<SellerReview>;
-  return {
-    reviewerName: rv.reviewerName ?? "Anonymous",
-    rating: rv.rating ?? 0,
-    comment: rv.comment ?? null,
-    createdAt: rv.createdAt ?? "",
+  //job apply handler
+  const handleApply = async () => {
+    if (!session?.accessToken) {
+      toast.error("Please log in to apply");
+      router.push(`/login?callbackUrl=${encodeURIComponent(`/category/job/${id}`)}`);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/jobs/${id}/apply`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Failed to apply");
+      }
+      setApplied(true);
+      toast.success("Application submitted");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong, please try again");
+    }
   };
-});
+
+  const postedBy = (job.postedBy ?? {}) as SellerLike;
+  const sellerForCard = {
+    ...postedBy,
+    name: postedBy.name ?? "Unknown",
+    avatar: postedBy.avatar ?? "",
+    rating: postedBy.rating ?? 0,
+    reviewCount: postedBy.reviewCount ?? 0,
+    isVerified: postedBy.isVerified ?? false,
+    isPro: postedBy.isPro ?? false,
+    isTrusted: postedBy.isTrusted ?? false,
+    memberSince: postedBy.memberSince ?? "N/A",
+    totalListing: postedBy.totalListing ?? 0,
+    responseRate: postedBy.responseRate ?? "N/A",
+    avgResponseTime: postedBy.avgResponseTime ?? "N/A",
+    phone: postedBy.phone ?? "N/A",
+  };
+
+  const sellerReviews: SellerReview[] = (
+    (job as unknown as { reviews?: unknown[] }).reviews ?? []
+  ).map((r) => {
+    const rv = r as Partial<SellerReview>;
+    return {
+      reviewerName: rv.reviewerName ?? "Anonymous",
+      rating: rv.rating ?? 0,
+      comment: rv.comment ?? null,
+      createdAt: rv.createdAt ?? "",
+    };
+  });
 
   return (
     <>
@@ -573,7 +608,8 @@ const sellerReviews: SellerReview[] = (
 
                   <button
                     className={`jd-btn-apply${applied ? " applied" : ""}`}
-                    onClick={() => setApplied(!applied)}
+                    onClick={handleApply}
+                    disabled={applied}
                     style={{ flex: "0 0 auto", minWidth: 160 }}
                   >
                     {applied ? (
