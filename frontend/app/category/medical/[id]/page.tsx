@@ -30,6 +30,8 @@ import type { MedicalDetail } from "@/app/types/listing";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import type { MedicalListing } from "@/app/types/medical";
+
 function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
   return (
     <span style={{ display: "inline-flex", gap: 1 }}>
@@ -64,6 +66,7 @@ export default function MedicalDetailPage() {
   const [copied, setCopied] = useState(false);
   const { data: session } = useSession();
   const [favLoading, setFavLoading] = useState(false);
+  const [similar, setSimilar] = useState<MedicalListing[]>([]);
 
   useEffect(() => {
     if (!session?.accessToken || !id) return;
@@ -105,6 +108,23 @@ export default function MedicalDetailPage() {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+  if (!id) return;
+  let cancelled = false;
+
+  api.getSimilarListings<MedicalListing>(id, 3)
+    .then((raw) => {
+      if (!cancelled) setSimilar(raw);
+    })
+    .catch(() => {
+      if (!cancelled) setSimilar([]);
+    });
+
+  return () => {
+    cancelled = true;
+  };
+}, [id]);
 
   const handleShare = () => {
     navigator.clipboard?.writeText(window.location.href).catch(() => {});

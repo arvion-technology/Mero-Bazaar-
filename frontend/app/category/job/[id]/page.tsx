@@ -152,19 +152,10 @@ export default function JobDetailPage() {
         setReviews(raw?.reviews ?? raw?.data?.reviews ?? []);
 
         /* 4️⃣  similar jobs */
-        const similarParams = new URLSearchParams({
-          city: raw?.job?.city ?? raw?.city ?? "",
-          limit: "5",
-        });
-        const similar = (await api.getJobs(
-          similarParams,
-        )) as unknown as JobListing[];
+        const similar = await api.getSimilarListings<JobListing>(id, 5);
         if (cancelled) return;
         setSimilarJobs(
-          similar
-            .filter((j) => j.job != null)
-            .map(toJobCard)
-            .filter((j) => j.id !== id),
+          similar.filter((j) => j.job != null).map(toJobCard),     
         );
       } catch (err) {
         console.error(err);

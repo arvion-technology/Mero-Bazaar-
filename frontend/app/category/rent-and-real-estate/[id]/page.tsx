@@ -22,6 +22,8 @@ import SellerCard from "@/components/SellerCard";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { api } from "@/lib/api";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 function prefixImage(path: string): string {
@@ -109,28 +111,22 @@ export default function PropertyDetailPage() {
         setDetail(mapped);
 
         try {
-          const relRes = await fetch(
-            `${API_BASE}/api/rental?city=${encodeURIComponent(listing.rental.city)}`,
-          );
-          if (relRes.ok) {
-            const relData: RentalListing[] = await relRes.json();
-            const cards: RelatedCard[] = relData
-              .filter((r) => r.id !== listing.id && r.rental)
-              .slice(0, 8)
-              .map((r) => ({
-                id: r.id,
-                title: r.title,
-                price:
-                  r.rental.listingType === "RENT"
-                    ? `Rs. ${r.rental.monthlyRent.toLocaleString()}/month`
-                    : `Rs. ${r.rental.monthlyRent.toLocaleString()}`,
-                location: r.rental.area
-                  ? `${r.rental.area}, ${r.rental.city}`
-                  : r.rental.city,
-                image: prefixImage(r.images?.[0]),
-              }));
-            if (!cancelled) setRelated(cards);
-          }
+          const relData = await api.getSimilarListings<RentalListing>(id, 8);
+          const cards: RelatedCard[] = relData
+            .filter((r) => r.rental)
+            .map((r) => ({
+              id: r.id,
+              title: r.title,
+              price:
+                r.rental.listingType === "RENT"
+                  ? `Rs. ${r.rental.monthlyRent.toLocaleString()}/month`
+                  : `Rs. ${r.rental.monthlyRent.toLocaleString()}`,
+              location: r.rental.area
+                ? `${r.rental.area}, ${r.rental.city}`
+                : r.rental.city,
+              image: prefixImage(r.images?.[0]),
+            }));
+          if (!cancelled) setRelated(cards);
         } catch {
           // related listings are non-critical; ignore failures silently
         }

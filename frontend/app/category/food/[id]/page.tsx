@@ -95,15 +95,9 @@ export default function FoodDetailPage() {
         setItem(toFoodsDetail(raw));
 
         // Related: same food type, excluding this listing
-        const all = await api.getFoods();
+        const rel = await api.getSimilarListings<FoodsListing>(id, RELATED_LIMIT);
         if (cancelled) return;
-        const rel = all
-          .filter(
-            (l) => l.id !== raw.id && l.foods?.foodType === raw.foods?.foodType,
-          )
-          .slice(0, RELATED_LIMIT)
-          .map(toFoodsCard);
-        setRelated(rel);
+        setRelated(rel.map(toFoodsCard));
       } catch (err) {
         console.error("Failed to load food listing:", err);
         if (!cancelled) setNotFound(true);

@@ -769,43 +769,43 @@ export default function AgriculturePage() {
                           <FiShare2 size={16} />
                         </button>
                       </Link>
-                      <div className="al-card-body">
-                        <p className="al-card-title">{item.title}</p>
-                        {item.breed && (
-                          <div className="al-card-breed-row">
-                            <span>
-                              Breed: <strong>{item.breed}</strong>
-                            </span>
-                            {item.age != null && (
+                        <div className="al-card-body">
+                          <p className="al-card-title">{item.title}</p>
+                          {item.listingType === "Livestock" && item.breed && (
+                            <div className="al-card-breed-row">
                               <span>
-                                Age: <strong>{item.age}</strong>
+                                Breed: <strong>{item.breed}</strong>
                               </span>
-                            )}
+                              {item.age != null && (
+                                <span>
+                                  Age: <strong>{item.age}</strong>
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          <p className="al-card-price">{item.price}</p>
+                          {item.listingType === "Produce" && item.organicCertified && (
+                            <div className="al-organic-badge">
+                              <FaLeaf size={11} /> Organic Certified
+                            </div>
+                          )}
+                          <div className="al-card-location">
+                            <FiMapPin size={11} /> {item.location}
                           </div>
-                        )}
-                        <p className="al-card-price">{item.price}</p>
-                        {item.organicCertified && (
-                          <div className="al-organic-badge">
-                            <FaLeaf size={11} /> Organic Certified
-                          </div>
-                        )}
-                        <div className="al-card-location">
-                          <FiMapPin size={11} /> {item.location}
+                          {item.listingType === "Livestock" && item.healthVaccineStatus && (
+                            <div className="al-vaccinated-row">
+                              <span className="al-vax-dot" />{" "}
+                              {HEALTH_LABEL[item.healthVaccineStatus] ??
+                                item.healthVaccineStatus}
+                            </div>
+                          )}
+                          <Link
+                            href={`/category/agriculture-and-livestock/${item.id}`}
+                            className="al-chat-btn"
+                          >
+                             View Details
+                          </Link>
                         </div>
-                        {item.healthVaccineStatus && (
-                          <div className="al-vaccinated-row">
-                            <span className="al-vax-dot" />{" "}
-                            {HEALTH_LABEL[item.healthVaccineStatus] ??
-                              item.healthVaccineStatus}
-                          </div>
-                        )}
-                        <Link
-                          href={`/category/agriculture-and-livestock/${item.id}`}
-                          className="al-chat-btn"
-                        >
-                          <FiMessageSquare size={13} /> Chat Seller
-                        </Link>
-                      </div>
                     </div>
                   );
                 })}
