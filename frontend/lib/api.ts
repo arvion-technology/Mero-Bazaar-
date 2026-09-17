@@ -167,4 +167,7 @@ export const api = {
     postLocal<EsewaInitiateResponse>('/api/payments/esewa/initiate', { orderId }),
   initiateKhalti: (orderId: string) =>
     postLocal<KhaltiInitiateResponse>('/api/payments/khalti/initiate', { orderId }),
+
+  getSimilarListings: <T = unknown>(id: string, limit = 6) =>
+    get<T[]>(`/api/listings/${id}/similar`, new URLSearchParams({ limit: String(limit) })),
 };

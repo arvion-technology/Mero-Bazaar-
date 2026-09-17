@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateJobDto } from './dto/create_job.dto';
 import { UpdateJobDto } from './dto/update_jobs.dto';
-import { ListingCategory } from '@prisma/client';
+import { LeadType, ListingCategory } from '@prisma/client';
 import { JobSearchDto } from 'src/search/dto/job_search.dto';
 import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
@@ -171,5 +171,39 @@ export class JobsService {
     return this.prisma.listing.delete({
       where: { id, userId },
     });
+  }
+
+  async applyJob(jobId: string, userId: string) {
+    await this.findOne(jobId);
+
+    const existing = await this.prisma.lead.findFirst({
+      where: {
+        listingId: jobId,
+        userId,
+        leadType: LeadType.APPLY,
+      },
+    });
+
+    if (existing) {
+      throw new ConflictException('You have already applied to this job');
+    }
+    return this.prisma.lead.create({
+      data: {
+        listingId: jobId,
+        userId,
+        leadType: LeadType.APPLY,
+      },
+    });
+  }
+
+  async hasApplied(jobId: string, userId: string) {
+    const existing = await this.prisma.lead.findFirst({
+      where: {
+        listingId: jobId,
+        userId,
+        leadType: LeadType.APPLY,
+      },
+    });
+    return { applied: !!existing };
   }
 }

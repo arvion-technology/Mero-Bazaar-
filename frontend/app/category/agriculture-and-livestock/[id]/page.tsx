@@ -19,13 +19,14 @@ import {
 } from "react-icons/fi";
 import { FaHeart, FaLeaf, FaShieldAlt } from "react-icons/fa";
 import { api } from "@/lib/api";
-import { toAgricultureDetail } from "@/lib/adapters/agricultureAdapter";
-import type { AgricultureListing } from "@/app/types/agriculture";
+import { toAgricultureDetail, toAgricultureCard } from "@/lib/adapters/agricultureAdapter";
+import type { AgricultureListing, AgricultureCard } from "@/app/types/agriculture";
 import type { AgricultureDetail } from "@/app/types/listing";
 import SellerCard from "@/components/SellerCard";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 export default function AgriDetailPage() {
   const params = useParams();
   const id = params?.id as string;
@@ -35,6 +36,9 @@ export default function AgriDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
   const [favLoading, setFavLoading] = useState(false);
+
+  const [similar, setSimilar] = useState<AgricultureCard[]>([]);
+  const [similarLoading, setSimilarLoading] = useState(true);
 
   useEffect(() => {
     if (!session?.accessToken || !id) return;
@@ -72,6 +76,27 @@ export default function AgriDetailPage() {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/listings/${id}/similar`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((raw: AgricultureListing[]) => {
+        if (!cancelled) setSimilar(raw.map(toAgricultureCard));
+      })
+      .catch(() => {
+        if (!cancelled) setSimilar([]);
+      })
+      .finally(() => {
+        if (!cancelled) setSimilarLoading(false);
+      });
+
     return () => {
       cancelled = true;
     };
@@ -264,45 +289,44 @@ export default function AgriDetailPage() {
           padding: 4px 10px; border-radius: 5px;
           text-transform: uppercase; letter-spacing: 0.4px;
         }
-          /* SAVE / HEART ON MAIN IMAGE */
-.ald-action-btn {
-  position: absolute;
-  top: 12px;
-  left: 12px;
+        .ald-action-btn {
+          position: absolute;
+          top: 12px;
+          left: 12px;
 
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
 
-  background: rgba(255, 255, 255, 0.94);
-  border: none;
+          background: rgba(255, 255, 255, 0.94);
+          border: none;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
 
-  padding: 0;
-  cursor: pointer;
-  z-index: 5;
+          padding: 0;
+          cursor: pointer;
+          z-index: 5;
 
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 
-  transition: transform 0.15s ease, background 0.15s ease;
-}
+          transition: transform 0.15s ease, background 0.15s ease;
+        }
 
-.ald-action-btn:hover {
-  transform: scale(1.12);
-  background: #fff;
-}
+        .ald-action-btn:hover {
+          transform: scale(1.12);
+          background: #fff;
+        }
 
-.ald-action-btn.fav-active {
-  background: #fff1f2;
-}
+        .ald-action-btn.fav-active {
+          background: #fff1f2;
+        }
 
-.ald-action-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+        .ald-action-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
         .ald-img-fav-btn {
           position: absolute; top: 12px; left: 12px;
           width: 36px; height: 36px; border-radius: 50%;
@@ -463,11 +487,52 @@ export default function AgriDetailPage() {
         }
         .ald-tip-item:last-child { margin-bottom: 0; }
 
+        .ald-similar-section {
+          margin-top: 28px;
+        }
+        .ald-similar-heading {
+          font-size: 17px; font-weight: 800; color: #111;
+          margin: 0 0 14px;
+        }
+        .ald-similar-grid {
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+        }
+        .ald-similar-card {
+          background: #fff; border-radius: 10px; border: 1px solid #e5e7eb;
+          overflow: hidden; display: flex; flex-direction: column;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-decoration: none;
+          color: inherit; transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .ald-similar-card:hover {
+          transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.1);
+        }
+        .ald-similar-img-wrap {
+          width: 100%; aspect-ratio: 4/3; overflow: hidden; background: #e5e7eb;
+        }
+        .ald-similar-img {
+          width: 100%; height: 100%; object-fit: cover;
+        }
+        .ald-similar-body {
+          padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;
+        }
+        .ald-similar-title {
+          font-size: 13.5px; font-weight: 700; color: #111; margin: 0;
+        }
+        .ald-similar-price {
+          font-size: 12.5px; font-weight: 700; color: #15803d;
+        }
+        .ald-similar-location {
+          display: flex; align-items: center; gap: 4px;
+          font-size: 11px; color: #6b7280;
+        }
+
         @media (max-width: 900px) {
           .ald-grid { grid-template-columns: 1fr; }
+          .ald-similar-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 540px) {
           .ald-body { padding: 16px 14px 40px; }
+          .ald-similar-grid { grid-template-columns: 1fr; }
         }
       `}</style>
 
@@ -514,11 +579,7 @@ export default function AgriDetailPage() {
                   <span className="ald-img-cat-badge" style={badgeStyle}>
                     #{detail.listingType}
                   </span>
-                  {/* <button className="ald-img-fav-btn" onClick={() => setIsFav(!isFav)}>
-                    <FaHeart size={16} color={isFav ? "#ef4444" : "#d1d5db"} />
-                  </button> */}
 
-                  {/* Posted time */}
                   {detail.postedDaysAgo !== undefined && (
                     <span className="ald-posted-tag">
                       {detail.postedDaysAgo === 0
@@ -526,11 +587,6 @@ export default function AgriDetailPage() {
                         : `${detail.postedDaysAgo}d ago`}
                     </span>
                   )}
-                  {/* 
-                  {/* Organic ribbon 
-                  {detail.isOrganic && (
-                    <span className="ald-organic-tag"><FaLeaf size={10} /> Organic</span>
-                  )} */}
                 </div>
               </div>
 
@@ -580,7 +636,7 @@ export default function AgriDetailPage() {
                 </div>
                 <p className="ald-desc">{detail.description}</p>
                 <div className="ald-details-grid">
-                  {detail.breed !== "N/A" && (
+                  {detail.listingType === "Livestock" && detail.breed !== "N/A" && (
                     <div className="ald-detail-item">
                       <p className="ald-detail-label">Breed</p>
                       <p className="ald-detail-val">{detail.breed}</p>
@@ -618,12 +674,12 @@ export default function AgriDetailPage() {
                   </div>
                 </div>
                 <div className="ald-badges-row">
-                  {detail.organicCertified && (
+                    {detail.listingType === "Produce" && detail.organicCertified && (
                     <span className="ald-badge-organic">
                       <FaLeaf size={11} /> Organic Certified
                     </span>
                   )}
-                  {detail.healthVaccineStatus !== "N/A" && (
+                    {detail.listingType === "Livestock" && detail.healthVaccineStatus !== "N/A" && (
                     <span className="ald-badge-vax">
                       <FaShieldAlt size={11} /> {detail.healthVaccineStatus}
                     </span>
@@ -642,11 +698,40 @@ export default function AgriDetailPage() {
                   </button>
                 </div>
               </div>
+
+              {!similarLoading && similar.length > 0 && (
+                <div className="ald-similar-section">
+                  <h3 className="ald-similar-heading">Similar Listings</h3>
+                  <div className="ald-similar-grid">
+                    {similar.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={`/category/agriculture-and-livestock/${item.id}`}
+                        className="ald-similar-card"
+                      >
+                        <div className="ald-similar-img-wrap">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={item.thumb}
+                            alt={item.title}
+                            className="ald-similar-img"
+                          />
+                        </div>
+                        <div className="ald-similar-body">
+                          <p className="ald-similar-title">{item.title}</p>
+                          <p className="ald-similar-price">{item.price}</p>
+                          <div className="ald-similar-location">
+                            <FiMapPin size={10} /> {item.location}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-              
             <div className="ald-right">
-
               <SellerCard
                 seller={detail.seller}
                 reviews={detail.reviews}

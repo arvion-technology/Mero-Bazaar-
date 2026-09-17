@@ -78,27 +78,16 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
   }
 }
 
-// Fetch related listings
+// Fetch related listings — now backed by the weighted similar-listings algorithm
 export async function fetchRelatedListings(
   category: string | null | undefined,
   excludeId: string
 ): Promise<RelatedListing[]> {
   try {
-    if (!category) {
-      console.warn("[fetchRelatedListings] missing category");
-      return [];
-    }
-
-    const safeCategory = category.toUpperCase();
-    const query = new URLSearchParams({
-      category: safeCategory,
-      exclude: excludeId,
-      limit: "8",
-    });
     const IMG_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/listings/related?${query.toString()}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/listings/${excludeId}/similar?limit=8`,
       {
         next: { revalidate: 60 },
       }

@@ -55,6 +55,7 @@ export default function BeautyDetailPage() {
   const [activeImg, setActiveImg] = useState(0);
   const { data: session } = useSession();
   const [favLoading, setFavLoading] = useState(false);
+
   useEffect(() => {
     if (!session?.accessToken || !id) return;
 
@@ -73,28 +74,36 @@ export default function BeautyDetailPage() {
   }, [id, session?.accessToken]);
 
   useEffect(() => {
+  if (!id) return;
+  let cancelled = false;
+
+  fetchBeautyListing(id)
+    .then((raw) => {
+      if (cancelled) return;
+      if (!raw) {
+        setItem(null);
+        return;
+      }
+      setItem(toBeautyDetail(raw));
+    })
+    .catch((e: Error) => {
+      if (!cancelled) setError(e.message || "Failed to load listing");
+    });
+
+  return () => {
+    cancelled = true;
+  };
+}, [id]);
+
+  useEffect(() => {
     if (!id) return;
     let cancelled = false;
 
-    fetchBeautyListing(id)
-      .then(async (raw) => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/listings/${id}/similar?limit=${RELATED_LIMIT}`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((raw: BeautyListing[]) => {
         if (cancelled) return;
-        if (!raw) {
-          setItem(null);
-          return;
-        }
-        const detail = toBeautyDetail(raw);
-        setItem(detail);
-
-        const all = await fetchBeautyListings();
-        if (cancelled) return;
-        const relatedCards = all
-          .filter(
-            (l) =>
-              l.id !== raw.id &&
-              l.beauty?.serviceType === raw.beauty?.serviceType,
-          )
-          .slice(0, RELATED_LIMIT)
+        const relatedCards = raw
           .map((l) => {
             try {
               return toBeautyCard(l);
@@ -105,8 +114,8 @@ export default function BeautyDetailPage() {
           .filter((c): c is BeautyCard => c !== null);
         setRelated(relatedCards);
       })
-      .catch((e: Error) => {
-        if (!cancelled) setError(e.message || "Failed to load listing");
+      .catch(() => {
+        if (!cancelled) setRelated([]);
       });
 
     return () => {
