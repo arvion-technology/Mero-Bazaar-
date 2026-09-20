@@ -7,7 +7,6 @@ import {
   Query,
   Body,
   Get,
-  UseGuards,
   Request,
   UseInterceptors,
   UploadedFiles,
@@ -17,7 +16,6 @@ import { AgricultureService } from './agriculture.service';
 import { CreateAgricultureDto } from './dto/create_agriculture.dto';
 import { QueryAgricultureDto } from './dto/query_agriculture.dto';
 import { UpdateAgricultureDto } from './dto/update_agriculture.dto';
-import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import {
@@ -25,12 +23,13 @@ import {
   serverFilename,
   removeUploadedFiles,
 } from '../../common/uploads/upload.utils';
+import { SellerOnly } from '../auth/roles_access.decorator';
 
 @Controller('agriculture')
 export class AgricultureController {
   constructor(private readonly service: AgricultureService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Post()
   create(@Body() dto: CreateAgricultureDto, @Request() req) {
     return this.service.create(dto, req.user.id);
@@ -46,7 +45,7 @@ export class AgricultureController {
     return this.service.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -56,13 +55,13 @@ export class AgricultureController {
     return this.service.update(id, dto, req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.service.remove(id, req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Post(':id/photos')
   @UseInterceptors(
     FilesInterceptor('images', 10, {

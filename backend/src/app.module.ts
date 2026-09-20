@@ -32,6 +32,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { ContentReportsModule } from './modules/content-reports/content-reports.module';
+import { FeaturedModule } from './modules/featured/featured.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { ContentReportsModule } from './modules/content-reports/content-reports.
     PaymentsModule,
     ReportsModule,
     ContentReportsModule,
+    FeaturedModule,
   ],
   controllers: [AppController],
   providers: [AppService],

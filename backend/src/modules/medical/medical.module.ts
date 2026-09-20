@@ -15,10 +15,10 @@ import { AuthModule } from '../auth/auth.module';
 @Module({
   imports: [PrismaModule, AuthModule],
   controllers: [
-    MedicalController,
-    VerificationController,
     MedicalAppointmentsController,
     MedicalSlotsController,
+    MedicalController,
+    VerificationController,
   ],
   providers: [
     MedicalService,

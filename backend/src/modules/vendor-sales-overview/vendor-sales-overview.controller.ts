@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { VendorSalesOverviewService } from './vendor-sales-overview.service';
+import { SellerOnly } from '../auth/roles_access.decorator';
 
 const MAX_MONTHS = 24;
 
@@ -18,6 +19,7 @@ export class VendorSalesOverviewController {
     private readonly salesOverviewService: VendorSalesOverviewService,
   ) {}
 
+  @SellerOnly()
   @Get()
   async getOverview(@Req() req, @Query('months') months?: string) {
     const monthCount = months !== undefined ? parseInt(months, 10) : 6;

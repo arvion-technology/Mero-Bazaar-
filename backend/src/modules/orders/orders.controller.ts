@@ -13,6 +13,7 @@ import { CreateDeliveryOrderDto } from './dto/create_delivery_order.dto';
 import { ConfirmPaymentDto } from './dto/confirm_payment.dto';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { RaiseDisputeDto } from './dto/raise_dispute.dto';
+import { SellerOnly } from '../auth/roles_access.decorator';
 
 @Controller('orders')
 @UseGuards(JwtAuthGuard)
@@ -35,11 +36,13 @@ export class OrdersController {
     );
   }
 
+  @SellerOnly()
   @Get('seller/mine')
   getSellerOrders(@Req() req) {
     return this.ordersService.getOrdersForSeller(req.user.id);
   }
 
+  @SellerOnly()
   @Get('seller/unread-count')
   countPending(@Req() req) {
     return this.ordersService.countPendingForSeller(req.user.id);
@@ -74,6 +77,7 @@ export class OrdersController {
     return this.ordersService.cancelReservation(id, req.user.id);
   }
 
+  @SellerOnly()
   @Get('seller/stats')
   getSellerStats(@Req() req) {
     return this.ordersService.getSellerOrderStats(req.user.id);

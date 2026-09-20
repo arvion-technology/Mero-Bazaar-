@@ -7,7 +7,6 @@ import {
   Body,
   Query,
   Post,
-  UseGuards,
   Request,
   UseInterceptors,
   UploadedFiles,
@@ -17,7 +16,6 @@ import { CreateFoodsAndHomeDeliveryDto } from './dto/create_foods.dto';
 import { QueryFoodsAndHomeDeliveryDto } from './dto/query_foods.dto';
 import { UpdateFoodsAndHomeDeliveryDto } from './dto/update_foods.dto';
 import { FoodsService } from './foods.service';
-import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import {
@@ -25,12 +23,13 @@ import {
   serverFilename,
   removeUploadedFiles,
 } from '../../common/uploads/upload.utils';
+import { SellerOnly } from '../auth/roles_access.decorator';
 
 @Controller('foods')
 export class FoodsController {
   constructor(private readonly service: FoodsService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Post()
   create(@Body() dto: CreateFoodsAndHomeDeliveryDto, @Request() req) {
     return this.service.create(dto, req.user.id);
@@ -46,7 +45,7 @@ export class FoodsController {
     return this.service.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -56,13 +55,13 @@ export class FoodsController {
     return this.service.update(id, dto, req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.service.remove(id, req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Post(':id/photos')
   @UseInterceptors(
     FilesInterceptor('images', 10, {

@@ -45,6 +45,7 @@ model User {
   wishlist      Wishlist[]
   reportsFiled  Report[] @relation("ReporterUser")
   reportsReceived Report[] @relation("ReportedUser")
+  featuredPlacements FeaturedPlacement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -296,6 +297,7 @@ model Listing {
   reviews             Review[]
   wishlist            Wishlist[]
   reports             Report[]
+  featuredPlacements FeaturedPlacement[]
 
   @@index(userId)
   @@index([category])
@@ -1098,4 +1100,63 @@ enum ReportStatus {
   UNDER_REVIEW
   ACTIONED
   DISMISSED
+}
+
+model FeaturedPlacement {
+  id String @id @default(cuid())
+
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  // Denormalised from listing so the per-seller / per-category caps
+  // don't need a join on every home-page request.
+  sellerId String
+  seller   User   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category ListingCategory
+
+  slot     FeaturedSlot @default(HOME_FEATURED)
+  tier     FeaturedTier @default(STANDARD)
+  priority Int          @default(0) // manual tie-breaker within a tier
+
+  startsAt DateTime @default(now())
+  endsAt   DateTime
+
+  amountPaid    Int?
+  paymentRef    String?        @unique
+  paymentMethod PaymentMethod?
+
+  status PlacementStatus @default(PENDING_PAYMENT)
+
+  createdBy String? 
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slot, status, startsAt, endsAt])
+  @@index([listingId])
+  @@index([sellerId])
+  @@index([category])
+  @@index([endsAt])
+}
+
+enum FeaturedSlot {
+  HOME_FEATURED
+  CATEGORY_TOP
+  SEARCH_TOP
+}
+
+enum FeaturedTier {
+  PLATINUM
+  GOLD
+  STANDARD
+}
+
+enum PlacementStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  PAUSED
+  EXPIRED
+  REFUNDED
+  CANCELLED
 }
