@@ -6,19 +6,18 @@ import {
   Param,
   Get,
   Patch,
-  UseGuards,
   Request,
 } from '@nestjs/common';
 import { BeautySlotsService } from './slots.service';
 import { CreateBeautySlotDto } from './dto/create_beauty_slot.dto';
 import { UpdateBeautySlotDto } from './dto/update_beauty_slot.dto';
-import { JwtAuthGuard } from '../../auth/jwt_auth.guards';
+import { SellerOnly } from '../../auth/roles_access.decorator';
 
 @Controller('beauty/slots')
 export class BeautySlotsController {
   constructor(private readonly slotsService: BeautySlotsService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Post()
   create(@Body() dto: CreateBeautySlotDto, @Request() req) {
     return this.slotsService.create(dto, req.user.id, req.user.role);
@@ -39,7 +38,7 @@ export class BeautySlotsController {
     return this.slotsService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -49,7 +48,7 @@ export class BeautySlotsController {
     return this.slotsService.update(id, dto, req.user.id, req.user.role);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.slotsService.remove(id, req.user.id, req.user.role);

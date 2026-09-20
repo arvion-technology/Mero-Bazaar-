@@ -15,12 +15,13 @@ import { CreateJobDto } from './dto/create_job.dto';
 import { UpdateJobDto } from './dto/update_jobs.dto';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { JobSearchDto } from 'src/search/dto/job_search.dto';
+import { SellerOnly } from '../auth/roles_access.decorator';
 
 @Controller('jobs')
 export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Post()
   create(@Body() dto: CreateJobDto, @Request() req) {
     return this.jobsService.create(dto, req.user.id);
@@ -42,13 +43,13 @@ export class JobsController {
     return this.jobsService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateJobDto, @Request() req) {
     return this.jobsService.update(id, dto, req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.jobsService.remove(id, req.user.id);
@@ -56,7 +57,7 @@ export class JobsController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/apply')
-  async apply (@Param('id') id: string, @Request() req) {
+  async apply(@Param('id') id: string, @Request() req) {
     return this.jobsService.applyJob(id, req.user.id);
   }
 

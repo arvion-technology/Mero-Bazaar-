@@ -6,7 +6,6 @@ import {
   Get,
   Post,
   Body,
-  UseGuards,
   Request,
   UseInterceptors,
   UploadedFiles,
@@ -21,13 +20,13 @@ import {
 import { HairBeautyAndWellnessService } from './beauty.service';
 import { CreateHairBeautyAndWellnessDto } from './dto/create_beauty.dto';
 import { UpdateHairBeautyAndWellnessDto } from './dto/update_beauty.dto';
-import { JwtAuthGuard } from '../auth/jwt_auth.guards';
+import { SellerOnly } from '../auth/roles_access.decorator';
 
 @Controller('beauty')
 export class HairBeautyAndWellnessController {
   constructor(private readonly beautyService: HairBeautyAndWellnessService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Post()
   create(@Body() dto: CreateHairBeautyAndWellnessDto, @Request() req) {
     return this.beautyService.create(dto, req.user.id);
@@ -43,7 +42,7 @@ export class HairBeautyAndWellnessController {
     return this.beautyService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -53,13 +52,13 @@ export class HairBeautyAndWellnessController {
     return this.beautyService.update(id, dto, req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.beautyService.remove(id, req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Post(':id/photos')
   @UseInterceptors(
     FilesInterceptor('images', 10, {

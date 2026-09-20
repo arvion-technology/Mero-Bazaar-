@@ -16,6 +16,7 @@ import { LeadStatus, ListingCategory } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { SellerOnly } from '../auth/roles_access.decorator';
 
 @Controller('leads')
 export class LeadsController {
@@ -39,7 +40,7 @@ export class LeadsController {
   }
 
   @Patch(':id/status')
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   updateStatus(
     @Param('id') id: string,
     @Body('status') status: LeadStatus,

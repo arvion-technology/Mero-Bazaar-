@@ -26,12 +26,13 @@ import {
   serverFilename,
   removeUploadedFiles,
 } from '../../common/uploads/upload.utils';
+import { SellerOnly } from '../auth/roles_access.decorator';
 
 @Controller('trades')
 export class TradesController {
   constructor(private readonly tradesService: TradesService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Post()
   create(@Body() dto: CreateTradesDto, @Request() req) {
     return this.tradesService.create(dto, req.user.id);
@@ -71,7 +72,7 @@ export class TradesController {
     return this.tradesService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -81,13 +82,13 @@ export class TradesController {
     return this.tradesService.update(id, dto, req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.tradesService.remove(id, req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Post(':id/photos')
   @UseInterceptors(
     FilesInterceptor('photos', 10, {

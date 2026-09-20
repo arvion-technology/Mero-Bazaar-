@@ -7,7 +7,6 @@ import {
   Body,
   Query,
   Patch,
-  UseGuards,
   Request,
   UseInterceptors,
   UploadedFiles,
@@ -24,13 +23,13 @@ import { RentalService } from './rental.service';
 import { CreateRentalDto } from './dto/create_rental.dto';
 import { QueryRentalDto } from './dto/query_rental.dto';
 import { UpdateRentalDto } from './dto/update_rental.dto';
-import { JwtAuthGuard } from '../auth/jwt_auth.guards';
+import { SellerOnly } from '../auth/roles_access.decorator';
 
 @Controller('rental')
 export class RentalController {
   constructor(private readonly rentalService: RentalService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Post()
   create(@Body() dto: CreateRentalDto, @Request() req) {
     return this.rentalService.create(dto, req.user.id);
@@ -46,7 +45,7 @@ export class RentalController {
     return this.rentalService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -56,7 +55,7 @@ export class RentalController {
     return this.rentalService.update(id, dto, req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Post(':id/photos')
   @UseInterceptors(
     FilesInterceptor('images', 10, {
@@ -84,7 +83,7 @@ export class RentalController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SellerOnly()
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.rentalService.remove(id, req.user.id);
