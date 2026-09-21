@@ -46,14 +46,19 @@ export default auth((req) => {
 
   const requiresAdmin = path.startsWith("/admin");
   const requiresSeller = path.startsWith("/seller") || path.startsWith("/kyc");
+  // Guests may view their (client-side, persisted) cart; only the checkout /
+  // payment steps require a signed-in account to place an order.
+  const requiresCheckout =
+    path.startsWith("/cart/checkout") ||
+    path.startsWith("/cart/payment") ||
+    path.startsWith("/checkout");
   const requiresAuth =
     requiresAdmin ||
     requiresSeller ||
     path.startsWith("/user") ||
     path.startsWith("/profile") ||
     path.startsWith("/orders") ||
-    path.startsWith("/cart") ||
-    path.startsWith("/checkout");
+    requiresCheckout;
 
   if (!requiresAuth) {
     return NextResponse.next();
