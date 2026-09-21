@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { TbGridDots } from "react-icons/tb";
-import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
+import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX, FiUser, FiLogOut, FiShoppingCart, FiHeart, FiPackage } from "react-icons/fi";
 import { useRouter } from "next/navigation";
+import { useFoodCart } from "@/app/context/FoodCartContext";
 
 const categories = [
   { name: "Vehicles", slug: "vehicles" },
@@ -49,6 +50,7 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const token = session?.accessToken;
   const router = useRouter();
+  const { items: cartItems } = useFoodCart();
   const [notifSeen, setNotifSeen] = useState(false);
   const [securityNotifs, setSecurityNotifs] = useState<{ id: string; type: string; createdAt: string; read: boolean }[]>([]);
 
@@ -637,6 +639,35 @@ export default function Navbar() {
 
           {/* notifications */}
           <div className="hnb-right">
+            {/* Cart / Wishlist / Orders quick links — these features were invisible from the header */}
+            <button
+              className="hnb-bell"
+              aria-label="Cart"
+              onClick={() => router.push("/cart")}
+              style={{ position: "relative" }}
+            >
+              <FiShoppingCart size={20} />
+              {cartItems.length > 0 && (
+                <span className="hnb-badge">{cartItems.length}</span>
+              )}
+            </button>
+
+            <button
+              className="hnb-bell"
+              aria-label="Wishlist"
+              onClick={() => router.push(session ? "/user/wishlist" : "/register")}
+            >
+              <FiHeart size={20} />
+            </button>
+
+            <button
+              className="hnb-bell"
+              aria-label="My Orders"
+              onClick={() => router.push(session ? "/user/orders" : "/register")}
+            >
+              <FiPackage size={20} />
+            </button>
+
             <div ref={notifRef} style={{ position: "relative" }}>
               <button
                 className="hnb-bell"
@@ -703,6 +734,27 @@ export default function Navbar() {
                     <button onClick={handleAccountClick} className="hnb-profile-item">
                       <FiUser size={15} />
                       My Account
+                    </button>
+                    <button
+                      onClick={() => { setShowProfileMenu(false); router.push("/cart"); }}
+                      className="hnb-profile-item"
+                    >
+                      <FiShoppingCart size={15} />
+                      My Cart
+                    </button>
+                    <button
+                      onClick={() => { setShowProfileMenu(false); router.push("/user/wishlist"); }}
+                      className="hnb-profile-item"
+                    >
+                      <FiHeart size={15} />
+                      Wishlist
+                    </button>
+                    <button
+                      onClick={() => { setShowProfileMenu(false); router.push("/user/orders"); }}
+                      className="hnb-profile-item"
+                    >
+                      <FiPackage size={15} />
+                      My Orders
                     </button>
                     <button
                       onClick={() => { setShowProfileMenu(false); signOut({ callbackUrl: "/" }); }}
