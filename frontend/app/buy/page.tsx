@@ -241,6 +241,29 @@ export default function BuyPage() {
     fetchProducts();
   }, [fetchProducts]);
 
+  // Pre-fill heart icons with the user's existing wishlist (authenticated only).
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/mine`,
+          { headers: { Authorization: `Bearer ${session.accessToken}` } },
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const favMap: Record<string, boolean> = {};
+        for (const row of data) {
+          const listingId = row?.listingId ?? row?.listing?.id;
+          if (listingId) favMap[listingId] = true;
+        }
+        setFavorites(favMap);
+      } catch {
+        // Non-fatal: hearts just start un-filled on a transient failure.
+      }
+    })();
+  }, [session?.accessToken]);
+
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
