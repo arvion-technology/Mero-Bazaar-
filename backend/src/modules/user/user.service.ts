@@ -48,13 +48,6 @@ export class UserService {
     });
   }
 
-  async findByEmail(email: string) {
-    return this.prisma.user.findUnique({
-      where: { email },
-      select: { id: true, role: true },
-    });
-  }
-
   async findOrCreateOAuthUser(data: {
     email: string;
     name: string;

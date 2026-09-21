@@ -7,12 +7,13 @@ import {
   IsOptional,
   IsString,
   Min,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { SecondHandCategory, SecondHandCondition } from '@prisma/client';
 
 export class CreateSecondHandDto {
-  @IsOptional()s
+  @IsOptional()
   @IsEnum(SecondHandCategory)
   category: SecondHandCategory;
 
@@ -22,6 +23,7 @@ export class CreateSecondHandDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(200)
   itemName: string;
 
   @IsOptional()
@@ -41,10 +43,12 @@ export class CreateSecondHandDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   city: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(5000)
   description?: string;
 
   @IsDateString()

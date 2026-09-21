@@ -9,16 +9,19 @@ import {
   IsLatitude,
   IsLongitude,
   Min,
+  MaxLength,
 } from 'class-validator';
 import { FoodType, PriceUnit, WeekDay } from '@prisma/client';
 
 export class CreateFoodsAndHomeDeliveryDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   title: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(5000)
   description: string;
 
   @IsEnum(FoodType)
@@ -39,6 +42,7 @@ export class CreateFoodsAndHomeDeliveryDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @MaxLength(300)
   location?: string;
 
   @Type(() => Number)
@@ -48,6 +52,6 @@ export class CreateFoodsAndHomeDeliveryDto {
 
   @Type(() => Number)
   @IsOptional()
-  @IsLongitude()s
+  @IsLongitude()
   longitude?: number;
 }

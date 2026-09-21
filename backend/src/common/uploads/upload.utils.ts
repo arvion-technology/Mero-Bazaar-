@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import sharp, { type Metadata } from 'sharp';
 import { Request } from 'express';
+import { BadRequestException } from '@nestjs/common';
 
 /**
  * Allowed output formats after re-encoding. Re-encoding (rather than trusting
@@ -72,12 +73,12 @@ export async function validateAndReencodeImage(
     metadata = await sharp(filePath).metadata();
   } catch (err) {
     await safeDelete(filePath);
-    throw new Error('Uploaded file is not a valid image');
+    throw new BadRequestException('Uploaded file is not a valid image');
   }
 
   if (!metadata.format || !['jpeg', 'png', 'webp'].includes(metadata.format)) {
     await safeDelete(filePath);
-    throw new Error('Uploaded file is not a supported image format');
+    throw new BadRequestException('Uploaded file is not a supported image format');
   }
 
   await fs.mkdir(destDir, { recursive: true });
@@ -101,7 +102,7 @@ export async function validateAndReencodeImage(
   } catch (err) {
     await safeDelete(filePath);
     await safeDelete(outputPath);
-    throw new Error('Failed to process uploaded image');
+    throw new BadRequestException('Failed to process uploaded image');
   }
 
   await safeDelete(filePath);

@@ -113,24 +113,10 @@ export class AdminUserService {
       select: { id: true, role: true },
     });
 
-    // When a user is promoted to DOCTOR, ensure their doctor profile exists so
-    // the medical listing flow can bind the licence number to the account.
-    if (role === UserRole.DOCTOR) {
-      const existing = await this.prisma.doctorProfile.findUnique({
-        where: { userId },
-      });
-      if (!existing) {
-        await this.prisma.doctorProfile.create({
-          data: {
-            userId,
-            doctorName: user.name ?? 'Doctor',
-            nmcLicenseNumber: `NMC-${Date.now().toString(36).toUpperCase()}`,
-            specialization: 'GENERAL_MEDICINE',
-          },
-        });
-      }
-    }
-
+    // Do NOT auto-create a doctor profile here: the NMC licence number must come
+    // from the doctor's own first medical listing (medical.service.create seeds
+    // the profile from the submitted licence). Auto-generating a placeholder
+    // licence would make every subsequent listing fail the NMC-match check.
     return updated;
   }
 }

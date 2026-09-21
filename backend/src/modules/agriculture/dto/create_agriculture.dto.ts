@@ -6,6 +6,8 @@ import {
   IsOptional,
   IsString,
   IsArray,
+  Min,
+  MaxLength,
 } from 'class-validator';
 import {
   AgricultureListingType,
@@ -20,17 +22,21 @@ export class CreateAgricultureDto {
   listingType: AgricultureListingType;
 
   @IsString()
+  @MaxLength(100)
   district: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   village?: string;
 
   @IsString()
+  @MaxLength(300)
   location: string;
 
   @Type(() => Number)
   @IsInt()
+  @Min(0)
   pricePerUnit: number;
 
   @IsEnum(UnitType)
@@ -48,19 +54,23 @@ export class CreateAgricultureDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   seasonalAvailability?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   animalType?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   breed?: string;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
+  @Min(0)
   age?: number;
 
   @IsOptional()
@@ -74,6 +84,7 @@ export class CreateAgricultureDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
+  @Min(0)
   experienceYears?: number;
 
   @IsOptional()
@@ -89,6 +100,7 @@ export class CreateAgricultureDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
+  @Min(0)
   serviceRadiusKm?: number;
 
   @IsOptional()

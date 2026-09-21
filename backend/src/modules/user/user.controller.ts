@@ -8,8 +8,6 @@ import {
   Patch,
   UseGuards,
   Request,
-  Query,
-  NotFoundException,
   UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
@@ -39,14 +37,6 @@ export class UserController {
   @Get()
   findAll() {
     return this.userService.findAll();
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('by-email')
-  async getUserByEmail(@Query('email') email: string) {
-    const user = await this.userService.findByEmail(email);
-    if (!user) throw new NotFoundException('User not found');
-    return { id: user.id, role: user.role };
   }
 
   @UseGuards(InternalAuthGuard)

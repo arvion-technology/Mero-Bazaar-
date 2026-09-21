@@ -6,6 +6,8 @@ import {
   IsArray,
   IsEnum,
   ValidateNested,
+  Min,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { MedicalServiceType, WeekDay } from '@prisma/client';
@@ -27,16 +29,20 @@ export class CreateMedicalDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
   servicesOffered?: string;
 
   @IsString()
+  @MaxLength(150)
   doctorName: string;
 
   @IsString()
+  @MaxLength(50)
   nmcLicenseNumber: string;
 
   @IsNumber()
   @Type(() => Number)
+  @Min(0)
   appointmentFee: number;
 
   @IsOptional()
@@ -50,13 +56,16 @@ export class CreateMedicalDto {
   onlineAppointments?: boolean;
 
   @IsString()
+  @MaxLength(300)
   clinicAddress: string;
 
   @IsString()
+  @MaxLength(100)
   city: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   shortBio?: string;
 
   @IsOptional()
@@ -66,6 +75,7 @@ export class CreateMedicalDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   experience?: string;
 
   @IsOptional()

@@ -6,6 +6,8 @@ import {
   IsArray,
   IsDateString,
   IsNumber,
+  Min,
+  MaxLength,
 } from 'class-validator';
 
 import { Type } from 'class-transformer';
@@ -14,11 +16,13 @@ import { PropertyType, ListingType, OwnerType } from '@prisma/client';
 export class CreateRentalDto {
   @IsOptional()
   @IsString()
+  @MaxLength(5000)
   description?: string;
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(0)
   price?: number;
 
   @IsOptional()
@@ -33,18 +37,22 @@ export class CreateRentalDto {
   listingType: ListingType;
 
   @IsString()
+  @MaxLength(100)
   city: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   area?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   ward?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(300)
   address?: string;
 
   @IsOptional()
@@ -59,25 +67,30 @@ export class CreateRentalDto {
 
   @Type(() => Number)
   @IsNumber()
+  @Min(0)
   monthlyRent: number;
 
   @Type(() => Number)
   @IsNumber()
+  @Min(0)
   depositAmount: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(0)
   bedrooms?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(0)
   bathrooms?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(0)
   squareFeet?: number;
 
   @IsOptional()

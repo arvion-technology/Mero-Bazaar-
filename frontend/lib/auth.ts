@@ -129,9 +129,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   callbacks: {
     async signIn({ user, account, profile }) {
-      console.log(" SIGNIN CALLBACK ");
-      console.log("Provider:", account?.provider);
-      console.log("User:", user);
+      // Never log `user` or the oauth-sync response: both can contain the
+      // access token. Only the provider name is safe to emit.
       if (account && account.provider !== "credentials" && account.provider !== "otp") {
         const p = profile as OAuthProfile;
         const email = p?.email;
@@ -147,7 +146,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             : true;
 
         if (!email || !emailVerified) {
-          console.error(`Unverified or missing email from ${account.provider}`, p);
+          console.error(`Unverified or missing email from ${account.provider}`);
           return false;
         }
 
@@ -168,7 +167,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
         const dbUser = await res.json();
         if (!res.ok) {
-          console.error("oauth-sync failed", account.provider, dbUser);
+          // Do not log dbUser — it can contain an access token or 2FA temp token.
+          console.error(`oauth-sync failed for provider ${account.provider}`);
           return false;
         }
 

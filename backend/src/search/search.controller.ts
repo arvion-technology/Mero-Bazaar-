@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { ListingSearchDto } from './dto/listing_search.dto';
 import { VehicleSearchDto } from './dto/vehicle_search.dto';
@@ -10,8 +10,10 @@ import { BeautySearchDto } from './dto/beauty_search.dto';
 import { AgricultureSearchDto } from './dto/agriculture_search.dto';
 import { SearchFoodsDto } from './dto/foods_search.dto';
 import { RentalSearchDto } from './dto/rental_search.dto';
+import { RateLimitGuard } from 'src/common/authz/rate-limit.guard';
 
 @Controller('search')
+@UseGuards(new RateLimitGuard(60 * 1000, 120))
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 

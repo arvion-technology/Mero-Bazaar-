@@ -5,6 +5,7 @@ import { UpdateListingDto } from './dto/update_listing.dto';
 import { SearchListingDto } from './dto/search_listing.dto';
 import { buildListingFilter } from '../../search/builders/listings_filter.builder';
 import { ListingCategory } from '@prisma/client';
+import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
 //categorical assumed weights
 type CategoryWeights = {
@@ -65,6 +66,7 @@ export class ListingsService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateListingDto, userId: string) {
+    await assertVerifiedSeller(this.prisma, userId);
     return this.prisma.listing.create({
       data: {
         title: dto.title,

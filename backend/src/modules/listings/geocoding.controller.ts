@@ -1,9 +1,29 @@
-import { Controller, Get, Query, HttpException, HttpStatus } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Query,
+  HttpException,
+  HttpStatus,
+  Req,
+} from '@nestjs/common';
+import type { Request } from 'express';
+import { InMemoryRateLimiter } from '../../common/utils/rate-limit';
 
 @Controller('geocode')
 export class GeocodingController {
+  // Nominatim's usage policy is ~1 req/s; throttle each client to ~1 req/s
+  // (60/min) so the marketplace cannot be used to exhaust the shared geocoder.
+  private readonly geocodeLimiter = new InMemoryRateLimiter(60 * 1000, 60);
+
   @Get('search')
-  async search(@Query('q') query: string) {
+  async search(@Query('q') query: string, @Req() req: Request) {
+    if (!this.geocodeLimiter.tryConsume(this.clientKey(req))) {
+      throw new HttpException(
+        'Too many geocoding requests. Please slow down.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
     if (!query || query.trim().length < 3) {
       return [];
     }
@@ -27,5 +47,13 @@ export class GeocodingController {
     }
 
     return data;
+  }
+
+  private clientKey(req: Request): string {
+    return (
+      (req.ip ?? req.socket?.remoteAddress ?? 'unknown') +
+      '|' +
+      (req.headers['user-agent'] ?? '')
+    );
   }
 }

@@ -8,6 +8,8 @@ import {
   IsOptional,
   IsArray,
   IsObject,
+  MaxLength,
+  Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import {
@@ -22,13 +24,17 @@ export class CreateVehicleDto {
   type: VehicleType;
 
   @IsString()
+  @MaxLength(100)
   brand: string;
 
   @IsString()
+  @MaxLength(100)
   model: string;
 
   @Type(() => Number)
   @IsInt()
+  @Min(1900)
+  @Max(2100)
   year: number;
 
   @Type(() => Number)
@@ -59,6 +65,7 @@ export class CreateVehicleDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(5000)
   description?: string;
 
   @IsOptional()
@@ -78,6 +85,7 @@ export class CreateVehicleDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(300)
   address?: string;
 
   @IsOptional()

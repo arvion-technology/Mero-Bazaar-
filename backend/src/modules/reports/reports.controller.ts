@@ -10,12 +10,9 @@ export class ReportsController {
 
   @SellerOnly()
   @Get('top-listings')
-  getTopListings(@Req() requestAnimationFrame, @Query('limit') limit?: string) {
+  getTopListings(@Req() req, @Query('limit') limit?: string) {
     const take = limit ? parseInt(limit, 10) : 5;
-    return this.reportsService.getTopListings(
-      requestAnimationFrame.user.id,
-      take,
-    );
+    return this.reportsService.getTopListings(req.user.id, take);
   }
 
   @SellerOnly()

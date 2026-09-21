@@ -4,6 +4,7 @@ import {
   IsString,
   Min,
   Max,
+  MaxLength,
   IsNotEmpty,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
@@ -14,6 +15,7 @@ export class CreateReviewDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   @Transform(({ value }) => value?.trim())
   reviewerName?: string;
 
@@ -26,6 +28,7 @@ export class CreateReviewDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   @Transform(({ value }) => value?.trim())
   comment?: string;
 }

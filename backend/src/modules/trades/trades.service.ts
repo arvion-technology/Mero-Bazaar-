@@ -83,6 +83,17 @@ export class TradesService {
   }
 
   async createLead(listingId: string, dto: CreateLeadDto, userId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { id: true, category: true },
+    });
+
+    // A lead may only reference an existing TRADES listing; silently accepting
+    // arbitrary listing ids would let callers create orphaned/invalid leads.
+    if (!listing || listing.category !== ListingCategory.TRADES) {
+      throw new NotFoundException('Trades listing not found');
+    }
+
     return this.prisma.lead.create({
       data: {
         listingId,
@@ -141,7 +152,13 @@ export class TradesService {
   }
 
   private async geoSearchNearby(lat: number, lng: number, km: number) {
-    const range = km / 111;
+    // Bound the search radius so a huge `km` cannot collapse the bounding box
+    // into a full-table scan of every trades listing.
+    const MAX_NEARBY_RADIUS_KM = 100;
+    const radiusKm = Number.isFinite(km)
+      ? Math.min(Math.max(km, 0), MAX_NEARBY_RADIUS_KM)
+      : 0;
+    const range = radiusKm / 111;
 
     return this.prisma.listing.findMany({
       where: {

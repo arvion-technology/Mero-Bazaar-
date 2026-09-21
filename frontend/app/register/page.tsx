@@ -86,6 +86,16 @@ function RegisterPageContent() {
       toast.error("Passwords do not match");
       return;
     }
+    if (
+      form.password.length < 8 ||
+      !/[a-zA-Z]/.test(form.password) ||
+      !/[0-9]/.test(form.password)
+    ) {
+      toast.error(
+        "Password must be at least 8 characters and include a letter and a number."
+      );
+      return;
+    }
   try {
     setLoading(true);
     const payload: RegisterPayload = {

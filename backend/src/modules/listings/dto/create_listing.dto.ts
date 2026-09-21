@@ -1,9 +1,11 @@
-﻿import {
+import {
   IsArray,
   IsEnum,
   IsNumber,
   IsOptional,
   IsString,
+  MaxLength,
+  Min,
 } from 'class-validator';
 
 import { Type } from 'class-transformer';
@@ -11,15 +13,18 @@ import { ListingCategory } from '@prisma/client';
 
 export class CreateListingDto {
   @IsString()
+  @MaxLength(200)
   title: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(5000)
   description?: string;
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(0)
   price?: number;
 
   @IsEnum(ListingCategory)
@@ -41,5 +46,6 @@ export class CreateListingDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(300)
   location?: string;
 }

@@ -18,6 +18,12 @@ services:
       INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:?INTERNAL_API_SECRET must be set (16+ random chars)}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       PORT: 3000
+      # App-read optional settings. Without SMS_PROVIDER the OTP/KYC-phone flow
+      # 500s on a missing Sparrow token; default it to the dev-only mock sender.
+      SMS_PROVIDER: ${SMS_PROVIDER:-mock}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:3000}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s

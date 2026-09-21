@@ -9,16 +9,19 @@ import {
   IsLongitude,
   Min,
   Max,
+  MaxLength,
 } from 'class-validator';
 import { PayPeriod, ContractType } from '@prisma/client';
 import { Type } from 'class-transformer';
 
 export class CreateJobDto {
   @IsString()
+  @MaxLength(150)
   role: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(5000)
   description?: string;
 
   @Type(() => Number)
@@ -36,10 +39,12 @@ export class CreateJobDto {
   payPeriod: PayPeriod;
 
   @IsString()
+  @MaxLength(100)
   city: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(300)
   location?: string;
 
   @Type(() => Number)

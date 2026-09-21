@@ -1,4 +1,4 @@
-import { IsEnum, IsString, IsOptional } from 'class-validator';
+import { IsEnum, IsString, IsOptional, MaxLength } from 'class-validator';
 import { LeadType } from '@prisma/client';
 
 export class CreateLeadDto {
@@ -10,5 +10,6 @@ export class CreateLeadDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   message?: string;
 }

@@ -8,12 +8,14 @@ import {
   IsLatitude,
   IsLongitude,
   Min,
+  MaxLength,
 } from 'class-validator';
 import { BeautyServiceType } from '@prisma/client';
 import { Type } from 'class-transformer';
 
 export class CreateHairBeautyAndWellnessDto {
   @IsString()
+  @MaxLength(200)
   serviceTitle: string;
 
   @IsEnum(BeautyServiceType)
@@ -21,6 +23,7 @@ export class CreateHairBeautyAndWellnessDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   shortDescription?: string;
 
   @Type(() => Number)
@@ -38,10 +41,12 @@ export class CreateHairBeautyAndWellnessDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(300)
   studioLocation?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(300)
   location?: string;
 
   @Type(() => Number)
@@ -94,5 +99,6 @@ export class CreateHairBeautyAndWellnessDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   city?: string;
 }
