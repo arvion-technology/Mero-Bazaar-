@@ -2,6 +2,9 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useFoodCart } from "@/app/context/FoodCartContext";
 import Footer from "@/components/Footer";
 import type { BuyProduct } from "../types/buy";
 import {
@@ -182,6 +185,10 @@ const pageStyles = `
 `;
 
 export default function BuyPage() {
+  const { addItem } = useFoodCart();
+  const router = useRouter();
+  const { data: session } = useSession();
+
   const [products, setProducts] = useState<BuyProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -197,7 +204,6 @@ export default function BuyPage() {
   const [conditionUsed, setConditionUsed] = useState(false);
 
   /* ─── CART & WISHLIST STATE ─── */
-  const [cart, setCart] = useState<Record<string, number>>({});
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
 
   /* ─── TOAST STATE ─── */
@@ -245,32 +251,69 @@ export default function BuyPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // cart actions
+  // cart actions — add to the shared cart context so items actually land in /cart
+  const toCartItem = (item: BuyProduct) => ({
+    id: item.id,
+    listingId: item.id,
+    name: item.title,
+    description: item.description || "",
+    variant: "",
+    price: item.price,
+    quantity: 1,
+    image: item.images?.[0] || item.thumb || "",
+  });
+
   const addToCart = (item: BuyProduct, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setCart((prev) => ({ ...prev, [item.id]: (prev[item.id] || 0) + 1 }));
+    addItem(toCartItem(item));
     showToast(`${item.title} added to cart`);
   };
 
   const buyNow = (item: BuyProduct, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setCart((prev) => ({ ...prev, [item.id]: (prev[item.id] || 0) + 1 }));
-    showToast(`${item.title} added to cart — Proceeding to checkout...`);
+    addItem(toCartItem(item));
+    router.push("/cart");
   };
 
   /*  WISHLIST ACTIONS */
-  const toggleFav = (id: string, e: React.MouseEvent) => {
+  const toggleFav = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const item = products.find((p) => p.id === id);
-    const isCurrentlyFav = !!favorites[id];
-    setFavorites((p) => ({ ...p, [id]: !p[id] }));
-    if (!isCurrentlyFav) {
-      showToast(`${item?.title} added to wishlist`, "info");
-    } else {
-      showToast(`${item?.title} removed from wishlist`, "info");
+    const previousState = !!favorites[id];
+
+    if (!session?.accessToken) {
+      showToast("Please log in to use your wishlist", "info");
+      router.push(`/login?callbackUrl=${encodeURIComponent("/buy")}`);
+      return;
+    }
+
+    // Optimistic update, then reconcile with the server.
+    setFavorites((p) => ({ ...p, [id]: !previousState }));
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/wishlist/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({ listingId: id }),
+        },
+      );
+      if (!res.ok) throw new Error("Failed to update wishlist");
+      const data = await res.json();
+      setFavorites((p) => ({ ...p, [id]: data.favorited }));
+      showToast(
+        data.favorited ? `${item?.title} added to wishlist` : `${item?.title} removed from wishlist`,
+        "info",
+      );
+    } catch {
+      setFavorites((p) => ({ ...p, [id]: previousState }));
+      showToast("Could not update wishlist", "error");
     }
   };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useMemo, useState, useCallback } from "react";
+import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from "react";
 
 export type CartItem = {
   id: string;
@@ -57,11 +57,45 @@ const defaultDelivery: DeliveryInfo = {
 
 const FoodCartContext = createContext<FoodCartContextType | null>(null);
 
+const CART_ITEMS_KEY = "mb_cart_items";
+const CART_SELECTED_KEY = "mb_cart_selected";
+
+// Persist the cart so it survives a full page reload / browser restart — a
+// cart that silently empties on refresh is not production-grade.
+function loadStored<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function store(key: string, value: unknown) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Quota / privacy-mode failure: keep the in-memory cart working.
+  }
+}
+
 export function FoodCartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  // Load lazily from localStorage (guarded for SSR) and persist on every change,
+  // so the cart survives a full page reload / browser restart.
+  const [items, setItems] = useState<CartItem[]>(() => loadStored<CartItem[]>(CART_ITEMS_KEY, []));
+  const [selectedIds, setSelectedIds] = useState<string[]>(() => loadStored<string[]>(CART_SELECTED_KEY, []));
   const [deliveryInfo, setDeliveryInfoState] = useState<DeliveryInfo>(defaultDelivery);
   const [paymentMethod, setPaymentMethod] = useState<"esewa" | "khalti" | "connectips" | null>(null);
+
+  useEffect(() => {
+    store(CART_ITEMS_KEY, items);
+  }, [items]);
+
+  useEffect(() => {
+    store(CART_SELECTED_KEY, selectedIds);
+  }, [selectedIds]);
 
   const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {
