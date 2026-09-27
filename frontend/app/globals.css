@@ -1,8 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-* {
+/* * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -15,7 +13,7 @@
   --muted: #666;
   --border: #ececec;
   --background: #ffffff;
-}
+} */
 
 html {
   scroll-behavior: smooth;

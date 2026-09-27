@@ -5,42 +5,15 @@ import Footer from "@/components/Footer";
 export default function CareersPage() {
   return (
     <>
-      <main
-        style={{
-          minHeight: "100vh",
-          background: "#6c8dd7",
-          // color: "#fff",
-          padding: "60px 24px",
-          fontFamily: "Inter, sans-serif",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "950px",
-            margin: "0 auto",
-          }}
-        >
+      <main className="min-h-screen bg-[#fff] px-6 py-[60px] font-sans">
+        <div className="mx-auto max-w-[950px]">
           {/* heading */}
-          <h1
-            style={{
-              fontSize: "42px",
-              fontWeight: "800",
-              marginBottom: "20px",
-              color: "#C0392B",
-            }}
-          >
+          <h1 className="mb-5 text-[42px] font-extrabold text-black">
             Careers at HamroNepal Bazaar
           </h1>
 
           {/* intro */}
-          <p
-            style={{
-              fontSize: "17px",
-              lineHeight: "1.8",
-              color: "rgba(255,255,255,0.75)",
-              marginBottom: "24px",
-            }}
-          >
+          <p className="mb-6 text-[17px] leading-[1.8] text-black">
             Join our growing team and help build the future of Nepali
             e-commerce. We are passionate about technology, innovation,
             and creating the best shopping experience for customers
@@ -48,97 +21,31 @@ export default function CareersPage() {
           </p>
 
           {/* open positions */}
-          <div
-            style={{
-              marginTop: "40px",
-              display: "grid",
-              gap: "24px",
-            }}
-          >
+          <div className="mt-10 grid gap-6">
             {/* job card 1 */}
-            <div
-              style={{
-                padding: "24px",
-                borderRadius: "14px",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: "24px",
-                  marginBottom: "10px",
-                }}
-              >
-                Frontend Developer
-              </h2>
+            <div className="rounded-2xl border border-black/10 bg-white/40 p-6 shadow-lg backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/60 hover:shadow-2xl">
+              <h2 className="mb-2.5 text-2xl text-black">Frontend Developer</h2>
 
-              <p
-                style={{
-                  color: "rgba(255,255,255,0.7)",
-                  lineHeight: "1.7",
-                  marginBottom: "18px",
-                }}
-              >
+              <p className="mb-[18px] leading-[1.7] text-black/70">
                 Build beautiful and responsive interfaces using React
                 and Next.js.
               </p>
 
-              <button
-                style={{
-                  background: "#C0392B",
-                  border: "none",
-                  color: "#fff",
-                  padding: "12px 20px",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                }}
-              >
+              <button className="rounded-lg bg-[#C0392B] px-5 py-3 font-semibold text-white transition-colors duration-200 hover:bg-[#a93226]">
                 Apply Now
               </button>
             </div>
 
             {/* job card 2 */}
-            <div
-              style={{
-                padding: "24px",
-                borderRadius: "14px",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: "24px",
-                  marginBottom: "10px",
-                }}
-              >
-                Customer Support Executive
-              </h2>
+            <div className="rounded-2xl border border-black/10 bg-white/40 p-6 shadow-lg backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/60 hover:shadow-2xl">
+              <h2 className="mb-2.5 text-2xl text-black">Customer Support Executive</h2>
 
-              <p
-                style={{
-                  color: "rgba(255,255,255,0.7)",
-                  lineHeight: "1.7",
-                  marginBottom: "18px",
-                }}
-              >
+              <p className="mb-[18px] leading-[1.7] text-black/70">
                 Help customers with orders, payments, and platform
                 support.
               </p>
 
-              <button
-                style={{
-                  background: "#C0392B",
-                  border: "none",
-                  color: "#fff",
-                  padding: "12px 20px",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                }}
-              >
+              <button className="rounded-lg bg-[#C0392B] px-5 py-3 font-semibold text-white transition-colors duration-200 hover:bg-[#a93226]">
                 Apply Now
               </button>
             </div>
