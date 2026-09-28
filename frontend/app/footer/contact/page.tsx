@@ -37,7 +37,7 @@ export default function ContactPage() {
           </h1>
 
           <p className="mb-8 text-[17px] leading-relaxed text-black/75">
-            We're here to help. Reach us through any of the options below.
+            We&apos;re here to help. Reach us through any of the options below.
           </p>
 
           <div className="grid gap-4 sm:grid-cols-2">

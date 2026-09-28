@@ -64,7 +64,7 @@ export default function HelpPage() {
           </div>
 
           <p className="mt-10 text-base leading-[1.8] text-black/60">
-            Can't find your answer?{" "}
+            Can&apos;t find your answer?{" "}
             <a href="/footer/contact" className="font-semibold text-[#C0392B] hover:underline">
               Contact us
             </a>

@@ -56,7 +56,7 @@ export default function SafetyCenterPage() {
 
           <p className="mb-10 text-[17px] leading-[1.8] text-black/75">
             Simple habits that keep your deals safe. Follow these tips whether
-            you're buying, selling, or hiring.
+            you&apos;re buying, selling, or hiring.
           </p>
 
           <div className="grid gap-6">
