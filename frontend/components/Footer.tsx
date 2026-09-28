@@ -13,13 +13,13 @@ const footerLinks = {
   ],
   Support: [
     { label: "Help Center", href: "/footer/help-center" },
-    { label: "Safety Center", href: "/safety" },
-    { label: "Contact Us", href: "/contact" },
+    { label: "Safety Center", href: "/footer/safety" },
+    { label: "Contact Us", href: "/footer/contact" },
   ],
   Legal: [
-    { label: "Terms of Use", href: "/terms" },
-    { label: "Privacy Policy", href: "/privacy" },
-    { label: "Refund Policy", href: "/refund" },
+    { label: "Terms of Use", href: "/footer/terms" },
+    { label: "Privacy Policy", href: "/footer/privacy" },
+    { label: "Refund Policy", href: "/footer/refund" },
   ],
 };
 
