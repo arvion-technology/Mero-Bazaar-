@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { NotificationCategory } from '@prisma/client';
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 @Injectable()
 export class NotificationsService {
   constructor(private prisma: PrismaService) {}
@@ -10,13 +12,18 @@ export class NotificationsService {
     return this.prisma.notification.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      take: 50,
     });
   }
 
   async findSecurityForUser(userId: string) {
     return this.prisma.activityLog.findMany({
-      where: { userId },
+      where: {
+        userId,
+        createdAt: { gte: new Date(Date.now() - 30 * DAY_MS) },
+      },
       orderBy: { createdAt: 'desc' },
+      take: 50,
     });
   }
 
@@ -78,6 +85,16 @@ export class NotificationsService {
         userId: admin.id,
         ...data,
       })),
+    });
+  }
+
+  // Cleanup: read notifications older than 90 days
+  async deleteOldRead() {
+    return this.prisma.notification.deleteMany({
+      where: {
+        read: true,
+        createdAt: { lt: new Date(Date.now() - 90 * DAY_MS) },
+      },
     });
   }
 }
