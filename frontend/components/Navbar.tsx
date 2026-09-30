@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { TbGridDots } from "react-icons/tb";
 import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
 import { useRouter } from "next/navigation";
+import { activityLabel, isKnownActivity } from "@/lib/activityLabel";
 
 const categories = [
   { name: "Vehicles", slug: "vehicles" },
@@ -38,6 +39,29 @@ const navLinks = [
 
 const PRIMARY = "#C0392B";
 
+// shared class strings
+const btnBase =
+  "flex items-center gap-[5px] py-[7px] px-[11px] rounded-md text-[13.5px] font-medium cursor-pointer bg-transparent border-0 whitespace-nowrap no-underline [transition:background_0.15s,color_0.15s] leading-none";
+const btnIdle = "text-[#333] hover:bg-[#f5f5f5] hover:text-[#111]";
+const btnActive = "text-[#C0392B] bg-[#fff5f5] hover:bg-[#fff5f5] hover:text-[#C0392B]";
+
+const dropdownAnim = "animate-[fadeDown_0.15s_ease]";
+const chevronBase = "[transition:transform_0.2s_ease] shrink-0";
+const chevronOpen = "[transform:rotate(180deg)]";
+
+const avatarImg = "w-full h-full object-cover";
+
+const profileItemBase =
+  "flex items-center gap-2.5 py-[9px] px-3 text-[13px] font-medium no-underline rounded-lg cursor-pointer [transition:background_0.15s,color_0.15s] border-0 bg-transparent w-full text-left";
+const profileItemIdle = "text-[#444] hover:bg-[#fff5f5] hover:text-[#C0392B]";
+const profileItemLogout = "text-[#d9534f] hover:bg-[#fdf2f2] hover:text-[#c9302c]";
+
+const mobileLink =
+  "block py-[11px] px-1 text-[14px] font-medium text-[#333] border-b border-[#f5f5f5] no-underline [transition:color_0.12s] hover:text-[#C0392B]";
+
+type ActivityItem = { id: string; type: string; createdAt: string; read: boolean };
+type UserNotif = { id: string; title: string; createdAt: string; read: boolean };
+
 export default function Navbar() {
   const [showCategories, setShowCategories] = useState(false);
   // const [showMore, setShowMore] = useState(false);
@@ -50,7 +74,8 @@ export default function Navbar() {
   const token = session?.accessToken;
   const router = useRouter();
   const [notifSeen, setNotifSeen] = useState(false);
-  const [securityNotifs, setSecurityNotifs] = useState<{ id: string; type: string; createdAt: string; read: boolean }[]>([]);
+  const [securityNotifs, setSecurityNotifs] = useState<ActivityItem[]>([]);
+  const [userNotifs, setUserNotifs] = useState<UserNotif[]>([]);
 
   const catRef = useRef<HTMLDivElement>(null);
   // const moreRef = useRef<HTMLDivElement>(null);
@@ -80,31 +105,38 @@ export default function Navbar() {
   }, []);
 
   //notification
-  const notifications = session
+  const profilePrompts = session
     ? ([
       !session.user?.phone && "Add your phone number",
       !session.user?.address && "Add your address",
-      ...securityNotifs.filter((n) => !n.read).map((n) => activityLabel(n.type)),
     ].filter(Boolean) as string[])
     : [];
 
-  const notificationCount = notifications.length;
+  const unreadCount =
+    securityNotifs.filter((n) => !n.read).length + userNotifs.filter((n) => !n.read).length;
+
+  const feed = [
+    ...userNotifs.map((n) => ({
+      key: `n-${n.id}`,
+      text: n.title,
+      createdAt: n.createdAt,
+    })),
+    ...securityNotifs.map((a) => ({
+      key: `a-${a.id}`,
+      text: activityLabel(a.type),
+      createdAt: a.createdAt,
+    })),
+  ]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 6);
+
+  const notificationCount = session ? profilePrompts.length + unreadCount : 0;
   const showNotificationBadge = notificationCount > 0;
 
   const [prevNotificationCount, setPrevNotificationCount] = useState(notificationCount);
   if (notificationCount !== prevNotificationCount) {
     setPrevNotificationCount(notificationCount);
     setNotifSeen(false);
-  }
-
-  function activityLabel(type: string) {
-    switch (type) {
-      case "PASSWORD_CHANGED": return "Password chnaged";
-      case "TWO_FA_ENABLED": return "Two-factor authentication enabled";
-      case "TWO_FA_DISABLED": return "Two-factor authentication disabled";
-      case "PHONE_CHANGED": return "Phone number changed";
-      default: return type;
-    }
   }
 
   function getImageUrl(image?: string | null) {
@@ -116,425 +148,58 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!token) return;
-    fetch("/api/user/notifications/security", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const headers = { Authorization: `Bearer ${token}` };
+
+    fetch("/api/user/notifications/security", { headers })
       .then((res) => (res.ok ? res.json() : []))
-      .then(setSecurityNotifs)
+      .then((data: ActivityItem[]) =>
+        setSecurityNotifs((data ?? []).filter((a) => isKnownActivity(a.type)))
+      )
+      .catch(() => { });
+
+    fetch("/api/user/notifications", { headers })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: UserNotif[]) => setUserNotifs(data ?? []))
       .catch(() => { });
   }, [token]);
+
+  function markAllRead() {
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}` };
+
+    if (securityNotifs.some((n) => !n.read)) {
+      fetch("/api/user/notifications/security/mark-read", { method: "POST", headers })
+        .then((res) => {
+          if (!res.ok) return;
+          setSecurityNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+        })
+        .catch(() => { });
+    }
+
+    if (userNotifs.some((n) => !n.read)) {
+      fetch("/api/user/notifications/mark-all-read", { method: "POST", headers })
+        .then((res) => {
+          if (!res.ok) return;
+          setUserNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+        })
+        .catch(() => { });
+    }
+  }
 
   return (
     <>
       <style>{`
-        * { box-sizing: border-box; }
-        .hnb-nav {
-          width: 100%;
-          background: #ffffff;
-          border-bottom: 1px solid #e8e8e8;
-          position: sticky;
-          top: 0;
-          z-index: 1000;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-        .hnb-inner {
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 0 24px;
-          display: flex;
-          align-items: center;
-          height: 60px;
-          gap: 6px;
-        }
-        .hnb-logo {
-          display: flex;
-          align-items: center;
-          gap: 9px;
-          text-decoration: none;
-          flex-shrink: 0;
-          margin-right: 8px;
-        }
-        .hnb-logo-icon {
-          width: 38px;
-          height: 38px;
-          flex-shrink: 0;
-        }
-        .hnb-logo-text { line-height: 1.15; }
-        .hnb-logo-line1 {
-          display: block;
-          font-size: 14px;
-          font-weight: 800;
-          color: ${PRIMARY};
-          letter-spacing: -0.2px;
-        }
-        .hnb-logo-line2 {
-          display: block;
-          font-size: 14px;
-          font-weight: 800;
-          color: #1a1a1a;
-          letter-spacing: -0.2px;
-        }
-        .hnb-links {
-          display: flex;
-          align-items: center;
-          margin-left: 150px;
-          gap: 0;
-          flex: 1;
-        }
-        .hnb-btn {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          padding: 7px 11px;
-          border-radius: 6px;
-          font-size: 13.5px;
-          font-weight: 500;
-          color: #333;
-          cursor: pointer;
-          background: none;
-          border: none;
-          white-space: nowrap;
-          text-decoration: none;
-          transition: background 0.15s, color 0.15s;
-          line-height: 1;
-        }
-        .hnb-btn:hover { background: #f5f5f5; color: #111; }
-        .hnb-btn.active { color: ${PRIMARY}; background: #fff5f5; }
-        .hnb-dropdown {
-          position: absolute;
-          top: calc(100% + 6px);
-          left: 0;
-          background: #fff;
-          border: 1px solid #ececec;
-          border-radius: 12px;
-          z-index: 200;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-          animation: fadeDown 0.15s ease;
-        }
         @keyframes fadeDown {
           from { opacity: 0; transform: translateY(-6px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .hnb-cat-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 2px;
-          padding: 10px;
-          width: 300px;
-        }
-        .hnb-cat-item {
-          display: flex;
-          align-items: center;
-          gap: 7px;
-          padding: 9px 10px;
-          border-radius: 8px;
-          font-size: 12.5px;
-          font-weight: 500;
-          color: #333;
-          text-decoration: none;
-          cursor: pointer;
-          transition: background 0.12s, color 0.12s;
-        }
-        .hnb-cat-item:hover { background: #fff5f5; color: ${PRIMARY}; }
-        .hnb-view-all {
-          border-top: 1px solid #f0f0f0;
-          padding: 9px 16px;
-          text-align: center;
-        }
-        .hnb-view-all-link {
-          font-size: 12px;
-          font-weight: 600;
-          color: ${PRIMARY};
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-        }
-        .hnb-view-all-link:hover { text-decoration: underline; }
-        .hnb-more-dropdown {
-          position: absolute;
-          top: calc(100% + 6px);
-          left: 0;
-          background: #fff;
-          border: 1px solid #ececec;
-          border-radius: 12px;
-          z-index: 200;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-          padding: 6px;
-          width: 175px;
-          animation: fadeDown 0.15s ease;
-        }
-        .hnb-more-item {
-          display: block;
-          padding: 9px 12px;
-          font-size: 13px;
-          color: #444;
-          text-decoration: none;
-          border-radius: 7px;
-          cursor: pointer;
-          transition: background 0.12s, color 0.12s;
-        }
-        .hnb-more-item:hover { background: #fff5f5; color: ${PRIMARY}; }
-        .hnb-right {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          margin-left: auto;
-          flex-shrink: 0;
-        }
-        .hnb-seller {
-          font-size: 13.5px;
-          font-weight: 500;
-          color: #333;
-          text-decoration: none;
-          white-space: nowrap;
-          transition: color 0.15s;
-        }
-        .hnb-seller:hover { color: ${PRIMARY}; }
-        .hnb-bell {
-          position: relative;
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: #555;
-          padding: 5px;
-          display: flex;
-          align-items: center;
-          border-radius: 50%;
-          transition: background 0.15s, color 0.15s;
-        }
-        .hnb-bell:hover { background: #f5f5f5; color: #111; }
-        .hnb-badge {
-          position: absolute;
-          top: -4px;
-          right: -4px;
-          background: #e74c3c;
-          color: #fff;
-          font-size: 10px;
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-        }
-        .hnb-notif-dropdown {
-          position: absolute;
-          top: calc(100% + 10px);
-          right: 0;
-          background: #fff;
-          border: 1px solid #ececec;
-          border-radius: 12px;
-          z-index: 1000;
-          box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-          width: 250px;
-          padding: 8px;
-          animation: fadeDown 0.15s ease;
-        }
-        .hnb-notif-header {
-          padding: 8px 10px 10px;
-          font-size: 13px;
-          font-weight: 600;
-          color: #111;
-          border-bottom: 1px solid #f0f0f0;
-          margin-bottom: 6px;
-        }
-        .hnb-notif-item {
-          padding: 9px 10px;
-          font-size: 12.5px;
-          color: #444;
-          border-radius: 8px;
-          transition: background 0.12s;
-        }
-        .hnb-notif-item:hover { background: #fff5f5; }
-        .hnb-notif-empty {
-          padding: 16px 10px;
-          font-size: 12.5px;
-          color: #888;
-          text-align: center;
-        }
-        .hnb-login {
-          background: ${PRIMARY};
-          color: #fff;
-          border: none;
-          border-radius: 8px;
-          padding: 8px 18px;
-          font-size: 13.5px;
-          font-weight: 600;
-          cursor: pointer;
-          white-space: nowrap;
-          text-decoration: none;
-          display: inline-block;
-          transition: background 0.15s, transform 0.1s;
-          letter-spacing: 0.1px;
-        }
-        .hnb-login:hover { background: #a93226; transform: translateY(-1px); }
-        .hnb-login:active { transform: translateY(0); }
-        .hnb-chevron {
-          transition: transform 0.2s ease;
-          flex-shrink: 0;
-        }
-        .hnb-chevron.open { transform: rotate(180deg); }
-        .hnb-hamburger {
-          display: none;
-          margin-left: auto;
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 8px;
-          color: #444;
-          border-radius: 6px;
-        }
-        .hnb-hamburger:hover { background: #f5f5f5; }
-        .hnb-mobile-menu {
-          border-top: 1px solid #f0f0f0;
-          background: #fff;
-          padding: 10px 16px 16px;
-        }
-        .hnb-mobile-link {
-          display: block;
-          padding: 11px 4px;
-          font-size: 14px;
-          font-weight: 500;
-          color: #333;
-          border-bottom: 1px solid #f5f5f5;
-          text-decoration: none;
-          transition: color 0.12s;
-        }
-        .hnb-mobile-link:hover { color: ${PRIMARY}; }
-        .hnb-mobile-cats-btn {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          width: 100%;
-          padding: 11px 4px;
-          font-size: 14px;
-          font-weight: 500;
-          color: #333;
-          background: none;
-          border: none;
-          border-bottom: 1px solid #f5f5f5;
-          cursor: pointer;
-        }
-        .hnb-mobile-sub-link {
-          display: block;
-          padding: 7px 12px;
-          font-size: 13px;
-          color: #555;
-          text-decoration: none;
-          border-radius: 6px;
-          transition: background 0.12s, color 0.12s;
-        }
-        .hnb-mobile-sub-link:hover { background: #fff5f5; color: ${PRIMARY}; }
-
-        /* Profile Dropdown & Avatar Styles */
-        .hnb-profile-container {
-          position: relative;
-        }
-        .hnb-avatar-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, ${PRIMARY}, #e74c3c);
-          color: #fff;
-          font-weight: 600;
-          font-size: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 2px solid transparent;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          overflow: hidden;
-          padding: 0;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        }
-        .hnb-avatar-btn:hover {
-          transform: scale(1.05);
-          box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-          border-color: rgba(255,255,255,0.8);
-        }
-        .hnb-avatar-btn img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-        .hnb-profile-dropdown {
-          position: absolute;
-          top: calc(100% + 10px);
-          right: 0;
-          background: #fff;
-          border: 1px solid rgba(0,0,0,0.08);
-          border-radius: 12px;
-          z-index: 1000;
-          box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-          width: 220px;
-          padding: 8px;
-          animation: fadeDown 0.15s ease;
-        }
-        .hnb-profile-header {
-          padding: 10px 12px 12px;
-          border-bottom: 1px solid #f0f0f0;
-          margin-bottom: 6px;
-        }
-        .hnb-profile-header-name {
-          font-size: 13.5px;
-          font-weight: 600;
-          color: #111;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .hnb-profile-header-email {
-          font-size: 11.5px;
-          color: #666;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          margin-top: 2px;
-        }
-        .hnb-profile-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 9px 12px;
-          font-size: 13px;
-          font-weight: 500;
-          color: #444;
-          text-decoration: none;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: background 0.15s, color 0.15s;
-          border: none;
-          background: none;
-          width: 100%;
-          text-align: left;
-        }
-        .hnb-profile-item:hover {
-          background: #fff5f5;
-          color: ${PRIMARY};
-        }
-        .hnb-profile-item.logout {
-          color: #d9534f;
-        }
-        .hnb-profile-item.logout:hover {
-          background: #fdf2f2;
-          color: #c9302c;
-        }
-
-        @media (max-width: 900px) {
-          .hnb-links { display: none !important; }
-          .hnb-right  { display: none !important; }
-          .hnb-hamburger { display: flex !important; }
-        }
       `}</style>
 
-      <nav className="hnb-nav">
-        <div className="hnb-inner">
+      <nav className="w-full bg-white border-b border-[#e8e8e8] sticky top-0 z-[1000] [font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif]">
+        <div className="max-w-[1280px] mx-auto px-6 flex items-center h-[60px] gap-1.5">
 
-          <Link href="/" className="hnb-logo">
-            <svg className="hnb-logo-icon" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <Link href="/" className="flex items-center gap-[9px] no-underline shrink-0 mr-2">
+            <svg className="w-[38px] h-[38px] shrink-0" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="38" height="38" rx="8" fill={PRIMARY} />
               <path
                 d="M10 10 C10 10, 14 8, 19 13 C24 18, 28 10, 28 10
@@ -546,44 +211,48 @@ export default function Navbar() {
               />
               <circle cx="19" cy="19" r="3" fill="#fff" opacity="0.9" />
             </svg>
-            <div className="hnb-logo-text">
-              <span className="hnb-logo-line1">HamroNepal</span>
-              <span className="hnb-logo-line2">Bazaar</span>
+            <div className="leading-[1.15]">
+              <span className="block text-[14px] font-extrabold text-[#C0392B] tracking-[-0.2px]">HamroNepal</span>
+              <span className="block text-[14px] font-extrabold text-[#1a1a1a] tracking-[-0.2px]">Bazaar</span>
             </div>
           </Link>
 
-          <div className="hnb-links">
+          <div className="flex items-center ml-[150px] gap-0 flex-1 max-[900px]:!hidden">
 
             <div style={{ position: "relative" }} ref={catRef}>
               <button
-                className={`hnb-btn${showCategories ? " active" : ""}`}
+                className={`${btnBase} ${showCategories ? btnActive : btnIdle}`}
                 onClick={() => { setShowCategories(!showCategories); /* setShowMore(false); */ }}
               >
                 <TbGridDots size={16} />
                 Categories
                 <FiChevronDown
                   size={13}
-                  className={`hnb-chevron${showCategories ? " open" : ""}`}
+                  className={`${chevronBase} ${showCategories ? chevronOpen : ""}`}
                   color="#999"
                 />
               </button>
 
               {showCategories && (
-                <div className="hnb-dropdown">
-                  <div className="hnb-cat-grid">
+                <div className={`absolute top-[calc(100%+6px)] left-0 bg-white border border-[#ececec] rounded-xl z-[200] shadow-[0_8px_32px_rgba(0,0,0,0.12)] ${dropdownAnim}`}>
+                  <div className="grid grid-cols-2 gap-0.5 p-2.5 w-[300px]">
                     {categories.map((cat) => (
                       <Link
                         key={cat.slug}
                         href={`/category/${cat.slug}`}
-                        className="hnb-cat-item"
+                        className="flex items-center gap-[7px] py-[9px] px-2.5 rounded-lg text-[12.5px] font-medium text-[#333] no-underline cursor-pointer [transition:background_0.12s,color_0.12s] hover:bg-[#fff5f5] hover:text-[#C0392B]"
                         onClick={() => setShowCategories(false)}
                       >
                         {cat.name}
                       </Link>
                     ))}
                   </div>
-                  <div className="hnb-view-all">
-                    <Link href="/categories" className="hnb-view-all-link" onClick={() => setShowCategories(false)}>
+                  <div className="border-t border-[#f0f0f0] py-[9px] px-4 text-center">
+                    <Link
+                      href="/categories"
+                      className="text-[12px] font-semibold text-[#C0392B] no-underline inline-flex items-center gap-1 hover:underline"
+                      onClick={() => setShowCategories(false)}
+                    >
                       View All Categories
                       <FiChevronRight size={13} color={PRIMARY} />
                     </Link>
@@ -596,7 +265,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="hnb-btn"
+                className={`${btnBase} ${btnIdle}`}
                 onMouseEnter={() => setHoveredLink(link.href)}
                 onMouseLeave={() => setHoveredLink(null)}
                 style={{ color: hoveredLink === link.href ? PRIMARY : undefined }}
@@ -636,10 +305,10 @@ export default function Navbar() {
           </div>
 
           {/* notifications */}
-          <div className="hnb-right">
+          <div className="flex items-center gap-3.5 ml-auto shrink-0 max-[900px]:!hidden">
             <div ref={notifRef} style={{ position: "relative" }}>
               <button
-                className="hnb-bell"
+                className="relative bg-transparent border-0 cursor-pointer text-[#555] p-[5px] flex items-center rounded-full [transition:background_0.15s,color_0.15s] hover:bg-[#f5f5f5] hover:text-[#111]"
                 aria-label="Notifications"
                 onClick={() => {
                   if (!session) {
@@ -648,65 +317,67 @@ export default function Navbar() {
                   }
                   setOpenNotif((v) => !v);
                   setNotifSeen(true);
-                  if (securityNotifs.some((n) => !n.read)) {
-                    fetch("/api/user/notifications/security/mark-read", {
-                      method: "POST",
-                      headers: { Authorization: `Bearer ${token}` },
-                    }).then(() => {
-                      setSecurityNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
-                    });
-                  }
+                  if (!openNotif) markAllRead();
                 }}
               >
                 <FiBell size={20} />
                 {session && showNotificationBadge && !notifSeen && (
-                  <span className="hnb-badge">{notificationCount}</span>
+                  <span className="absolute -top-1 -right-1 bg-[#e74c3c] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                    {notificationCount}
+                  </span>
                 )}
               </button>
 
               {session && openNotif && (
-                <div className="hnb-notif-dropdown">
-                  <div className="hnb-notif-header">Notifications</div>
-                  {notifications.length > 0 ? (
-                    notifications.map((msg, i) => (
-                      <div key={i} className="hnb-notif-item">⚠️ {msg}</div>
-                    ))
+                <div className={`absolute top-[calc(100%+10px)] right-0 bg-white border border-[#ececec] rounded-xl z-[1000] shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] w-[250px] p-2 ${dropdownAnim}`}>
+                  <div className="pt-2 px-2.5 pb-2.5 text-[13px] font-semibold text-[#111] border-b border-[#f0f0f0] mb-1.5">
+                    Notifications
+                  </div>
+                  {profilePrompts.length + feed.length > 0 ? (
+                    <>
+                      {profilePrompts.map((msg, i) => (
+                        <div key={`p-${i}`} className="py-[9px] px-2.5 text-[12.5px] text-[#444] rounded-lg [transition:background_0.12s] hover:bg-[#fff5f5]">⚠️ {msg}</div>
+                      ))}
+                      {feed.map((item) => (
+                        <div key={item.key} className="py-[9px] px-2.5 text-[12.5px] text-[#444] rounded-lg [transition:background_0.12s] hover:bg-[#fff5f5]">🔔 {item.text}</div>
+                      ))}
+                    </>
                   ) : (
-                    <div className="hnb-notif-empty">You are all caught up</div>
+                    <div className="py-4 px-2.5 text-[12.5px] text-[#888] text-center">You are all caught up</div>
                   )}
                 </div>
               )}
             </div>
 
             {status === "loading" ? null : session ? (
-              <div className="hnb-profile-container" ref={profileRef}>
+              <div className="relative" ref={profileRef}>
                 <button
-                  className="hnb-avatar-btn"
+                  className="w-9 h-9 rounded-full bg-[linear-gradient(135deg,#C0392B,#e74c3c)] text-white font-semibold text-[14px] flex items-center justify-center border-2 border-transparent cursor-pointer [transition:all_0.2s_ease] overflow-hidden p-0 shadow-[0_2px_6px_rgba(0,0,0,0.15)] hover:[transform:scale(1.05)] hover:shadow-[0_4px_10px_rgba(0,0,0,0.2)] hover:border-[rgba(255,255,255,0.8)]"
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   aria-label="User profile menu"
                   aria-haspopup="true"
                   aria-expanded={showProfileMenu}
                 >
                   {session.user?.image ? (
-                    <img src={getImageUrl(session.user.image)} alt={session.user.name || "User"} />
+                    <img className={avatarImg} src={getImageUrl(session.user.image)} alt={session.user.name || "User"} />
                   ) : (
                     <span>{(session.user?.name?.[0] || "U").toUpperCase()}</span>
                   )}
                 </button>
 
                 {showProfileMenu && (
-                  <div className="hnb-profile-dropdown">
-                    <div className="hnb-profile-header">
-                      <div className="hnb-profile-header-name">{session.user?.name || "User"}</div>
-                      <div className="hnb-profile-header-email">{session.user?.email || ""}</div>
+                  <div className={`absolute top-[calc(100%+10px)] right-0 bg-white border border-[rgba(0,0,0,0.08)] rounded-xl z-[1000] shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] w-[220px] p-2 ${dropdownAnim}`}>
+                    <div className="pt-2.5 px-3 pb-3 border-b border-[#f0f0f0] mb-1.5">
+                      <div className="text-[13.5px] font-semibold text-[#111] whitespace-nowrap overflow-hidden text-ellipsis">{session.user?.name || "User"}</div>
+                      <div className="text-[11.5px] text-[#666] whitespace-nowrap overflow-hidden text-ellipsis mt-0.5">{session.user?.email || ""}</div>
                     </div>
-                    <button onClick={handleAccountClick} className="hnb-profile-item">
+                    <button onClick={handleAccountClick} className={`${profileItemBase} ${profileItemIdle}`}>
                       <FiUser size={15} />
                       My Account
                     </button>
                     <button
                       onClick={() => { setShowProfileMenu(false); signOut({ callbackUrl: "/" }); }}
-                      className="hnb-profile-item logout"
+                      className={`${profileItemBase} ${profileItemLogout}`}
                     >
                       <FiLogOut size={15} />
                       Logout
@@ -715,12 +386,17 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <Link href="/register" className="hnb-login">Signup</Link>
+              <Link
+                href="/register"
+                className="bg-[#C0392B] text-white border-0 rounded-lg py-2 px-[18px] text-[13.5px] font-semibold cursor-pointer whitespace-nowrap no-underline inline-block [transition:background_0.15s,transform_0.1s] tracking-[0.1px] hover:bg-[#a93226] hover:[transform:translateY(-1px)] active:[transform:translateY(0)]"
+              >
+                Signup
+              </Link>
             )}
           </div>
 
           <button
-            className="hnb-hamburger"
+            className="hidden ml-auto bg-transparent border-0 cursor-pointer p-2 text-[#444] rounded-md hover:bg-[#f5f5f5] max-[900px]:!flex"
             onClick={() => setShowMobileMenu(!showMobileMenu)}
             aria-label="Toggle menu"
           >
@@ -729,13 +405,13 @@ export default function Navbar() {
         </div>
 
         {showMobileMenu && (
-          <div className="hnb-mobile-menu">
+          <div className="border-t border-[#f0f0f0] bg-white pt-2.5 px-4 pb-4">
             {navLinks.map((link) =>
               "dropdown" in link ? (
                 <Link
                   key={link.label}
                   href="/services"
-                  className="hnb-mobile-link"
+                  className={mobileLink}
                 >
                   {link.label}
                 </Link>
@@ -743,14 +419,17 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="hnb-mobile-link"
+                  className={mobileLink}
                 >
                   {link.label}
                 </Link>
               )
             )}
 
-            <button className="hnb-mobile-cats-btn" onClick={() => setShowMobileCats(!showMobileCats)}>
+            <button
+              className="flex items-center justify-between w-full py-[11px] px-1 text-[14px] font-medium text-[#333] bg-transparent border-0 border-b border-[#f5f5f5] cursor-pointer"
+              onClick={() => setShowMobileCats(!showMobileCats)}
+            >
               All Categories
               <FiChevronDown
                 size={14}
@@ -762,7 +441,11 @@ export default function Navbar() {
             {showMobileCats && (
               <div style={{ paddingLeft: 4, paddingBottom: 4 }}>
                 {categories.map((cat) => (
-                  <Link key={cat.slug} href={`/category/${cat.slug}`} className="hnb-mobile-sub-link">
+                  <Link
+                    key={cat.slug}
+                    href={`/category/${cat.slug}`}
+                    className="block py-[7px] px-3 text-[13px] text-[#555] no-underline rounded-md [transition:background_0.12s,color_0.12s] hover:bg-[#fff5f5] hover:text-[#C0392B]"
+                  >
                     {cat.name}
                   </Link>
                 ))}
@@ -772,9 +455,12 @@ export default function Navbar() {
             {session ? (
               <div style={{ borderTop: "1px solid #f0f0f0", marginTop: 14, paddingTop: 14 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, paddingLeft: 4 }}>
-                  <div className="hnb-avatar-btn" style={{ cursor: "default", transform: "none", boxShadow: "none" }}>
+                  <div
+                    className="w-9 h-9 rounded-full bg-[linear-gradient(135deg,#C0392B,#e74c3c)] text-white font-semibold text-[14px] flex items-center justify-center border-2 border-transparent overflow-hidden p-0"
+                    style={{ cursor: "default", transform: "none", boxShadow: "none" }}
+                  >
                     {session.user?.image ? (
-                      <img src={getImageUrl(session.user.image)} alt={session.user.name || "User"} />) : (
+                      <img className={avatarImg} src={getImageUrl(session.user.image)} alt={session.user.name || "User"} />) : (
                       <span>
                         {(session.user?.name?.[0] || "U").toUpperCase()}
                       </span>
@@ -788,7 +474,7 @@ export default function Navbar() {
                 <div style={{ display: "flex", gap: 10 }}>
                   <button
                     onClick={() => { setShowMobileMenu(false); handleAccountClick(); }}
-                    className="hnb-mobile-link"
+                    className={mobileLink}
                     style={{ flex: 1, textAlign: "center", fontSize: 13, fontWeight: 500, color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "9px 0", textDecoration: "none", borderBottom: "1px solid #ddd" }}
                   >
                     My Account
