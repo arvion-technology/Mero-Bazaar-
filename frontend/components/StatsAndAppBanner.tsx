@@ -192,7 +192,7 @@ export default function StatsAndAppBanner() {
             <div className="sab-stat-item">
               <TbLayoutGrid className="sab-stat-icon" size={25} color="#9aa3b8" />
               <div>
-                <div className="sab-stat-number">18</div>
+                <div className="sab-stat-number">9</div>
                 <div className="sab-stat-label">Categories</div>
               </div>
             </div>
