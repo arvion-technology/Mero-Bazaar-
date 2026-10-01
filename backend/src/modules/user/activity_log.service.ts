@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { ActivityType } from '@prisma/client';
+import { NotificationsGateway } from '../notifications/notifications.gateway'; // adjust path
 
 const NOTIFIABLE_TYPES: ActivityType[] = [
   'PASSWORD_CHANGED',
@@ -11,14 +12,17 @@ const NOTIFIABLE_TYPES: ActivityType[] = [
 
 @Injectable()
 export class ActivityLogService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private gateway: NotificationsGateway,
+  ) {}
 
-  log(
+  async log(
     userId: string,
     type: ActivityType,
     opts?: { ipAddress?: string; deviceLabel?: string; description?: string },
   ) {
-    return this.prisma.activityLog.create({
+    const row = await this.prisma.activityLog.create({
       data: {
         userId,
         type,
@@ -27,6 +31,12 @@ export class ActivityLogService {
         description: opts?.description,
       },
     });
+
+    if (NOTIFIABLE_TYPES.includes(type)) {
+      this.gateway.emitToUser(userId, 'security-event', row);
+    }
+
+    return row;
   }
 
   list(userId: string, take = 50) {

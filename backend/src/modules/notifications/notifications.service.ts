@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { NotificationCategory } from '@prisma/client';
+import { NotificationsGateway } from './notifications.gateway';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class NotificationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private gateway: NotificationsGateway,
+  ) {}
 
   async findAllForUser(userId: string) {
     return this.prisma.notification.findMany({
@@ -57,7 +61,11 @@ export class NotificationsService {
       description: string;
     },
   ) {
-    return this.prisma.notification.create({ data: { userId, ...data } });
+    const notification = await this.prisma.notification.create({
+      data: { userId, ...data },
+    });
+    this.gateway.emitToUser(userId, 'notification', notification);
+    return notification;
   }
 
   async countUnreadForUser(userId: string) {
@@ -80,12 +88,15 @@ export class NotificationsService {
 
     if (admins.length === 0) return;
 
-    await this.prisma.notification.createMany({
+    const created = await this.prisma.notification.createManyAndReturn({
       data: admins.map((admin) => ({
         userId: admin.id,
         ...data,
       })),
     });
+    created.forEach((n) =>
+      this.gateway.emitToUser(n.userId, 'notification', n),
+    );
   }
 
   // Cleanup: read notifications older than 90 days
