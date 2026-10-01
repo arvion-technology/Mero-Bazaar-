@@ -133,12 +133,12 @@ export default function BrowseCategories() {
         .bc-view-all-arrow { font-size: 15px; transition: transform 0.2s; }
         .bc-view-all:hover .bc-view-all-arrow { transform: translateX(2px); }
 
-        /* Grid — 3 columns matching screenshot */
+        /* Grid — 3 columns, 9 categories in a clean 3×3 */
         .bc-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(3, 1fr);
           gap: 12px;
-          width:100%
+          width: 100%;
         }
 
         /* Card — horizontal layout like the screenshot */
@@ -225,7 +225,7 @@ export default function BrowseCategories() {
 
           {/* Category Grid */}
           <div className="bc-grid">
-            {categories.slice(0, 4).map((cat) => (
+            {categories.map((cat) => (
               <Link key={cat.id} href={cat.href} className="bc-card">
                 <div
                   className="bc-icon-wrap"
