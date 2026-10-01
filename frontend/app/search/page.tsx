@@ -61,7 +61,7 @@ function SearchResults() {
       setError(null);
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/search?query=${encodeURIComponent(query)}&limit=50`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/search?query=${encodeURIComponent(query)}&limit=20`,
           { next: { revalidate: 60 } },
         );
         if (!res.ok) throw new Error(`Search failed (${res.status})`);
