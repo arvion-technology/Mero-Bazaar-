@@ -13,6 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3002"),
   title: {
     default: "HamroNepal Bazaar – Buy, Sell, Book Trusted Services Across Nepal",
     template: "%s | HamroNepal Bazaar",
