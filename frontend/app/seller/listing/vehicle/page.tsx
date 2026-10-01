@@ -111,22 +111,6 @@ function NewListingContent() {
           throw new Error(data?.message || "Failed to load listing");
         }
 
-        console.log("EDIT DATA JSON:", JSON.stringify(data, null, 2));
-
-        console.log(
-          "ADDRESS:",
-          JSON.stringify(
-            {
-              vehicleAddress: data.vehicle?.address,
-              mainAddress: data.address,
-              location: data.location,
-              kmDriven: data.vehicle?.kmDriven,
-            },
-            null,
-            2,
-          ),
-        );
-
         setTitle(data.title ?? "");
         setPrice(data.price != null ? String(data.price) : "");
         setDescription(data.description ?? "");

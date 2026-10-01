@@ -79,7 +79,6 @@ function AddMedicalPhotosContent() {
 
       const data = await response.json();
 
-      console.log("EDIT API RESPONSE:", data);
 
       if (!response.ok) {
         throw new Error(data?.message || "Failed to load listing");

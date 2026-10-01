@@ -78,7 +78,6 @@ function RealEstatePhotosContent() {
           throw new Error(data?.message || "Failed to load listing");
         }
 
-        console.log("EDIT FULL DATA:", data);
 
         // Find existing images wherever the API returns them
         const rawImages =
