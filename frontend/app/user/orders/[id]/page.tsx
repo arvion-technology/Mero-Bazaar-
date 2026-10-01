@@ -9,12 +9,7 @@ import { useSession, signOut } from "next-auth/react";
 import { toast } from "react-toastify";
 import { MdVerified } from "react-icons/md";
 import type { OrderDetail as ApiOrderDetail } from "@/app/types/orders";
-import {
-  FiGrid, FiShoppingBag, FiHeart, FiBell, FiHelpCircle, FiSettings,
-  FiTrash2, FiAlertTriangle, FiLogOut, FiUser, FiChevronDown,
-  FiMenu, FiX, FiMoreHorizontal, FiAlertCircle,
-  FiPhone, FiArrowLeft, FiCheckCircle,
-} from "react-icons/fi";
+import { FiGrid, FiShoppingBag, FiHeart, FiBell, FiHelpCircle, FiSettings, FiTrash2, FiAlertTriangle, FiLogOut, FiUser, FiChevronDown, FiMenu, FiX, FiMoreHorizontal, FiAlertCircle, FiPhone, FiArrowLeft } from "react-icons/fi";
 
 const PRIMARY = "#C0392B";
 

@@ -8,12 +8,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import type { OrderDetail as ApiOrderDetail } from "@/app/types/orders";
 import { adaptLeadSentToContact, ClientMessage, LeadSent } from "@/lib/leads";
-import {
-  FiGrid, FiShoppingBag, FiHeart, FiBell, FiHelpCircle, FiSettings,
-  FiTrash2, FiChevronRight, FiTrendingUp, FiDollarSign, FiClock,
-  FiMoreHorizontal, FiAlertTriangle, FiLogOut, FiMapPin, FiUser,
-  FiChevronDown, FiMenu, FiX, FiAlertCircle,
-} from "react-icons/fi";
+import { FiGrid, FiShoppingBag, FiHeart, FiBell, FiHelpCircle, FiSettings, FiTrash2, FiChevronRight, FiDollarSign, FiClock, FiMoreHorizontal, FiAlertTriangle, FiLogOut, FiUser, FiChevronDown, FiMenu, FiX, FiAlertCircle } from "react-icons/fi";
 
 const PRIMARY = "#C0392B";
 
@@ -106,7 +101,6 @@ export default function UserDashboard() {
       .then((data) => setWishlistCount(Array.isArray(data) ? data.length : 0))
       .catch(() => setWishlistCount(0));
   }, [token]);
-
 
   useEffect(() => {
     if (!token) return;

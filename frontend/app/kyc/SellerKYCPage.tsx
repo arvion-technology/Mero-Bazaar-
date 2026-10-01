@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import {
-  FiUser, FiCalendar, FiUpload, FiCreditCard, FiCamera,
-  FiCheckCircle, FiShield, FiLock, FiArrowRight, FiArrowLeft
-} from "react-icons/fi";
+import { FiUser, FiCalendar, FiUpload, FiCreditCard, FiCamera, FiCheckCircle, FiShield, FiArrowRight, FiArrowLeft } from "react-icons/fi";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useSession } from "next-auth/react";
@@ -185,7 +182,6 @@ export default function SellerKYCPage() {
     checkExisting();
      
   }, [session, router, isEditMode]);
-
 
   const [showCamera, setShowCamera] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);

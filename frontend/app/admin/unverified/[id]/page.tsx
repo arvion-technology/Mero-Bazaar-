@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { FiBell, FiChevronRight, FiMenu } from "react-icons/fi";
+import { FiChevronRight, FiMenu } from "react-icons/fi";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import KYCDetailsContentPending from "@/components/KYCDetailsContentPending";
 import type { VendorKycDetail, MappedKycDetail } from "@/app/types/kyc";

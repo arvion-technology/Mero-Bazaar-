@@ -3,26 +3,9 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import {
-  FiSearch,
-  FiMapPin,
-  FiHeart,
-  FiCheck,
-  FiChevronDown,
-  FiTool,
-  FiLoader,
-  FiAlertTriangle,
-  FiShare2,
-} from "react-icons/fi";
-import { FaHeart, FaStar, FaHammer } from "react-icons/fa";
-import {
-  MdHandyman,
-  MdConstruction,
-  MdPlumbing,
-  MdElectricalServices,
-  MdFormatPaint,
-  MdCleaningServices,
-} from "react-icons/md";
+import { FiSearch, FiMapPin, FiHeart, FiChevronDown, FiTool, FiLoader, FiAlertTriangle, FiShare2 } from "react-icons/fi";
+import { FaHeart } from "react-icons/fa";
+import { MdHandyman, MdPlumbing, MdElectricalServices, MdFormatPaint, MdCleaningServices } from "react-icons/md";
 import { api } from "@/lib/api";
 import { toTradesCard } from "@/lib/adapters/tradesAdapter";
 import type { TradesCard, TradesListing } from "@/app/types/trades";

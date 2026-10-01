@@ -1,21 +1,6 @@
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import {
-  FiSearch,
-  FiCheckCircle,
-  FiStar,
-  FiShield,
-  FiScissors,
-  FiHome,
-  FiHeart,
-  FiDroplet,
-  FiTruck,
-  FiCoffee,
-  FiKey,
-  FiTool,
-  FiBriefcase,
-  FiArrowRight,
-} from "react-icons/fi";
+import { FiCheckCircle, FiStar, FiShield, FiScissors, FiHome, FiHeart, FiDroplet, FiTruck, FiCoffee, FiKey, FiTool, FiBriefcase, FiArrowRight } from "react-icons/fi";
 
 export default function ServicesPage() {
   return (

@@ -12,18 +12,7 @@ import {
   FaIdCard,
   FaCalendarCheck,
 } from "react-icons/fa";
-import {
-  FiShare2,
-  FiHeart,
-  FiMapPin,
-  FiClock,
-  FiBriefcase,
-  FiCheckCircle,
-  FiMail,
-  FiMessageSquare,
-  FiChevronRight,
-  FiActivity,
-} from "react-icons/fi";
+import { FiShare2, FiHeart, FiMapPin, FiClock, FiBriefcase, FiCheckCircle, FiMail, FiMessageSquare, FiActivity } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { toMedicalDetail } from "@/lib/adapters/medicalAdapter";
 import type { MedicalDetail } from "@/app/types/listing";

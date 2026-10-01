@@ -4,19 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
-import {
-  FiMapPin,
-  FiMessageSquare,
-  FiArrowLeft,
-  FiPhone,
-  FiShare2,
-  FiHeart,
-  FiCheckCircle,
-  FiCalendar,
-  FiUser,
-  FiAlertTriangle,
-  FiSun,
-} from "react-icons/fi";
+import { FiMapPin, FiArrowLeft, FiShare2, FiHeart, FiCheckCircle, FiAlertTriangle, FiSun } from "react-icons/fi";
 import { FaHeart, FaLeaf, FaShieldAlt } from "react-icons/fa";
 import { api } from "@/lib/api";
 import { toAgricultureDetail, toAgricultureCard } from "@/lib/adapters/agricultureAdapter";

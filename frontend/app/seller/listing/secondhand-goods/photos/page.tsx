@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Suspense } from "react";
@@ -72,7 +72,6 @@ function AddPhotosContent() {
         if (!response.ok) {
           throw new Error(data?.message || "Failed to load listing");
         }
-
 
         // Find existing images wherever the API returns them
         const rawImages =

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FiLock, FiEye, FiEyeOff, FiAlertTriangle } from "react-icons/fi";
 import { toast } from "react-toastify";
@@ -315,7 +315,6 @@ function ResetPasswordForm() {
     </>
   );
 }
-
 
 export default function ResetPassword() {
   return (

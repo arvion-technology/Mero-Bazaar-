@@ -6,16 +6,7 @@ import Footer from "@/components/Footer";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  FiSearch,
-  FiMapPin,
-  FiChevronDown,
-  FiMessageSquare,
-  FiHeart,
-  FiCheckCircle,
-  FiInbox,
-  FiShare2,
-} from "react-icons/fi";
+import { FiSearch, FiMapPin, FiChevronDown, FiHeart, FiCheckCircle, FiShare2 } from "react-icons/fi";
 import {
   FaHeart,
   FaLeaf,

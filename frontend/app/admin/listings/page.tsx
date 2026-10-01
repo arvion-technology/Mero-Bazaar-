@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { FiBell, FiMenu, FiLogOut, FiSearch } from "react-icons/fi";
+import { FiMenu, FiLogOut, FiSearch } from "react-icons/fi";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import Link from "next/link";
 import type { ListingCategory, ListingStatus, AdminListingRecord } from "@/app/types/admin-listing";

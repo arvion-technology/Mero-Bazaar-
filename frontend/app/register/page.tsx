@@ -5,19 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  FiUser,
-  FiMail,
-  FiLock,
-  FiEye,
-  FiEyeOff,
-  FiMapPin,
-  FiArrowRight,
-  FiArrowLeft,
-  FiShoppingBag,
-  FiBriefcase,
-  FiPhone,
-} from "react-icons/fi";
+import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiMapPin, FiArrowRight, FiArrowLeft, FiShoppingBag, FiBriefcase } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import { api } from "../../lib/api";

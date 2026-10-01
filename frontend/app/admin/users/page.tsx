@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { FiBell, FiMenu, FiLogOut, FiSearch, FiCheckCircle, FiXCircle } from "react-icons/fi";
+import { FiMenu, FiLogOut, FiSearch, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import Link from "next/link";
 import type { KycFilterStatus, UserRole, AdminUserRecord } from "@/app/types/admin-user";

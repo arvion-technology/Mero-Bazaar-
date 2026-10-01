@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
-import { FiPhone, FiMessageSquare, FiMail } from "react-icons/fi";
+import { FiPhone } from "react-icons/fi";
 import { FaStar, FaRegStar } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import type { ListingDetail } from "../app/types/listing";

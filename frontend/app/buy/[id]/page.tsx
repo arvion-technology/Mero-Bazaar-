@@ -8,31 +8,10 @@ import SellerCard from "@/components/SellerCard";
 import type { BuyCard, BuyProduct } from "@/app/types/buy";
 import { useRouter } from "next/navigation";
 import { useFoodCart } from "@/app/context/FoodCartContext"; 
-import {
-  FiArrowLeft,
-  FiMapPin,
-  FiHeart,
-  FiShare2,
-  FiShoppingCart,
-  FiCheckCircle,
-  FiStar,
-  FiClock,
-  FiShield,
-  FiTruck,
-  FiRotateCcw,
-  FiCheck,
-  FiFrown,
-  FiZap,
-  FiTag,
-  FiPhone,
-  FiCalendar,
-  FiAlertCircle,
-  FiRefreshCw,
-} from "react-icons/fi";
+import { FiArrowLeft, FiMapPin, FiShare2, FiShoppingCart, FiCheckCircle, FiStar, FiClock, FiShield, FiTruck, FiRotateCcw, FiCheck, FiFrown, FiZap, FiTag, FiPhone, FiCalendar, FiAlertCircle, FiRefreshCw } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 import { toBuyDetail, toBuyCard } from "@/lib/buyAdapter";
 import type { RawListing } from "@/lib/buyAdapter";
-
 
 /* ─────────── TOAST TYPE ─────────── */
 interface Toast {

@@ -4,21 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Suspense } from "react";
-import {
-  FiArrowLeft,
-  FiChevronRight,
-  FiChevronDown,
-  FiMapPin,
-  FiFileText,
-  FiBriefcase,
-  FiImage,
-  FiEye,
-  FiCheck,
-  FiX,
-  FiPlus,
-  FiBox,
-  FiCalendar,
-} from "react-icons/fi";
+import { FiArrowLeft, FiChevronRight, FiChevronDown, FiFileText, FiImage, FiEye, FiCheck, FiBox, FiCalendar } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { useDraft } from "./DraftContext";

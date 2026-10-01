@@ -3,18 +3,8 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import {
-  FiShare2,
-  FiHeart,
-  FiMapPin,
-  FiClock,
-  FiCheckCircle,
-  FiPhone,
-  FiMessageSquare,
-  FiMaximize,
-  FiDroplet,
-} from "react-icons/fi";
-import { FaStar, FaRegStar, FaHeart, FaBed, FaCar } from "react-icons/fa";
+import { FiShare2, FiHeart, FiMapPin, FiClock, FiCheckCircle, FiMaximize, FiDroplet } from "react-icons/fi";
+import { FaHeart, FaBed, FaCar } from "react-icons/fa";
 import type { RentalListing } from "@/app/types/realestate";
 import type { RealEstateDetail } from "@/app/types/listing";
 import { toRentalDetail } from "@/lib/adapters/realEstateAdapter";

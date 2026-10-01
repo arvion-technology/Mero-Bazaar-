@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { FiBell, FiChevronRight, FiMenu, FiLogOut } from "react-icons/fi";
+import { FiChevronRight, FiMenu, FiLogOut } from "react-icons/fi";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import type { VendorKycRecord } from "../types/kyc";
 import AdminNotificationBell from "@/components/admin/AdminNotificationBell";

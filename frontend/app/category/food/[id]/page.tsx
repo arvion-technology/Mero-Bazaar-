@@ -11,17 +11,7 @@ import type { FoodDetail } from "@/app/types/listing";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  FiMapPin,
-  FiMessageSquare,
-  FiArrowLeft,
-  FiPhone,
-  FiShare2,
-  FiCheckCircle,
-  FiStar,
-  FiClock,
-  FiHeart,
-} from "react-icons/fi";
+import { FiMapPin, FiMessageSquare, FiArrowLeft, FiShare2, FiStar, FiClock, FiHeart } from "react-icons/fi";
 import { FaHeart, FaUtensils } from "react-icons/fa";
 import SellerCard from "@/components/SellerCard";
 import { useFoodCart } from "../../../context/FoodCartContext";

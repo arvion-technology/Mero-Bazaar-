@@ -3,26 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import {
-  FiShare2,
-  FiHeart,
-  FiMapPin,
-  FiClock,
-  FiCheckCircle,
-  FiPhone,
-  FiMessageSquare,
-  FiShoppingCart,
-  FiBox,
-  FiShield,
-  FiTag,
-  FiArrowLeft,
-  FiStar,
-  FiChevronRight,
-  FiTruck,
-  FiRotateCcw,
-  FiCalendar,
-  FiZap,
-} from "react-icons/fi";
+import { FiShare2, FiHeart, FiMapPin, FiClock, FiCheckCircle, FiPhone, FiMessageSquare, FiShoppingCart, FiBox, FiShield, FiTag, FiArrowLeft, FiStar, FiTruck, FiRotateCcw, FiCalendar } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
@@ -30,18 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import SellerCard from "@/components/SellerCard";
 import type { WishlistProduct, WishlistCard, WishlistReview } from "@/app/types/wishlist";
-import {
-  toWishlistDetail,
-  toWishlistCard,
-  prefixImage,
-  formatPrice,
-  timeAgo,
-  formatDate,
-  detectCategoryRoute,
-  getCategoryLabel,
-  getSpecIcons,
-  API_BASE,
-} from "@/lib/adapters/wishlistAdapter";
+import { toWishlistDetail, toWishlistCard, formatPrice, timeAgo, detectCategoryRoute, getCategoryLabel, getSpecIcons, API_BASE } from "@/lib/adapters/wishlistAdapter";
 
 const PRIMARY = "#C0392B";
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { FiBell, FiEye, FiMenu, FiLogOut } from "react-icons/fi";
+import { FiEye, FiMenu, FiLogOut } from "react-icons/fi";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import StatusBadge from "@/components/StatusBadge";
 import type { VendorKycRecord, KYCRow } from "@/app/types/kyc";

@@ -4,9 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import {
-  FiBell, FiMenu, FiLogOut, FiArrowLeft, FiCheckCircle, FiXCircle, FiExternalLink,
-} from "react-icons/fi";
+import { FiMenu, FiLogOut, FiArrowLeft, FiCheckCircle, FiXCircle, FiExternalLink } from "react-icons/fi";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import type { VendorKycFull as VendorKyc, AdminUserDetail } from "@/app/types/admin-user";
 import { getStatusPill } from "@/app/types/admin-user_mappers";
