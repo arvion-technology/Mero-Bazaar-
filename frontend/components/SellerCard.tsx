@@ -55,7 +55,6 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
 export default function SellerCard({ seller, reviews: initialReviews, listingId, sellerId }: Props) {
   const { data: session } = useSession();
   const router = useRouter();
-  const [callRevealed, setCallRevealed] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);

@@ -36,7 +36,6 @@ export default function SecondhandDetailPage() {
   const [isFav, setIsFav] = useState(false);
   const { data: session } = useSession();
   const [favLoading, setFavLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!session?.accessToken || !id) return;

@@ -52,7 +52,6 @@ export default function MedicalDetailPage() {
   const [isFav, setIsFav] = useState(false);
   const [showFull, setShowFull] = useState(false);
   const [callRevealed, setCallRevealed] = useState(false);
-  const [copied, setCopied] = useState(false);
   const { data: session } = useSession();
   const [favLoading, setFavLoading] = useState(false);
   const [similar, setSimilar] = useState<MedicalListing[]>([]);

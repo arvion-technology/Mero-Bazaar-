@@ -148,7 +148,6 @@ export default function KYCDetailsContentPending({ kyc }: KYCDetailsContentPendi
   const { data: session } = useSession();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   if (!kyc) {
     return (

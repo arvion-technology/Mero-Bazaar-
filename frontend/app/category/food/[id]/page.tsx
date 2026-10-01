@@ -53,7 +53,6 @@ export default function FoodDetailPage() {
   const [activeImg, setActiveImg] = useState(0);
   const { data: session } = useSession();
   const [favLoading, setFavLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!session?.accessToken || !id) return;

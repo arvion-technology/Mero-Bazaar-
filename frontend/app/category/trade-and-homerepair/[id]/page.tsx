@@ -58,7 +58,6 @@ export default function TradeDetailPage() {
 
   const [isFav, setIsFav] = useState(false);
   const [showFull, setShowFull] = useState(false);
-  const [copied, setCopied] = useState(false);
   const { data: session } = useSession();
   const [favLoading, setFavLoading] = useState(false);
 

@@ -46,7 +46,6 @@ export default function ListingInfo({
   const { data: session } = useSession();
   const [isFav, setIsFav] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!session?.accessToken) return;
