@@ -100,45 +100,6 @@ export default function FoodDetailPage() {
     };
   }, [id]);
 
-  const renderStars = (rating: number, reviewCount: number) => {
-    const fullStars = Math.floor(rating);
-    const hasHalf = rating % 1 >= 0.5;
-    return (
-      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <FiStar
-            key={i}
-            size={14}
-            fill={
-              i < fullStars
-                ? "#f59e0b"
-                : i === fullStars && hasHalf
-                  ? "#f59e0b"
-                  : "none"
-            }
-            color={
-              i < fullStars || (i === fullStars && hasHalf)
-                ? "#f59e0b"
-                : "#d1d5db"
-            }
-          />
-        ))}
-        <span
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: "#111",
-            marginLeft: 6,
-          }}
-        >
-          {rating.toFixed(1)}
-        </span>
-        <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: 3 }}>
-          ({reviewCount} Reviews)
-        </span>
-      </div>
-    );
-  };
 
   const handleOrderNow = () => {
     if (!item) return;
@@ -264,12 +225,6 @@ export default function FoodDetailPage() {
     } finally {
       setFavLoading(false);
     }
-  };
-  const handleShare = () => {
-    navigator.clipboard?.writeText(window.location.href).catch(() => {});
-    setCopied(true);
-    toast.success("Link copied to clipboard");
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (

@@ -115,12 +115,6 @@ export default function MedicalDetailPage() {
   };
 }, [id]);
 
-  const handleShare = () => {
-    navigator.clipboard?.writeText(window.location.href).catch(() => {});
-    setCopied(true);
-    toast.success("Link copied to clipboard");
-    setTimeout(() => setCopied(false), 2000);
-  };
   const handleToggleFavorite = async () => {
     if (!session?.accessToken) {
       toast.error("Please log in to save jobs");

@@ -231,12 +231,6 @@ export default function PropertyDetailPage() {
       setFavLoading(false);
     }
   };
-  const handleShare = () => {
-    navigator.clipboard?.writeText(window.location.href).catch(() => {});
-    setCopied(true);
-    toast.success("Link copied to clipboard");
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   return (
     <>
