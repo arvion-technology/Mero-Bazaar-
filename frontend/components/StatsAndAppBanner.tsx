@@ -1,7 +1,7 @@
 "use client";
 
-import { FiUsers, FiFileText, FiMapPin } from "react-icons/fi";
-import { TbLayoutGrid, TbCubeUnfolded } from "react-icons/tb";
+import { FiUsers, FiFileText, FiMapPin, FiLock } from "react-icons/fi";
+import { TbLayoutGrid } from "react-icons/tb";
 import { FaGooglePlay, FaApple } from "react-icons/fa";
 
 export default function StatsAndAppBanner() {
@@ -210,12 +210,12 @@ export default function StatsAndAppBanner() {
 
             <div className="sab-stat-divider" />
 
-            {/* Blockchain Verified */}
+            {/* Secure Payments */}
             <div className="sab-stat-item">
-              <TbCubeUnfolded className="sab-stat-icon" size={25} color="#9aa3b8" />
+              <FiLock className="sab-stat-icon" size={25} color="#9aa3b8" />
               <div>
                 <div className="sab-stat-number">100%</div>
-                <div className="sab-stat-label">Blockchain Verified</div>
+                <div className="sab-stat-label">Secure Payments</div>
               </div>
             </div>
 

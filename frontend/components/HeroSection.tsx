@@ -9,7 +9,7 @@ import {
   FiCreditCard,
   FiShield,
   FiCheckCircle,
-  FiBox,
+  FiLock,
   FiMapPin,
 } from "react-icons/fi";
 
@@ -42,10 +42,10 @@ const trustBadges = [
     sub: "10,000+ Trusted",
   },
   {
-    id: "blockchain",
-    icon: <FiBox size={26} color="#4B6BFB" />,
-    title: "Blockchain Verified",
-    sub: "Tamper-proof records",
+    id: "secure",
+    icon: <FiLock size={26} color="#4B6BFB" />,
+    title: "Secure & Encrypted",
+    sub: "Your data is protected",
   },
   {
     id: "payments",
