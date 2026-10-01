@@ -250,7 +250,7 @@ export default function CheckoutPage() {
             >
               {paying ? "Processing…" : isReservation && secondsLeft === 0 ? "Reservation Expired" : (
                 <>
-                  <img src="/esewa_logo.png" alt="eSewa" style={{ height: 18 }} />
+                  <img src="/esewa_logo.png" alt="eSewa" style={{ height: 18, width: "auto" }} />
                   Pay with eSewa
                 </>
               )}
@@ -271,7 +271,7 @@ export default function CheckoutPage() {
             >
               {payingKhalti ? "Processing…" : isReservation && secondsLeft === 0 ? "Reservation Expired" : (
                 <>
-                  <img src="/khalti.png" alt="Khalti" style={{ height: 18 }} />
+                  <img src="/khalti.png" alt="Khalti" style={{ height: 18, width: "auto" }} />
                   Pay with Khalti
                 </>
               )}
