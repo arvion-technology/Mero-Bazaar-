@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Footer from "@/components/Footer";
@@ -46,41 +46,47 @@ function SearchResults() {
   const [error, setError] = useState<string | null>(null);
   const [imgFailed, setImgFailed] = useState<Record<string, boolean>>({});
 
-  // keep input in sync when the URL query changes (back/forward)
-  useEffect(() => setInput(q), [q]);
+  // Keep the input box in sync with the URL query (back/forward) using the
+  // "adjust state during render" pattern instead of setState-in-effect.
+  const [prevQ, setPrevQ] = useState(q);
+  if (prevQ !== q) {
+    setPrevQ(q);
+    setInput(q);
+  }
 
-  const runSearch = useCallback(
-    async (query: string) => {
-      if (!query) {
-        setResults([]);
-        setError(null);
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/search?query=${encodeURIComponent(query)}&limit=20`,
-          { next: { revalidate: 60 } },
-        );
-        if (!res.ok) throw new Error(`Search failed (${res.status})`);
-        const data = (await res.json()) as SearchListing[];
-        setResults(Array.isArray(data) ? data : []);
-      } catch (e) {
-        console.error("Search error:", e);
-        setError("Couldn't load results right now. Please try again.");
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
+  // Turn the loading flag on during render when the query changes.
+  const [loadingKey, setLoadingKey] = useState(q);
+  if (loadingKey !== q) {
+    setLoadingKey(q);
+    setLoading(q.length > 0);
+  }
 
   useEffect(() => {
-    runSearch(q);
-  }, [q, runSearch]);
+    if (!q) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/search?query=${encodeURIComponent(q)}&limit=20`,
+        );
+        if (cancelled) return;
+        if (!res.ok) throw new Error(`Search failed (${res.status})`);
+        const data = (await res.json()) as SearchListing[];
+        if (!cancelled) setResults(Array.isArray(data) ? data : []);
+      } catch (e) {
+        if (!cancelled) {
+          console.error("Search error:", e);
+          setError("Couldn't load results right now. Please try again.");
+          setResults([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [q]);
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();

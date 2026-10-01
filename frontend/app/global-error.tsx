@@ -45,6 +45,12 @@ export default function GlobalError({
           >
             Reload
           </button>
+          {error?.digest && (
+            <details style={{ marginTop: 20, color: "#9ca3af", fontSize: 12 }}>
+              <summary style={{ cursor: "pointer" }}>Technical details</summary>
+              <code>{error.digest}</code>
+            </details>
+          )}
         </div>
       </body>
     </html>
