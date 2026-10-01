@@ -60,7 +60,9 @@ export default function SellerDashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { kycStatus, kycRejectionReason } = useKycStatus();
-  const isKycLocked = kycStatus !== "VERIFIED";
+  const role = session?.user?.role;
+  // Only VENDOR accounts are gated on KYC; regular USERs may sell immediately.
+  const isKycLocked = role === "VENDOR" && kycStatus !== "VERIFIED";
 
   const [chartData, setChartData] = useState<MonthlySalesData[]>([]);
   const [chartLoading, setChartLoading] = useState(true);
@@ -528,7 +530,7 @@ export default function SellerDashboard() {
         }
       `}</style>
 
-      {kycStatus === "NOT_STARTED" && (
+      {role === "VENDOR" && kycStatus === "NOT_STARTED" && (
         <div style={{
           background: "#EFF6FF", color: "#1E40AF", padding: "14px 16px",
           borderRadius: 10, marginBottom: 20, fontSize: 13, fontWeight: 500,
@@ -542,13 +544,13 @@ export default function SellerDashboard() {
         </div>
       )}
 
-      {kycStatus === "PENDING" && (
+      {role === "VENDOR" && kycStatus === "PENDING" && (
         <div style={{ background: "#FFF3CD", color: "#856404", padding: "12px 16px", borderRadius: 10, marginBottom: 20, fontSize: 13, fontWeight: 500, border: "1px solid #ffc107" }}>
           Your KYC is under review. You will be able to create listings once approved.
         </div>
       )}
 
-      {kycStatus === "REJECTED" && (
+      {role === "VENDOR" && kycStatus === "REJECTED" && (
         <div style={{
           background: "#FEF2F2", color: "#991B1B", padding: "14px 16px",
           borderRadius: 10, marginBottom: 20, fontSize: 13, fontWeight: 500,
