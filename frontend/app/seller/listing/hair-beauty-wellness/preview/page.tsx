@@ -21,8 +21,8 @@ const CARD_BG = "#ffffff";
 
 const categoryConfig: Record<ServiceCategory, { endpoint: string }> = {
   Beauty: { endpoint: "/api/beauty" },
-  Hair: { endpoint: "/api/hair" },
-  Wellness: { endpoint: "/api/wellness" },
+  Hair: { endpoint: "/api/beauty" },
+  Wellness: { endpoint: "/api/beauty" },
 };
 
 export default function PreviewServicePage() {

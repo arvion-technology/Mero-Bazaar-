@@ -510,7 +510,7 @@ export default function UserDashboard() {
                     setShowNotifDropdown((v) => !v);
                     setNotifSeen(true);
                     if (securityNotifs.some((n) => !n.read)) {
-                      fetch("/api/profile/notifications/security/mark-read", {
+                      fetch("/api/user/notifications/security/mark-read", {
                         method: "POST",
                         headers: { Authorization: `Bearer ${token}` },
                       }).then(() => {

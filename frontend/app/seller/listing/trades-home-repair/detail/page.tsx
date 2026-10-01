@@ -224,7 +224,7 @@ function TradesHomeRepairDetailContent() {
 
     const loadExistingListing = async () => {
       try {
-        const res = await fetch(`/api/trades-home-repair/${editId}`, {
+        const res = await fetch(`/api/trades/${editId}`, {
           headers: {
             Authorization: `Bearer ${session.accessToken}`,
           },
