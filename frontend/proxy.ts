@@ -74,7 +74,7 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/", nextUrl));
   }
 
-  if (requiresSeller && role !== "VENDOR" && role !== "ADMIN") {
+  if (requiresSeller && role !== "USER" && role !== "VENDOR" && role !== "ADMIN") {
     return NextResponse.redirect(new URL("/", nextUrl));
   }
 

@@ -9,7 +9,7 @@ import { Roles } from './roles.decorator';
 export const SellerOnly = () =>
   applyDecorators(
     UseGuards(JwtAuthGuard, RolesGuard),
-    Roles('VENDOR', 'ADMIN'),
+    Roles('USER', 'VENDOR', 'ADMIN'),
   );
 
 export const DoctorOnly = () =>

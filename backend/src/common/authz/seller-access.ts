@@ -20,8 +20,10 @@ export async function assertVerifiedSeller(
 
   if (!user) throw new ForbiddenException('Account not found');
   if (user.role === 'ADMIN') return;
+  // Regular users may also sell (unverified); VENDORs are the KYC-verified tier.
+  if (user.role === 'USER') return;
   if (user.role !== 'VENDOR') {
-    throw new ForbiddenException('Only sellers can publish listings.');
+    throw new ForbiddenException('Only registered users can publish listings.');
   }
   if (!user.vendorProfile?.isVerified) {
     throw new ForbiddenException(

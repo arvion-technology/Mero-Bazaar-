@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { TbGridDots } from "react-icons/tb";
-import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX, FiUser, FiLogOut, FiShoppingCart, FiHeart, FiPackage } from "react-icons/fi";
+import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX, FiUser, FiLogOut, FiShoppingCart, FiHeart, FiPackage, FiPlusSquare } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { useFoodCart } from "@/app/context/FoodCartContext";
 
@@ -666,6 +666,15 @@ export default function Navbar() {
               onClick={() => router.push(session ? "/user/orders" : "/register")}
             >
               <FiPackage size={20} />
+            </button>
+
+            <button
+              className="hnb-bell"
+              aria-label="Sell"
+              title="Sell"
+              onClick={() => router.push(session ? "/seller/dashboard" : "/register")}
+            >
+              <FiPlusSquare size={20} />
             </button>
 
             <div ref={notifRef} style={{ position: "relative" }}>
