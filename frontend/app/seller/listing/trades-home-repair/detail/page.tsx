@@ -332,11 +332,11 @@ function TradesHomeRepairDetailContent() {
       toast.error("Please fill all required fields");
       return;
     }
-    toast.success("Details saved! Preview your listing.");
+    toast.success("Details saved! Add photos.");
     if (editId) {
-      router.push(`/seller/listing/trades-home-repair/preview?edit=${editId}`);
+      router.push(`/seller/listing/trades-home-repair/photos?edit=${editId}`);
     } else {
-      router.push("/seller/listing/trades-home-repair/preview");
+      router.push("/seller/listing/trades-home-repair/photos");
     }
   };
 

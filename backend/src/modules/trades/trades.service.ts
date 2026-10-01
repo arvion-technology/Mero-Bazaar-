@@ -27,7 +27,7 @@ export class TradesService {
         location: dto.city,
         latitude: dto.latitude,
         longitude: dto.longitude,
-        images: [],
+        images: dto.images ?? [],
         user: {
           connect: {
             id: userId,

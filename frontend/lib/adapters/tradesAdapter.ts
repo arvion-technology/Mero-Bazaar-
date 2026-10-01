@@ -98,6 +98,7 @@ interface RawTradesForm {
   latitude?: number;
   longitude?: number;
   mapPosition?: [number, number];
+  images?: string[];
 }
 
 function toNumber(value: unknown): number | undefined {
@@ -139,5 +140,8 @@ export function formToCreateTradesPayload(raw: RawTradesForm): CreateTradesPaylo
     warrantyGiven: toBool(raw.warrantyGiven, false),
     latitude: toNumber(lat) ?? toNumber(raw.latitude) ?? 0,
     longitude: toNumber(lng) ?? toNumber(raw.longitude) ?? 0,
+    images: Array.isArray(raw.images)
+      ? raw.images.filter((i) => typeof i === "string")
+      : undefined,
   };
 }

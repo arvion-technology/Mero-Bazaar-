@@ -82,6 +82,7 @@ export interface CreateTradesPayload {
   warrantyGiven: boolean;
   latitude: number;
   longitude: number;
+  images?: string[];
 }
 
 export interface TradesCard {

@@ -55,4 +55,9 @@ export class CreateTradesDto {
   @Type(() => Number)
   @IsNumber()
   longitude: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
 }

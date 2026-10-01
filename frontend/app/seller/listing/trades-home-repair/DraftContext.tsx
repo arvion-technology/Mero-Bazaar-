@@ -17,6 +17,7 @@ export interface TradesDraftData {
   avgResponseTime: string;
   address: string;
   mapPosition: [number, number];
+  images: string[];
 }
 
 export interface TradesDraftContextType {
@@ -39,6 +40,7 @@ export const defaultData: TradesDraftData = {
   avgResponseTime: "1 Hour",
   address: "Kalanki, Kathmandu, Nepal",
   mapPosition: [27.7172, 85.3240],
+  images: [],
 };
 
 export const TradesDraftContext = createContext<TradesDraftContextType | null>(null);
