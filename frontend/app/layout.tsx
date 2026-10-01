@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import ConditionalNavbar from "@/components/ConditionalNavbar";
@@ -13,9 +13,32 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "HamroNepal Bazaar – Buy, Sell, Book Trusted Services Across Nepal",
+  title: {
+    default: "HamroNepal Bazaar – Buy, Sell, Book Trusted Services Across Nepal",
+    template: "%s | HamroNepal Bazaar",
+  },
   description:
     "Nepal's most trusted digital marketplace. Buy, sell, book and find services across Nepal. Verified sellers, safe payments, buyer protection.",
+  applicationName: "HamroNepal Bazaar",
+  openGraph: {
+    title: "HamroNepal Bazaar – Buy, Sell, Book Trusted Services Across Nepal",
+    description:
+      "Nepal's most trusted digital marketplace. Verified sellers, safe payments, buyer protection.",
+    type: "website",
+    siteName: "HamroNepal Bazaar",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HamroNepal Bazaar – Buy, Sell, Book Trusted Services Across Nepal",
+    description:
+      "Nepal's most trusted digital marketplace. Verified sellers, safe payments, buyer protection.",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#C0392B",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
