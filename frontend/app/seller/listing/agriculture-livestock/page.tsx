@@ -20,7 +20,6 @@ import { useDraft } from "./DraftContext";
 import LocationPicker from "@/components/LocationPicker";
  
 const ACCENT = "#2563eb";
-const ACCENT_HOVER = "#1d4ed8";
 const ACCENT_LIGHT = "#eff6ff";
 const DANGER = "#dc2626";
 const SUCCESS = "#10b981";

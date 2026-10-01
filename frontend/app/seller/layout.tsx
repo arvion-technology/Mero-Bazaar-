@@ -19,7 +19,6 @@ const SITE_PRIMARY = "#C0392B";
 const PRIMARY = "#0f172a";
 const ACCENT = "#3b82f6";
 const SUCCESS = "#10b981";
-const WARNING = "#f59e0b";
 const DANGER = "#ef4444";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";

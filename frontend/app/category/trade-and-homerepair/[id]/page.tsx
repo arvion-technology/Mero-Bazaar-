@@ -198,8 +198,6 @@ export default function TradeDetailPage() {
     );
   }
 
-  const lat = listing.latitude ?? DEFAULT_LAT;
-  const lng = listing.longitude ?? DEFAULT_LNG;
 
   return (
     <>

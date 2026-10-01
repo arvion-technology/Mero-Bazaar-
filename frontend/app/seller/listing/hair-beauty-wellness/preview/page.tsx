@@ -12,7 +12,6 @@ import { Suspense } from "react";
 const ACCENT = "#2563eb";
 const ACCENT_HOVER = "#1d4ed8";
 const SUCCESS = "#10b981";
-const ACCENT_LIGHT = "#eff6ff";
 const BORDER = "#e2e8f0";
 const TEXT_PRIMARY = "#0f172a";
 const TEXT_SECONDARY = "#64748b";

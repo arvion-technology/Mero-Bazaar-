@@ -21,12 +21,10 @@ import { useSession } from "next-auth/react";
 import LocationPicker from "@/components/LocationPicker";
 
 const ACCENT = "#2563eb";
-const ACCENT_HOVER = "#1d4ed8";
 const ACCENT_LIGHT = "#eff6ff";
 const DANGER = "#dc2626";
 const SUCCESS = "#10b981";
 const BORDER = "#e2e8f0";
-const BORDER_FOCUS = "#bfdbfe";
 const TEXT_PRIMARY = "#0f172a";
 const TEXT_SECONDARY = "#64748b";
 const TEXT_MUTED = "#94a3b8";

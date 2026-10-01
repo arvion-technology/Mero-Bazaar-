@@ -30,7 +30,6 @@ const SUCCESS = "#10b981";
 const BORDER = "#e2e8f0";
 const TEXT_PRIMARY = "#0f172a";
 const TEXT_SECONDARY = "#64748b";
-const TEXT_MUTED = "#94a3b8";
 const BG = "#f8fafc";
 const CARD_BG = "#ffffff";
 

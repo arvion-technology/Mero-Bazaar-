@@ -20,7 +20,6 @@ import { useTradesDraft } from "../DraftContext";
 import LocationPicker from "@/components/LocationPicker";
 
 const ACCENT = "#2563eb";
-const ACCENT_HOVER = "#1d4ed8";
 const ACCENT_LIGHT = "#eff6ff";
 const DANGER = "#dc2626";
 const SUCCESS = "#10b981";
@@ -49,8 +48,6 @@ const responseTimes = [
   "Next Day",
 ];
 
-const DEFAULT_LAT = 27.7172;
-const DEFAULT_LNG = 85.324;
 
 const MapWithNoSSR = dynamic(() => import("../../../../../components/MapComponent"), {
   ssr: false,
