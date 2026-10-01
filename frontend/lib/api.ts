@@ -1,5 +1,4 @@
 import { JobListing } from "@/app/types/jobs";
-import type { DBListing, Vehicle } from "../app/types/vehicle";
 import type { RegisterPayload, LoginPayload, AuthResponse } from "../app/types/auth";
 import type { SecondhandListing } from "../app/types/secondhand";
 import type { RentalListing } from "../app/types/realestate";
@@ -101,9 +100,6 @@ async function del<T>(path: string): Promise<T> {
 export const api = {
   register:    (payload: RegisterPayload) => post<AuthResponse>('/api/auth/register', payload),
   login:       (payload: LoginPayload) => post<AuthResponse>('/api/auth/login', payload),
-
-  getListings: () => get<DBListing[]>('/listings'),
-  getVehicles: () => get<Vehicle[]>('/vehicles'),
 
   getJobs:     (params?: URLSearchParams) => get<JobListing[]>('/api/jobs', params),
   getJob:      (id: string) => get<JobListing>(`/api/jobs/${id}`),
