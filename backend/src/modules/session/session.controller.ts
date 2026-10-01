@@ -1,4 +1,4 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Delete, Param, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt_auth.guards';
 import { SessionsService } from './session.service';
 import type { Request } from 'express';
@@ -16,5 +16,14 @@ export class SessionsController {
       req.user.id,
       req.user.sessionId,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  revoke(
+    @Param('id') id: string,
+    @Req() req: Request & { user: { id: string } },
+  ) {
+    return this.sessionsService.revoke(req.user.id, id);
   }
 }

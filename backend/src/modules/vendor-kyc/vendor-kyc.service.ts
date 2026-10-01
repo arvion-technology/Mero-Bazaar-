@@ -151,6 +151,40 @@ export class VendorKycService {
     }
   }
 
+  async uploadDocument(
+    userId: string,
+    docType: string,
+    file?: Express.Multer.File,
+  ) {
+    const allowed = ['panCardUrl', 'photoUrl', 'selfieWithPanUrl'];
+    if (!allowed.includes(docType)) {
+      throw new BadRequestException('Invalid document type.');
+    }
+    if (!file) throw new BadRequestException('Document file is required.');
+
+    const existing = await this.prisma.vendorKyc.findUnique({
+      where: { userId },
+    });
+    if (!existing) {
+      throw new BadRequestException(
+        'Submit your KYC details first before uploading documents.',
+      );
+    }
+
+    const currentFilename = (existing as Record<string, unknown>)[docType] as
+      | string
+      | null
+      | undefined;
+    const filename = await this.processUpload(file, currentFilename);
+
+    const updated = await this.prisma.vendorKyc.update({
+      where: { userId },
+      data: { [docType]: filename } as Record<string, unknown>,
+    });
+
+    return updated;
+  }
+
   async sendContactOtp(
     userId: string,
     phone: string,

@@ -1,1 +1,0 @@
-export { JobSearchDto as QueryJobDto } from '../../../search/dto/job_search.dto';

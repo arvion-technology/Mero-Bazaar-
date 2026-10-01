@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 
 @Injectable()
@@ -23,5 +23,16 @@ export class SessionsService {
       ...s,
       isCurrent: s.id === currentSessionId,
     }));
+  }
+
+  async revoke(userId: string, sessionId: string) {
+    const result = await this.prisma.session.updateMany({
+      where: { id: sessionId, userId },
+      data: { revokedAt: new Date() },
+    });
+    if (result.count === 0) {
+      throw new NotFoundException('Session not found.');
+    }
+    return { success: true };
   }
 }

@@ -3,6 +3,7 @@ import {
   ConflictException,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import {
@@ -11,6 +12,7 @@ import {
   ListingStatus,
   PaymentMethod,
   DisputeStatus,
+  ListingCategory,
 } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -115,6 +117,11 @@ export class OrdersService {
       where: { id: listingId },
     });
     if (!listing) throw new NotFoundException('Listing not found.');
+    if (listing.category !== ListingCategory.FOODS) {
+      throw new BadRequestException(
+        'Delivery orders are only available for food listings. Use reservation or contact the seller for other items.',
+      );
+    }
     if (!listing.price)
       throw new ConflictException('This listing has no price set.');
     if (listing.userId === buyerId) {

@@ -13,7 +13,7 @@ import { ListingsService } from './listings.service';
 import { CreateListingDto } from './dto/create_listing.dto';
 import { UpdateListingDto } from './dto/update_listing.dto';
 import { SearchListingDto } from './dto/search_listing.dto';
-import { ListingCategory } from '@prisma/client';
+import { ListingCategory, ListingStatus } from '@prisma/client';
 import { SellerOnly } from '../auth/roles_access.decorator';
 
 @Controller('listings')
@@ -71,6 +71,16 @@ export class ListingsController {
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.listingsService.remove(id, req.user.id);
+  }
+
+  @SellerOnly()
+  @Patch(':id/status')
+  setStatus(
+    @Param('id') id: string,
+    @Body('status') status: ListingStatus,
+    @Request() req,
+  ) {
+    return this.listingsService.setStatus(id, req.user.id, status);
   }
 
   @Get(':id/similar')

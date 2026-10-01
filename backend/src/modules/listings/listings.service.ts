@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateListingDto } from './dto/create_listing.dto';
 import { UpdateListingDto } from './dto/update_listing.dto';
 import { SearchListingDto } from './dto/search_listing.dto';
 import { buildListingFilter } from '../../search/builders/listings_filter.builder';
-import { ListingCategory } from '@prisma/client';
+import { ListingCategory, ListingStatus } from '@prisma/client';
 import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
 //categorical assumed weights
@@ -179,6 +179,24 @@ export class ListingsService {
   async remove(id: string, userId: string) {
     return this.prisma.listing.delete({
       where: { id, userId },
+    });
+  }
+
+  async setStatus(id: string, userId: string, status: ListingStatus) {
+    const allowed: ListingStatus[] = [
+      ListingStatus.ACTIVE,
+      ListingStatus.SOLD,
+      ListingStatus.RESERVED,
+    ];
+    if (!allowed.includes(status)) {
+      throw new BadRequestException(
+        'Only ACTIVE, SOLD, or RESERVED status may be set by the seller.',
+      );
+    }
+    return this.prisma.listing.update({
+      where: { id, userId },
+      data: { status },
+      select: { id: true, status: true },
     });
   }
 

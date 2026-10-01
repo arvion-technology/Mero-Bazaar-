@@ -3,6 +3,7 @@ import {
   Controller,
   Param,
   UploadedFiles,
+  UploadedFile,
   UseGuards,
   Post,
   Get,
@@ -12,7 +13,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { VendorKycService } from './vendor-kyc.service';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { kycUploadconfig } from './upload/kyc-upload.config';
 import { SubmitKycDto } from './dto/submit-kyc.dto';
 import { RolesGuard } from '../auth/roles.guard';
@@ -51,6 +52,17 @@ export class VendorKycController {
     },
   ) {
     return this.vendorKycService.submitKyc(req.user.id, dto, files);
+  }
+
+  @Post('upload')
+  @Roles(UserRole.VENDOR)
+  @UseInterceptors(FileInterceptor('document', kycUploadconfig))
+  uploadDocument(
+    @Request() req,
+    @Body('docType') docType: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.vendorKycService.uploadDocument(req.user.id, docType, file);
   }
 
   @Post('send')
