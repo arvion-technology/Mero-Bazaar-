@@ -7,7 +7,6 @@ export const metadata = {
 export default function ContactPage() {
   const channels = [
     { icon: "✉️", label: "Email Support", value: "support@hamronepalbazaar.com", note: "We reply within 1–2 business days." },
-    { icon: "📞", label: "Phone / WhatsApp", value: "+977 98XXXXXXXX", note: "Available 9 AM – 6 PM (Nepal Time)." },
     { icon: "🏢", label: "Office", value: "Kathmandu, Nepal", note: "Visit by appointment only." },
   ];
 
