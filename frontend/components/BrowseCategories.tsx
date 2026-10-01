@@ -160,6 +160,27 @@ export default function BrowseCategories() {
           border-color: #e0e0e0;
         }
 
+        /* Subtle staggered entrance */
+        @keyframes bcFadeInUp {
+          from { opacity: 0; transform: translateY(14px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .bc-card {
+          animation: bcFadeInUp 0.45s ease backwards;
+        }
+        .bc-card:nth-child(1) { animation-delay: 0.04s; }
+        .bc-card:nth-child(2) { animation-delay: 0.08s; }
+        .bc-card:nth-child(3) { animation-delay: 0.12s; }
+        .bc-card:nth-child(4) { animation-delay: 0.16s; }
+        .bc-card:nth-child(5) { animation-delay: 0.20s; }
+        .bc-card:nth-child(6) { animation-delay: 0.24s; }
+        .bc-card:nth-child(7) { animation-delay: 0.28s; }
+        .bc-card:nth-child(8) { animation-delay: 0.32s; }
+        .bc-card:nth-child(9) { animation-delay: 0.36s; }
+        @media (prefers-reduced-motion: reduce) {
+          .bc-card { animation: none; }
+        }
+
         /* Icon */
         .bc-icon-wrap {
           width: 54px;
