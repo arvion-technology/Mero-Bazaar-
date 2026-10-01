@@ -190,6 +190,18 @@ html, body { overflow-x: hidden; }
 `;
 
 /* ─────────── COMPONENT ─────────── */
+const CATEGORY_SLUG: Record<string, string> = {
+  VEHICLE: "vehicles",
+  JOB: "job",
+  MEDICAL: "medical",
+  TRADES: "trade-and-homerepair",
+  RENTAL: "rent-and-real-estate",
+  AGRICULTURE: "agriculture-and-livestock",
+  SECONDHAND: "secondhand",
+  FOODS: "food",
+  BEAUTY: "beauty",
+};
+
 export default function BuyDetailPage() {
   const params = useParams();
   const id = params?.id as string;
@@ -219,26 +231,41 @@ export default function BuyDetailPage() {
   );
 
   const buyNow = () => {
-  if (!product) return;
+    if (!product) return;
 
-  addItem({
-    id: product.id,
-    listingId: product.id,
-    name: product.title,
-    description: product.detailedDescription || "",
-    variant: "",
-    price: typeof product.price === "number"
-      ? product.price
-      : parseFloat(String(product.priceDisplay).replace(/[^0-9.]/g, "")) || 0,
-    quantity: 1,
-    image: product.images[0] || "",
-  });
+    // Non-food items do not use the home-delivery cart: route to the
+    // category-specific detail page, which offers the correct action
+    // (reserve / apply / book / contact).
+    const slug = CATEGORY_SLUG[product.category];
+    if (product.category !== "FOODS" && slug) {
+      router.push(`/category/${slug}/${product.id}`);
+      return;
+    }
 
-  router.push("/cart");
-};
+    addItem({
+      id: product.id,
+      listingId: product.id,
+      name: product.title,
+      description: product.detailedDescription || "",
+      variant: "",
+      price: typeof product.price === "number"
+        ? product.price
+        : parseFloat(String(product.priceDisplay).replace(/[^0-9.]/g, "")) || 0,
+      quantity: 1,
+      image: product.images[0] || "",
+    });
+
+    router.push("/cart");
+  };
 
   const addToCart = () => {
     if (!product) return;
+
+    const slug = CATEGORY_SLUG[product.category];
+    if (product.category !== "FOODS" && slug) {
+      router.push(`/category/${slug}/${product.id}`);
+      return;
+    }
 
     addItem({
       id: product.id,

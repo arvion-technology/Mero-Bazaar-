@@ -18,6 +18,7 @@ interface Listing {
   price: number | null;
   category: string;
   images: string[];
+  status?: string;
   vehicle: VehicleDetails | null;
 }
 
@@ -28,6 +29,7 @@ export default function SellerProductPage() {
   const [products, setProducts] = useState<Listing[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sellingId, setSellingId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [deleteItem, setDeleteItem] = useState<Listing | null>(null);
 
@@ -113,6 +115,47 @@ export default function SellerProductPage() {
       setDeletingId(null);
     }
   }
+
+  async function handleMarkSold(item: Listing) {
+    if (!session?.accessToken) {
+      showToast("Please login again.");
+      return;
+    }
+    const nextStatus = item.status === "SOLD" ? "ACTIVE" : "SOLD";
+    try {
+      setSellingId(item.id);
+      const response = await fetch(`/api/listings/${item.id}/status`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.message || "Failed to update listing status");
+      }
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === item.id ? { ...p, status: nextStatus } : p,
+        ),
+      );
+      showToast(
+        nextStatus === "SOLD"
+          ? "Listing marked as sold."
+          : "Listing marked as active.",
+      );
+    } catch (error) {
+      console.error("Mark sold failed:", error);
+      showToast(
+        error instanceof Error ? error.message : "Failed to update status",
+      );
+    } finally {
+      setSellingId(null);
+    }
+  }
+
   const editRoutes: Record<string, string> = {
     VEHICLE: "/seller/listing/vehicle",
     JOB: "/seller/listing/job",
@@ -416,6 +459,35 @@ export default function SellerProductPage() {
                     }}
                   >
                     Edit
+                  </button>
+
+                  {/* MARK SOLD / ACTIVE */}
+                  <button
+                    type="button"
+                    disabled={sellingId === item.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMarkSold(item);
+                    }}
+                    style={{
+                      flex: 1,
+                      height: 34,
+                      borderRadius: 7,
+                      border: "1px solid #bbf7d0",
+                      background: item.status === "SOLD" ? "#16a34a" : "#f59e0b",
+                      color: "#fff",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor:
+                        sellingId === item.id ? "not-allowed" : "pointer",
+                      opacity: sellingId === item.id ? 0.6 : 1,
+                    }}
+                  >
+                    {sellingId === item.id
+                      ? "Saving..."
+                      : item.status === "SOLD"
+                        ? "Mark Active"
+                        : "Mark Sold"}
                   </button>
 
                   {/* DELETE */}
