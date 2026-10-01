@@ -8,7 +8,7 @@ import { saveCheckoutQueue } from "@/lib/checkoutQueue";
 
 const methods = [
   { id: "esewa" as const, name: "eSewa", logo: "/esewa_logo.png" },
-  { id: "khalti" as const, name: "Khalti", logo: "/Khalti.png" },
+  { id: "khalti" as const, name: "Khalti", logo: "/khalti.png" },
   { id: "connectips" as const, name: "ConnectIPS", logo: "/logo_connectIPS.png" },
 ];
 

@@ -15,8 +15,8 @@ const categoryRoute: Record<string, string> = {
   TRADES: "/category/trade-and-homerepair",
   BEAUTY: "/category/beauty",
   SECONDHAND: "/category/secondhand",
-  FOODS: "/category/foods",
-  AGRICULTURE: "/category/agriculture",
+  FOODS: "/category/food",
+  AGRICULTURE: "/category/agriculture-and-livestock",
 };
 
 const categoryGradients: Record<string, string> = {

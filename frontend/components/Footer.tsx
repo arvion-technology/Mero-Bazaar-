@@ -280,7 +280,7 @@ export default function Footer() {
               {/* khalti needs white pill background */}
               <span className="hnb-khalti-pill">
                 <Image
-                  src="/Khalti.png"
+                  src="/khalti.png"
                   alt="Khalti"
                   width={80}
                   height={28}
