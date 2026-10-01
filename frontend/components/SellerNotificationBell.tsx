@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { FiBell } from "react-icons/fi";
 import { useSidebarBadges } from "./SidebarBadgesContext";
 import { activityLabel, isKnownActivity } from "@/lib/activityLabel";
+import { useNotificationSocket } from "@/lib/notificationSocket";
 
 type NotificationItem = {
   id: string;
@@ -81,13 +82,28 @@ export default function SellerNotificationBell({
       .finally(() => setLoadingList(false));
   }
 
-  // load security events on mount
+   // load security events on mount
   useEffect(() => {
     fetchActivity();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  function toggleOpen() {
+  useNotificationSocket(token, {
+    onNotification: (n) => {
+      setNotifications((prev) => (prev.some((x) => x.id === n.id) ? prev : [n, ...prev]));
+      refetchBadges();
+    },
+    onSecurityEvent: (a) => {
+      if (!isKnownActivity(a.type)) return;
+      setActivity((prev) => (prev.some((x) => x.id === a.id) ? prev : [a, ...prev]));
+    },
+    onConnect: () => {
+      fetchActivity();
+      refetchBadges();
+    },
+  });
+
+    function toggleOpen() {
     const willOpen = !open;
     setOpen(willOpen);
     if (willOpen) {

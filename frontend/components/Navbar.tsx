@@ -7,6 +7,7 @@ import { TbGridDots } from "react-icons/tb";
 import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { activityLabel, isKnownActivity } from "@/lib/activityLabel";
+import { useNotificationSocket } from "@/lib/notificationSocket";
 
 const categories = [
   { name: "Vehicles", slug: "vehicles" },
@@ -146,7 +147,8 @@ export default function Navbar() {
       : `${process.env.NEXT_PUBLIC_API_URL}${image}`;
   }
 
-  useEffect(() => {
+  //notification handler
+  function loadAll() {
     if (!token) return;
     const headers = { Authorization: `Bearer ${token}` };
 
@@ -155,36 +157,51 @@ export default function Navbar() {
       .then((data: ActivityItem[]) =>
         setSecurityNotifs((data ?? []).filter((a) => isKnownActivity(a.type)))
       )
-      .catch(() => { });
+      .catch(() => {});
 
     fetch("/api/user/notifications", { headers })
       .then((res) => (res.ok ? res.json() : []))
       .then((data: UserNotif[]) => setUserNotifs(data ?? []))
-      .catch(() => { });
+      .catch(() => {});
+  }
+
+  useEffect(() => {
+    loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  useNotificationSocket(token, {
+    onNotification: (n) =>
+      setUserNotifs((prev) => (prev.some((x) => x.id === n.id) ? prev : [n, ...prev])),
+    onSecurityEvent: (a) => {
+      if (!isKnownActivity(a.type)) return;
+      setSecurityNotifs((prev) => (prev.some((x) => x.id === a.id) ? prev : [a, ...prev]));
+    },
+    onConnect: loadAll,
+  });
+
   function markAllRead() {
-    if (!token) return;
-    const headers = { Authorization: `Bearer ${token}` };
+  if (!token) return;
+  const headers = { Authorization: `Bearer ${token}` };
 
-    if (securityNotifs.some((n) => !n.read)) {
-      fetch("/api/user/notifications/security/mark-read", { method: "POST", headers })
-        .then((res) => {
-          if (!res.ok) return;
-          setSecurityNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
-        })
-        .catch(() => { });
-    }
-
-    if (userNotifs.some((n) => !n.read)) {
-      fetch("/api/user/notifications/mark-all-read", { method: "POST", headers })
-        .then((res) => {
-          if (!res.ok) return;
-          setUserNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
-        })
-        .catch(() => { });
-    }
+  if (securityNotifs.some((n) => !n.read)) {
+    fetch("/api/user/notifications/security/mark-read", { method: "POST", headers })
+      .then((res) => {
+        if (!res.ok) return;
+        setSecurityNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+      })
+      .catch(() => {});
   }
+
+  if (userNotifs.some((n) => !n.read)) {
+    fetch("/api/user/notifications/mark-all-read", { method: "POST", headers })
+      .then((res) => {
+        if (!res.ok) return;
+        setUserNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+      })
+      .catch(() => {});
+  }
+}
 
   return (
     <>

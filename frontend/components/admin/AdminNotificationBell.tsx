@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { FiBell } from "react-icons/fi";
+import { useNotificationSocket } from "@/lib/notificationSocket";
 
 const SITE_PRIMARY = "#C0392B";
 
@@ -42,14 +43,34 @@ export default function AdminNotificationBell({
     ? { Authorization: `Bearer ${session.accessToken}` }
     : null;
 
-  // fetch unread count once session is ready
-  useEffect(() => {
+  function fetchCount() {
     if (!headers) return;
     fetch("/api/user/notifications/unread-count", { headers })
       .then((r) => (r.ok ? r.json() : { count: 0 }))
       .then((d: { count: number }) => setUnreadCount(d?.count ?? 0))
       .catch(() => setUnreadCount(0));
+  }
+
+  // fetch unread count once session is ready
+  useEffect(() => {
+    fetchCount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.accessToken]);
+
+  useNotificationSocket(session?.accessToken ?? null, {
+    onNotification: (n) => {
+      setUnreadCount((c) => (c ?? 0) + 1);
+      if (fetchedList) {
+        setNotifications((prev) =>
+          prev.some((x) => x.id === n.id) ? prev : [n, ...prev].slice(0, 8)
+        );
+      }
+    },
+    onConnect: () => {
+      fetchCount();
+      setFetchedList(false);
+    },
+  });
 
   function toggleOpen() {
     setOpen((v) => !v);
