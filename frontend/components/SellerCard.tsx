@@ -19,7 +19,7 @@ type Props = {
 
 function StarRating({ rating }: { rating: number }) {
   return (
-    <span style={{ display: "flex", gap: 2 }}>
+    <span className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map((i) =>
         i <= Math.round(rating)
           ? <FaStar    key={i} size={13} color="#F39C12" />
@@ -32,7 +32,7 @@ function StarRating({ rating }: { rating: number }) {
 function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const [hover, setHover] = useState(0);
   return (
-    <span style={{ display: "flex", gap: 4 }}>
+    <span className="flex gap-1">
       {[1, 2, 3, 4, 5].map((i) => (
         <button
           key={i}
@@ -40,7 +40,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
           onClick={() => onChange(i)}
           onMouseEnter={() => setHover(i)}
           onMouseLeave={() => setHover(0)}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}
+          className="cursor-pointer border-none bg-transparent p-0.5"
           aria-label={`${i} star${i > 1 ? "s" : ""}`}
         >
           {i <= (hover || value)
@@ -86,7 +86,7 @@ export default function SellerCard({ seller, reviews: initialReviews, listingId,
       if (!res.ok) {
         const err = await res.json().catch(() => null);
         throw new Error(err?.message || "Failed to submit review");
-      }    
+      }
       setRating(0);
       setComment("");
       toast.success("Review submitted!");
@@ -100,85 +100,72 @@ export default function SellerCard({ seller, reviews: initialReviews, listingId,
   };
 
   return (
-    <>
-    <style>{`
-      .ld-seller-card { background: #fff; border-radius: 16px; padding: 20px 18px; box-shadow: 0 2px 14px rgba(0,0,0,.08); }
-      .ld-seller-card-title { font-size: 14px; font-weight: 800; color: #1a1a1a; margin: 0 0 14px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
-      .ld-seller-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-      .ld-seller-avatar-wrap { position: relative; flex-shrink: 0; }
-      .ld-seller-avatar { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; border: 2.5px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,.14); display: block; }
-      .ld-avatar-placeholder { width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg,#C0392B 0%,#8e1c10 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: #fff; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,.14); }
-      .ld-seller-online { position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; border-radius: 50%; background: #27ae60; border: 2px solid #fff; }
-      .ld-seller-name { font-size: 16px; font-weight: 800; color: #1a1a1a; margin: 0 0 4px; }
-      .ld-rating-row { display: flex; align-items: center; gap: 5px; }
-      .ld-rating-num { font-size: 13.5px; font-weight: 700; color: #1a1a1a; }
-      .ld-reviews { font-size: 11.5px; color: #888; }
-      .ld-seller-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
-      .ld-sbadge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-      .ld-sbadge-verified { background: #eafaf1; color: #1e8449; border: 1px solid #a9dfbf; }
-      .ld-sbadge-pro      { background: #fef9e7; color: #b7950b; border: 1px solid #f9e79f; }
-      .ld-sbadge-trusted  { background: #f4ecf7; color: #7d3c98; border: 1px solid #d7bde2; }
-      .ld-seller-stats { border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; margin-bottom: 14px; }
-      .ld-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f8f8f8; font-size: 12.5px; }
-      .ld-stat-row:last-child { border-bottom: none; }
-      .ld-stat-label { color: #777; }
-      .ld-stat-val   { color: #1a1a1a; font-weight: 700; }
-      .ld-cta-btns { display: flex; flex-direction: column; gap: 8px; }
-      .ld-btn-call { width: 100%; padding: 12px; border-radius: 10px; border: none; background: linear-gradient(135deg,#27ae60 0%,#1e8449 100%); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; font-family: inherit; box-shadow: 0 4px 14px rgba(39,174,96,.32); transition: opacity .2s, transform .15s; }
-      .ld-btn-call:hover { opacity: .9; transform: translateY(-1px); }
-      .ld-section-title { font-size: 16px; font-weight: 800; color: #1a1a1a; margin: 0 0 11px; }
-    `}</style>
+    <div className="mx-auto w-full max-w-[380px] rounded-2xl bg-white px-[18px] py-5 shadow-[0_2px_14px_rgba(0,0,0,0.08)]">
+      <p className="mb-3.5 border-b border-[#f0f0f0] pb-3 text-sm font-extrabold text-[#1a1a1a]">
+        Seller Information
+      </p>
 
-    <div className="ld-seller-card">
-      <p className="ld-seller-card-title">Seller Information</p>
-
-      <div className="ld-seller-top">
-        <div className="ld-seller-avatar-wrap">
+      <div className="mb-3 flex items-center gap-3">
+        <div className="relative shrink-0">
           {seller.avatar && seller.avatar !== "/placeholder-avatar.png" ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={seller.avatar} alt={seller.name} className="ld-seller-avatar" />
+            <img
+              src={seller.avatar}
+              alt={seller.name}
+              className="block h-[58px] w-[58px] rounded-full border-[2.5px] border-white object-cover shadow-[0_2px_10px_rgba(0,0,0,0.14)]"
+            />
           ) : (
-            <div className="ld-avatar-placeholder">
+            <div className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#C0392B_0%,#8e1c10_100%)] text-[22px] font-extrabold text-white shadow-[0_2px_10px_rgba(0,0,0,0.14)]">
               {seller.name.charAt(0).toUpperCase()}
             </div>
           )}
-          <span className="ld-seller-online" aria-label="Online" />
+          <span
+            className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full border-2 border-white bg-[#27ae60]"
+            aria-label="Online"
+          />
         </div>
 
         <div>
-          <Link href={`/sellers/${sellerId}`} className="ld-seller-name" style={{ textDecoration: "none" }}>
+          <Link
+            href={`/sellers/${sellerId}`}
+            className="mb-1 block text-base font-extrabold text-[#1a1a1a] no-underline"
+          >
             {seller.name}
           </Link>
-            <div className="ld-rating-row">
+          <div className="flex items-center gap-[5px]">
             <StarRating rating={seller.rating} />
-            <span className="ld-rating-num">{seller.rating}</span>
-            <span className="ld-reviews">({seller.reviewCount} reviews)</span>
+            <span className="text-[13.5px] font-bold text-[#1a1a1a]">{seller.rating}</span>
+            <span className="text-[11.5px] text-[#888]">({seller.reviewCount} reviews)</span>
           </div>
         </div>
       </div>
 
-      <div className="ld-seller-badges">
+      <div className="mb-3.5 flex flex-wrap gap-[5px]">
         {seller.isVerified && (
-          <span className="ld-sbadge ld-sbadge-verified">
+          <span className="inline-flex items-center gap-1 rounded-full border border-[#a9dfbf] bg-[#eafaf1] px-[9px] py-[3px] text-[11px] font-semibold text-[#1e8449]">
             <MdVerified size={11} /> Verified
           </span>
         )}
       </div>
 
-      <div className="ld-seller-stats">
+      <div className="mb-3.5 border-y border-[#f0f0f0]">
         {[
-          { label: "Member Since",   val: seller.memberSince   },
-          { label: "Total Listings", val: seller.totalListing  },
+          { label: "Member Since",   val: seller.memberSince  },
+          { label: "Total Listings", val: seller.totalListing },
         ].map(({ label, val }) => (
-          <div key={label} className="ld-stat-row">
-            <span className="ld-stat-label">{label}</span>
-            <span className="ld-stat-val">{val}</span>
+          <div
+            key={label}
+            className="flex items-center justify-between border-b border-[#f8f8f8] py-2 text-[12.5px] last:border-b-0"
+          >
+            <span className="text-[#777]">{label}</span>
+            <span className="font-bold text-[#1a1a1a]">{val}</span>
           </div>
         ))}
       </div>
-      <div className="ld-cta-btns">
+
+      <div className="flex flex-col gap-2">
         <button
-          className="ld-btn-call"
+          className="flex w-full cursor-pointer items-center justify-center gap-[7px] rounded-[10px] border-none bg-[linear-gradient(135deg,#27ae60_0%,#1e8449_100%)] p-3 font-[inherit] text-sm font-bold text-white shadow-[0_4px_14px_rgba(39,174,96,0.32)] transition hover:-translate-y-px hover:opacity-90"
           onClick={() => {
             if (!seller.phone || seller.phone === "N/A") {
               toast.error("Phone number not available");
@@ -191,72 +178,39 @@ export default function SellerCard({ seller, reviews: initialReviews, listingId,
           Call Seller
         </button>
 
-      {/* holding this feature for now */}
-        {/* <button className="ld-btn-chat">
+        {/* holding this feature for now */}
+        {/* <button className="...">
           <FiMessageSquare size={16} />
           Chat with Seller
         </button> */}
-
       </div>
 
       {!isOwnListing && (
-        <div className="ld-review-form" style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f0f0f0" }}>
-          <p className="ld-section-title" style={{ fontSize: 13, marginBottom: 8 }}>Leave a Review</p>
+        <div className="mt-4 border-t border-[#f0f0f0] pt-4">
+          <p className="mb-2 text-[13px] font-extrabold text-[#1a1a1a]">Leave a Review</p>
           <StarPicker value={rating} onChange={setRating} />
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Share your experience with this seller (optional)"
-            style={{
-              width: "100%",
-              marginTop: 10,
-              padding: 10,
-              borderRadius: 8,
-              border: "1px solid #e2e8f0",
-              fontSize: 13,
-              fontFamily: "inherit",
-              resize: "vertical",
-              minHeight: 60,
-            }}
+            className="mt-2.5 min-h-[60px] w-full resize-y rounded-lg border border-[#e2e8f0] p-2.5 font-[inherit] text-[13px]"
           />
           <button
             onClick={handleSubmitReview}
             disabled={submitting}
-            style={{
-              marginTop: 8,
-              width: "100%",
-              padding: "10px",
-              borderRadius: 8,
-              border: "none",
-              background: "#C0392B",
-              color: "#fff",
-              fontWeight: 600,
-              fontSize: 13,
-              cursor: submitting ? "not-allowed" : "pointer",
-              opacity: submitting ? 0.7 : 1,
-            }}
+            className="mt-2 w-full rounded-lg border-none bg-[#C0392B] p-2.5 text-[13px] font-semibold text-white enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
           >
             {submitting ? "Submitting..." : "Submit Review"}
           </button>
         </div>
       )}
+
       <Link
         href={`/sellers/${sellerId}`}
-        style={{
-          display: "block",
-          textAlign: "center",
-          marginTop: 16,
-          paddingTop: 14,
-          borderTop: "1px solid #f0f0f0",
-          fontSize: 13,
-          fontWeight: 600,
-          color: "black",
-          textDecoration: "none",
-        }}
+        className="mt-4 block border-t border-[#f0f0f0] pt-3.5 text-center text-[13px] font-semibold text-black no-underline"
       >
         View full profile & all reviews →
       </Link>
     </div>
-  </>
   );
 }
