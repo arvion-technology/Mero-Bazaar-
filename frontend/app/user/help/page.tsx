@@ -103,6 +103,22 @@ const supportHours = [
   { day: "Sunday", time: "10:00 AM - 4:00 PM" },
 ];
 
+/* ── Shared Tailwind class strings ── */
+const iconBtn =
+  "w-10 h-10 rounded-[10px] border border-[#e2e8f0] bg-white flex items-center justify-center cursor-pointer text-[#64748b] transition-all duration-200 relative shrink-0 hover:bg-[#f8fafc] hover:text-[#334155] hover:border-[#cbd5e1]";
+const squareBtn =
+  "rounded-lg border border-[#e2e8f0] bg-white items-center justify-center cursor-pointer text-[#64748b] transition-all duration-200 shrink-0 hover:bg-[#f8fafc] hover:text-[#334155] hover:border-[#cbd5e1]";
+const navItemBase =
+  "relative mb-0.5 flex w-full cursor-pointer items-center gap-3 whitespace-nowrap rounded-[10px] border-0 px-3.5 py-2.5 text-left font-[inherit] text-[14px] leading-normal no-underline transition-all duration-200";
+const navItemIdle = "font-medium text-[#5a6478]! hover:bg-[#f4f6fb] hover:text-slate-800!";
+const navItemActive =
+  "bg-[#fff5f5] font-semibold text-[#C0392B]! before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-r-[3px] before:bg-[#C0392B] before:content-['']";
+const navItemDanger = "font-medium text-red-500/70! hover:bg-red-500/5 hover:text-red-500!";
+const dropdownItemBase =
+  "flex items-center gap-2.5 px-4 py-[11px] text-sm font-medium cursor-pointer transition-all duration-150 border-0 bg-transparent w-full text-left";
+const navLabel = "text-[10px] font-bold text-[#b0b8c4] uppercase tracking-[1.2px] px-3 mb-2 whitespace-nowrap";
+const navIcon = "text-lg w-[22px] flex justify-center shrink-0";
+
 export default function HelpSupportPage() {
   const [activeTab, setActiveTab] = useState("help");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -133,6 +149,7 @@ export default function HelpSupportPage() {
 
   const sidebarItems = [
     { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/user/dashboard" },
+    { id: "contacts", icon: FiUser, label: "Contacts", href: "/user/contacts" },
     { id: "orders", icon: FiShoppingBag, label: "My Orders", href: "/user/orders" },
     { id: "wishlist", icon: FiHeart, label: "Wishlist", href: "/user/wishlist" },
     { id: "notification", icon: FiBell, label: "Notifications", href: "/user/notifications" },
@@ -217,1163 +234,102 @@ export default function HelpSupportPage() {
       f.a.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const collapsedHide = sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "";
+
   return (
     <>
-      <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        html, body {
-          overflow-x: hidden;
-          max-width: 100vw;
-        }
-
-        .ud-page {
-          min-height: 100vh;
-          min-height: 100dvh;
-          background: #f1f5f9;
-          display: flex;
-          font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-
-        /* Sidebar */
-        .ud-sidebar {
-          width: 260px;
-          background: #ffffff;
-          border-right: 1px solid #e8ecf0;
-          display: flex;
-          flex-direction: column;
-          flex-shrink: 0;
-          transition: width 0.3s ease, transform 0.3s ease;
-          position: fixed;
-          height: 100vh;
-          height: 100dvh;
-          left: 0;
-          top: 0;
-          z-index: 100;
-          box-shadow: 2px 0 8px rgba(0,0,0,0.04);
-        }
-
-        .ud-sidebar.collapsed {
-          width: 72px;
-        }
-
-        .ud-sidebar-header {
-          padding: 20px 20px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          border-bottom: 1px solid #f0f2f5;
-          min-height: 72px;
-          overflow: hidden;
-        }
-
-        .ud-sidebar-logo-wrap {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          text-decoration: none;
-          flex-shrink: 0;
-        }
-
-        .ud-sidebar-logo-icon {
-          width: 36px;
-          height: 36px;
-          flex-shrink: 0;
-        }
-
-        .ud-sidebar-logo-text {
-          display: flex;
-          flex-direction: column;
-          line-height: 1.1;
-          opacity: 1;
-          transition: opacity 0.2s, width 0.2s;
-          white-space: nowrap;
-          overflow: hidden;
-        }
-
-        .ud-sidebar.collapsed .ud-sidebar-logo-text {
-          opacity: 0;
-          width: 0;
-        }
-
-        .ud-logo-line1 {
-          font-size: 14px;
-          font-weight: 800;
-          color: ${PRIMARY};
-          letter-spacing: -0.3px;
-        }
-
-        .ud-logo-line2 {
-          font-size: 11px;
-          font-weight: 600;
-          color: #888;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-        }
-
-        .ud-nav-section {
-          padding: 16px 12px;
-          flex: 1;
-          overflow-y: auto;
-        }
-
-        .ud-nav-label {
-          font-size: 10px;
-          font-weight: 700;
-          color: #b0b8c4;
-          text-transform: uppercase;
-          letter-spacing: 1.2px;
-          padding: 0 12px;
-          margin-bottom: 8px;
-          white-space: nowrap;
-        }
-
-        .ud-sidebar.collapsed .ud-nav-label {
-          display: none;
-        }
-
-        .ud-nav-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 10px 14px;
-          color: #5a6478;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-          border: none;
-          background: none;
-          width: 100%;
-          text-align: left;
-          font-family: inherit;
-          text-decoration: none;
-          border-radius: 10px;
-          margin-bottom: 2px;
-          position: relative;
-          white-space: nowrap;
-        }
-
-        .ud-nav-item:hover {
-          background: #f4f6fb;
-          color: #1e293b;
-        }
-
-        .ud-nav-item.active {
-          background: #fff5f5;
-          color: ${PRIMARY};
-          font-weight: 600;
-        }
-
-        .ud-nav-item.active::before {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 3px;
-          height: 20px;
-          background: ${PRIMARY};
-          border-radius: 0 3px 3px 0;
-        }
-
-        .ud-nav-icon {
-          font-size: 18px;
-          width: 22px;
-          display: flex;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .ud-nav-text {
-          opacity: 1;
-          transition: opacity 0.2s;
-        }
-
-        .ud-sidebar.collapsed .ud-nav-text {
-          opacity: 0;
-          width: 0;
-          overflow: hidden;
-        }
-
-        .ud-sidebar-footer {
-          padding: 16px;
-          border-top: 1px solid #f0f2f5;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .ud-sidebar-avatar {
-          width: 38px;
-          height: 38px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, ${PRIMARY}, #e74c3c);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #fff;
-          font-size: 14px;
-          font-weight: 600;
-          flex-shrink: 0;
-          overflow: hidden;
-        }
-
-        .ud-sidebar-user {
-          opacity: 1;
-          transition: opacity 0.2s;
-          overflow: hidden;
-        }
-
-        .ud-sidebar.collapsed .ud-sidebar-user {
-          opacity: 0;
-          width: 0;
-        }
-
-        .ud-sidebar-name {
-          font-size: 13px;
-          font-weight: 600;
-          color: #1e293b;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 160px;
-        }
-
-        .ud-sidebar-role {
-          font-size: 11px;
-          color: #94a3b8;
-          margin-top: 1px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 160px;
-        }
-
-        /* Main Area */
-        .ud-main-area {
-          flex: 1;
-          margin-left: 260px;
-          display: flex;
-          flex-direction: column;
-          min-height: 100vh;
-          min-height: 100dvh;
-          transition: margin-left 0.3s ease;
-          width: calc(100% - 260px);
-          min-width: 0;
-        }
-
-        .ud-sidebar.collapsed ~ .ud-main-area {
-          margin-left: 72px;
-          width: calc(100% - 72px);
-        }
-
-        /* Top Header */
-        .ud-topbar {
-          background: #fff;
-          border-bottom: 1px solid #e2e8f0;
-          padding: 0 32px;
-          height: 64px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          position: sticky;
-          top: 0;
-          z-index: 50;
-          gap: 16px;
-        }
-
-        .ud-topbar-left {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          flex: 1;
-          min-width: 0;
-        }
-
-        .ud-toggle-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
-          background: #fff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: #64748b;
-          transition: all 0.2s;
-          flex-shrink: 0;
-        }
-
-        .ud-toggle-btn:hover {
-          background: #f8fafc;
-          color: #334155;
-          border-color: #cbd5e1;
-        }
-
-        .ud-breadcrumb {
-          font-size: 20px;
-          font-weight: 700;
-          color: #1e293b;
-          letter-spacing: -0.3px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .ud-topbar-right {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          flex-shrink: 0;
-        }
-
-        .ud-icon-btn {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          border: 1px solid #e2e8f0;
-          background: #fff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: #64748b;
-          transition: all 0.2s;
-          position: relative;
-          flex-shrink: 0;
-          text-decoration: none;
-        }
-
-        .ud-icon-btn:hover {
-          background: #f8fafc;
-          color: #334155;
-          border-color: #cbd5e1;
-        }
-
-        .ud-badge {
-          position: absolute;
-          top: -2px;
-          right: -2px;
-          width: 18px;
-          height: 18px;
-          background: #ef4444;
-          color: #fff;
-          font-size: 10px;
-          font-weight: 700;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 2px solid #fff;
-        }
-
-        /* Profile Dropdown */
-        .ud-profile-wrap {
-          position: relative;
-        }
-
-        .ud-profile-btn {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 5px 10px 5px 5px;
-          border-radius: 40px;
-          border: 1.5px solid #e2e8f0;
-          background: #fff;
-          cursor: pointer;
-          transition: all 0.2s;
-          font-family: inherit;
-        }
-
-        .ud-profile-btn:hover {
-          border-color: #cbd5e1;
-          background: #f8fafc;
-        }
-
-        .ud-profile-btn-avatar {
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, ${PRIMARY}, #e74c3c);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #fff;
-          font-size: 12px;
-          font-weight: 700;
-          overflow: hidden;
-          flex-shrink: 0;
-        }
-
-        .ud-profile-btn-name {
-          font-size: 13px;
-          font-weight: 600;
-          color: #1e293b;
-          max-width: 120px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .ud-profile-chevron {
-          color: #94a3b8;
-          transition: transform 0.2s;
-          flex-shrink: 0;
-        }
-
-        .ud-profile-chevron.open {
-          transform: rotate(180deg);
-        }
-
-        .ud-profile-dropdown {
-          position: absolute;
-          top: calc(100% + 8px);
-          right: 0;
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-          min-width: 200px;
-          z-index: 999;
-          overflow: hidden;
-          animation: dropdownIn 0.15s ease;
-        }
-
-        @keyframes dropdownIn {
-          from { opacity: 0; transform: translateY(-6px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .ud-dropdown-header {
-          padding: 14px 16px 12px;
-          border-bottom: 1px solid #f1f5f9;
-        }
-
-        .ud-dropdown-username {
-          font-size: 14px;
-          font-weight: 700;
-          color: #1e293b;
-        }
-
-        .ud-dropdown-email {
-          font-size: 12px;
-          color: #94a3b8;
-          margin-top: 2px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .ud-dropdown-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 11px 16px;
-          font-size: 14px;
-          font-weight: 500;
-          color: #475569;
-          cursor: pointer;
-          transition: all 0.15s;
-          border: none;
-          background: none;
-          width: 100%;
-          text-align: left;
-          font-family: inherit;
-          text-decoration: none;
-        }
-
-        .ud-dropdown-item:hover {
-          background: #f8fafc;
-          color: #1e293b;
-        }
-
-        .ud-dropdown-item.logout {
-          color: #ef4444;
-        }
-
-        .ud-dropdown-item.logout:hover {
-          background: #fef2f2;
-          color: #dc2626;
-        }
-
-        .ud-dropdown-divider {
-          height: 1px;
-          background: #f1f5f9;
-          margin: 0;
-        }
-
-        /* Main Content */
-        .ud-main {
-          flex: 1;
-          padding: 28px 32px;
-          overflow-y: auto;
-          min-width: 0;
-        }
-
-        /* Search */
-        .hs-search-wrap {
-          margin-bottom: 28px;
-        }
-
-        .hs-search-box {
-          position: relative;
-          max-width: 100%;
-        }
-
-        .hs-search-icon {
-          position: absolute;
-          left: 16px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #94a3b8;
-          pointer-events: none;
-        }
-
-        .hs-search-input {
-          width: 100%;
-          padding: 14px 16px 14px 48px;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          background: #fff;
-          font-size: 14px;
-          color: #1e293b;
-          font-family: inherit;
-          transition: all 0.2s;
-          outline: none;
-        }
-
-        .hs-search-input::placeholder {
-          color: #94a3b8;
-        }
-
-        .hs-search-input:focus {
-          border-color: ${PRIMARY};
-          box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.08);
-        }
-
-        /* Section Title */
-        .hs-section-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 16px;
-          gap: 12px;
-          flex-wrap: wrap;
-        }
-
-        .hs-section-title {
-          font-size: 16px;
-          font-weight: 700;
-          color: #1e293b;
-          letter-spacing: -0.2px;
-        }
-
-        .hs-section-link {
-          font-size: 13px;
-          font-weight: 600;
-          color: #6366f1;
-          text-decoration: none;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          transition: all 0.2s;
-          flex-shrink: 0;
-        }
-
-        .hs-section-link:hover {
-          color: #4f46e5;
-          gap: 6px;
-        }
-
-        /* Categories */
-        .hs-categories-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 16px;
-          margin-bottom: 28px;
-        }
-
-        .hs-category-card {
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 20px;
-          display: flex;
-          align-items: flex-start;
-          gap: 14px;
-          cursor: pointer;
-          transition: all 0.2s;
-          text-decoration: none;
-        }
-
-        .hs-category-card:hover {
-          box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-          transform: translateY(-2px);
-          border-color: #cbd5e1;
-        }
-
-        .hs-category-icon {
-          width: 44px;
-          height: 44px;
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-          flex-shrink: 0;
-        }
-
-        .hs-category-content {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .hs-category-title {
-          font-size: 14px;
-          font-weight: 600;
-          color: #1e293b;
-          margin-bottom: 4px;
-        }
-
-        .hs-category-desc {
-          font-size: 12px;
-          color: #64748b;
-          line-height: 1.5;
-        }
-
-        .hs-category-arrow {
-          color: #94a3b8;
-          flex-shrink: 0;
-          margin-top: 4px;
-        }
-
-        /* FAQ */
-        .hs-faq-section {
-          margin-bottom: 28px;
-        }
-
-        .hs-faq-card {
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          overflow: hidden;
-        }
-
-        .hs-faq-item {
-          border-bottom: 1px solid #f1f5f9;
-        }
-
-        .hs-faq-item:last-child {
-          border-bottom: none;
-        }
-
-        .hs-faq-question {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 16px 20px;
-          cursor: pointer;
-          transition: background 0.15s;
-          border: none;
-          background: none;
-          width: 100%;
-          text-align: left;
-          font-family: inherit;
-          font-size: 14px;
-          font-weight: 500;
-          color: #334155;
-        }
-
-        .hs-faq-question:hover {
-          background: #fafbfc;
-        }
-
-        .hs-faq-question-text {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .hs-faq-chevron {
-          color: #94a3b8;
-          flex-shrink: 0;
-          transition: transform 0.2s;
-        }
-
-        .hs-faq-chevron.open {
-          transform: rotate(180deg);
-        }
-
-        .hs-faq-answer {
-          padding: 0 20px 16px;
-          font-size: 13px;
-          color: #64748b;
-          line-height: 1.7;
-          animation: fadeIn 0.2s ease;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        /* Contact */
-        .hs-contact-card {
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 20px;
-        }
-
-        .hs-contact-title {
-          font-size: 15px;
-          font-weight: 700;
-          color: #1e293b;
-          margin-bottom: 4px;
-        }
-
-        .hs-contact-sub {
-          font-size: 12px;
-          color: #64748b;
-          margin-bottom: 16px;
-        }
-
-        .hs-contact-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px 0;
-          border-bottom: 1px solid #f1f5f9;
-          text-decoration: none;
-          transition: background 0.15s;
-          cursor: pointer;
-        }
-
-        .hs-contact-item:last-child {
-          border-bottom: none;
-        }
-
-        .hs-contact-item:hover {
-          background: #fafbfc;
-          margin: 0 -20px;
-          padding-left: 20px;
-          padding-right: 20px;
-        }
-
-        .hs-contact-icon-wrap {
-          width: 36px;
-          height: 36px;
-          border-radius: 8px;
-          background: #f1f5f9;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #64748b;
-          flex-shrink: 0;
-        }
-
-        .hs-contact-info {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .hs-contact-label {
-          font-size: 13px;
-          font-weight: 600;
-          color: #1e293b;
-        }
-
-        .hs-contact-desc {
-          font-size: 12px;
-          color: #64748b;
-          margin-top: 2px;
-        }
-
-        .hs-contact-status {
-          font-size: 11px;
-          font-weight: 600;
-          padding: 3px 8px;
-          border-radius: 10px;
-          flex-shrink: 0;
-        }
-
-        .hs-contact-arrow {
-          color: #94a3b8;
-          flex-shrink: 0;
-        }
-
-        /* Support Hours */
-        .hs-hours-card {
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 20px;
-          margin-top: 16px;
-        }
-
-        .hs-hours-title {
-          font-size: 14px;
-          font-weight: 700;
-          color: #1e293b;
-          margin-bottom: 12px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .hs-hours-row {
-          display: flex;
-          justify-content: space-between;
-          padding: 6px 0;
-          font-size: 12px;
-        }
-
-        .hs-hours-day {
-          color: #64748b;
-        }
-
-        .hs-hours-time {
-          color: #334155;
-          font-weight: 500;
-        }
-
-        .hs-hours-note {
-          margin-top: 12px;
-          padding: 10px 12px;
-          background: #f8fafc;
-          border-radius: 8px;
-          font-size: 12px;
-          color: #64748b;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        /* Layout */
-        .hs-content-grid {
-          display: grid;
-          grid-template-columns: 1fr 320px;
-          gap: 24px;
-        }
-
-        /* Backdrop */
-        .ud-backdrop {
-          display: none;
-          position: fixed;
-          inset: 0;
-          background: rgba(15, 23, 42, 0.45);
-          backdrop-filter: blur(2px);
-          z-index: 99;
-          animation: backdropIn 0.2s ease;
-        }
-        @keyframes backdropIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-
-        .ud-sidebar-close {
-          display: none;
-          position: absolute;
-          top: 18px;
-          right: 16px;
-          width: 32px;
-          height: 32px;
-          border: none;
-          background: #f1f5f9;
-          border-radius: 8px;
-          cursor: pointer;
-          align-items: center;
-          justify-content: center;
-          color: #64748b;
-          transition: all 0.2s;
-          z-index: 1;
-        }
-        .ud-sidebar-close:hover {
-          background: #e2e8f0;
-          color: #1e293b;
-        }
-
-        .ud-hamburger {
-          display: none;
-          width: 38px;
-          height: 38px;
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
-          background: #fff;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: #64748b;
-          transition: all 0.2s;
-          flex-shrink: 0;
-        }
-        .ud-hamburger:hover {
-          background: #f8fafc;
-          color: #334155;
-          border-color: #cbd5e1;
-        }
-
-        .ud-desktop-toggle {
-          display: flex;
-        }
-
-        /* Responsive */
-        @media (max-width: 1200px) {
-          .hs-content-grid {
-            grid-template-columns: 1fr 280px;
-          }
-          .hs-categories-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-
-        @media (max-width: 1023px) {
-          .ud-sidebar {
-            transform: translateX(-100%);
-            width: 280px !important;
-            z-index: 200;
-          }
-          .ud-sidebar.mobile-open {
-            transform: translateX(0);
-            box-shadow: 4px 0 32px rgba(0,0,0,0.15);
-          }
-          .ud-backdrop.active {
-            display: block;
-          }
-          .ud-sidebar.mobile-open .ud-sidebar-close {
-            display: flex;
-          }
-          .ud-hamburger {
-            display: flex;
-          }
-          .ud-desktop-toggle {
-            display: none;
-          }
-          .ud-main-area {
-            margin-left: 0 !important;
-            width: 100% !important;
-          }
-          .ud-main {
-            padding: 20px 20px 32px;
-          }
-          .ud-topbar {
-            padding: 0 20px;
-          }
-          .hs-content-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        @media (max-width: 767px) {
-          .ud-main {
-            padding: 16px;
-          }
-          .ud-topbar {
-            padding: 0 16px;
-            height: 56px;
-          }
-          .ud-breadcrumb {
-            font-size: 18px;
-          }
-          .hs-categories-grid {
-            grid-template-columns: 1fr;
-          }
-          .hs-category-card {
-            padding: 16px;
-          }
-          .hs-faq-question {
-            padding: 14px 16px;
-            font-size: 13px;
-          }
-          .hs-faq-answer {
-            padding: 0 16px 14px;
-          }
-          .hs-contact-card,
-          .hs-hours-card {
-            padding: 16px;
-          }
-          .ud-profile-btn-name {
-            display: none;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .ud-main {
-            padding: 12px;
-          }
-          .ud-topbar {
-            padding: 0 12px;
-          }
-        }
-
-        /* Delete Modal */
-        .ud-modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,0.5);
-          backdrop-filter: blur(4px);
-          z-index: 9999;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-          animation: fadeIn 0.2s ease;
-        }
-        .ud-modal {
-          background: #fff;
-          border-radius: 16px;
-          padding: 32px;
-          width: 100%;
-          max-width: 420px;
-          box-shadow: 0 25px 50px rgba(0,0,0,0.25);
-          animation: slideUp 0.25s ease;
-        }
-        .ud-modal-icon {
-          width: 56px;
-          height: 56px;
-          border-radius: 14px;
-          background: #fef2f2;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #ef4444;
-          margin: 0 auto 20px;
-        }
-        .ud-modal-title {
-          font-size: 18px;
-          font-weight: 700;
-          color: #1e293b;
-          text-align: center;
-          margin-bottom: 8px;
-        }
-        .ud-modal-body {
-          font-size: 14px;
-          color: #64748b;
-          text-align: center;
-          line-height: 1.6;
-          margin-bottom: 24px;
-        }
-        .ud-modal-body strong { color: #ef4444; }
-        .ud-modal-error {
-          font-size: 13px;
-          color: #ef4444;
-          background: #fef2f2;
-          border-radius: 8px;
-          padding: 10px 14px;
-          margin-bottom: 16px;
-          text-align: center;
-        }
-        .ud-modal-actions {
-          display: flex;
-          gap: 12px;
-        }
-        .ud-modal-cancel {
-          flex: 1;
-          padding: 11px 0;
-          border-radius: 10px;
-          border: 1.5px solid #e2e8f0;
-          background: #fff;
-          color: #475569;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          font-family: inherit;
-        }
-        .ud-modal-cancel:hover {
-          background: #f8fafc;
-          border-color: #cbd5e1;
-        }
-        .ud-modal-delete {
-          flex: 1;
-          padding: 11px 0;
-          border-radius: 10px;
-          border: none;
-          background: #ef4444;
-          color: #fff;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          font-family: inherit;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-        }
-        .ud-modal-delete:hover:not(:disabled) { background: #dc2626; }
-        .ud-modal-delete:disabled { opacity: 0.7; cursor: not-allowed; }
-
-        .ud-nav-item.danger {
-          color: rgba(239,68,68,0.7);
-        }
-        .ud-nav-item.danger:hover {
-          background: rgba(239,68,68,0.06);
-          color: #ef4444;
-        }
-      `}</style>
-
-      <div className={`ud-backdrop ${sidebarOpen ? "active" : ""}`} onClick={() => setSidebarOpen(false)} aria-hidden="true" />
-
-      <div className="ud-page">
-        <aside className={`ud-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
-          <button type="button" className="ud-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
+      {/* Mobile backdrop */}
+      <div
+        className={`hidden fixed inset-0 bg-[rgba(15,23,42,0.45)] backdrop-blur-[2px] z-[99] animate-[backdropIn_0.2s_ease] ${
+          sidebarOpen ? "max-lg:block" : ""
+        }`}
+        onClick={() => setSidebarOpen(false)}
+        aria-hidden="true"
+      />
+
+      <div className="min-h-dvh bg-[#f1f5f9] flex font-[Inter,-apple-system,BlinkMacSystemFont,'Segoe_UI',Roboto,'Helvetica_Neue',Arial,sans-serif]">
+        {/* ── Sidebar ── */}
+        <aside
+          className={`fixed left-0 top-0 h-dvh z-[100] flex flex-col shrink-0 bg-white border-r border-[#e8ecf0] shadow-[2px_0_8px_rgba(0,0,0,0.04)] transition-[width,transform] duration-300 ease-in-out ${
+            sidebarCollapsed ? "w-[72px]" : "w-[260px]"
+          } max-lg:w-[280px] max-lg:z-[200] ${
+            sidebarOpen
+              ? "max-lg:translate-x-0 max-lg:shadow-[4px_0_32px_rgba(0,0,0,0.15)]"
+              : "max-lg:-translate-x-full"
+          }`}
+        >
+          <button
+            type="button"
+            className={`hidden absolute top-[18px] right-4 w-8 h-8 border-0 bg-[#f1f5f9] rounded-lg cursor-pointer items-center justify-center text-[#64748b] transition-all duration-200 z-[1] hover:bg-[#e2e8f0] hover:text-[#1e293b] ${
+              sidebarOpen ? "max-lg:flex" : ""
+            }`}
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close sidebar"
+          >
             <FiX size={18} />
           </button>
 
-          <div className="ud-sidebar-header">
-            <Link href="/" className="ud-sidebar-logo-wrap">
-              <svg className="ud-sidebar-logo-icon" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <div className="p-5 flex items-center gap-2.5 border-b border-[#f0f2f5] min-h-[72px] overflow-hidden">
+            <Link href="/" className="flex items-center gap-2.5 shrink-0">
+              <svg className="w-9 h-9 shrink-0" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="38" height="38" rx="8" fill={PRIMARY} />
                 <path d="M10 10 C10 10, 14 8, 19 13 C24 18, 28 10, 28 10 M10 28 C10 28, 14 30, 19 25 C24 20, 28 28, 28 28 M10 10 Q10 19 10 28 M28 10 Q28 19 28 28 M14 19 C14 19 16 22 19 22 C22 22 24 19 24 19" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                 <circle cx="19" cy="19" r="3" fill="#fff" opacity="0.9" />
               </svg>
-              <div className="ud-sidebar-logo-text">
-                <span className="ud-logo-line1">HamroNepal</span>
-                <span className="ud-logo-line2">Bazaar</span>
+              <div
+                className={`flex flex-col leading-[1.1] transition-[opacity,width] duration-200 whitespace-nowrap overflow-hidden ${
+                  sidebarCollapsed ? "opacity-0 w-0" : "opacity-100"
+                }`}
+              >
+                <span className="text-sm font-extrabold text-[#C0392B] tracking-[-0.3px]">HamroNepal</span>
+                <span className="text-[11px] font-semibold text-[#888] tracking-[0.5px] uppercase">Bazaar</span>
               </div>
             </Link>
           </div>
 
-          <div className="ud-nav-section">
-            <div className="ud-nav-label">Menu</div>
+          <div className="px-3 py-4 flex-1 overflow-y-auto">
+            <div className={`${navLabel} ${sidebarCollapsed ? "hidden" : ""}`}>Menu</div>
             {sidebarItems.slice(0, 4).map((item) => (
-              <Link key={item.id} href={item.href} className={`ud-nav-item ${activeTab === item.id ? "active" : ""}`} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}>
-                <span className="ud-nav-icon"><item.icon size={18} /></span>
-                <span className="ud-nav-text">{item.label}</span>
+              <Link key={item.id} href={item.href} className={`${navItemBase} ${activeTab === item.id ? navItemActive : navItemIdle}`} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}>
+                <span className={navIcon}><item.icon size={18} /></span>
+                <span className={`transition-opacity duration-200 ${collapsedHide}`}>{item.label}</span>
               </Link>
             ))}
 
-            <div className="ud-nav-label" style={{ marginTop: 16 }}>Account</div>
+            <div className={`${navLabel} mt-4 ${sidebarCollapsed ? "hidden" : ""}`}>Account</div>
             {sidebarItems.slice(4).map((item) => (
-              <Link key={item.id} href={item.href} className={`ud-nav-item ${activeTab === item.id ? "active" : ""}`} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}>
-                <span className="ud-nav-icon"><item.icon size={18} /></span>
-                <span className="ud-nav-text">{item.label}</span>
+              <Link key={item.id} href={item.href} className={`${navItemBase} ${activeTab === item.id ? navItemActive : navItemIdle}`} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}>
+                <span className={navIcon}><item.icon size={18} /></span>
+                <span className={`transition-opacity duration-200 ${collapsedHide}`}>{item.label}</span>
               </Link>
             ))}
 
-            <button type="button" className="ud-nav-item danger" onClick={() => { setShowDeleteModal(true); setSidebarOpen(false); }} title="Delete Account">
-              <span className="ud-nav-icon"><FiTrash2 size={18} /></span>
-              <span className="ud-nav-text">Delete Account</span>
+            <button type="button" className={`${navItemBase} ${navItemDanger}`} onClick={() => { setShowDeleteModal(true); setSidebarOpen(false); }} title="Delete Account">
+              <span className={navIcon}><FiTrash2 size={18} /></span>
+              <span className={`transition-opacity duration-200 ${collapsedHide}`}>Delete Account</span>
             </button>
           </div>
         </aside>
 
-        <div className="ud-main-area">
-          <header className="ud-topbar">
-            <div className="ud-topbar-left">
-              <button type="button" className="ud-hamburger" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar">
+        {/* ── Main area ── */}
+        <div
+          className={`flex-1 flex flex-col min-h-dvh min-w-0 transition-[margin-left] duration-300 ease-in-out ml-0 w-full ${
+            sidebarCollapsed ? "lg:ml-[72px] lg:w-[calc(100%-72px)]" : "lg:ml-[260px] lg:w-[calc(100%-260px)]"
+          }`}
+        >
+          <header className="bg-white border-b border-[#e2e8f0] px-8 h-16 flex items-center justify-between sticky top-0 z-50 gap-4 max-lg:px-5 max-md:px-4 max-md:h-14 max-[480px]:px-3">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <button type="button" className={`hidden max-lg:flex w-[38px] h-[38px] ${squareBtn}`} onClick={() => setSidebarOpen(true)} aria-label="Open sidebar">
                 <FiMenu size={20} />
               </button>
-              <button type="button" className="ud-toggle-btn ud-desktop-toggle" onClick={() => setSidebarCollapsed((prev) => !prev)} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
+              <button type="button" className={`flex max-lg:hidden w-9 h-9 ${squareBtn}`} onClick={() => setSidebarCollapsed((prev) => !prev)} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
                 <FiMoreHorizontal size={18} />
               </button>
-              <h1 className="ud-breadcrumb">Help & Support</h1>
+              <h1 className="text-xl font-bold text-[#1e293b] tracking-[-0.3px] whitespace-nowrap overflow-hidden text-ellipsis max-md:text-lg">Help & Support</h1>
             </div>
-            <div className="ud-topbar-right">
-              <div style={{ position: "relative" }} ref={notifDropdownRef}>
-                <button type="button" className="ud-icon-btn" title="Notifications" onClick={() => {
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="relative" ref={notifDropdownRef}>
+                <button type="button" className={iconBtn} title="Notifications" onClick={() => {
                   setShowNotifDropdown((v) => !v);
                   setNotifSeen(true);
                   if (securityNotifs.some((n) => !n.read)) {
@@ -1386,44 +342,51 @@ export default function HelpSupportPage() {
                   }
                 }}>
                   <FiBell size={18} />
-                  {notificationCount > 0 && !notifSeen && <span className="ud-badge">{notificationCount}</span>}
+                  {notificationCount > 0 && !notifSeen && (
+                    <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-[#ef4444] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">{notificationCount}</span>
+                  )}
                 </button>
 
                 {showNotifDropdown && (
-                  <div style={{ position: "absolute", top: "calc(100% + 10px)", right: 0, background: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.1)", minWidth: "280px", zIndex: 999, overflow: "hidden", animation: "dropdownIn 0.15s ease" }}>
-                    <div style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9", fontWeight: 700, fontSize: "13px", color: "#1e293b" }}>Notifications</div>
+                  <div className="absolute top-[calc(100%+10px)] right-0 bg-white border border-[#e2e8f0] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.1)] min-w-[280px] z-[999] overflow-hidden animate-[dropdownIn_0.15s_ease]">
+                    <div className="px-4 py-3 border-b border-[#f1f5f9] font-bold text-[13px] text-[#1e293b]">Notifications</div>
                     {notifications.length > 0 ? (
                       notifications.map((msg, i) => (
-                        <Link key={i} href="/user/settings" style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", fontSize: "13px", color: "#475569", borderBottom: i < notifications.length - 1 ? "1px solid #f8fafc" : "none", textDecoration: "none", transition: "background 0.15s" }} onClick={() => setShowNotifDropdown(false)}>
-                          <FiAlertCircle size={15} color="#f59e0b" style={{ flexShrink: 0 }} />{msg}
+                        <Link
+                          key={i}
+                          href="/user/settings"
+                          className={`flex items-center gap-2.5 px-4 py-3 text-[13px] text-[#475569] transition-colors duration-150 ${i < notifications.length - 1 ? "border-b border-[#f8fafc]" : ""}`}
+                          onClick={() => setShowNotifDropdown(false)}
+                        >
+                          <FiAlertCircle size={15} color="#f59e0b" className="shrink-0" />{msg}
                         </Link>
                       ))
                     ) : (
-                      <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>You&apos;re all caught up</div>
+                      <div className="p-4 text-[13px] text-[#94a3b8] text-center">You&apos;re all caught up</div>
                     )}
                   </div>
                 )}
               </div>
 
-              <div className="ud-profile-wrap" ref={profileDropdownRef}>
-                <button type="button" className="ud-profile-btn" onClick={() => setShowProfileDropdown((prev) => !prev)}>
-                  <div className="ud-profile-btn-avatar">
-                    {session?.user?.image ? <img src={getImageUrl(session.user.image)} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : userInitials}
+              <div className="relative" ref={profileDropdownRef}>
+                <button type="button" className="flex items-center gap-2 py-[5px] pr-2.5 pl-[5px] rounded-[40px] border-[1.5px] border-[#e2e8f0] bg-white cursor-pointer transition-all duration-200 hover:border-[#cbd5e1] hover:bg-[#f8fafc]" onClick={() => setShowProfileDropdown((prev) => !prev)}>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#C0392B] to-[#e74c3c] flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
+                    {session?.user?.image ? <img src={getImageUrl(session.user.image)} alt="avatar" className="w-full h-full object-cover" /> : userInitials}
                   </div>
-                  <FiChevronDown size={14} className={`ud-profile-chevron ${showProfileDropdown ? "open" : ""}`} />
+                  <FiChevronDown size={14} className={`text-[#94a3b8] transition-transform duration-200 shrink-0 ${showProfileDropdown ? "rotate-180" : ""}`} />
                 </button>
 
                 {showProfileDropdown && (
-                  <div className="ud-profile-dropdown">
-                    <div className="ud-dropdown-header">
-                      <div className="ud-dropdown-username">{session?.user?.name || "User"}</div>
-                      <div className="ud-dropdown-email">{session?.user?.email || ""}</div>
+                  <div className="absolute top-[calc(100%+8px)] right-0 bg-white border border-[#e2e8f0] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.1)] min-w-[200px] z-[999] overflow-hidden animate-[dropdownIn_0.15s_ease]">
+                    <div className="pt-3.5 pb-3 px-4 border-b border-[#f1f5f9]">
+                      <div className="text-sm font-bold text-[#1e293b]">{session?.user?.name || "User"}</div>
+                      <div className="text-xs text-[#94a3b8] mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap">{session?.user?.email || ""}</div>
                     </div>
-                    <Link href="/user/settings" className="ud-dropdown-item" onClick={() => setShowProfileDropdown(false)}>
+                    <Link href="/user/settings" className={`${dropdownItemBase} text-[#475569] hover:bg-[#f8fafc] hover:text-[#1e293b]`} onClick={() => setShowProfileDropdown(false)}>
                       <FiUser size={15} />Profile & Settings
                     </Link>
-                    <div className="ud-dropdown-divider" />
-                    <button type="button" className="ud-dropdown-item logout" onClick={() => signOut({ callbackUrl: "/" })}>
+                    <div className="h-px bg-[#f1f5f9]" />
+                    <button type="button" className={`${dropdownItemBase} text-[#ef4444] hover:bg-[#fef2f2] hover:text-[#dc2626]`} onClick={() => signOut({ callbackUrl: "/" })}>
                       <FiLogOut size={15} />Logout
                     </button>
                   </div>
@@ -1432,57 +395,73 @@ export default function HelpSupportPage() {
             </div>
           </header>
 
-          <main className="ud-main">
-            <div className="hs-search-wrap">
-              <div className="hs-search-box">
-                <FiSearch size={18} className="hs-search-icon" />
-                <input type="text" className="hs-search-input" placeholder="Search for help articles, topics or keywords...." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+          <main className="flex-1 px-8 py-7 overflow-y-auto min-w-0 max-lg:px-5 max-lg:pt-5 max-lg:pb-8 max-md:p-4 max-[480px]:p-3">
+            {/* Search */}
+            <div className="mb-7">
+              <div className="relative max-w-full">
+                <FiSearch size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none" />
+                <input
+                  type="text"
+                  className="w-full py-3.5 pr-4 pl-12 border border-[#e2e8f0] rounded-xl bg-white text-sm text-[#1e293b] transition-all duration-200 outline-none placeholder:text-[#94a3b8] focus:border-[#C0392B] focus:shadow-[0_0_0_3px_rgba(192,57,43,0.08)]"
+                  placeholder="Search for help articles, topics or keywords...."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
             </div>
 
-            <div className="hs-content-grid">
+            <div className="grid grid-cols-[1fr_320px] gap-6 max-[1200px]:grid-cols-[1fr_280px] max-lg:grid-cols-1">
               <div>
-                <h2 className="hs-section-title" style={{ marginBottom: 16 }}>How can we help you?</h2>
-                <div className="hs-categories-grid">
+                <h2 className="text-base font-bold text-[#1e293b] tracking-[-0.2px] mb-4">How can we help you?</h2>
+                <div className="grid grid-cols-3 gap-4 mb-7 max-[1200px]:grid-cols-2 max-md:grid-cols-1">
                   {helpCategories.map((cat) => (
-                    <div key={cat.title} className="hs-category-card">
-                      <div className="hs-category-icon" style={{ background: cat.bg, color: cat.color }}>
+                    <div
+                      key={cat.title}
+                      className="bg-white border border-[#e2e8f0] rounded-xl p-5 flex items-start gap-3.5 cursor-pointer transition-all duration-200 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 hover:border-[#cbd5e1] max-md:p-4"
+                    >
+                      <div className="w-11 h-11 rounded-[10px] flex items-center justify-center text-xl shrink-0" style={{ background: cat.bg, color: cat.color }}>
                         <cat.icon size={20} />
                       </div>
-                      <div className="hs-category-content">
-                        <div className="hs-category-title">{cat.title}</div>
-                        <div className="hs-category-desc">{cat.desc}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-[#1e293b] mb-1">{cat.title}</div>
+                        <div className="text-xs text-[#64748b] leading-normal">{cat.desc}</div>
                       </div>
-                      <FiChevronRight size={16} className="hs-category-arrow" />
+                      <FiChevronRight size={16} className="text-[#94a3b8] shrink-0 mt-1" />
                     </div>
                   ))}
                 </div>
 
-                <div className="hs-faq-section">
-                  <div className="hs-section-header">
-                    <h3 className="hs-section-title">Frequently Asked Questions</h3>
-                    <Link href="/user/faqs" className="hs-section-link">
+                <div className="mb-7">
+                  <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                    <h3 className="text-base font-bold text-[#1e293b] tracking-[-0.2px]">Frequently Asked Questions</h3>
+                    <Link href="/user/faqs" className="text-[13px] font-semibold text-[#6366f1] flex items-center gap-1 transition-all duration-200 shrink-0 hover:text-[#4f46e5] hover:gap-1.5">
                       View all FAQs <FiChevronRight size={14} />
                     </Link>
                   </div>
-                  <div className="hs-faq-card">
+                  <div className="bg-white border border-[#e2e8f0] rounded-xl overflow-hidden">
                     {filteredFaqs.map((faq, idx) => (
-                      <div key={idx} className="hs-faq-item">
-                        <button type="button" className="hs-faq-question" onClick={() => setOpenFaq(openFaq === idx ? null : idx)}>
-                          <span className="hs-faq-question-text">{faq.q}</span>
+                      <div key={idx} className="border-b border-[#f1f5f9] last:border-b-0">
+                        <button
+                          type="button"
+                          className="flex items-center justify-between px-5 py-4 cursor-pointer transition-colors duration-150 border-0 bg-transparent w-full text-left text-sm font-medium text-[#334155] hover:bg-[#fafbfc] max-md:px-4 max-md:py-3.5 max-md:text-[13px]"
+                          onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                        >
+                          <span className="flex-1 min-w-0">{faq.q}</span>
                           {openFaq === idx ? (
-                            <FiChevronUp size={16} className="hs-faq-chevron open" />
+                            <FiChevronUp size={16} className="text-[#94a3b8] shrink-0 transition-transform duration-200 rotate-180" />
                           ) : (
-                            <FiChevronDown size={16} className="hs-faq-chevron" />
+                            <FiChevronDown size={16} className="text-[#94a3b8] shrink-0 transition-transform duration-200" />
                           )}
                         </button>
                         {openFaq === idx && (
-                          <div className="hs-faq-answer">{faq.a}</div>
+                          <div className="px-5 pb-4 text-[13px] text-[#64748b] leading-[1.7] animate-[fadeIn_0.2s_ease] max-md:px-4 max-md:pb-3.5">
+                            {faq.a}
+                          </div>
                         )}
                       </div>
                     ))}
                     {filteredFaqs.length === 0 && (
-                      <div style={{ padding: "20px", textAlign: "center", color: "#94a3b8", fontSize: "14px" }}>
+                      <div className="p-5 text-center text-[#94a3b8] text-sm">
                         No results found for &quot;{searchQuery}&quot;
                       </div>
                     )}
@@ -1491,44 +470,48 @@ export default function HelpSupportPage() {
               </div>
 
               <div>
-                <div className="hs-contact-card">
-                  <div className="hs-contact-title">Contact Us</div>
-                  <div className="hs-contact-sub">Can&apos;t Find you&apos;re looking for? We&apos;re here to help!</div>
+                <div className="bg-white border border-[#e2e8f0] rounded-xl p-5 max-md:p-4">
+                  <div className="text-[15px] font-bold text-[#1e293b] mb-1">Contact Us</div>
+                  <div className="text-xs text-[#64748b] mb-4">Can&apos;t Find you&apos;re looking for? We&apos;re here to help!</div>
 
                   {contactMethods.map((method) => (
-                    <Link key={method.label} href={method.href} className="hs-contact-item">
-                      <div className="hs-contact-icon-wrap">
+                    <Link
+                      key={method.label}
+                      href={method.href}
+                      className="flex items-center gap-3 py-3 border-b border-[#f1f5f9] transition-colors duration-150 cursor-pointer last:border-b-0 hover:bg-[#fafbfc] hover:-mx-5 hover:px-5"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-[#f1f5f9] flex items-center justify-center text-[#64748b] shrink-0">
                         <method.icon size={16} />
                       </div>
-                      <div className="hs-contact-info">
-                        <div className="hs-contact-label">{method.label}</div>
-                        <div className="hs-contact-desc">{method.desc}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-semibold text-[#1e293b]">{method.label}</div>
+                        <div className="text-xs text-[#64748b] mt-0.5">{method.desc}</div>
                       </div>
                       {method.status && (
-                        <span className="hs-contact-status" style={{ background: method.statusColor + "15", color: method.statusColor }}>
+                        <span className="text-[11px] font-semibold px-2 py-[3px] rounded-[10px] shrink-0" style={{ background: method.statusColor + "15", color: method.statusColor }}>
                           {method.status}
                         </span>
                       )}
-                      <FiChevronRight size={14} className="hs-contact-arrow" />
+                      <FiChevronRight size={14} className="text-[#94a3b8] shrink-0" />
                     </Link>
                   ))}
                 </div>
 
-                <div className="hs-hours-card">
-                  <div className="hs-hours-title">
+                <div className="bg-white border border-[#e2e8f0] rounded-xl p-5 mt-4 max-md:p-4">
+                  <div className="text-sm font-bold text-[#1e293b] mb-3 flex items-center gap-2">
                     <FiClock size={16} color="#6366f1" />
                     Support Hours
                   </div>
-                  <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "12px" }}>
+                  <div className="text-xs text-[#64748b] mb-3">
                     We are unavailable to assist you during the following hours:
                   </div>
                   {supportHours.map((h) => (
-                    <div key={h.day} className="hs-hours-row">
-                      <span className="hs-hours-day">{h.day}</span>
-                      <span className="hs-hours-time">{h.time}</span>
+                    <div key={h.day} className="flex justify-between py-1.5 text-xs">
+                      <span className="text-[#64748b]">{h.day}</span>
+                      <span className="text-[#334155] font-medium">{h.time}</span>
                     </div>
                   ))}
-                  <div className="hs-hours-note">
+                  <div className="mt-3 px-3 py-2.5 bg-[#f8fafc] rounded-lg text-xs text-[#64748b] flex items-center gap-2">
                     <FiMessageCircle size={14} color="#6366f1" />
                     We usually respond within a few minutes during business hours
                   </div>
@@ -1540,24 +523,37 @@ export default function HelpSupportPage() {
       </div>
 
       {showDeleteModal && (
-        <div className="ud-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
-          <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="ud-modal-icon">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-5 animate-[fadeIn_0.2s_ease]"
+          onClick={() => !deleting && setShowDeleteModal(false)}
+        >
+          <div className="bg-white rounded-2xl p-8 w-full max-w-[420px] shadow-[0_25px_50px_rgba(0,0,0,0.25)] animate-[slideUp_0.25s_ease]" onClick={(e) => e.stopPropagation()}>
+            <div className="w-14 h-14 rounded-[14px] bg-[#fef2f2] flex items-center justify-center text-[#ef4444] mx-auto mb-5">
               <FiAlertCircle size={26} />
             </div>
-            <div className="ud-modal-title">Delete Your Account?</div>
-            <div className="ud-modal-body">
+            <div className="text-lg font-bold text-[#1e293b] text-center mb-2">Delete Your Account?</div>
+            <div className="text-sm text-[#64748b] text-center leading-[1.6] mb-6 [&_strong]:text-[#ef4444]">
               This action is <strong>permanent and irreversible</strong>. All your orders,
               wishlist, and personal data will be permanently deleted.
             </div>
             {deleteError && (
-              <div className="ud-modal-error">{deleteError}</div>
+              <div className="text-[13px] text-[#ef4444] bg-[#fef2f2] rounded-lg px-3.5 py-2.5 mb-4 text-center">{deleteError}</div>
             )}
-            <div className="ud-modal-actions">
-              <button type="button" className="ud-modal-cancel" onClick={() => { setShowDeleteModal(false); setDeleteError(""); }} disabled={deleting}>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-[#e2e8f0] bg-white text-[#475569] text-sm font-semibold cursor-pointer transition-all duration-200 hover:bg-[#f8fafc] hover:border-[#cbd5e1]"
+                onClick={() => { setShowDeleteModal(false); setDeleteError(""); }}
+                disabled={deleting}
+              >
                 Cancel
               </button>
-              <button type="button" className="ud-modal-delete" onClick={handleDeleteAccount} disabled={deleting}>
+              <button
+                type="button"
+                className="flex-1 py-[11px] rounded-[10px] border-0 bg-[#ef4444] text-white text-sm font-semibold cursor-pointer transition-all duration-200 flex items-center justify-center gap-1.5 enabled:hover:bg-[#dc2626] disabled:opacity-70 disabled:cursor-not-allowed"
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+              >
                 {deleting ? (
                   <>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -1579,4 +575,3 @@ export default function HelpSupportPage() {
     </>
   );
 }
-

@@ -86,8 +86,6 @@ const handleGoogle = async () => {
       theme="colored"
     />
       <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
         .login-page {
           min-height: 100vh;
           background: #ffffff;
