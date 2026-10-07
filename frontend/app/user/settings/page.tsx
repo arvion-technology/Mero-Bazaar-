@@ -37,6 +37,55 @@ import { deleteAccountWithReauth, reauthFetch } from "@/lib/accountActions";
 
 const PRIMARY = "#C0392B";
 
+/* ── Shared Tailwind class strings ── */
+const iconBtn =
+  "w-10 h-10 rounded-[10px] border border-[#e2e8f0] bg-white flex items-center justify-center cursor-pointer text-[#64748b] transition-all duration-200 relative shrink-0 hover:bg-[#f8fafc] hover:text-[#334155] hover:border-[#cbd5e1]";
+const squareBtn =
+  "rounded-lg border border-[#e2e8f0] bg-white items-center justify-center cursor-pointer text-[#64748b] transition-all duration-200 shrink-0 hover:bg-[#f8fafc] hover:text-[#334155] hover:border-[#cbd5e1]";
+const navItemBase =
+  "relative mb-0.5 flex w-full cursor-pointer items-center gap-3 whitespace-nowrap rounded-[10px] border-0 px-3.5 py-2.5 text-left font-[inherit] text-[14px] leading-normal no-underline transition-all duration-200";
+const navItemIdle = "font-medium text-[#5a6478]! hover:bg-[#f4f6fb] hover:text-slate-800!";
+const navItemActive =
+  "bg-[#fff5f5] font-semibold text-[#C0392B]! before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-r-[3px] before:bg-[#C0392B] before:content-['']";
+const navItemDanger = "font-medium text-red-500/70! hover:bg-red-500/5 hover:text-red-500!";
+const dropdownItemBase =
+  "flex items-center gap-2.5 px-4 py-[11px] text-sm font-medium cursor-pointer transition-all duration-150 border-0 bg-transparent w-full text-left";
+const navLabel = "text-[10px] font-bold text-[#b0b8c4] uppercase tracking-[1.2px] px-3 mb-2 whitespace-nowrap";
+const navIcon = "text-lg w-[22px] flex justify-center shrink-0";
+
+const btnBase =
+  "inline-flex items-center gap-1.5 px-5 py-2.5 rounded-[10px] text-[13px] font-semibold cursor-pointer transition-all duration-200 max-[480px]:px-4 max-[480px]:py-2 max-[480px]:text-xs";
+const btnPrimary = `${btnBase} border-0 bg-[#4f46e5] text-white hover:bg-[#4338ca] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(79,70,229,0.25)]`;
+const btnGhost = `${btnBase} bg-[#f1f5f9] border border-[#e2e8f0] hover:bg-[#e2e8f0]`;
+
+const sectionHeader = "flex items-center justify-between mb-4 gap-3 flex-wrap";
+const sectionTitle = "text-base font-bold text-[#1e293b] tracking-[-0.2px] max-[480px]:text-sm";
+
+const formInputBase =
+  "px-3.5 py-2.5 border border-[#e2e8f0] rounded-lg font-[inherit] text-[#1e293b] outline-none transition-all duration-200 min-w-0 focus:border-[#6366f1] focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)]";
+const otpInput = `${formInputBase} text-center text-xl tracking-[6px] mb-5`;
+
+const pwSubmitBtn =
+  "inline-flex items-center gap-2 px-6 py-[11px] bg-[#C0392B] text-white border-0 rounded-[10px] text-sm font-semibold cursor-pointer transition-all duration-200 enabled:hover:bg-[#a93226] enabled:hover:-translate-y-px enabled:hover:shadow-[0_4px_12px_rgba(192,57,43,0.25)] disabled:opacity-70 disabled:cursor-not-allowed";
+const pwInput =
+  "w-full py-[11px] pr-11 pl-3.5 border border-[#e2e8f0] rounded-lg text-sm text-[#1e293b] outline-none transition-all duration-200 bg-[#fafbfc] focus:border-[#6366f1] focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] max-md:py-2.5 max-md:pr-10 max-md:pl-3 max-md:text-[13px]";
+const pwEyeBtn =
+  "absolute right-3 bg-transparent border-0 cursor-pointer text-[#94a3b8] p-1 flex items-center rounded-sm transition-colors duration-200 text-[15px] hover:text-[#6366f1]";
+const pwLabel = "text-[13px] font-semibold text-[#475569] flex items-center gap-1.5";
+
+const modalOverlay =
+  "fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-5 animate-[fadeIn_0.2s_ease]";
+const modalBox =
+  "bg-white rounded-2xl p-8 w-full shadow-[0_25px_50px_rgba(0,0,0,0.25)] animate-[slideUp_0.25s_ease]";
+const modalIconBase = "w-14 h-14 rounded-[14px] flex items-center justify-center mx-auto mb-5";
+const modalTitle = "text-lg font-bold text-[#1e293b] text-center";
+const modalBody = "text-sm text-[#64748b] text-center leading-[1.6] mb-6 [&_strong]:text-[#ef4444]";
+const modalError = "text-[13px] text-[#ef4444] bg-[#fef2f2] rounded-lg px-3.5 py-2.5 mb-4 text-center";
+const modalCancel =
+  "flex-1 py-[11px] rounded-[10px] border-[1.5px] border-[#e2e8f0] bg-white text-[#475569] text-sm font-semibold cursor-pointer transition-all duration-200 hover:bg-[#f8fafc] hover:border-[#cbd5e1]";
+const modalDelete =
+  "flex-1 py-[11px] rounded-[10px] border-0 bg-[#ef4444] text-white text-sm font-semibold cursor-pointer transition-all duration-200 flex items-center justify-center gap-1.5 enabled:hover:bg-[#dc2626] disabled:opacity-70 disabled:cursor-not-allowed";
+
 export default function UserSettings() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -124,6 +173,7 @@ export default function UserSettings() {
 
   const sidebarItems = [
     { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/user/dashboard" },
+    { id: "contacts", icon: FiUser, label: "Contacts", href: "/user/contacts" },
     { id: "orders", icon: FiShoppingBag, label: "My Orders", href: "/user/orders" },
     { id: "wishlist", icon: FiHeart, label: "Wishlist", href: "/user/wishlist" },
     { id: "notification", icon: FiBell, label: "Notifications", href: "/user/notifications" },
@@ -170,7 +220,7 @@ export default function UserSettings() {
           await updateSession({ user: { ...session?.user, twoFactorEnabled: data.twoFactorEnabled } });
         }
       } catch {
-        // silent â€” non-critical background sync
+        // silent — non-critical background sync
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -289,7 +339,7 @@ export default function UserSettings() {
   const profileFields = [
     { key: "name", icon: FiUser, label: "Full Name", value: profileForm.name, type: "text", editable: true },
     { key: "phone", icon: FiPhone, label: "Phone Number", value: profileForm.phone, type: "tel", editable: true },
-    { key: "email", icon: FiMail, label: "Email Address", value: session?.user?.email || "â€”", type: "email", editable: false },
+    { key: "email", icon: FiMail, label: "Email Address", value: session?.user?.email || "—", type: "email", editable: false },
     { key: "address", icon: FiMapPin, label: "Address", value: profileForm.address, type: "text", editable: true },
   ];
 
@@ -508,7 +558,7 @@ async function handleConfirmEnable2FA() {
   }
 }
 
-// Disable â€” requires step-up reauthentication (current password or OTP) per policy
+// Disable — requires step-up reauthentication (current password or OTP) per policy
 async function handleDisable2FA() {
   setTfaDisabling(true);
   try {
@@ -529,1206 +579,36 @@ async function handleDisable2FA() {
   }
 }
 
+  const collapsedHide = sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "";
+
   return (
     <>
-      <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        html, body {
-          overflow-x: hidden;
-          max-width: 100vw;
-        }
-
-        .ud-page {
-          min-height: 100vh;
-          min-height: 100dvh;
-          background: #f1f5f9;
-          display: flex;
-          font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-
-        /* â”€â”€ Sidebar â”€â”€ */
-        .ud-sidebar {
-          width: 260px;
-          background: #ffffff;
-          border-right: 1px solid #e8ecf0;
-          display: flex;
-          flex-direction: column;
-          flex-shrink: 0;
-          transition: width 0.3s ease, transform 0.3s ease;
-          position: fixed;
-          height: 100vh;
-          height: 100dvh;
-          left: 0;
-          top: 0;
-          z-index: 100;
-          box-shadow: 2px 0 8px rgba(0,0,0,0.04);
-        }
-
-        .ud-sidebar.collapsed {
-          width: 72px;
-        }
-
-        .ud-sidebar-header {
-          padding: 20px 20px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          border-bottom: 1px solid #f0f2f5;
-          min-height: 72px;
-          overflow: hidden;
-        }
-
-        .ud-sidebar-logo-wrap {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          text-decoration: none;
-          flex-shrink: 0;
-        }
-
-        .ud-sidebar-logo-icon {
-          width: 36px;
-          height: 36px;
-          flex-shrink: 0;
-        }
-
-        .ud-sidebar-logo-text {
-          display: flex;
-          flex-direction: column;
-          line-height: 1.1;
-          opacity: 1;
-          transition: opacity 0.2s, width 0.2s;
-          white-space: nowrap;
-          overflow: hidden;
-        }
-
-        .ud-sidebar.collapsed .ud-sidebar-logo-text {
-          opacity: 0;
-          width: 0;
-        }
-
-        .ud-logo-line1 {
-          font-size: 14px;
-          font-weight: 800;
-          color: ${PRIMARY};
-          letter-spacing: -0.3px;
-        }
-
-        .ud-logo-line2 {
-          font-size: 11px;
-          font-weight: 600;
-          color: #888;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-        }
-
-        .ud-nav-section {
-          padding: 16px 12px;
-          flex: 1;
-          overflow-y: auto;
-        }
-
-        .ud-nav-label {
-          font-size: 10px;
-          font-weight: 700;
-          color: #b0b8c4;
-          text-transform: uppercase;
-          letter-spacing: 1.2px;
-          padding: 0 12px;
-          margin-bottom: 8px;
-          white-space: nowrap;
-        }
-
-        .ud-sidebar.collapsed .ud-nav-label {
-          display: none;
-        }
-
-        .ud-nav-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 10px 14px;
-          color: #5a6478;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-          border: none;
-          background: none;
-          width: 100%;
-          text-align: left;
-          font-family: inherit;
-          text-decoration: none;
-          border-radius: 10px;
-          margin-bottom: 2px;
-          position: relative;
-          white-space: nowrap;
-        }
-
-        .ud-nav-item:hover {
-          background: #f4f6fb;
-          color: #1e293b;
-        }
-
-        .ud-nav-item.active {
-          background: #fff5f5;
-          color: ${PRIMARY};
-          font-weight: 600;
-        }
-
-        .ud-nav-item.active::before {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 3px;
-          height: 20px;
-          background: ${PRIMARY};
-          border-radius: 0 3px 3px 0;
-        }
-
-        .ud-nav-icon {
-          font-size: 18px;
-          width: 22px;
-          display: flex;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .ud-nav-text {
-          opacity: 1;
-          transition: opacity 0.2s;
-        }
-
-        .ud-sidebar.collapsed .ud-nav-text {
-          opacity: 0;
-          width: 0;
-          overflow: hidden;
-        }
-
-        .ud-sidebar-footer {
-          padding: 16px;
-          border-top: 1px solid #f0f2f5;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .ud-sidebar-avatar {
-          width: 38px;
-          height: 38px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, ${PRIMARY}, #e74c3c);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #fff;
-          font-size: 14px;
-          font-weight: 600;
-          flex-shrink: 0;
-          overflow: hidden;
-        }
-
-        .ud-sidebar-user {
-          opacity: 1;
-          transition: opacity 0.2s;
-          overflow: hidden;
-        }
-
-        .ud-sidebar.collapsed .ud-sidebar-user {
-          opacity: 0;
-          width: 0;
-        }
-
-        .ud-sidebar-name {
-          font-size: 13px;
-          font-weight: 600;
-          color: #1e293b;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 160px;
-        }
-
-        .ud-sidebar-role {
-          font-size: 11px;
-          color: #94a3b8;
-          margin-top: 1px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 160px;
-        }
-
-        /* â”€â”€ Main Area â”€â”€ */
-        .ud-main-area {
-          flex: 1;
-          margin-left: 260px;
-          display: flex;
-          flex-direction: column;
-          min-height: 100vh;
-          min-height: 100dvh;
-          transition: margin-left 0.3s ease;
-          width: calc(100% - 260px);
-          min-width: 0;
-        }
-
-        .ud-sidebar.collapsed ~ .ud-main-area {
-          margin-left: 72px;
-          width: calc(100% - 72px);
-        }
-
-        /* â”€â”€ Top Header â”€â”€ */
-        .ud-topbar {
-          background: #fff;
-          border-bottom: 1px solid #e2e8f0;
-          padding: 0 32px;
-          height: 64px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          position: sticky;
-          top: 0;
-          z-index: 50;
-          gap: 16px;
-        }
-
-        .ud-topbar-left {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          flex: 1;
-          min-width: 0;
-        }
-
-        .ud-toggle-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
-          background: #fff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: #64748b;
-          transition: all 0.2s;
-          flex-shrink: 0;
-        }
-
-        .ud-toggle-btn:hover {
-          background: #f8fafc;
-          color: #334155;
-          border-color: #cbd5e1;
-        }
-
-        .ud-breadcrumb {
-          font-size: 20px;
-          font-weight: 700;
-          color: #1e293b;
-          letter-spacing: -0.3px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .ud-topbar-right {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          flex-shrink: 0;
-        }
-
-        .ud-icon-btn {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          border: 1px solid #e2e8f0;
-          background: #fff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: #64748b;
-          transition: all 0.2s;
-          position: relative;
-          text-decoration: none;
-          flex-shrink: 0;
-        }
-
-        .ud-icon-btn:hover {
-          background: #f8fafc;
-          color: #334155;
-          border-color: #cbd5e1;
-        }
-
-        .ud-badge {
-          position: absolute;
-          top: -2px;
-          right: -2px;
-          width: 18px;
-          height: 18px;
-          background: #ef4444;
-          color: #fff;
-          font-size: 10px;
-          font-weight: 700;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 2px solid #fff;
-        }
-
-        /* â”€â”€ Profile Avatar Dropdown â”€â”€ */
-        .ud-profile-wrap {
-          position: relative;
-        }
-
-        .ud-profile-btn {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 5px 10px 5px 5px;
-          border-radius: 40px;
-          border: 1.5px solid #e2e8f0;
-          background: #fff;
-          cursor: pointer;
-          transition: all 0.2s;
-          font-family: inherit;
-        }
-
-        .ud-profile-btn:hover {
-          border-color: #cbd5e1;
-          background: #f8fafc;
-        }
-
-        .ud-profile-btn-avatar {
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, ${PRIMARY}, #e74c3c);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #fff;
-          font-size: 12px;
-          font-weight: 700;
-          overflow: hidden;
-          flex-shrink: 0;
-        }
-
-        .ud-profile-btn-name {
-          font-size: 13px;
-          font-weight: 600;
-          color: #1e293b;
-          max-width: 120px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .ud-profile-chevron {
-          color: #94a3b8;
-          transition: transform 0.2s;
-          flex-shrink: 0;
-        }
-
-        .ud-profile-chevron.open {
-          transform: rotate(180deg);
-        }
-
-        .ud-profile-dropdown {
-          position: absolute;
-          top: calc(100% + 8px);
-          right: 0;
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-          min-width: 200px;
-          z-index: 999;
-          overflow: hidden;
-          animation: dropdownIn 0.15s ease;
-        }
-
-        @keyframes dropdownIn {
-          from { opacity: 0; transform: translateY(-6px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .ud-dropdown-header {
-          padding: 14px 16px 12px;
-          border-bottom: 1px solid #f1f5f9;
-        }
-
-        .ud-dropdown-username {
-          font-size: 14px;
-          font-weight: 700;
-          color: #1e293b;
-        }
-
-        .ud-dropdown-email {
-          font-size: 12px;
-          color: #94a3b8;
-          margin-top: 2px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .ud-dropdown-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 11px 16px;
-          font-size: 14px;
-          font-weight: 500;
-          color: #475569;
-          cursor: pointer;
-          transition: all 0.15s;
-          border: none;
-          background: none;
-          width: 100%;
-          text-align: left;
-          font-family: inherit;
-          text-decoration: none;
-        }
-
-        .ud-dropdown-item:hover {
-          background: #f8fafc;
-          color: #1e293b;
-        }
-
-        .ud-dropdown-item.logout {
-          color: #ef4444;
-        }
-
-        .ud-dropdown-item.logout:hover {
-          background: #fef2f2;
-          color: #dc2626;
-        }
-
-        .ud-dropdown-divider {
-          height: 1px;
-          background: #f1f5f9;
-          margin: 0;
-        }
-
-        /* â”€â”€ Main Content â”€â”€ */
-        .ud-main {
-          flex: 1;
-          padding: 28px 32px;
-          overflow-y: auto;
-          min-width: 0;
-        }
-
-        /* Profile Header */
-        .ud-profile-header {
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 16px;
-          padding: 32px;
-          margin-bottom: 24px;
-          display: flex;
-          align-items: center;
-          gap: 24px;
-          position: relative;
-          flex-wrap: wrap;
-        }
-
-        .ud-profile-avatar-wrap {
-          position: relative;
-          flex-shrink: 0;
-        }
-
-        .ud-profile-avatar {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, ${PRIMARY}, #e74c3c);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #fff;
-          font-size: 28px;
-          font-weight: 700;
-          overflow: hidden;
-        }
-
-        .ud-avatar-edit {
-          position: absolute;
-          bottom: 0;
-          right: 0;
-          width: 28px;
-          height: 28px;
-          background: #fff;
-          border: 2px solid #e2e8f0;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: #64748b;
-          transition: all 0.2s;
-        }
-
-        .ud-avatar-edit:hover {
-          border-color: ${PRIMARY};
-          color: ${PRIMARY};
-        }
-
-        .ud-profile-info {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .ud-profile-name {
-          font-size: 22px;
-          font-weight: 700;
-          color: #1e293b;
-          letter-spacing: -0.3px;
-          margin-bottom: 4px;
-        }
-
-        .ud-profile-role {
-          font-size: 14px;
-          color: #64748b;
-          font-weight: 500;
-        }
-
-        .ud-profile-actions {
-          display: flex;
-          gap: 10px;
-          flex-shrink: 0;
-        }
-
-        .ud-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 10px 20px;
-          border-radius: 10px;
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          border: none;
-          font-family: inherit;
-        }
-
-        .ud-btn-primary {
-          background: #4f46e5;
-          color: #fff;
-        }
-
-        .ud-btn-primary:hover {
-          background: #4338ca;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
-        }
-
-        .ud-btn-ghost {
-          background: #f1f5f9;
-          color: #475569;
-          border: 1px solid #e2e8f0;
-        }
-
-        .ud-btn-ghost:hover {
-          background: #e2e8f0;
-        }
-
-        /* Section Title */
-        .ud-section-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 16px;
-          gap: 12px;
-          flex-wrap: wrap;
-        }
-
-        .ud-section-title {
-          font-size: 16px;
-          font-weight: 700;
-          color: #1e293b;
-          letter-spacing: -0.2px;
-        }
-
-        /* Form Card */
-        .ud-form-card {
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          overflow: hidden;
-          margin-bottom: 24px;
-          width: 100%;
-        }
-
-        .ud-form-row {
-          display: flex;
-          align-items: center;
-          gap: 0;
-          padding: 0 24px;
-          border-bottom: 1px solid #f8fafc;
-          transition: background 0.2s;
-        }
-
-        .ud-form-row:hover {
-          background: #fafbfc;
-        }
-
-        .ud-form-row:last-child {
-          border-bottom: none;
-        }
-
-        .ud-form-label {
-          flex: 0 0 180px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 13px;
-          color: #475569;
-          font-weight: 600;
-          padding: 18px 0;
-          flex-shrink: 0;
-        }
-
-        .ud-form-label svg {
-          color: #94a3b8;
-        }
-
-        .ud-form-value {
-          flex: 1;
-          font-size: 14px;
-          color: #1e293b;
-          font-weight: 500;
-          padding: 18px 0;
-          min-width: 0;
-        }
-
-        .ud-form-input {
-          flex: 1;
-          padding: 10px 14px;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          font-size: 14px;
-          font-family: inherit;
-          color: #1e293b;
-          outline: none;
-          transition: all 0.2s;
-          min-width: 0;
-        }
-
-        .ud-form-input:focus {
-          border-color: #6366f1;
-          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-
-        /* Security Card */
-        .ud-security-card {
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 24px;
-          margin-bottom: 24px;
-          width: 100%;
-        }
-
-        .ud-security-title {
-          font-size: 14px;
-          font-weight: 700;
-          color: #1e293b;
-          margin-bottom: 16px;
-        }
-
-        .ud-security-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 14px 0;
-          border-bottom: 1px solid #f8fafc;
-          gap: 12px;
-          flex-wrap: wrap;
-        }
-
-        .ud-security-row:last-child {
-          border-bottom: none;
-          padding-bottom: 0;
-        }
-
-        .ud-security-info {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .ud-security-info h4 {
-          font-size: 14px;
-          font-weight: 600;
-          color: #1e293b;
-          margin-bottom: 3px;
-        }
-
-        .ud-security-info p {
-          font-size: 12px;
-          color: #64748b;
-        }
-
-        /* Change Password Card */
-        .ud-pw-card {
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 28px;
-          margin-bottom: 24px;
-          width: 100%;
-        }
-
-        .ud-pw-oauth-msg {
-          font-size: 14px;
-          color: #64748b;
-          padding: 16px 0;
-          line-height: 1.6;
-        }
-
-        .ud-pw-fields {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          margin-bottom: 20px;
-        }
-
-        .ud-pw-field-group {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .ud-pw-label {
-          font-size: 13px;
-          font-weight: 600;
-          color: #475569;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .ud-pw-input-wrap {
-          position: relative;
-          display: flex;
-          align-items: center;
-        }
-
-        .ud-pw-input {
-          width: 100%;
-          padding: 11px 44px 11px 14px;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          font-size: 14px;
-          font-family: inherit;
-          color: #1e293b;
-          outline: none;
-          transition: all 0.2s;
-          background: #fafbfc;
-        }
-
-        .ud-pw-input:focus {
-          border-color: #6366f1;
-          background: #fff;
-          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-
-        .ud-pw-eye-btn {
-          position: absolute;
-          right: 12px;
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: #94a3b8;
-          padding: 4px;
-          display: flex;
-          align-items: center;
-          border-radius: 4px;
-          transition: color 0.2s;
-          font-size: 15px;
-        }
-
-        .ud-pw-eye-btn:hover {
-          color: #6366f1;
-        }
-
-        .ud-pw-submit-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 11px 24px;
-          background: ${PRIMARY};
-          color: #fff;
-          border: none;
-          border-radius: 10px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          font-family: inherit;
-          transition: all 0.2s;
-        }
-
-        .ud-pw-submit-btn:hover:not(:disabled) {
-          background: #a93226;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(192,57,43,0.25);
-        }
-
-        .ud-pw-submit-btn:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-        }
-
-        /* Delete Account sidebar button */
-        .ud-nav-item.danger {
-          color: rgba(239,68,68,0.7);
-        }
-        .ud-nav-item.danger:hover {
-          background: rgba(239,68,68,0.06);
-          color: #ef4444;
-        }
-
-        /* â”€â”€ Backdrop (mobile overlay) â”€â”€ */
-        .ud-backdrop {
-          display: none;
-          position: fixed;
-          inset: 0;
-          background: rgba(15, 23, 42, 0.45);
-          backdrop-filter: blur(2px);
-          z-index: 99;
-          animation: backdropIn 0.2s ease;
-        }
-        @keyframes backdropIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-
-        /* Mobile sidebar close button */
-        .ud-sidebar-close {
-          display: none;
-          position: absolute;
-          top: 18px;
-          right: 16px;
-          width: 32px;
-          height: 32px;
-          border: none;
-          background: #f1f5f9;
-          border-radius: 8px;
-          cursor: pointer;
-          align-items: center;
-          justify-content: center;
-          color: #64748b;
-          transition: all 0.2s;
-          z-index: 1;
-        }
-        .ud-sidebar-close:hover {
-          background: #e2e8f0;
-          color: #1e293b;
-        }
-
-        /* Hamburger - hidden on desktop */
-        .ud-hamburger {
-          display: none;
-          width: 38px;
-          height: 38px;
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
-          background: #fff;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: #64748b;
-          transition: all 0.2s;
-          flex-shrink: 0;
-        }
-        .ud-hamburger:hover {
-          background: #f8fafc;
-          color: #334155;
-          border-color: #cbd5e1;
-        }
-
-        /* Desktop toggle - hidden on mobile */
-        .ud-desktop-toggle {
-          display: flex;
-        }
-
-        /* â”€â”€ Responsive â”€â”€ */
-
-        /* Tablet + Mobile: overlay sidebar */
-        @media (max-width: 1023px) {
-          .ud-sidebar {
-            transform: translateX(-100%);
-            width: 280px !important;
-            z-index: 200;
-          }
-          .ud-sidebar.mobile-open {
-            transform: translateX(0);
-            box-shadow: 4px 0 32px rgba(0,0,0,0.15);
-          }
-          .ud-backdrop.active {
-            display: block;
-          }
-          .ud-sidebar.mobile-open .ud-sidebar-close {
-            display: flex;
-          }
-          .ud-hamburger {
-            display: flex;
-          }
-          .ud-desktop-toggle {
-            display: none;
-          }
-          .ud-main-area {
-            margin-left: 0 !important;
-            width: 100% !important;
-          }
-          .ud-main {
-            padding: 20px 20px 32px;
-          }
-          .ud-topbar {
-            padding: 0 20px;
-          }
-        }
-
-        /* Mobile: < 768px */
-        @media (max-width: 767px) {
-          .ud-main {
-            padding: 16px;
-          }
-          .ud-topbar {
-            padding: 0 16px;
-            height: 56px;
-          }
-          .ud-breadcrumb {
-            font-size: 18px;
-          }
-
-          /* Profile header */
-          .ud-profile-header {
-            flex-direction: column;
-            text-align: center;
-            padding: 24px;
-            gap: 16px;
-          }
-          .ud-profile-avatar {
-            width: 64px;
-            height: 64px;
-            font-size: 22px;
-          }
-          .ud-profile-name {
-            font-size: 18px;
-          }
-          .ud-profile-actions {
-            width: 100%;
-            justify-content: center;
-          }
-
-          /* Form rows */
-          .ud-form-row {
-            flex-direction: column;
-            align-items: flex-start;
-            padding: 14px 16px;
-            gap: 6px;
-          }
-          .ud-form-label {
-            flex: none;
-            padding: 0;
-            font-size: 12px;
-          }
-          .ud-form-value {
-            padding: 0;
-            font-size: 13px;
-          }
-          .ud-form-input {
-            width: 100%;
-          }
-
-          /* Security rows */
-          .ud-security-row {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-          }
-          .ud-security-info h4 {
-            font-size: 13px;
-          }
-          .ud-security-info p {
-            font-size: 11px;
-          }
-
-          /* Password card */
-          .ud-pw-card {
-            padding: 20px;
-          }
-          .ud-pw-input {
-            padding: 10px 40px 10px 12px;
-            font-size: 13px;
-          }
-
-          /* Profile btn */
-          .ud-profile-btn-name {
-            display: none;
-          }
-        }
-
-        /* Small mobile: < 480px */
-        @media (max-width: 480px) {
-          .ud-main {
-            padding: 12px;
-          }
-          .ud-topbar {
-            padding: 0 12px;
-          }
-          .ud-profile-header {
-            padding: 20px;
-          }
-          .ud-profile-avatar {
-            width: 56px;
-            height: 56px;
-            font-size: 20px;
-          }
-          .ud-avatar-edit {
-            width: 24px;
-            height: 24px;
-          }
-          .ud-btn {
-            padding: 8px 16px;
-            font-size: 12px;
-          }
-          .ud-pw-card {
-            padding: 16px;
-          }
-          .ud-section-title {
-            font-size: 14px;
-          }
-        }
-
-        /* â”€â”€ Delete Account Modal â”€â”€ */
-        .ud-modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,0.5);
-          backdrop-filter: blur(4px);
-          z-index: 9999;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-          animation: fadeIn 0.2s ease;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-        .ud-modal {
-          background: #fff;
-          border-radius: 16px;
-          padding: 32px;
-          width: 100%;
-          max-width: 420px;
-          box-shadow: 0 25px 50px rgba(0,0,0,0.25);
-          animation: slideUp 0.25s ease;
-        }
-        @keyframes slideUp {
-          from { transform: translateY(20px); opacity: 0; }
-          to   { transform: translateY(0);    opacity: 1; }
-        }
-        .ud-modal-icon {
-          width: 56px;
-          height: 56px;
-          border-radius: 14px;
-          background: #fef2f2;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #ef4444;
-          margin: 0 auto 20px;
-        }
-        .ud-modal-title {
-          font-size: 18px;
-          font-weight: 700;
-          color: #1e293b;
-          text-align: center;
-          margin-bottom: 8px;
-        }
-        .ud-modal-body {
-          font-size: 14px;
-          color: #64748b;
-          text-align: center;
-          line-height: 1.6;
-          margin-bottom: 24px;
-        }
-        .ud-modal-body strong { color: #ef4444; }
-        .ud-modal-error {
-          font-size: 13px;
-          color: #ef4444;
-          background: #fef2f2;
-          border-radius: 8px;
-          padding: 10px 14px;
-          margin-bottom: 16px;
-          text-align: center;
-        }
-        .ud-modal-actions {
-          display: flex;
-          gap: 12px;
-        }
-        .ud-modal-cancel {
-          flex: 1;
-          padding: 11px 0;
-          border-radius: 10px;
-          border: 1.5px solid #e2e8f0;
-          background: #fff;
-          color: #475569;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          font-family: inherit;
-        }
-        .ud-modal-cancel:hover {
-          background: #f8fafc;
-          border-color: #cbd5e1;
-        }
-        .ud-modal-delete {
-          flex: 1;
-          padding: 11px 0;
-          border-radius: 10px;
-          border: none;
-          background: #ef4444;
-          color: #fff;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          font-family: inherit;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-        }
-        .ud-modal-delete:hover:not(:disabled) { background: #dc2626; }
-        .ud-modal-delete:disabled { opacity: 0.7; cursor: not-allowed; }
-      `}</style>
-
-      {/* â”€â”€ Mobile Backdrop â”€â”€ */}
+      {/* ── Mobile Backdrop ── */}
       <div
-        className={`ud-backdrop ${sidebarOpen ? "active" : ""}`}
+        className={`hidden fixed inset-0 bg-[rgba(15,23,42,0.45)] backdrop-blur-[2px] z-[99] animate-[backdropIn_0.2s_ease] ${
+          sidebarOpen ? "max-lg:block" : ""
+        }`}
         onClick={() => setSidebarOpen(false)}
         aria-hidden="true"
       />
 
-      <div className="ud-page">
-        {/* â”€â”€ Sidebar â”€â”€ */}
-        <aside className={`ud-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
+      <div className="min-h-dvh bg-[#f1f5f9] flex font-[Inter,-apple-system,BlinkMacSystemFont,'Segoe_UI',Roboto,'Helvetica_Neue',Arial,sans-serif]">
+        {/* ── Sidebar ── */}
+        <aside
+          className={`fixed left-0 top-0 h-dvh z-[100] flex flex-col shrink-0 bg-white border-r border-[#e8ecf0] shadow-[2px_0_8px_rgba(0,0,0,0.04)] transition-[width,transform] duration-300 ease-in-out ${
+            sidebarCollapsed ? "w-[72px]" : "w-[260px]"
+          } max-lg:w-[280px] max-lg:z-[200] ${
+            sidebarOpen
+              ? "max-lg:translate-x-0 max-lg:shadow-[4px_0_32px_rgba(0,0,0,0.15)]"
+              : "max-lg:-translate-x-full"
+          }`}
+        >
           {/* Mobile close button */}
           <button
             type="button"
-            className="ud-sidebar-close"
+            className={`hidden absolute top-[18px] right-4 w-8 h-8 border-0 bg-[#f1f5f9] rounded-lg cursor-pointer items-center justify-center text-[#64748b] transition-all duration-200 z-[1] hover:bg-[#e2e8f0] hover:text-[#1e293b] ${
+              sidebarOpen ? "max-lg:flex" : ""
+            }`}
             onClick={() => setSidebarOpen(false)}
             aria-label="Close sidebar"
           >
@@ -1736,9 +616,9 @@ async function handleDisable2FA() {
           </button>
 
           {/* Logo */}
-          <div className="ud-sidebar-header">
-            <Link href="/" className="ud-sidebar-logo-wrap">
-              <svg className="ud-sidebar-logo-icon" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <div className="p-5 flex items-center gap-2.5 border-b border-[#f0f2f5] min-h-[72px] overflow-hidden">
+            <Link href="/" className="flex items-center gap-2.5 shrink-0">
+              <svg className="w-9 h-9 shrink-0" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="38" height="38" rx="8" fill={PRIMARY} />
                 <path
                   d="M10 10 C10 10, 14 8, 19 13 C24 18, 28 10, 28 10
@@ -1750,70 +630,78 @@ async function handleDisable2FA() {
                 />
                 <circle cx="19" cy="19" r="3" fill="#fff" opacity="0.9" />
               </svg>
-              <div className="ud-sidebar-logo-text">
-                <span className="ud-logo-line1">HamroNepal</span>
-                <span className="ud-logo-line2">Bazaar</span>
+              <div
+                className={`flex flex-col leading-[1.1] transition-[opacity,width] duration-200 whitespace-nowrap overflow-hidden ${
+                  sidebarCollapsed ? "opacity-0 w-0" : "opacity-100"
+                }`}
+              >
+                <span className="text-sm font-extrabold text-[#C0392B] tracking-[-0.3px]">HamroNepal</span>
+                <span className="text-[11px] font-semibold text-[#888] tracking-[0.5px] uppercase">Bazaar</span>
               </div>
             </Link>
           </div>
 
-          <div className="ud-nav-section">
-            <div className="ud-nav-label">Menu</div>
+          <div className="px-3 py-4 flex-1 overflow-y-auto">
+            <div className={`${navLabel} ${sidebarCollapsed ? "hidden" : ""}`}>Menu</div>
             {sidebarItems.slice(0, 4).map((item) => (
               <Link
                 key={item.id}
                 href={item.href}
-                className={`ud-nav-item ${activeTab === item.id ? "active" : ""}`}
+                className={`${navItemBase} ${activeTab === item.id ? navItemActive : navItemIdle}`}
                 onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
               >
-                <span className="ud-nav-icon">
+                <span className={navIcon}>
                   <item.icon size={18} />
                 </span>
-                <span className="ud-nav-text">{item.label}</span>
+                <span className={`transition-opacity duration-200 ${collapsedHide}`}>{item.label}</span>
               </Link>
             ))}
 
-            <div className="ud-nav-label" style={{ marginTop: 16 }}>Account</div>
+            <div className={`${navLabel} mt-4 ${sidebarCollapsed ? "hidden" : ""}`}>Account</div>
             {sidebarItems.slice(4).map((item) => (
               <Link
                 key={item.id}
                 href={item.href}
-                className={`ud-nav-item ${activeTab === item.id ? "active" : ""}`}
+                className={`${navItemBase} ${activeTab === item.id ? navItemActive : navItemIdle}`}
                 onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
               >
-                <span className="ud-nav-icon">
+                <span className={navIcon}>
                   <item.icon size={18} />
                 </span>
-                <span className="ud-nav-text">{item.label}</span>
+                <span className={`transition-opacity duration-200 ${collapsedHide}`}>{item.label}</span>
               </Link>
             ))}
 
             {/* Delete Account */}
             <button
               type="button"
-              className="ud-nav-item danger"
+              className={`${navItemBase} ${navItemDanger}`}
               onClick={() => { setShowDeleteModal(true); setSidebarOpen(false); }}
               title="Delete Account"
             >
-              <span className="ud-nav-icon">
+              <span className={navIcon}>
                 <FiTrash2 size={18} />
               </span>
-              <span className="ud-nav-text">Delete Account</span>
+              <span className={`transition-opacity duration-200 ${collapsedHide}`}>Delete Account</span>
             </button>
           </div>
 
           {/* Sidebar footer intentionally left empty */}
         </aside>
 
-        {/* â”€â”€ Main Area â”€â”€ */}
-        <div className="ud-main-area">
+        {/* ── Main Area ── */}
+        <div
+          className={`flex-1 flex flex-col min-h-dvh min-w-0 transition-[margin-left] duration-300 ease-in-out ml-0 w-full ${
+            sidebarCollapsed ? "lg:ml-[72px] lg:w-[calc(100%-72px)]" : "lg:ml-[260px] lg:w-[calc(100%-260px)]"
+          }`}
+        >
           {/* Top Header */}
-          <header className="ud-topbar">
-            <div className="ud-topbar-left">
+          <header className="bg-white border-b border-[#e2e8f0] px-8 h-16 flex items-center justify-between sticky top-0 z-50 gap-4 max-lg:px-5 max-md:px-4 max-md:h-14 max-[480px]:px-3">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
               {/* Hamburger - mobile only */}
               <button
                 type="button"
-                className="ud-hamburger"
+                className={`hidden max-lg:flex w-[38px] h-[38px] ${squareBtn}`}
                 onClick={() => setSidebarOpen(true)}
                 aria-label="Open sidebar"
               >
@@ -1822,20 +710,20 @@ async function handleDisable2FA() {
               {/* Desktop toggle - desktop only */}
               <button
                 type="button"
-                className="ud-toggle-btn ud-desktop-toggle"
+                className={`flex max-lg:hidden w-9 h-9 ${squareBtn}`}
                 onClick={() => setSidebarCollapsed((prev) => !prev)}
                 title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               >
                 <FiMoreHorizontal size={18} />
               </button>
-              <h1 className="ud-breadcrumb">Settings</h1>
+              <h1 className="text-xl font-bold text-[#1e293b] tracking-[-0.3px] whitespace-nowrap overflow-hidden text-ellipsis max-md:text-lg">Settings</h1>
             </div>
-            <div className="ud-topbar-right">
+            <div className="flex items-center gap-3 shrink-0">
               {/* Notifications Bell */}
-              <div style={{ position: "relative" }} ref={notifDropdownRef}>
+              <div className="relative" ref={notifDropdownRef}>
                 <button
                   type="button"
-                  className="ud-icon-btn"
+                  className={iconBtn}
                   title="Notifications"
                   onClick={() => {
                     setShowNotifDropdown((v) => !v);
@@ -1853,48 +741,32 @@ async function handleDisable2FA() {
                 >
                   <FiBell size={18} />
                   {notificationCount > 0 && !notifSeen && (
-                    <span className="ud-badge">{notificationCount}</span>
+                    <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-[#ef4444] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                      {notificationCount}
+                    </span>
                   )}
                 </button>
 
                 {showNotifDropdown && (
-                  <div style={{
-                    position: "absolute",
-                    top: "calc(100% + 10px)",
-                    right: 0,
-                    background: "#fff",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
-                    minWidth: "280px",
-                    zIndex: 999,
-                    overflow: "hidden",
-                    animation: "dropdownIn 0.15s ease",
-                  }}>
-                    <div style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9", fontWeight: 700, fontSize: "13px", color: "#1e293b" }}>
+                  <div className="absolute top-[calc(100%+10px)] right-0 bg-white border border-[#e2e8f0] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.1)] min-w-[280px] z-[999] overflow-hidden animate-[dropdownIn_0.15s_ease]">
+                    <div className="px-4 py-3 border-b border-[#f1f5f9] font-bold text-[13px] text-[#1e293b]">
                       Notifications
                     </div>
                     {notifications.length > 0 ? (
                       notifications.map((msg, i) => (
                         <div
                           key={i}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                            padding: "12px 16px",
-                            fontSize: "13px",
-                            color: "#475569",
-                            borderBottom: i < notifications.length - 1 ? "1px solid #f8fafc" : "none",
-                          }}
+                          className={`flex items-center gap-2.5 px-4 py-3 text-[13px] text-[#475569] ${
+                            i < notifications.length - 1 ? "border-b border-[#f8fafc]" : ""
+                          }`}
                         >
-                          <FiAlertCircle size={15} color="#f59e0b" style={{ flexShrink: 0 }} />
+                          <FiAlertCircle size={15} color="#f59e0b" className="shrink-0" />
                           {msg}
                         </div>
                       ))
                     ) : (
-                      <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>
-                        You&apos;re all caught up âœ“
+                      <div className="p-4 text-[13px] text-[#94a3b8] text-center">
+                        You&apos;re all caught up ✓
                       </div>
                     )}
                   </div>
@@ -1902,39 +774,39 @@ async function handleDisable2FA() {
               </div>
 
               {/* Profile Avatar Dropdown */}
-              <div className="ud-profile-wrap" ref={profileDropdownRef}>
+              <div className="relative" ref={profileDropdownRef}>
                 <button
                   type="button"
-                  className="ud-profile-btn"
+                  className="flex items-center gap-2 py-[5px] pr-2.5 pl-[5px] rounded-[40px] border-[1.5px] border-[#e2e8f0] bg-white cursor-pointer transition-all duration-200 hover:border-[#cbd5e1] hover:bg-[#f8fafc]"
                   onClick={() => setShowProfileDropdown((prev) => !prev)}
                 >
-                  <div className="ud-profile-btn-avatar">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#C0392B] to-[#e74c3c] flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
                     {session?.user?.image
-                      ? <img src={getImageUrl(session.user.image)} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ? <img src={getImageUrl(session.user.image)} alt="avatar" className="w-full h-full object-cover" />
                       : userInitials
                     }
                   </div>
-                  <FiChevronDown size={14} className={`ud-profile-chevron ${showProfileDropdown ? "open" : ""}`} />
+                  <FiChevronDown size={14} className={`text-[#94a3b8] transition-transform duration-200 shrink-0 ${showProfileDropdown ? "rotate-180" : ""}`} />
                 </button>
 
                 {showProfileDropdown && (
-                  <div className="ud-profile-dropdown">
-                    <div className="ud-dropdown-header">
-                      <div className="ud-dropdown-username">{session?.user?.name || "User"}</div>
-                      <div className="ud-dropdown-email">{session?.user?.email || ""}</div>
+                  <div className="absolute top-[calc(100%+8px)] right-0 bg-white border border-[#e2e8f0] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.1)] min-w-[200px] z-[999] overflow-hidden animate-[dropdownIn_0.15s_ease]">
+                    <div className="pt-3.5 pb-3 px-4 border-b border-[#f1f5f9]">
+                      <div className="text-sm font-bold text-[#1e293b]">{session?.user?.name || "User"}</div>
+                      <div className="text-xs text-[#94a3b8] mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap">{session?.user?.email || ""}</div>
                     </div>
                     <Link
                       href="/user/dashboard"
-                      className="ud-dropdown-item"
+                      className={`${dropdownItemBase} text-[#475569] hover:bg-[#f8fafc] hover:text-[#1e293b]`}
                       onClick={() => setShowProfileDropdown(false)}
                     >
                       <FiUser size={15} />
                       Dashboard
                     </Link>
-                    <div className="ud-dropdown-divider" />
+                    <div className="h-px bg-[#f1f5f9]" />
                     <button
                       type="button"
-                      className="ud-dropdown-item logout"
+                      className={`${dropdownItemBase} text-[#ef4444] hover:bg-[#fef2f2] hover:text-[#dc2626]`}
                       onClick={() => signOut({ callbackUrl: "/" })}
                     >
                       <FiLogOut size={15} />
@@ -1947,22 +819,23 @@ async function handleDisable2FA() {
           </header>
 
           {/* Main Content */}
-          <main className="ud-main">
+          <main className="flex-1 px-8 py-7 overflow-y-auto min-w-0 max-lg:px-5 max-lg:pt-5 max-lg:pb-8 max-md:p-4 max-[480px]:p-3">
             {/* Profile Header */}
-            <div className="ud-profile-header">
-              <div className="ud-profile-avatar-wrap">
-                <div className="ud-profile-avatar">
+            <div className="bg-white border border-[#e2e8f0] rounded-2xl p-8 mb-6 flex items-center gap-6 relative flex-wrap max-md:flex-col max-md:text-center max-md:p-6 max-md:gap-4 max-[480px]:p-5">
+              <div className="relative shrink-0">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#C0392B] to-[#e74c3c] flex items-center justify-center text-white text-[28px] font-bold overflow-hidden max-md:w-16 max-md:h-16 max-md:text-[22px] max-[480px]:w-14 max-[480px]:h-14 max-[480px]:text-xl">
                   {session?.user?.image
-                    ? <img src={getImageUrl(session.user.image)} alt="avatar" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                    ? <img src={getImageUrl(session.user.image)} alt="avatar" className="w-full h-full rounded-full object-cover" />
                     : userInitials}
                 </div>
                 <button
                   type="button"
-                  className="ud-avatar-edit"
+                  className={`absolute bottom-0 right-0 w-7 h-7 bg-white border-2 border-[#e2e8f0] rounded-full flex items-center justify-center text-[#64748b] transition-all duration-200 hover:border-[#C0392B] hover:text-[#C0392B] max-[480px]:w-6 max-[480px]:h-6 ${
+                    uploadingAvatar ? "cursor-wait" : "cursor-pointer"
+                  }`}
                   title="Change photo"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingAvatar}
-                  style={{ cursor: uploadingAvatar ? "wait" : "pointer" }}
                 >
                   <FiCamera size={12} />
                 </button>
@@ -1971,19 +844,19 @@ async function handleDisable2FA() {
                   accept="image/*"
                   ref={fileInputRef}
                   onChange={handleAvatarChange}
-                  style={{ display: "none" }}
+                  className="hidden"
                 />
               </div>
 
-              <div className="ud-profile-info">
-                <div className="ud-profile-name">{session?.user?.name || "User"}</div>
-                <div className="ud-profile-role">Member Â· Kathmandu, Nepal</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[22px] font-bold text-[#1e293b] tracking-[-0.3px] mb-1 max-md:text-lg">{session?.user?.name || "User"}</div>
+                <div className="text-sm text-[#64748b] font-medium">Member · Kathmandu, Nepal</div>
               </div>
               
-              <div className="ud-profile-actions">
+              <div className="flex gap-2.5 shrink-0 max-md:w-full max-md:justify-center">
                 <button
                   type="button"
-                  className={`ud-btn ${isEditing ? "ud-btn-primary" : "ud-btn-ghost"}`}
+                  className={isEditing ? btnPrimary : `${btnGhost} text-[#475569]`}
                   onClick={() => (isEditing ? handleProfileSave() : setIsEditing(true))}
                   disabled={savingProfile}
                 >
@@ -2000,90 +873,93 @@ async function handleDisable2FA() {
               </div>
             </div>
 
-            {/* Account Details â€” Password field removed */}
-            <div className="ud-section-header">
-              <h3 className="ud-section-title">Account Information</h3>
+            {/* Account Details — Password field removed */}
+            <div className={sectionHeader}>
+              <h3 className={sectionTitle}>Account Information</h3>
             </div>
 
-            <div className="ud-form-card">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl overflow-hidden mb-6 w-full">
               {profileFields.map((field) => (
-                <div key={field.key} className="ud-form-row">
-                  <div className="ud-form-label">
+                <div
+                  key={field.key}
+                  className="flex items-center gap-0 px-6 border-b border-[#f8fafc] transition-colors duration-200 hover:bg-[#fafbfc] last:border-b-0 max-md:flex-col max-md:items-start max-md:px-4 max-md:py-3.5 max-md:gap-1.5"
+                >
+                  <div className="basis-[180px] grow-0 shrink-0 flex items-center gap-2.5 text-[13px] text-[#475569] font-semibold py-[18px] [&_svg]:text-[#94a3b8] max-md:basis-auto max-md:p-0 max-md:text-xs">
                     <field.icon size={16} />
                     {field.label}
                   </div>
                   {isEditing && field.editable ? (
                     <input
                       type={field.type}
-                      className="ud-form-input"
+                      className={`${formInputBase} flex-1 text-sm max-md:w-full`}
                       value={field.value}
                       onChange={(e) => setProfileForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
                     />
                   ) : (
-                    <div className="ud-form-value">{field.value || "-"}</div>
+                    <div className="flex-1 text-sm text-[#1e293b] font-medium py-[18px] min-w-0 max-md:p-0 max-md:text-[13px]">{field.value || "-"}</div>
                   )}
                 </div>
               ))}
             </div>
 
             {/* Security Section */}
-            <div className="ud-section-header">
-              <h3 className="ud-section-title">Security</h3>
+            <div className={sectionHeader}>
+              <h3 className={sectionTitle}>Security</h3>
             </div>
-            <div className="ud-security-card">
-              <div className="ud-security-row">
-                <div className="ud-security-info">
-                  <h4>Two-Factor Authentication</h4>
-                  <p>
+            <div className="bg-white border border-[#e2e8f0] rounded-xl p-6 mb-6 w-full">
+              <div className="flex items-center justify-between py-3.5 border-b border-[#f8fafc] gap-3 flex-wrap last:border-b-0 last:pb-0 max-md:flex-col max-md:items-start max-md:gap-2.5">
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-[#1e293b] mb-[3px] max-md:text-[13px]">Two-Factor Authentication</h4>
+                  <p className="text-xs text-[#64748b] max-md:text-[11px]">
                     {twoFactorEnabled
                       ? "Your account is protected with an extra verification step."
                       : "Add an extra layer of security to your account"}
                   </p>
                 </div>
                 {twoFactorEnabled ? (
-                  <button type="button" className="ud-btn ud-btn-ghost" style={{ color: "#ef4444" }} onClick={() => setShowDisable2FAModal(true)}>
+                  <button type="button" className={`${btnGhost} text-[#ef4444]`} onClick={() => setShowDisable2FAModal(true)}>
                     Disable
                   </button>
                 ) : (
-                  <button type="button" className="ud-btn ud-btn-ghost" onClick={handleRequestEnable2FA} disabled={tfaRequesting}>
+                  <button type="button" className={`${btnGhost} text-[#475569]`} onClick={handleRequestEnable2FA} disabled={tfaRequesting}>
                     {tfaRequesting ? "Sending code..." : "Enable"}
                   </button>
                 )}
               </div>
 
-              <div className="ud-security-row">
-                <div className="ud-security-info">
-                  <h4>Active Sessions</h4>
-                  <p>Manage devices where you&apos;re currently logged in</p>
+              <div className="flex items-center justify-between py-3.5 border-b border-[#f8fafc] gap-3 flex-wrap last:border-b-0 last:pb-0 max-md:flex-col max-md:items-start max-md:gap-2.5">
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-[#1e293b] mb-[3px] max-md:text-[13px]">Active Sessions</h4>
+                  <p className="text-xs text-[#64748b] max-md:text-[11px]">Manage devices where you&apos;re currently logged in</p>
                 </div>
-                <button type="button" className="ud-btn ud-btn-ghost" onClick={() => { setShowSessionsModal(true); loadSessions(); }}>
+                <button type="button" className={`${btnGhost} text-[#475569]`} onClick={() => { setShowSessionsModal(true); loadSessions(); }}>
                   Manage
                 </button>
               </div>
               </div>
 
             {/* Change Password Section */}
-            <div className="ud-section-header">
-              <h3 className="ud-section-title">Change Password</h3>
+            <div className={sectionHeader}>
+              <h3 className={sectionTitle}>Change Password</h3>
             </div>
-            <div className="ud-pw-card">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl p-7 mb-6 w-full max-md:p-5 max-[480px]:p-4">
               {isOAuthUser ? (
-                <p className="ud-pw-oauth-msg">
+                <p className="text-sm text-[#64748b] py-4 leading-[1.6]">
                   You signed in with {session?.user?.provider || "a social account"}. Password management
                   is handled by your {session?.user?.provider || "social"} account and cannot be changed here.
                 </p>
               ) : (
                 <>
-                  <div className="ud-pw-fields">
-                    <div className="ud-pw-field-group">
-                      <label className="ud-pw-label">
+                  <div className="flex flex-col gap-4 mb-5">
+                    <div className="flex flex-col gap-1.5">
+                      <label className={pwLabel}>
                         <FiLock size={14} />
                         Current Password
                       </label>
-                      <div className="ud-pw-input-wrap">
+                      <div className="relative flex items-center">
                         <input
                           type={showCurrentPw ? "text" : "password"}
-                          className="ud-pw-input"
+                          className={pwInput}
                           placeholder="Enter current password"
                           value={currentPassword}
                           onChange={(e) => setCurrentPassword(e.target.value)}
@@ -2091,7 +967,7 @@ async function handleDisable2FA() {
                         />
                         <button
                           type="button"
-                          className="ud-pw-eye-btn"
+                          className={pwEyeBtn}
                           onClick={() => setShowCurrentPw((p) => !p)}
                           title={showCurrentPw ? "Hide" : "Show"}
                         >
@@ -2100,15 +976,15 @@ async function handleDisable2FA() {
                       </div>
                     </div>
 
-                    <div className="ud-pw-field-group">
-                      <label className="ud-pw-label">
+                    <div className="flex flex-col gap-1.5">
+                      <label className={pwLabel}>
                         <FiLock size={14} />
                         New Password
                       </label>
-                      <div className="ud-pw-input-wrap">
+                      <div className="relative flex items-center">
                         <input
                           type={showNewPw ? "text" : "password"}
-                          className="ud-pw-input"
+                          className={pwInput}
                           placeholder="At least 8 characters"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
@@ -2116,7 +992,7 @@ async function handleDisable2FA() {
                         />
                         <button
                           type="button"
-                          className="ud-pw-eye-btn"
+                          className={pwEyeBtn}
                           onClick={() => setShowNewPw((p) => !p)}
                           title={showNewPw ? "Hide" : "Show"}
                         >
@@ -2125,15 +1001,15 @@ async function handleDisable2FA() {
                       </div>
                     </div>
 
-                    <div className="ud-pw-field-group">
-                      <label className="ud-pw-label">
+                    <div className="flex flex-col gap-1.5">
+                      <label className={pwLabel}>
                         <FiLock size={14} />
                         Confirm New Password
                       </label>
-                      <div className="ud-pw-input-wrap">
+                      <div className="relative flex items-center">
                         <input
                           type={showConfirmPw ? "text" : "password"}
-                          className="ud-pw-input"
+                          className={pwInput}
                           placeholder="Repeat new password"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
@@ -2141,7 +1017,7 @@ async function handleDisable2FA() {
                         />
                         <button
                           type="button"
-                          className="ud-pw-eye-btn"
+                          className={pwEyeBtn}
                           onClick={() => setShowConfirmPw((p) => !p)}
                           title={showConfirmPw ? "Hide" : "Show"}
                         >
@@ -2153,7 +1029,7 @@ async function handleDisable2FA() {
 
                   <button
                     type="button"
-                    className="ud-pw-submit-btn"
+                    className={pwSubmitBtn}
                     onClick={handlePasswordUpdate}
                     disabled={isSubmittingPw}
                   >
@@ -2167,25 +1043,25 @@ async function handleDisable2FA() {
         </div>
       </div>
 
-    {/* â”€â”€ Delete Account Confirmation Modal â”€â”€ */}
+    {/* ── Delete Account Confirmation Modal ── */}
     {showDeleteModal && (
-      <div className="ud-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
-        <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
-          <div className="ud-modal-icon">
+      <div className={modalOverlay} onClick={() => !deleting && setShowDeleteModal(false)}>
+        <div className={`${modalBox} max-w-[420px]`} onClick={(e) => e.stopPropagation()}>
+          <div className={`${modalIconBase} bg-[#fef2f2] text-[#ef4444]`}>
             <FiAlertTriangle size={26} />
           </div>
-          <div className="ud-modal-title">Delete Your Account?</div>
-          <div className="ud-modal-body">
+          <div className={`${modalTitle} mb-2`}>Delete Your Account?</div>
+          <div className={modalBody}>
             This action is <strong>permanent and irreversible</strong>. All your orders,
             wishlist, and personal data will be permanently deleted.
           </div>
           {deleteError && (
-            <div className="ud-modal-error">{deleteError}</div>
+            <div className={modalError}>{deleteError}</div>
           )}
-          <div className="ud-modal-actions">
+          <div className="flex gap-3">
             <button
               type="button"
-              className="ud-modal-cancel"
+              className={modalCancel}
               onClick={() => { setShowDeleteModal(false); setDeleteError(""); }}
               disabled={deleting}
             >
@@ -2193,7 +1069,7 @@ async function handleDisable2FA() {
             </button>
             <button
               type="button"
-              className="ud-modal-delete"
+              className={modalDelete}
               onClick={handleDeleteAccount}
               disabled={deleting}
             >
@@ -2216,53 +1092,44 @@ async function handleDisable2FA() {
       </div>
     )}
 
-    {/* â”€â”€ Active Sessions Modal â”€â”€ */}
+    {/* ── Active Sessions Modal ── */}
     {showSessionsModal && (
-      <div className="ud-modal-overlay" onClick={() => setShowSessionsModal(false)}>
-        <div className="ud-modal" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
-          <div className="ud-modal-title" style={{ marginBottom: 16 }}>Active Sessions</div>
+      <div className={modalOverlay} onClick={() => setShowSessionsModal(false)}>
+        <div className={`${modalBox} max-w-[480px]`} onClick={(e) => e.stopPropagation()}>
+          <div className={`${modalTitle} mb-4`}>Active Sessions</div>
 
           {loadingSessions ? (
-            <div style={{ textAlign: "center", padding: "20px 0", color: "#94a3b8", fontSize: 13 }}>
+            <div className="text-center py-5 text-[#94a3b8] text-[13px]">
               Loading...
             </div>
           ) : sessions.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "20px 0", color: "#94a3b8", fontSize: 13 }}>
+            <div className="text-center py-5 text-[#94a3b8] text-[13px]">
               No active sessions found.
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20, maxHeight: "50vh", overflowY: "auto", paddingRight: 4 }}>
+            <div className="flex flex-col gap-2.5 mb-5 max-h-[50vh] overflow-y-auto pr-1">
               {sessions.map((s) => (
                 <div
                   key={s.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "12px 14px",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: 10,
-                    gap: 12,
-                  }}
+                  className="flex items-center justify-between px-3.5 py-3 border border-[#e2e8f0] rounded-[10px] gap-3"
                 >
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", display: "flex", alignItems: "center", gap: 6 }}>
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-semibold text-[#1e293b] flex items-center gap-1.5">
                       {s.deviceLabel || "Unknown device"}
                       {s.isCurrent && (
-                        <span style={{ fontSize: 10, fontWeight: 700, color: "#16a34a", background: "#f0fdf4", padding: "2px 6px", borderRadius: 6 }}>
+                        <span className="text-[10px] font-bold text-[#16a34a] bg-[#f0fdf4] px-1.5 py-0.5 rounded-md">
                           This device
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
-                      {s.ipAddress || "Unknown IP"} Â· Last active {new Date(s.lastActiveAt).toLocaleString()}
+                    <div className="text-[11px] text-[#94a3b8] mt-0.5">
+                      {s.ipAddress || "Unknown IP"} · Last active {new Date(s.lastActiveAt).toLocaleString()}
                     </div>
                   </div>
                   {!s.isCurrent && (
                     <button
                       type="button"
-                      className="ud-btn ud-btn-ghost"
-                      style={{ flexShrink: 0, color: "#ef4444" }}
+                      className={`${btnGhost} shrink-0 text-[#ef4444]`}
                       onClick={() => handleRevokeSession(s.id)}
                       disabled={revokingId === s.id}
                     >
@@ -2276,8 +1143,7 @@ async function handleDisable2FA() {
 
           <button
             type="button"
-            className="ud-modal-cancel"
-            style={{ width: "100%" }}
+            className={`${modalCancel} w-full`}
             onClick={() => setShowSessionsModal(false)}
           >
             Close
@@ -2287,36 +1153,35 @@ async function handleDisable2FA() {
     )}
 
     
-        {/* â”€â”€ Enable 2FA â€” Verify OTP Modal â”€â”€ */}
+        {/* ── Enable 2FA — Verify OTP Modal ── */}
         {show2FAModal && (
-          <div className="ud-modal-overlay" onClick={() => !tfaConfirming && setShow2FAModal(false)}>
-            <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="ud-modal-icon" style={{ background: "#eef2ff", color: "#4f46e5" }}>
+          <div className={modalOverlay} onClick={() => !tfaConfirming && setShow2FAModal(false)}>
+            <div className={`${modalBox} max-w-[420px]`} onClick={(e) => e.stopPropagation()}>
+              <div className={`${modalIconBase} bg-[#eef2ff] text-[#4f46e5]`}>
                 <FiShield size={26} />
               </div>
-              <div className="ud-modal-title">Verify Your Identity</div>
-              <div className="ud-modal-body">
+              <div className={`${modalTitle} mb-2`}>Verify Your Identity</div>
+              <div className={modalBody}>
                 Enter the 6-digit code we sent you to finish enabling two-factor authentication.
               </div>
 
-              {tfaError && <div className="ud-modal-error">{tfaError}</div>}
+              {tfaError && <div className={modalError}>{tfaError}</div>}
 
               <input
                 type="text"
                 inputMode="numeric"
                 maxLength={6}
-                className="ud-form-input"
+                className={otpInput}
                 placeholder="000000"
                 value={tfaOtp}
                 onChange={(e) => setTfaOtp(e.target.value.replace(/\D/g, ""))}
-                style={{ textAlign: "center", fontSize: 20, letterSpacing: 6, marginBottom: 20 }}
                 autoFocus
               />
 
-              <div className="ud-modal-actions">
+              <div className="flex gap-3">
                 <button
                   type="button"
-                  className="ud-modal-cancel"
+                  className={modalCancel}
                   onClick={() => { setShow2FAModal(false); setTfaError(""); }}
                   disabled={tfaConfirming}
                 >
@@ -2324,8 +1189,7 @@ async function handleDisable2FA() {
                 </button>
                 <button
                   type="button"
-                  className="ud-pw-submit-btn"
-                  style={{ flex: 1, justifyContent: "center" }}
+                  className={`${pwSubmitBtn} flex-1 justify-center`}
                   onClick={handleConfirmEnable2FA}
                   disabled={tfaConfirming}
                 >
@@ -2336,22 +1200,22 @@ async function handleDisable2FA() {
           </div>
         )}
 
-        {/* â”€â”€ Disable 2FA Confirmation Modal â”€â”€ */}
+        {/* ── Disable 2FA Confirmation Modal ── */}
         {showDisable2FAModal && (
-          <div className="ud-modal-overlay" onClick={() => !tfaDisabling && setShowDisable2FAModal(false)}>
-            <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="ud-modal-icon">
+          <div className={modalOverlay} onClick={() => !tfaDisabling && setShowDisable2FAModal(false)}>
+            <div className={`${modalBox} max-w-[420px]`} onClick={(e) => e.stopPropagation()}>
+              <div className={`${modalIconBase} bg-[#fef2f2] text-[#ef4444]`}>
                 <FiAlertTriangle size={26} />
               </div>
-              <div className="ud-modal-title">Disable Two-Factor Authentication?</div>
-              <div className="ud-modal-body">
+              <div className={`${modalTitle} mb-2`}>Disable Two-Factor Authentication?</div>
+              <div className={modalBody}>
                 This will <strong>remove the extra verification step</strong> when you log in.
                 Your account will rely on your password alone.
               </div>
-              <div className="ud-modal-actions">
+              <div className="flex gap-3">
                 <button
                   type="button"
-                  className="ud-modal-cancel"
+                  className={modalCancel}
                   onClick={() => setShowDisable2FAModal(false)}
                   disabled={tfaDisabling}
                 >
@@ -2359,7 +1223,7 @@ async function handleDisable2FA() {
                 </button>
                 <button
                   type="button"
-                  className="ud-modal-delete"
+                  className={modalDelete}
                   onClick={handleDisable2FA}
                   disabled={tfaDisabling}
                 >
@@ -2370,36 +1234,35 @@ async function handleDisable2FA() {
           </div>
         )}
  
- {/* â”€â”€ Phone OTP Verification Modal â”€â”€ */}
+ {/* ── Phone OTP Verification Modal ── */}
         {showPhoneOtpModal && (
-          <div className="ud-modal-overlay" onClick={() => !confirmingPhone && setShowPhoneOtpModal(false)}>
-            <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="ud-modal-icon" style={{ background: "#eef2ff", color: "#4f46e5" }}>
+          <div className={modalOverlay} onClick={() => !confirmingPhone && setShowPhoneOtpModal(false)}>
+            <div className={`${modalBox} max-w-[420px]`} onClick={(e) => e.stopPropagation()}>
+              <div className={`${modalIconBase} bg-[#eef2ff] text-[#4f46e5]`}>
                 <FiPhone size={26} />
               </div>
-              <div className="ud-modal-title">Verify New Phone Number</div>
-              <div className="ud-modal-body">
+              <div className={`${modalTitle} mb-2`}>Verify New Phone Number</div>
+              <div className={modalBody}>
                 Enter the 6-digit code sent to {pendingPhone} to confirm this number.
               </div>
 
-              {phoneOtpError && <div className="ud-modal-error">{phoneOtpError}</div>}
+              {phoneOtpError && <div className={modalError}>{phoneOtpError}</div>}
 
               <input
                 type="text"
                 inputMode="numeric"
                 maxLength={6}
-                className="ud-form-input"
+                className={otpInput}
                 placeholder="000000"
                 value={phoneOtp}
                 onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, ""))}
-                style={{ textAlign: "center", fontSize: 20, letterSpacing: 6, marginBottom: 20 }}
                 autoFocus
               />
 
-              <div className="ud-modal-actions">
+              <div className="flex gap-3">
               <button
                   type="button"
-                  className="ud-modal-cancel"
+                  className={modalCancel}
                   onClick={() => {
                     setShowPhoneOtpModal(false);
                     setPhoneOtpError("");
@@ -2411,8 +1274,7 @@ async function handleDisable2FA() {
                 </button>
                 <button
                   type="button"
-                  className="ud-pw-submit-btn"
-                  style={{ flex: 1, justifyContent: "center" }}
+                  className={`${pwSubmitBtn} flex-1 justify-center`}
                   onClick={handleConfirmPhoneOtp}
                   disabled={confirmingPhone}
                 >

@@ -405,7 +405,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/register"
-                className="bg-[#C0392B] text-white border-0 rounded-lg py-2 px-[18px] text-[13.5px] font-semibold cursor-pointer whitespace-nowrap no-underline inline-block [transition:background_0.15s,transform_0.1s] tracking-[0.1px] hover:bg-[#a93226] hover:[transform:translateY(-1px)] active:[transform:translateY(0)]"
+                className="bg-[#C0392B] !text-white border-0 rounded-lg py-2 px-[18px] text-[13.5px] font-semibold cursor-pointer whitespace-nowrap no-underline inline-block [transition:background_0.15s,transform_0.1s] tracking-[0.1px] hover:bg-[#a93226] hover:[transform:translateY(-1px)] active:[transform:translateY(0)]"
               >
                 Signup
               </Link>

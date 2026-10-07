@@ -65,6 +65,27 @@ function adaptOrder(o: ApiOrderDetail): OrderRow {
   };
 }
 
+/* ── shared class strings ── */
+const navItemBase =
+  "relative mb-0.5 flex w-full cursor-pointer items-center gap-3 whitespace-nowrap rounded-[10px] border-0 px-3.5 py-2.5 text-left font-[inherit] text-[14px] leading-normal no-underline transition-all duration-200";
+const navItemIdle = "font-medium text-[#5a6478]! hover:bg-[#f4f6fb] hover:text-slate-800!";
+const navItemActive =
+  "bg-[#fff5f5] font-semibold text-[#C0392B]! before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-r-[3px] before:bg-[#C0392B] before:content-['']";
+const navItemDanger = "font-medium text-red-500/70! hover:bg-red-500/5 hover:text-red-500!";
+const iconBtn =
+  "relative flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-[10px] border border-slate-200 bg-white text-slate-500 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700";
+const ddItemBase =
+  "flex w-full cursor-pointer items-center gap-2.5 border-0 bg-transparent px-4 py-[11px] text-left font-[inherit] text-sm font-medium no-underline transition-all duration-150";
+
+const statusPill =
+  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-[20px] px-3 py-[5px] text-xs font-semibold";
+const pagBtn =
+  "flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-lg border font-[inherit] text-[13px] font-semibold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40";
+const pagIdle =
+  "border-slate-200 bg-white text-slate-500 enabled:hover:border-slate-300 enabled:hover:bg-slate-50 enabled:hover:text-slate-700";
+const pagActive = "border-[#C0392B] bg-[#C0392B] text-white";
+const emptyBlock = "px-5 py-[60px] text-center text-slate-400";
+
 export default function UserOrders() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -139,6 +160,7 @@ export default function UserOrders() {
 
   const sidebarItems = [
     { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/user/dashboard" },
+    { id: "contacts", icon: FiUser, label: "Contacts", href: "/user/contacts" },
     { id: "orders", icon: FiShoppingBag, label: "My Orders", href: "/user/orders" },
     { id: "wishlist", icon: FiHeart, label: "Wishlist", href: "/user/wishlist" },
     { id: "notification", icon: FiBell, label: "Notifications", href: "/user/notifications" },
@@ -204,333 +226,53 @@ export default function UserOrders() {
 
   if (loadingOrders) {
     return (
-      <div className="ud-page" style={{ alignItems: "center", justifyContent: "center", width: "100%" }}>
-        <div className="orders-empty"><p>Loading your ordersâ€¦</p></div>
-        <style>{`.ud-page { display: flex; }`}</style>
+      <div className="flex w-full items-center justify-center">
+        <div className={emptyBlock}><p className="text-sm">Loading your orders…</p></div>
       </div>
     );
   }
 
   if (ordersError) {
     return (
-      <div className="ud-page" style={{ alignItems: "center", justifyContent: "center", width: "100%" }}>
-        <div className="orders-empty"><p style={{ color: "#ef4444" }}>{ordersError}</p></div>
-        <style>{`.ud-page { display: flex; }`}</style>
+      <div className="flex w-full items-center justify-center">
+        <div className={emptyBlock}><p className="text-sm text-red-500">{ordersError}</p></div>
       </div>
     );
   }
 
+  const collapsedHide = sidebarCollapsed ? "lg:hidden" : "";
+  const collapsedFade = sidebarCollapsed ? "lg:w-0 lg:overflow-hidden lg:opacity-0" : "";
+
   return (
     <>
-      <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { overflow-x: hidden; max-width: 100vw; }
-
-        .ud-page {
-          min-height: 100vh; min-height: 100dvh;
-          background: #f1f5f9; display: flex;
-          font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-
-        /* â”€â”€ Sidebar â”€â”€ */
-        .ud-sidebar {
-          width: 260px; background: #ffffff; border-right: 1px solid #e8ecf0;
-          display: flex; flex-direction: column; flex-shrink: 0;
-          transition: width 0.3s ease, transform 0.3s ease;
-          position: fixed; height: 100vh; height: 100dvh; left: 0; top: 0; z-index: 100;
-          box-shadow: 2px 0 8px rgba(0,0,0,0.04);
-        }
-        .ud-sidebar.collapsed { width: 72px; }
-        .ud-sidebar-header {
-          padding: 20px; display: flex; align-items: center; gap: 10px;
-          border-bottom: 1px solid #f0f2f5; min-height: 72px; overflow: hidden;
-        }
-        .ud-sidebar-logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
-        .ud-sidebar-logo-icon { width: 36px; height: 36px; flex-shrink: 0; }
-        .ud-sidebar-logo-text {
-          display: flex; flex-direction: column; line-height: 1.1;
-          opacity: 1; transition: opacity 0.2s, width 0.2s; white-space: nowrap; overflow: hidden;
-        }
-        .ud-sidebar.collapsed .ud-sidebar-logo-text { opacity: 0; width: 0; }
-        .ud-logo-line1 { font-size: 14px; font-weight: 800; color: ${PRIMARY}; letter-spacing: -0.3px; }
-        .ud-logo-line2 { font-size: 11px; font-weight: 600; color: #888; letter-spacing: 0.5px; text-transform: uppercase; }
-        .ud-nav-section { padding: 16px 12px; flex: 1; overflow-y: auto; }
-        .ud-nav-label {
-          font-size: 10px; font-weight: 700; color: #b0b8c4; text-transform: uppercase;
-          letter-spacing: 1.2px; padding: 0 12px; margin-bottom: 8px; white-space: nowrap;
-        }
-        .ud-sidebar.collapsed .ud-nav-label { display: none; }
-        .ud-nav-item {
-          display: flex; align-items: center; gap: 12px; padding: 10px 14px;
-          color: #5a6478; font-size: 14px; font-weight: 500; cursor: pointer;
-          transition: all 0.2s; border: none; background: none; width: 100%;
-          text-align: left; font-family: inherit; text-decoration: none;
-          border-radius: 10px; margin-bottom: 2px; position: relative; white-space: nowrap;
-        }
-        .ud-nav-item:hover { background: #f4f6fb; color: #1e293b; }
-        .ud-nav-item.active { background: #fff5f5; color: ${PRIMARY}; font-weight: 600; }
-        .ud-nav-item.active::before {
-          content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-          width: 3px; height: 20px; background: ${PRIMARY}; border-radius: 0 3px 3px 0;
-        }
-        .ud-nav-icon { font-size: 18px; width: 22px; display: flex; justify-content: center; flex-shrink: 0; }
-        .ud-nav-text { opacity: 1; transition: opacity 0.2s; }
-        .ud-sidebar.collapsed .ud-nav-text { opacity: 0; width: 0; overflow: hidden; }
-        .ud-nav-item.danger { color: rgba(239,68,68,0.7); }
-        .ud-nav-item.danger:hover { background: rgba(239,68,68,0.06); color: #ef4444; }
-
-        /* â”€â”€ Main Area â”€â”€ */
-        .ud-main-area {
-          flex: 1; margin-left: 260px; display: flex; flex-direction: column;
-          min-height: 100vh; min-height: 100dvh; transition: margin-left 0.3s ease;
-          width: calc(100% - 260px); min-width: 0;
-        }
-        .ud-sidebar.collapsed ~ .ud-main-area { margin-left: 72px; width: calc(100% - 72px); }
-
-        /* â”€â”€ Top Header â”€â”€ */
-        .ud-topbar {
-          background: #fff; border-bottom: 1px solid #e2e8f0;
-          padding: 0 32px; height: 64px; display: flex; align-items: center;
-          justify-content: space-between; position: sticky; top: 0; z-index: 50; gap: 16px;
-        }
-        .ud-topbar-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
-        .ud-toggle-btn {
-          width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e2e8f0;
-          background: #fff; display: flex; align-items: center; justify-content: center;
-          cursor: pointer; color: #64748b; transition: all 0.2s; flex-shrink: 0;
-        }
-        .ud-toggle-btn:hover { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
-        .ud-breadcrumb { font-size: 20px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .ud-topbar-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-        .ud-icon-btn {
-          width: 40px; height: 40px; border-radius: 10px; border: 1px solid #e2e8f0;
-          background: #fff; display: flex; align-items: center; justify-content: center;
-          cursor: pointer; color: #64748b; transition: all 0.2s; position: relative; flex-shrink: 0;
-        }
-        .ud-icon-btn:hover { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
-        .ud-badge {
-          position: absolute; top: -2px; right: -2px; width: 18px; height: 18px;
-          background: #ef4444; color: #fff; font-size: 10px; font-weight: 700;
-          border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff;
-        }
-
-        /* â”€â”€ Profile Dropdown â”€â”€ */
-        .ud-profile-wrap { position: relative; }
-        .ud-profile-btn {
-          display: flex; align-items: center; gap: 8px; padding: 5px 10px 5px 5px;
-          border-radius: 40px; border: 1.5px solid #e2e8f0; background: #fff;
-          cursor: pointer; transition: all 0.2s; font-family: inherit;
-        }
-        .ud-profile-btn:hover { border-color: #cbd5e1; background: #f8fafc; }
-        .ud-profile-btn-avatar {
-          width: 32px; height: 32px; border-radius: 50%;
-          background: linear-gradient(135deg, ${PRIMARY}, #e74c3c);
-          display: flex; align-items: center; justify-content: center;
-          color: #fff; font-size: 12px; font-weight: 700; overflow: hidden; flex-shrink: 0;
-        }
-        .ud-profile-chevron { color: #94a3b8; transition: transform 0.2s; flex-shrink: 0; }
-        .ud-profile-chevron.open { transform: rotate(180deg); }
-        .ud-profile-dropdown {
-          position: absolute; top: calc(100% + 8px); right: 0; background: #fff;
-          border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-          min-width: 200px; z-index: 999; overflow: hidden; animation: dropdownIn 0.15s ease;
-        }
-        @keyframes dropdownIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-        .ud-dropdown-header { padding: 14px 16px 12px; border-bottom: 1px solid #f1f5f9; }
-        .ud-dropdown-username { font-size: 14px; font-weight: 700; color: #1e293b; }
-        .ud-dropdown-email { font-size: 12px; color: #94a3b8; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .ud-dropdown-item {
-          display: flex; align-items: center; gap: 10px; padding: 11px 16px;
-          font-size: 14px; font-weight: 500; color: #475569; cursor: pointer;
-          transition: all 0.15s; border: none; background: none; width: 100%;
-          text-align: left; font-family: inherit; text-decoration: none;
-        }
-        .ud-dropdown-item:hover { background: #f8fafc; color: #1e293b; }
-        .ud-dropdown-item.logout { color: #ef4444; }
-        .ud-dropdown-item.logout:hover { background: #fef2f2; color: #dc2626; }
-        .ud-dropdown-divider { height: 1px; background: #f1f5f9; }
-
-        /* â”€â”€ Main Content â”€â”€ */
-        .ud-main { flex: 1; padding: 28px 32px; overflow-y: auto; min-width: 0; }
-
-        /* â”€â”€ Orders Page Specific â”€â”€ */
-        .orders-toolbar {
-          display: flex; align-items: center; justify-content: space-between;
-          gap: 16px; margin-bottom: 20px; flex-wrap: wrap;
-        }
-        .orders-search-wrap {
-          position: relative; flex: 1; min-width: 200px; max-width: 340px;
-        }
-        .orders-search-icon {
-          position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-          color: #94a3b8; pointer-events: none;
-        }
-        .orders-search {
-          width: 100%; padding: 9px 14px 9px 38px;
-          border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;
-          font-family: inherit; color: #1e293b; outline: none;
-          transition: all 0.2s; background: #fff;
-        }
-        .orders-search:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-        .orders-filters { display: flex; gap: 8px; flex-wrap: wrap; }
-        .orders-filter-btn {
-          padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
-          cursor: pointer; transition: all 0.2s; border: 1.5px solid #e2e8f0;
-          background: #fff; color: #64748b; font-family: inherit;
-        }
-        .orders-filter-btn:hover { border-color: #cbd5e1; color: #1e293b; }
-        .orders-filter-btn.active { background: ${PRIMARY}; color: #fff; border-color: ${PRIMARY}; }
-
-        .orders-card {
-          background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
-          overflow: hidden; margin-bottom: 24px; width: 100%;
-        }
-        .orders-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
-        .orders-table { width: 100%; border-collapse: collapse; min-width: 560px; }
-        .orders-table th {
-          text-align: left; padding: 14px 20px; font-size: 12px; font-weight: 600;
-          color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;
-          border-bottom: 1px solid #f1f5f9; background: #fafbfc; white-space: nowrap;
-        }
-        .orders-table td {
-          padding: 14px 20px; font-size: 14px; color: #334155;
-          border-bottom: 1px solid #f8fafc; white-space: nowrap;
-        }
-        .orders-table tr:last-child td { border-bottom: none; }
-        .order-row-link {
-          text-decoration: none;
-          color: inherit;
-          transition: background 0.15s;
-          cursor: pointer;
-        }
-        .order-row-link:hover td { background: #fafbfc; }
-        .order-id { font-weight: 600; color: #1e293b; font-family: "SF Mono", "Fira Code", monospace; font-size: 13px; }
-        .order-item { color: #475569; font-size: 13px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
-        .ud-status {
-          display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px;
-          border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap;
-        }
-        .ud-status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-        .order-amount { font-weight: 600; color: #1e293b; }
-
-        /* Empty state */
-        .orders-empty {
-          padding: 60px 20px; text-align: center; color: #94a3b8;
-        }
-        .orders-empty svg { margin-bottom: 16px; opacity: 0.4; }
-        .orders-empty h3 { font-size: 16px; font-weight: 600; color: #64748b; margin-bottom: 6px; }
-        .orders-empty p { font-size: 14px; }
-
-        /* â”€â”€ Pagination â”€â”€ */
-        .orders-pagination {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 16px 20px; border-top: 1px solid #f1f5f9; gap: 12px; flex-wrap: wrap;
-        }
-        .pagination-info { font-size: 13px; color: #64748b; }
-        .pagination-btns { display: flex; gap: 6px; align-items: center; }
-        .pag-btn {
-          width: 34px; height: 34px; border-radius: 8px; border: 1px solid #e2e8f0;
-          background: #fff; display: flex; align-items: center; justify-content: center;
-          cursor: pointer; color: #64748b; font-size: 13px; font-weight: 600;
-          transition: all 0.15s; font-family: inherit;
-        }
-        .pag-btn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; color: #334155; }
-        .pag-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .pag-btn.active { background: ${PRIMARY}; color: #fff; border-color: ${PRIMARY}; }
-
-        /* Mobile order cards */
-        .orders-mobile { display: none; flex-direction: column; gap: 12px; padding: 16px; }
-        .orders-mobile-card {
-          background: #f8fafc; border-radius: 10px; padding: 14px;
-          border: 1px solid #f1f5f9; cursor: pointer;
-          transition: background 0.15s, border-color 0.15s;
-          text-decoration: none; color: inherit; display: block;
-        }
-        .orders-mobile-card:hover { background: #f1f5f9; border-color: #e2e8f0; }
-        .orders-mobile-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .orders-mobile-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-        .orders-mobile-item { font-size: 13px; color: #475569; margin-bottom: 6px; }
-        .orders-mobile-date { font-size: 12px; color: #94a3b8; }
-
-        /* â”€â”€ Backdrop â”€â”€ */
-        .ud-backdrop { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.45); backdrop-filter: blur(2px); z-index: 99; }
-        .ud-backdrop.active { display: block; }
-        .ud-sidebar-close {
-          display: none; position: absolute; top: 18px; right: 16px;
-          width: 32px; height: 32px; border: none; background: #f1f5f9;
-          border-radius: 8px; cursor: pointer; align-items: center; justify-content: center;
-          color: #64748b; transition: all 0.2s; z-index: 1;
-        }
-        .ud-sidebar-close:hover { background: #e2e8f0; color: #1e293b; }
-        .ud-hamburger {
-          display: none; width: 38px; height: 38px; border-radius: 8px;
-          border: 1px solid #e2e8f0; background: #fff; align-items: center;
-          justify-content: center; cursor: pointer; color: #64748b;
-          transition: all 0.2s; flex-shrink: 0;
-        }
-        .ud-hamburger:hover { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
-        .ud-desktop-toggle { display: flex; }
-
-        /* â”€â”€ Responsive â”€â”€ */
-        @media (max-width: 1023px) {
-          .ud-sidebar { transform: translateX(-100%); width: 280px !important; z-index: 200; }
-          .ud-sidebar.mobile-open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.15); }
-          .ud-sidebar.mobile-open .ud-sidebar-close { display: flex; }
-          .ud-hamburger { display: flex; }
-          .ud-desktop-toggle { display: none; }
-          .ud-main-area { margin-left: 0 !important; width: 100% !important; }
-          .ud-main { padding: 20px 20px 32px; }
-          .ud-topbar { padding: 0 20px; }
-        }
-        @media (max-width: 767px) {
-          .ud-main { padding: 16px; }
-          .ud-topbar { padding: 0 16px; height: 56px; }
-          .ud-breadcrumb { font-size: 18px; }
-          .orders-toolbar { flex-direction: column; align-items: stretch; }
-          .orders-search-wrap { max-width: 100%; }
-          .orders-table-wrap { display: none; }
-          .orders-mobile { display: flex; }
-          .orders-pagination { flex-direction: column; align-items: center; }
-        }
-        @media (max-width: 480px) {
-          .ud-main { padding: 12px; }
-          .ud-topbar { padding: 0 12px; }
-          .orders-filters { gap: 6px; }
-          .orders-filter-btn { padding: 6px 12px; font-size: 12px; }
-        }
-
-        /* â”€â”€ Delete Modal â”€â”€ */
-        .ud-modal-overlay {
-          position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
-          z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;
-        }
-        .ud-modal { background: #fff; border-radius: 16px; padding: 32px; width: 100%; max-width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
-        .ud-modal-icon { width: 56px; height: 56px; border-radius: 14px; background: #fef2f2; display: flex; align-items: center; justify-content: center; color: #ef4444; margin: 0 auto 20px; }
-        .ud-modal-title { font-size: 18px; font-weight: 700; color: #1e293b; text-align: center; margin-bottom: 8px; }
-        .ud-modal-body { font-size: 14px; color: #64748b; text-align: center; line-height: 1.6; margin-bottom: 24px; }
-        .ud-modal-body strong { color: #ef4444; }
-        .ud-modal-error { font-size: 13px; color: #ef4444; background: #fef2f2; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; text-align: center; }
-        .ud-modal-actions { display: flex; gap: 12px; }
-        .ud-modal-cancel { flex: 1; padding: 11px 0; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #fff; color: #475569; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-        .ud-modal-cancel:hover { background: #f8fafc; border-color: #cbd5e1; }
-        .ud-modal-delete { flex: 1; padding: 11px 0; border-radius: 10px; border: none; background: #ef4444; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .ud-modal-delete:hover:not(:disabled) { background: #dc2626; }
-        .ud-modal-delete:disabled { opacity: 0.7; cursor: not-allowed; }
-      `}</style>
-
       {/* Mobile Backdrop */}
-      <div className={`ud-backdrop ${sidebarOpen ? "active" : ""}`} onClick={() => setSidebarOpen(false)} aria-hidden="true" />
+      <div
+        className={`fixed inset-0 z-[99] bg-[rgba(15,23,42,0.45)] backdrop-blur-[2px] lg:hidden ${sidebarOpen ? "block" : "hidden"}`}
+        onClick={() => setSidebarOpen(false)}
+        aria-hidden="true"
+      />
 
-      <div className="ud-page">
-        {/* â”€â”€ Sidebar â”€â”€ */}
-        <aside className={`ud-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
-          <button type="button" className="ud-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
+      <div className="flex min-h-dvh bg-slate-100 font-['Inter',-apple-system,BlinkMacSystemFont,'Segoe_UI',Roboto,sans-serif]">
+        {/* ── Sidebar ── */}
+        <aside
+          className={`fixed left-0 top-0 z-[200] flex h-dvh w-[280px] shrink-0 flex-col border-r border-[#e8ecf0] bg-white shadow-[2px_0_8px_rgba(0,0,0,0.04)] transition-[width,transform] duration-300 ease-in-out lg:z-[100] ${
+            sidebarCollapsed ? "lg:w-[72px]" : "lg:w-[260px]"
+          } ${sidebarOpen ? "translate-x-0 shadow-[4px_0_32px_rgba(0,0,0,0.15)]" : "-translate-x-full lg:translate-x-0"}`}
+        >
+          <button
+            type="button"
+            className={`absolute right-4 top-[18px] z-[1] h-8 w-8 cursor-pointer items-center justify-center rounded-lg border-0 bg-slate-100 text-slate-500 transition-all duration-200 hover:bg-slate-200 hover:text-slate-800 ${
+              sidebarOpen ? "flex lg:hidden" : "hidden"
+            }`}
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close sidebar"
+          >
             <FiX size={18} />
           </button>
 
-          <div className="ud-sidebar-header">
-            <Link href="/" className="ud-sidebar-logo-wrap">
-              <svg className="ud-sidebar-logo-icon" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <div className="flex min-h-[72px] items-center gap-2.5 overflow-hidden border-b border-[#f0f2f5] p-5">
+            <Link href="/" className="flex shrink-0 items-center gap-2.5 no-underline">
+              <svg className="h-9 w-9 shrink-0" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="38" height="38" rx="8" fill={PRIMARY} />
                 <path
                   d="M10 10 C10 10, 14 8, 19 13 C24 18, 28 10, 28 10
@@ -542,90 +284,164 @@ export default function UserOrders() {
                 />
                 <circle cx="19" cy="19" r="3" fill="#fff" opacity="0.9" />
               </svg>
-              <div className="ud-sidebar-logo-text">
-                <span className="ud-logo-line1">HamroNepal</span>
-                <span className="ud-logo-line2">Bazaar</span>
+              <div className={`flex flex-col overflow-hidden whitespace-nowrap leading-[1.1] transition-[opacity,width] duration-200 ${collapsedFade}`}>
+                <span className="text-sm font-extrabold tracking-[-0.3px] text-[#C0392B]">HamroNepal</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.5px] text-[#888]">Bazaar</span>
               </div>
             </Link>
           </div>
 
-          <div className="ud-nav-section">
-            <div className="ud-nav-label">Menu</div>
+          <div className="flex-1 overflow-y-auto px-3 py-4">
+            <div className={`mb-2 whitespace-nowrap px-3 text-[10px] font-bold uppercase tracking-[1.2px] text-[#b0b8c4] ${collapsedHide}`}>
+              Menu
+            </div>
             {sidebarItems.slice(0, 4).map((item) => (
-              <Link key={item.id} href={item.href} className={`ud-nav-item ${item.id === "orders" ? "active" : ""}`} onClick={() => setSidebarOpen(false)}>
-                <span className="ud-nav-icon"><item.icon size={18} /></span>
-                <span className="ud-nav-text">{item.label}</span>
+              <Link
+                key={item.id}
+                href={item.href}
+                className={`${navItemBase} ${item.id === "orders" ? navItemActive : navItemIdle}`}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <span className="flex w-[22px] shrink-0 justify-center text-lg"><item.icon size={18} /></span>
+                <span className={`transition-opacity duration-200 ${collapsedFade}`}>{item.label}</span>
               </Link>
             ))}
-            <div className="ud-nav-label" style={{ marginTop: 16 }}>Account</div>
+            <div className={`mb-2 mt-4 whitespace-nowrap px-3 text-[10px] font-bold uppercase tracking-[1.2px] text-[#b0b8c4] ${collapsedHide}`}>
+              Account
+            </div>
             {sidebarItems.slice(4).map((item) => (
-              <Link key={item.id} href={item.href} className="ud-nav-item" onClick={() => setSidebarOpen(false)}>
-                <span className="ud-nav-icon"><item.icon size={18} /></span>
-                <span className="ud-nav-text">{item.label}</span>
+              <Link
+                key={item.id}
+                href={item.href}
+                className={`${navItemBase} ${navItemIdle}`}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <span className="flex w-[22px] shrink-0 justify-center text-lg"><item.icon size={18} /></span>
+                <span className={`transition-opacity duration-200 ${collapsedFade}`}>{item.label}</span>
               </Link>
             ))}
-            <button type="button" className="ud-nav-item danger" onClick={() => { setShowDeleteModal(true); setSidebarOpen(false); }}>
-              <span className="ud-nav-icon"><FiTrash2 size={18} /></span>
-              <span className="ud-nav-text">Delete Account</span>
+            <button
+              type="button"
+              className={`${navItemBase} ${navItemDanger}`}
+              onClick={() => { setShowDeleteModal(true); setSidebarOpen(false); }}
+            >
+              <span className="flex w-[22px] shrink-0 justify-center text-lg"><FiTrash2 size={18} /></span>
+              <span className={`transition-opacity duration-200 ${collapsedFade}`}>Delete Account</span>
             </button>
           </div>
         </aside>
 
         {/* Main Area */}
-        <div className="ud-main-area">
+        <div
+          className={`flex min-h-dvh w-full min-w-0 flex-1 flex-col transition-[margin-left] duration-300 ease-in-out ${
+            sidebarCollapsed ? "lg:ml-[72px] lg:w-[calc(100%-72px)]" : "lg:ml-[260px] lg:w-[calc(100%-260px)]"
+          }`}
+        >
           {/* Top Header */}
-          <header className="ud-topbar">
-            <div className="ud-topbar-left">
-              <button type="button" className="ud-hamburger" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar">
+          <header className="sticky top-0 z-50 flex h-14 items-center justify-between gap-4 border-b border-slate-200 bg-white px-3 min-[481px]:px-4 md:h-16 md:px-5 lg:px-8">
+            <div className="flex min-w-0 flex-1 items-center gap-4">
+              <button
+                type="button"
+                className="flex h-[38px] w-[38px] shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 lg:hidden"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open sidebar"
+              >
                 <FiMenu size={20} />
               </button>
-              <button type="button" className="ud-toggle-btn ud-desktop-toggle" onClick={() => setSidebarCollapsed((p) => !p)}>
+              <button
+                type="button"
+                className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 lg:flex"
+                onClick={() => setSidebarCollapsed((p) => !p)}
+              >
                 <FiMoreHorizontal size={18} />
               </button>
-              <h1 className="ud-breadcrumb">My Orders</h1>
+              <h1 className="overflow-hidden text-ellipsis whitespace-nowrap text-lg font-bold tracking-[-0.3px] text-slate-800 md:text-xl">
+                My Orders
+              </h1>
             </div>
-            <div className="ud-topbar-right">
+
+            <div className="flex shrink-0 items-center gap-3">
               {/* Notification Bell */}
-              <div style={{ position: "relative" }} ref={notifDropdownRef}>
-                <button type="button" className="ud-icon-btn" title="Notifications"
-                  onClick={() => { setShowNotifDropdown((v) => !v); setNotifSeen(true); }}>
+              <div className="relative" ref={notifDropdownRef}>
+                <button
+                  type="button"
+                  className={iconBtn}
+                  title="Notifications"
+                  onClick={() => { setShowNotifDropdown((v) => !v); setNotifSeen(true); }}
+                >
                   <FiBell size={18} />
-                  {notificationCount > 0 && !notifSeen && <span className="ud-badge">{notificationCount}</span>}
+                  {notificationCount > 0 && !notifSeen && (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-white bg-red-500 text-[10px] font-bold text-white">
+                      {notificationCount}
+                    </span>
+                  )}
                 </button>
                 {showNotifDropdown && (
-                  <div style={{ position: "absolute", top: "calc(100% + 10px)", right: 0, background: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.1)", minWidth: "280px", zIndex: 999, overflow: "hidden", animation: "dropdownIn 0.15s ease" }}>
-                    <div style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9", fontWeight: 700, fontSize: "13px", color: "#1e293b" }}>Notifications</div>
-                    {notifications.length > 0 ? notifications.map((msg, i) => (
-                      <Link key={i} href="/user/settings" style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", fontSize: "13px", color: "#475569", borderBottom: i < notifications.length - 1 ? "1px solid #f8fafc" : "none", textDecoration: "none" }} onClick={() => setShowNotifDropdown(false)}>
-                        <FiAlertCircle size={15} color="#f59e0b" style={{ flexShrink: 0 }} />
-                        {msg}
-                      </Link>
-                    )) : (
-                      <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>You&apos;re all caught up âœ“</div>
+                  <div className="absolute right-0 top-[calc(100%+10px)] z-[999] min-w-[280px] animate-[dropdownIn_0.15s_ease] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.1)]">
+                    <div className="border-b border-slate-100 px-4 py-3 text-[13px] font-bold text-slate-800">
+                      Notifications
+                    </div>
+                    {notifications.length > 0 ? (
+                      notifications.map((msg, i) => (
+                        <Link
+                          key={i}
+                          href="/user/settings"
+                          className={`flex items-center gap-2.5 px-4 py-3 text-[13px] text-slate-600! no-underline ${
+                            i < notifications.length - 1 ? "border-b border-slate-50" : ""
+                          }`}
+                          onClick={() => setShowNotifDropdown(false)}
+                        >
+                          <FiAlertCircle size={15} color="#f59e0b" className="shrink-0" />
+                          {msg}
+                        </Link>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-[13px] text-slate-400">You&apos;re all caught up ✓</div>
                     )}
                   </div>
                 )}
               </div>
 
               {/* Profile Avatar Dropdown */}
-              <div className="ud-profile-wrap" ref={profileDropdownRef}>
-                <button type="button" className="ud-profile-btn" onClick={() => setShowProfileDropdown((p) => !p)}>
-                  <div className="ud-profile-btn-avatar">
-                    {session?.user?.image ? <img src={getImageUrl(session.user.image)} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : userInitials}
+              <div className="relative" ref={profileDropdownRef}>
+                <button
+                  type="button"
+                  className="flex cursor-pointer items-center gap-2 rounded-[40px] border-[1.5px] border-slate-200 bg-white py-[5px] pl-[5px] pr-2.5 font-[inherit] transition-all duration-200 hover:border-slate-300 hover:bg-slate-50"
+                  onClick={() => setShowProfileDropdown((p) => !p)}
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[linear-gradient(135deg,#C0392B,#e74c3c)] text-xs font-bold text-white">
+                    {session?.user?.image ? (
+                      <img src={getImageUrl(session.user.image)} alt="avatar" className="h-full w-full object-cover" />
+                    ) : (
+                      userInitials
+                    )}
                   </div>
-                  <FiChevronDown size={14} className={`ud-profile-chevron ${showProfileDropdown ? "open" : ""}`} />
+                  <FiChevronDown
+                    size={14}
+                    className={`shrink-0 text-slate-400 transition-transform duration-200 ${showProfileDropdown ? "rotate-180" : ""}`}
+                  />
                 </button>
                 {showProfileDropdown && (
-                  <div className="ud-profile-dropdown">
-                    <div className="ud-dropdown-header">
-                      <div className="ud-dropdown-username">{session?.user?.name || "User"}</div>
-                      <div className="ud-dropdown-email">{session?.user?.email || ""}</div>
+                  <div className="absolute right-0 top-[calc(100%+8px)] z-[999] min-w-[200px] animate-[dropdownIn_0.15s_ease] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.1)]">
+                    <div className="border-b border-slate-100 px-4 pb-3 pt-3.5">
+                      <div className="text-sm font-bold text-slate-800">{session?.user?.name || "User"}</div>
+                      <div className="mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-xs text-slate-400">
+                        {session?.user?.email || ""}
+                      </div>
                     </div>
-                    <Link href="/user/settings" className="ud-dropdown-item" onClick={() => setShowProfileDropdown(false)}>
+                    <Link
+                      href="/user/settings"
+                      className={`${ddItemBase} text-slate-600! hover:bg-slate-50 hover:text-slate-800!`}
+                      onClick={() => setShowProfileDropdown(false)}
+                    >
                       <FiUser size={15} /> Profile &amp; Settings
                     </Link>
-                    <div className="ud-dropdown-divider" />
-                    <button type="button" className="ud-dropdown-item logout" onClick={() => signOut({ callbackUrl: "/" })}>
+                    <div className="h-px bg-slate-100" />
+                    <button
+                      type="button"
+                      className={`${ddItemBase} text-red-500 hover:bg-red-50 hover:text-red-600`}
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                    >
                       <FiLogOut size={15} /> Logout
                     </button>
                   </div>
@@ -635,25 +451,29 @@ export default function UserOrders() {
           </header>
 
           {/* Main Content */}
-          <main className="ud-main">
+          <main className="min-w-0 flex-1 overflow-y-auto p-3 min-[481px]:p-4 md:px-5 md:pb-8 md:pt-5 lg:px-8 lg:py-7">
             {/* Toolbar: search + filters */}
-            <div className="orders-toolbar">
-              <div className="orders-search-wrap">
-                <FiSearch size={15} className="orders-search-icon" />
+            <div className="mb-5 flex flex-col flex-wrap items-stretch justify-between gap-4 md:flex-row md:items-center">
+              <div className="relative min-w-[200px] max-w-full flex-1 md:max-w-[340px]">
+                <FiSearch size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  className="orders-search"
-                  placeholder="Search by order ID, item, or dateâ€¦"
+                  className="w-full rounded-[10px] border border-slate-200 bg-white py-[9px] pl-[38px] pr-3.5 font-[inherit] text-sm text-slate-800 outline-none transition-all duration-200 focus:border-indigo-500 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)]"
+                  placeholder="Search by order ID, item, or date…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <div className="orders-filters">
+              <div className="flex flex-wrap gap-1.5 min-[481px]:gap-2">
                 {FILTERS.map((f) => (
                   <button
                     key={f}
                     type="button"
-                    className={`orders-filter-btn ${activeFilter === f ? "active" : ""}`}
+                    className={`cursor-pointer rounded-lg border-[1.5px] px-3 py-1.5 font-[inherit] text-xs font-semibold transition-all duration-200 min-[481px]:px-4 min-[481px]:py-[7px] min-[481px]:text-[13px] ${
+                      activeFilter === f
+                        ? "border-[#C0392B] bg-[#C0392B] text-white"
+                        : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-800"
+                    }`}
                     onClick={() => setActiveFilter(f)}
                   >
                     {f}
@@ -663,23 +483,26 @@ export default function UserOrders() {
             </div>
 
             {/* Orders Table (desktop/tablet) */}
-            <div className="orders-card">
-              <div className="orders-table-wrap">
-                <table className="orders-table">
+            <div className="mb-6 w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div className="hidden w-full overflow-x-auto md:block">
+                <table className="w-full min-w-[560px] border-collapse">
                   <thead>
                     <tr>
-                      <th>Order ID</th>
-                      <th>Item</th>
-                      <th>Date</th>
-                      <th>Status</th>
-                      <th>Amount</th>
+                      {["Order ID", "Item", "Date", "Status", "Amount"].map((h) => (
+                        <th
+                          key={h}
+                          className="whitespace-nowrap border-b border-slate-100 bg-[#fafbfc] px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.5px] text-slate-500"
+                        >
+                          {h}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
                     {paginated.length > 0 ? paginated.map((order) => (
                       <tr
                         key={order.rawId}
-                        className="order-row-link"
+                        className="group cursor-pointer text-inherit last:[&>td]:border-b-0"
                         role="link"
                         tabIndex={0}
                         onClick={() => goToOrder(order.rawId)}
@@ -690,24 +513,32 @@ export default function UserOrders() {
                           }
                         }}
                       >
-                        <td><span className="order-id">{order.id}</span></td>
-                        <td><span className="order-item">{order.item}</span></td>
-                        <td>{order.date}</td>
-                        <td>
-                          <span className="ud-status" style={{ background: order.statusColor + "12", color: order.statusColor }}>
-                            <span className="ud-status-dot" style={{ background: order.statusColor }} />
+                        <td className="whitespace-nowrap border-b border-slate-50 px-5 py-3.5 text-sm text-slate-700 transition-colors duration-150 group-hover:bg-[#fafbfc]">
+                          <span className="font-[SF_Mono,Fira_Code,monospace] text-[13px] font-semibold text-slate-800">{order.id}</span>
+                        </td>
+                        <td className="whitespace-nowrap border-b border-slate-50 px-5 py-3.5 text-sm text-slate-700 transition-colors duration-150 group-hover:bg-[#fafbfc]">
+                          <span className="max-w-[200px] overflow-hidden text-ellipsis text-[13px] text-slate-600">{order.item}</span>
+                        </td>
+                        <td className="whitespace-nowrap border-b border-slate-50 px-5 py-3.5 text-sm text-slate-700 transition-colors duration-150 group-hover:bg-[#fafbfc]">
+                          {order.date}
+                        </td>
+                        <td className="whitespace-nowrap border-b border-slate-50 px-5 py-3.5 text-sm text-slate-700 transition-colors duration-150 group-hover:bg-[#fafbfc]">
+                          <span className={statusPill} style={{ background: order.statusColor + "12", color: order.statusColor }}>
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: order.statusColor }} />
                             {order.status}
                           </span>
                         </td>
-                        <td className="order-amount">{order.amount}</td>
+                        <td className="whitespace-nowrap border-b border-slate-50 px-5 py-3.5 text-sm font-semibold text-slate-800 transition-colors duration-150 group-hover:bg-[#fafbfc]">
+                          {order.amount}
+                        </td>
                       </tr>
                     )) : (
-                      <tr>
-                        <td colSpan={5}>
-                          <div className="orders-empty">
-                            <FiShoppingBag size={40} />
-                            <h3>No orders found</h3>
-                            <p>Try adjusting your search or filter.</p>
+                      <tr className="last:[&>td]:border-b-0">
+                        <td colSpan={5} className="whitespace-nowrap border-b border-slate-50 px-5 py-3.5 text-sm text-slate-700">
+                          <div className={emptyBlock}>
+                            <FiShoppingBag size={40} className="mx-auto mb-4 block opacity-40" />
+                            <h3 className="mb-1.5 text-base font-semibold text-slate-500">No orders found</h3>
+                            <p className="text-sm">Try adjusting your search or filter.</p>
                           </div>
                         </td>
                       </tr>
@@ -717,53 +548,53 @@ export default function UserOrders() {
               </div>
 
               {/* Mobile Cards */}
-              <div className="orders-mobile">
+              <div className="flex flex-col gap-3 p-4 md:hidden">
                 {paginated.length > 0 ? paginated.map((order) => (
                   <Link
                     key={order.rawId}
                     href={`/user/orders/${order.rawId}`}
-                    className="orders-mobile-card"
+                    className="block cursor-pointer rounded-[10px] border border-slate-100 bg-[#f8fafc] p-3.5 text-inherit no-underline transition-[background,border-color] duration-150 hover:border-slate-200 hover:bg-slate-100"
                   >
-                    <div className="orders-mobile-row">
-                      <span className="order-id">{order.id}</span>
-                      <span className="ud-status" style={{ background: order.statusColor + "12", color: order.statusColor }}>
-                        <span className="ud-status-dot" style={{ background: order.statusColor }} />
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="font-[SF_Mono,Fira_Code,monospace] text-[13px] font-semibold text-slate-800">{order.id}</span>
+                      <span className={statusPill} style={{ background: order.statusColor + "12", color: order.statusColor }}>
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: order.statusColor }} />
                         {order.status}
                       </span>
                     </div>
-                    <div className="orders-mobile-item">{order.item}</div>
-                    <div className="orders-mobile-footer">
-                      <span className="orders-mobile-date">{order.date}</span>
-                      <span className="order-amount">{order.amount}</span>
+                    <div className="mb-1.5 text-[13px] text-slate-600">{order.item}</div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-xs text-slate-400">{order.date}</span>
+                      <span className="font-semibold text-slate-800">{order.amount}</span>
                     </div>
                   </Link>
                 )) : (
-                  <div className="orders-empty">
-                    <FiShoppingBag size={40} />
-                    <h3>No orders found</h3>
-                    <p>Try adjusting your search or filter.</p>
+                  <div className={emptyBlock}>
+                    <FiShoppingBag size={40} className="mx-auto mb-4 block opacity-40" />
+                    <h3 className="mb-1.5 text-base font-semibold text-slate-500">No orders found</h3>
+                    <p className="text-sm">Try adjusting your search or filter.</p>
                   </div>
                 )}
               </div>
 
               {/* Pagination */}
               {filtered.length > PER_PAGE && (
-                <div className="orders-pagination">
-                  <div className="pagination-info">
-                    Showing {Math.min((safePage - 1) * PER_PAGE + 1, filtered.length)}â€“{Math.min(safePage * PER_PAGE, filtered.length)} of {filtered.length} orders
+                <div className="flex flex-col flex-wrap items-center gap-3 border-t border-slate-100 px-5 py-4 md:flex-row md:justify-between">
+                  <div className="text-[13px] text-slate-500">
+                    Showing {Math.min((safePage - 1) * PER_PAGE + 1, filtered.length)}–{Math.min(safePage * PER_PAGE, filtered.length)} of {filtered.length} orders
                   </div>
-                  <div className="pagination-btns">
-                    <button type="button" className="pag-btn" disabled={safePage === 1} onClick={() => setPage((p) => p - 1)}>
+                  <div className="flex items-center gap-1.5">
+                    <button type="button" className={`${pagBtn} ${pagIdle}`} disabled={safePage === 1} onClick={() => setPage((p) => p - 1)}>
                       <FiChevronLeft size={16} />
                     </button>
                     {Array.from({ length: totalPages }, (_, i) => i + 1)
                       .filter((p) => Math.abs(p - safePage) <= 2)
                       .map((p) => (
-                        <button key={p} type="button" className={`pag-btn ${p === safePage ? "active" : ""}`} onClick={() => setPage(p)}>
+                        <button key={p} type="button" className={`${pagBtn} ${p === safePage ? pagActive : pagIdle}`} onClick={() => setPage(p)}>
                           {p}
                         </button>
                       ))}
-                    <button type="button" className="pag-btn" disabled={safePage === totalPages} onClick={() => setPage((p) => p + 1)}>
+                    <button type="button" className={`${pagBtn} ${pagIdle}`} disabled={safePage === totalPages} onClick={() => setPage((p) => p + 1)}>
                       <FiChevronRight size={16} />
                     </button>
                   </div>
@@ -776,17 +607,41 @@ export default function UserOrders() {
 
       {/* Delete Account Modal */}
       {showDeleteModal && (
-        <div className="ud-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
-          <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="ud-modal-icon"><FiAlertTriangle size={26} /></div>
-            <div className="ud-modal-title">Delete Your Account?</div>
-            <div className="ud-modal-body">
-              This action is <strong>permanent and irreversible</strong>. All your orders, wishlist, and personal data will be permanently deleted.
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-5 backdrop-blur-[4px]"
+          onClick={() => !deleting && setShowDeleteModal(false)}
+        >
+          <div
+            className="w-full max-w-[420px] rounded-2xl bg-white p-8 shadow-[0_25px_50px_rgba(0,0,0,0.25)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-[14px] bg-red-50 text-red-500">
+              <FiAlertTriangle size={26} />
             </div>
-            {deleteError && <div className="ud-modal-error">{deleteError}</div>}
-            <div className="ud-modal-actions">
-              <button type="button" className="ud-modal-cancel" onClick={() => { setShowDeleteModal(false); setDeleteError(""); }} disabled={deleting}>Cancel</button>
-              <button type="button" className="ud-modal-delete" onClick={handleDeleteAccount} disabled={deleting}>
+            <div className="mb-2 text-center text-lg font-bold text-slate-800">Delete Your Account?</div>
+            <div className="mb-6 text-center text-sm leading-relaxed text-slate-500">
+              This action is <strong className="text-red-500">permanent and irreversible</strong>. All your orders, wishlist, and personal data will be permanently deleted.
+            </div>
+            {deleteError && (
+              <div className="mb-4 rounded-lg bg-red-50 px-3.5 py-2.5 text-center text-[13px] text-red-500">
+                {deleteError}
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className="flex-1 cursor-pointer rounded-[10px] border-[1.5px] border-slate-200 bg-white py-[11px] font-[inherit] text-sm font-semibold text-slate-600 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50"
+                onClick={() => { setShowDeleteModal(false); setDeleteError(""); }}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border-0 bg-red-500 py-[11px] font-[inherit] text-sm font-semibold text-white transition-all duration-200 hover:enabled:bg-red-600 disabled:cursor-not-allowed disabled:opacity-70"
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+              >
                 {deleting ? "Deleting..." : <><FiTrash2 size={15} /> Yes, Delete Account</>}
               </button>
             </div>
@@ -796,4 +651,3 @@ export default function UserOrders() {
     </>
   );
 }
-

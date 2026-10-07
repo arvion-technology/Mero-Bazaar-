@@ -109,6 +109,7 @@ export default function UserWishlist() {
 
   const sidebarItems = [
     { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/user/dashboard" },
+    { id: "contacts", icon: FiUser, label: "Contacts", href: "/user/contacts" },
     { id: "orders", icon: FiShoppingBag, label: "My Orders", href: "/user/orders" },
     { id: "wishlist", icon: FiHeart, label: "Wishlist", href: "/user/wishlist" },
     { id: "notification", icon: FiBell, label: "Notifications", href: "/user/notifications" },

@@ -52,6 +52,26 @@ function adaptOrder(o: ApiOrderDetail & { createdAt: string; listing?: { title?:
   };
 }
 
+/* ── Shared Tailwind class strings (same look as the old .ud-* CSS) ── */
+const iconBtn =
+  "w-10 h-10 rounded-[10px] border border-[#e2e8f0] bg-white flex items-center justify-center cursor-pointer text-[#64748b] transition-all duration-200 relative shrink-0 hover:bg-[#f8fafc] hover:text-[#334155] hover:border-[#cbd5e1]";
+const squareBtn =
+  "rounded-lg border border-[#e2e8f0] bg-white items-center justify-center cursor-pointer text-[#64748b] transition-all duration-200 shrink-0 hover:bg-[#f8fafc] hover:text-[#334155] hover:border-[#cbd5e1]";
+const navItemBase =
+  "relative mb-0.5 flex w-full cursor-pointer items-center gap-3 whitespace-nowrap rounded-[10px] border-0 px-3.5 py-2.5 text-left font-[inherit] text-[14px] leading-normal no-underline transition-all duration-200";
+const navItemIdle = "font-medium text-[#5a6478]! hover:bg-[#f4f6fb] hover:text-slate-800!";
+const navItemActive =
+  "bg-[#fff5f5] font-semibold text-[#C0392B]! before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-r-[3px] before:bg-[#C0392B] before:content-['']";
+const navItemDanger = "font-medium text-red-500/70! hover:bg-red-500/5 hover:text-red-500!";
+const dropdownItemBase =
+  "flex items-center gap-2.5 px-4 py-[11px] text-sm font-medium cursor-pointer transition-all duration-150 border-0 bg-transparent w-full text-left";
+const sectionHeader = "flex items-center justify-between mb-4 gap-3 flex-wrap";
+const sectionTitle = "text-base font-bold text-[#1e293b] tracking-[-0.2px]";
+const sectionLink =
+  "text-[13px] font-semibold text-[#6366f1] flex items-center gap-1 transition-all duration-200 shrink-0 hover:text-[#4f46e5] hover:gap-1.5";
+const statusPill =
+  "inline-flex items-center gap-1.5 px-3 py-[5px] rounded-[20px] text-xs font-semibold whitespace-nowrap";
+
 export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -126,7 +146,7 @@ export default function UserDashboard() {
           rows.reduce((sum, r) => sum + Number(r.amount.replace(/[^\d.]/g, "")), 0)
         );
       } catch {
-        // silent â€” cards fall back to placeholders
+        // silent — cards fall back to placeholders
       } finally {
         setOrdersLoading(false);
       }
@@ -229,7 +249,7 @@ export default function UserDashboard() {
     {
       icon: FiShoppingBag,
       label: "Total Orders",
-      value: totalOrders === null ? "â€¦" : String(totalOrders),
+      value: totalOrders === null ? "…" : String(totalOrders),
       change: "",
       color: "#4f46e5",
       bg: "#eef2ff",
@@ -238,7 +258,7 @@ export default function UserDashboard() {
     {
       icon: FiDollarSign,
       label: "Total Spent",
-      value: totalSpent === null ? "â€¦" : `NPR ${totalSpent.toLocaleString()}`,
+      value: totalSpent === null ? "…" : `NPR ${totalSpent.toLocaleString()}`,
       change: "",
       color: "#10b981",
       bg: "#ecfdf5",
@@ -247,7 +267,7 @@ export default function UserDashboard() {
     {
       icon: FiHeart,
       label: "Wishlist",
-      value: wishlistCount === null ? "â€¦" : String(wishlistCount),
+      value: wishlistCount === null ? "…" : String(wishlistCount),
       change: "",
       color: "#ef4444",
       bg: "#fef2f2",
@@ -255,178 +275,45 @@ export default function UserDashboard() {
     },
   ];
 
+  // Collapsed-sidebar helpers (state-driven, replaces the old `.collapsed` CSS selectors)
+  const collapsedHide = sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "";
+
   return (
     <>
-      <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { overflow-x: hidden; max-width: 100vw; }
-        .ud-page { min-height: 100vh; min-height: 100dvh; background: #f1f5f9; display: flex; font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-        .ud-sidebar { width: 260px; background: #ffffff; border-right: 1px solid #e8ecf0; display: flex; flex-direction: column; flex-shrink: 0; transition: width 0.3s ease, transform 0.3s ease; position: fixed; height: 100vh; height: 100dvh; left: 0; top: 0; z-index: 100; box-shadow: 2px 0 8px rgba(0,0,0,0.04); }
-        .ud-sidebar.collapsed { width: 72px; }
-        .ud-sidebar-header { padding: 20px 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f0f2f5; min-height: 72px; overflow: hidden; }
-        .ud-sidebar-logo-wrap { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
-        .ud-sidebar-logo-icon { width: 36px; height: 36px; flex-shrink: 0; }
-        .ud-sidebar-logo-text { display: flex; flex-direction: column; line-height: 1.1; opacity: 1; transition: opacity 0.2s, width 0.2s; white-space: nowrap; overflow: hidden; }
-        .ud-sidebar.collapsed .ud-sidebar-logo-text { opacity: 0; width: 0; }
-        .ud-logo-line1 { font-size: 14px; font-weight: 800; color: ${PRIMARY}; letter-spacing: -0.3px; }
-        .ud-logo-line2 { font-size: 11px; font-weight: 600; color: #888; letter-spacing: 0.5px; text-transform: uppercase; }
-        .ud-nav-section { padding: 16px 12px; flex: 1; overflow-y: auto; }
-        .ud-nav-label { font-size: 10px; font-weight: 700; color: #b0b8c4; text-transform: uppercase; letter-spacing: 1.2px; padding: 0 12px; margin-bottom: 8px; white-space: nowrap; }
-        .ud-sidebar.collapsed .ud-nav-label { display: none; }
-        .ud-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: #5a6478; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; background: none; width: 100%; text-align: left; font-family: inherit; text-decoration: none; border-radius: 10px; margin-bottom: 2px; position: relative; white-space: nowrap; }
-        .ud-nav-item:hover { background: #f4f6fb; color: #1e293b; }
-        .ud-nav-item.active { background: #fff5f5; color: ${PRIMARY}; font-weight: 600; }
-        .ud-nav-item.active::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 20px; background: ${PRIMARY}; border-radius: 0 3px 3px 0; }
-        .ud-nav-icon { font-size: 18px; width: 22px; display: flex; justify-content: center; flex-shrink: 0; }
-        .ud-nav-text { opacity: 1; transition: opacity 0.2s; }
-        .ud-sidebar.collapsed .ud-nav-text { opacity: 0; width: 0; overflow: hidden; }
-        .ud-nav-item.danger { color: rgba(239,68,68,0.7); }
-        .ud-nav-item.danger:hover { background: rgba(239,68,68,0.06); color: #ef4444; }
-        .ud-main-area { flex: 1; margin-left: 260px; display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; transition: margin-left 0.3s ease; width: calc(100% - 260px); min-width: 0; }
-        .ud-sidebar.collapsed ~ .ud-main-area { margin-left: 72px; width: calc(100% - 72px); }
-        .ud-topbar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; gap: 16px; }
-        .ud-topbar-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
-        .ud-toggle-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; transition: all 0.2s; flex-shrink: 0; }
-        .ud-toggle-btn:hover { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
-        .ud-breadcrumb { font-size: 20px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .ud-topbar-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-        .ud-icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid #e2e8f0; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; transition: all 0.2s; position: relative; flex-shrink: 0; text-decoration: none; }
-        .ud-icon-btn:hover { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
-        .ud-badge { position: absolute; top: -2px; right: -2px; width: 18px; height: 18px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
-        .ud-profile-wrap { position: relative; }
-        .ud-profile-btn { display: flex; align-items: center; gap: 8px; padding: 5px 10px 5px 5px; border-radius: 40px; border: 1.5px solid #e2e8f0; background: #fff; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-        .ud-profile-btn:hover { border-color: #cbd5e1; background: #f8fafc; }
-        .ud-profile-btn-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, ${PRIMARY}, #e74c3c); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 700; overflow: hidden; flex-shrink: 0; }
-        .ud-profile-btn-name { font-size: 13px; font-weight: 600; color: #1e293b; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .ud-profile-chevron { color: #94a3b8; transition: transform 0.2s; flex-shrink: 0; }
-        .ud-profile-chevron.open { transform: rotate(180deg); }
-        .ud-profile-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); min-width: 200px; z-index: 999; overflow: hidden; animation: dropdownIn 0.15s ease; }
-        @keyframes dropdownIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-        .ud-dropdown-header { padding: 14px 16px 12px; border-bottom: 1px solid #f1f5f9; }
-        .ud-dropdown-username { font-size: 14px; font-weight: 700; color: #1e293b; }
-        .ud-dropdown-email { font-size: 12px; color: #94a3b8; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .ud-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 14px; font-weight: 500; color: #475569; cursor: pointer; transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; font-family: inherit; text-decoration: none; }
-        .ud-dropdown-item:hover { background: #f8fafc; color: #1e293b; }
-        .ud-dropdown-item.logout { color: #ef4444; }
-        .ud-dropdown-item.logout:hover { background: #fef2f2; color: #dc2626; }
-        .ud-dropdown-divider { height: 1px; background: #f1f5f9; margin: 0; }
-        .ud-main { flex: 1; padding: 28px 32px; overflow-y: auto; min-width: 0; }
-        .ud-welcome-section { margin-bottom: 28px; }
-        .ud-welcome-title { font-size: 24px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px; margin-bottom: 4px; }
-        .ud-welcome-sub { font-size: 14px; color: #64748b; }
-        .ud-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
-        .ud-stat-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; transition: all 0.25s; cursor: pointer; min-width: 0; display: flex; align-items: center; gap: 14px; }
-        .ud-stat-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); transform: translateY(-2px); border-color: #cbd5e1; }
-        .ud-stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-        .ud-stat-info { display: flex; flex-direction: column; min-width: 0; }
-        .ud-stat-value { font-size: 20px; font-weight: 700; color: #1e293b; letter-spacing: -0.4px; line-height: 1.2; }
-        .ud-stat-label { font-size: 12px; color: #64748b; font-weight: 500; margin-top: 1px; }
-        .ud-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
-        .ud-section-title { font-size: 16px; font-weight: 700; color: #1e293b; letter-spacing: -0.2px; }
-        .ud-section-link { font-size: 13px; font-weight: 600; color: #6366f1; text-decoration: none; display: flex; align-items: center; gap: 4px; transition: all 0.2s; flex-shrink: 0; }
-        .ud-section-link:hover { color: #4f46e5; gap: 6px; }
-        .ud-orders-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 28px; width: 100%; }
-        .ud-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
-        .ud-table { width: 100%; border-collapse: collapse; min-width: 500px; }
-        .ud-table th { text-align: left; padding: 14px 20px; font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #f1f5f9; background: #fafbfc; white-space: nowrap; }
-        .ud-table td { padding: 14px 20px; font-size: 14px; color: #334155; border-bottom: 1px solid #f8fafc; white-space: nowrap; }
-        .ud-table tr:last-child td { border-bottom: none; }
-        .ud-table tr:hover td { background: #fafbfc; }
-        .ud-order-id { font-weight: 600; color: #1e293b; font-family: "SF Mono", "Fira Code", monospace; font-size: 13px; }
-        .ud-status { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-        .ud-status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-        .ud-amount { font-weight: 600; color: #1e293b; }
-        .ud-mobile-orders { display: none; flex-direction: column; gap: 12px; padding: 16px; }
-        .ud-mobile-order-card { background: #f8fafc; border-radius: 10px; padding: 14px; border: 1px solid #f1f5f9; }
-        .ud-mobile-order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .ud-mobile-order-id { font-weight: 600; color: #1e293b; font-family: "SF Mono", monospace; font-size: 13px; }
-        .ud-mobile-order-date { font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
-        .ud-mobile-order-footer { display: flex; justify-content: space-between; align-items: center; }
-        .ud-mobile-order-amount { font-weight: 600; color: #1e293b; font-size: 14px; }
-        .ud-orders-empty, .ud-contacts-empty { padding: 40px 20px; text-align: center; color: #94a3b8; font-size: 13px; }
-        .ud-contacts-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; width: 100%; }
-        .ud-contact-row { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid #f8fafc; transition: background 0.2s; }
-        .ud-contact-row:hover { background: #fafbfc; }
-        .ud-contact-row:last-child { border-bottom: none; }
-        .ud-contact-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-        .ud-contact-info { flex: 1; min-width: 0; }
-        .ud-contact-name { font-size: 14px; font-weight: 600; color: #1e293b; }
-        .ud-contact-phone { font-size: 12px; color: #64748b; margin-top: 2px; }
-        .ud-contact-time { font-size: 12px; color: #94a3b8; font-weight: 500; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-        .ud-backdrop { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(2px); z-index: 99; animation: backdropIn 0.2s ease; }
-        @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
-        .ud-sidebar-close { display: none; position: absolute; top: 18px; right: 16px; width: 32px; height: 32px; border: none; background: #f1f5f9; border-radius: 8px; cursor: pointer; align-items: center; justify-content: center; color: #64748b; transition: all 0.2s; z-index: 1; }
-        .ud-sidebar-close:hover { background: #e2e8f0; color: #1e293b; }
-        .ud-hamburger { display: none; width: 38px; height: 38px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; align-items: center; justify-content: center; cursor: pointer; color: #64748b; transition: all 0.2s; flex-shrink: 0; }
-        .ud-hamburger:hover { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
-        .ud-desktop-toggle { display: flex; }
-        @media (max-width: 1200px) { .ud-stats { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 1023px) {
-          .ud-sidebar { transform: translateX(-100%); width: 280px !important; z-index: 200; }
-          .ud-sidebar.mobile-open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.15); }
-          .ud-backdrop.active { display: block; }
-          .ud-sidebar.mobile-open .ud-sidebar-close { display: flex; }
-          .ud-hamburger { display: flex; }
-          .ud-desktop-toggle { display: none; }
-          .ud-main-area { margin-left: 0 !important; width: 100% !important; }
-          .ud-main { padding: 20px 20px 32px; }
-          .ud-topbar { padding: 0 20px; }
-        }
-        @media (max-width: 767px) {
-          .ud-main { padding: 16px; }
-          .ud-topbar { padding: 0 16px; height: 56px; }
-          .ud-breadcrumb { font-size: 18px; }
-          .ud-welcome-title { font-size: 20px; }
-          .ud-welcome-sub { font-size: 13px; }
-          .ud-stats { grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
-          .ud-stat-card { padding: 16px; }
-          .ud-stat-value { font-size: 22px; }
-          .ud-table-wrap { display: none; }
-          .ud-mobile-orders { display: flex; }
-          .ud-contact-row { padding: 12px 16px; gap: 12px; }
-          .ud-contact-avatar { width: 36px; height: 36px; font-size: 12px; }
-          .ud-contact-name { font-size: 13px; }
-          .ud-contact-phone { font-size: 11px; }
-          .ud-contact-time { font-size: 11px; }
-          .ud-profile-btn-name { display: none; }
-        }
-        @media (max-width: 480px) {
-          .ud-main { padding: 12px; }
-          .ud-topbar { padding: 0 12px; }
-          .ud-stats { gap: 10px; }
-          .ud-stat-card { padding: 14px; }
-          .ud-stat-icon { width: 40px; height: 40px; font-size: 18px; }
-          .ud-stat-value { font-size: 20px; }
-          .ud-welcome-section { margin-bottom: 20px; }
-        }
-        .ud-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .ud-modal { background: #fff; border-radius: 16px; padding: 32px; width: 100%; max-width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); animation: slideUp 0.25s ease; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .ud-modal-icon { width: 56px; height: 56px; border-radius: 14px; background: #fef2f2; display: flex; align-items: center; justify-content: center; color: #ef4444; margin: 0 auto 20px; }
-        .ud-modal-title { font-size: 18px; font-weight: 700; color: #1e293b; text-align: center; margin-bottom: 8px; }
-        .ud-modal-body { font-size: 14px; color: #64748b; text-align: center; line-height: 1.6; margin-bottom: 24px; }
-        .ud-modal-body strong { color: #ef4444; }
-        .ud-modal-error { font-size: 13px; color: #ef4444; background: #fef2f2; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; text-align: center; }
-        .ud-modal-actions { display: flex; gap: 12px; }
-        .ud-modal-cancel { flex: 1; padding: 11px 0; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #fff; color: #475569; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-        .ud-modal-cancel:hover { background: #f8fafc; border-color: #cbd5e1; }
-        .ud-modal-delete { flex: 1; padding: 11px 0; border-radius: 10px; border: none; background: #ef4444; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .ud-modal-delete:hover:not(:disabled) { background: #dc2626; }
-        .ud-modal-delete:disabled { opacity: 0.7; cursor: not-allowed; }
-      `}</style>
+      {/* Mobile backdrop */}
+      <div
+        className={`hidden fixed inset-0 bg-[rgba(15,23,42,0.45)] backdrop-blur-[2px] z-[99] animate-[backdropIn_0.2s_ease] ${
+          sidebarOpen ? "max-lg:block" : ""
+        }`}
+        onClick={() => setSidebarOpen(false)}
+        aria-hidden="true"
+      />
 
-      <div className={`ud-backdrop ${sidebarOpen ? "active" : ""}`} onClick={() => setSidebarOpen(false)} aria-hidden="true" />
-
-      <div className="ud-page">
-        <aside className={`ud-sidebar ${sidebarOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
-          <button type="button" className="ud-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
+      <div className="min-h-dvh bg-[#f1f5f9] flex font-[Inter,-apple-system,BlinkMacSystemFont,'Segoe_UI',Roboto,'Helvetica_Neue',Arial,sans-serif]">
+        {/* ── Sidebar ── */}
+        <aside
+          className={`fixed left-0 top-0 h-dvh z-[100] flex flex-col shrink-0 bg-white border-r border-[#e8ecf0] shadow-[2px_0_8px_rgba(0,0,0,0.04)] transition-[width,transform] duration-300 ease-in-out ${
+            sidebarCollapsed ? "w-[72px]" : "w-[260px]"
+          } max-lg:w-[280px] max-lg:z-[200] ${
+            sidebarOpen
+              ? "max-lg:translate-x-0 max-lg:shadow-[4px_0_32px_rgba(0,0,0,0.15)]"
+              : "max-lg:-translate-x-full"
+          }`}
+        >
+          <button
+            type="button"
+            className={`hidden absolute top-[18px] right-4 w-8 h-8 border-0 bg-[#f1f5f9] rounded-lg cursor-pointer items-center justify-center text-[#64748b] transition-all duration-200 z-[1] hover:bg-[#e2e8f0] hover:text-[#1e293b] ${
+              sidebarOpen ? "max-lg:flex" : ""
+            }`}
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close sidebar"
+          >
             <FiX size={18} />
           </button>
 
-          <div className="ud-sidebar-header">
-            <Link href="/" className="ud-sidebar-logo-wrap">
-              <svg className="ud-sidebar-logo-icon" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <div className="p-5 flex items-center gap-2.5 border-b border-[#f0f2f5] min-h-[72px] overflow-hidden">
+            <Link href="/" className="flex items-center gap-2.5 shrink-0">
+              <svg className="w-9 h-9 shrink-0" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="38" height="38" rx="8" fill={PRIMARY} />
                 <path
                   d="M10 10 C10 10, 14 8, 19 13 C24 18, 28 10, 28 10
@@ -438,73 +325,93 @@ export default function UserDashboard() {
                 />
                 <circle cx="19" cy="19" r="3" fill="#fff" opacity="0.9" />
               </svg>
-              <div className="ud-sidebar-logo-text">
-                <span className="ud-logo-line1">HamroNepal</span>
-                <span className="ud-logo-line2">Bazaar</span>
+              <div
+                className={`flex flex-col leading-[1.1] transition-[opacity,width] duration-200 whitespace-nowrap overflow-hidden ${
+                  sidebarCollapsed ? "opacity-0 w-0" : "opacity-100"
+                }`}
+              >
+                <span className="text-sm font-extrabold text-[#C0392B] tracking-[-0.3px]">HamroNepal</span>
+                <span className="text-[11px] font-semibold text-[#888] tracking-[0.5px] uppercase">Bazaar</span>
               </div>
             </Link>
           </div>
 
-          <div className="ud-nav-section">
-            <div className="ud-nav-label">Menu</div>
+          <div className="px-3 py-4 flex-1 overflow-y-auto">
+            <div className={`text-[10px] font-bold text-[#b0b8c4] uppercase tracking-[1.2px] px-3 mb-2 whitespace-nowrap ${sidebarCollapsed ? "hidden" : ""}`}>
+              Menu
+            </div>
             {sidebarItems.slice(0, 4).map((item) => (
               <Link
                 key={item.id}
                 href={item.href}
-                className={`ud-nav-item ${activeTab === item.id ? "active" : ""}`}
+                className={`${navItemBase} ${activeTab === item.id ? navItemActive : navItemIdle}`}
                 onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
               >
-                <span className="ud-nav-icon"><item.icon size={18} /></span>
-                <span className="ud-nav-text">{item.label}</span>
+                <span className="text-lg w-[22px] flex justify-center shrink-0"><item.icon size={18} /></span>
+                <span className={`transition-opacity duration-200 ${collapsedHide}`}>{item.label}</span>
               </Link>
             ))}
 
-            <div className="ud-nav-label" style={{ marginTop: 16 }}>Account</div>
+            <div className={`text-[10px] font-bold text-[#b0b8c4] uppercase tracking-[1.2px] px-3 mb-2 whitespace-nowrap mt-4 ${sidebarCollapsed ? "hidden" : ""}`}>
+              Account
+            </div>
             {sidebarItems.slice(4).map((item) => (
               <Link
                 key={item.id}
                 href={item.href}
-                className={`ud-nav-item ${activeTab === item.id ? "active" : ""}`}
+                className={`${navItemBase} ${activeTab === item.id ? navItemActive : navItemIdle}`}
                 onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
               >
-                <span className="ud-nav-icon"><item.icon size={18} /></span>
-                <span className="ud-nav-text">{item.label}</span>
+                <span className="text-lg w-[22px] flex justify-center shrink-0"><item.icon size={18} /></span>
+                <span className={`transition-opacity duration-200 ${collapsedHide}`}>{item.label}</span>
               </Link>
             ))}
 
             <button
               type="button"
-              className="ud-nav-item danger"
+              className={`${navItemBase} ${navItemDanger}`}
               onClick={() => { setShowDeleteModal(true); setSidebarOpen(false); }}
               title="Delete Account"
             >
-              <span className="ud-nav-icon"><FiTrash2 size={18} /></span>
-              <span className="ud-nav-text">Delete Account</span>
+              <span className="text-lg w-[22px] flex justify-center shrink-0"><FiTrash2 size={18} /></span>
+              <span className={`transition-opacity duration-200 ${collapsedHide}`}>Delete Account</span>
             </button>
           </div>
         </aside>
 
-        <div className="ud-main-area">
-          <header className="ud-topbar">
-            <div className="ud-topbar-left">
-              <button type="button" className="ud-hamburger" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar">
+        {/* ── Main area ── */}
+        <div
+          className={`flex-1 flex flex-col min-h-dvh min-w-0 transition-[margin-left] duration-300 ease-in-out ml-0 w-full ${
+            sidebarCollapsed ? "lg:ml-[72px] lg:w-[calc(100%-72px)]" : "lg:ml-[260px] lg:w-[calc(100%-260px)]"
+          }`}
+        >
+          <header className="bg-white border-b border-[#e2e8f0] px-8 h-16 flex items-center justify-between sticky top-0 z-50 gap-4 max-lg:px-5 max-md:px-4 max-md:h-14 max-[480px]:px-3">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <button
+                type="button"
+                className={`hidden max-lg:flex w-[38px] h-[38px] ${squareBtn}`}
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open sidebar"
+              >
                 <FiMenu size={20} />
               </button>
               <button
                 type="button"
-                className="ud-toggle-btn ud-desktop-toggle"
+                className={`flex max-lg:hidden w-9 h-9 ${squareBtn}`}
                 onClick={() => setSidebarCollapsed((prev) => !prev)}
                 title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               >
                 <FiMoreHorizontal size={18} />
               </button>
-              <h1 className="ud-breadcrumb">Dashboard</h1>
+              <h1 className="text-xl font-bold text-[#1e293b] tracking-[-0.3px] whitespace-nowrap overflow-hidden text-ellipsis max-md:text-lg">
+                Dashboard
+              </h1>
             </div>
-            <div className="ud-topbar-right">
-              <div style={{ position: "relative" }} ref={notifDropdownRef}>
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="relative" ref={notifDropdownRef}>
                 <button
                   type="button"
-                  className="ud-icon-btn"
+                  className={iconBtn}
                   title="Notifications"
                   onClick={() => {
                     setShowNotifDropdown((v) => !v);
@@ -520,16 +427,16 @@ export default function UserDashboard() {
                   }}
                 >
                   <FiBell size={18} />
-                  {notificationCount > 0 && !notifSeen && <span className="ud-badge">{notificationCount}</span>}
+                  {notificationCount > 0 && !notifSeen && (
+                    <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-[#ef4444] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                      {notificationCount}
+                    </span>
+                  )}
                 </button>
 
                 {showNotifDropdown && (
-                  <div style={{
-                    position: "absolute", top: "calc(100% + 10px)", right: 0, background: "#fff",
-                    border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
-                    minWidth: "280px", zIndex: 999, overflow: "hidden", animation: "dropdownIn 0.15s ease",
-                  }}>
-                    <div style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9", fontWeight: 700, fontSize: "13px", color: "#1e293b" }}>
+                  <div className="absolute top-[calc(100%+10px)] right-0 bg-white border border-[#e2e8f0] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.1)] min-w-[280px] z-[999] overflow-hidden animate-[dropdownIn_0.15s_ease]">
+                    <div className="px-4 py-3 border-b border-[#f1f5f9] font-bold text-[13px] text-[#1e293b]">
                       Notifications
                     </div>
                     {notifications.length > 0 ? (
@@ -537,20 +444,17 @@ export default function UserDashboard() {
                         <Link
                           key={i}
                           href="/user/settings"
-                          style={{
-                            display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px",
-                            fontSize: "13px", color: "#475569",
-                            borderBottom: i < notifications.length - 1 ? "1px solid #f8fafc" : "none",
-                            textDecoration: "none", transition: "background 0.15s",
-                          }}
+                          className={`flex items-center gap-2.5 px-4 py-3 text-[13px] text-[#475569] transition-colors duration-150 ${
+                            i < notifications.length - 1 ? "border-b border-[#f8fafc]" : ""
+                          }`}
                           onClick={() => setShowNotifDropdown(false)}
                         >
-                          <FiAlertCircle size={15} color="#f59e0b" style={{ flexShrink: 0 }} />
+                          <FiAlertCircle size={15} color="#f59e0b" className="shrink-0" />
                           {msg}
                         </Link>
                       ))
                     ) : (
-                      <div style={{ padding: "16px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>
+                      <div className="p-4 text-[13px] text-[#94a3b8] text-center">
                         You&apos;re all caught up
                       </div>
                     )}
@@ -558,28 +462,45 @@ export default function UserDashboard() {
                 )}
               </div>
 
-              <div className="ud-profile-wrap" ref={profileDropdownRef}>
-                <button type="button" className="ud-profile-btn" onClick={() => setShowProfileDropdown((prev) => !prev)}>
-                  <div className="ud-profile-btn-avatar">
+              <div className="relative" ref={profileDropdownRef}>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 py-[5px] pr-2.5 pl-[5px] rounded-[40px] border-[1.5px] border-[#e2e8f0] bg-white cursor-pointer transition-all duration-200 hover:border-[#cbd5e1] hover:bg-[#f8fafc]"
+                  onClick={() => setShowProfileDropdown((prev) => !prev)}
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#C0392B] to-[#e74c3c] flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
                     {session?.user?.image
-                      ? <img src={getImageUrl(session.user.image)} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ? <img src={getImageUrl(session.user.image)} alt="avatar" className="w-full h-full object-cover" />
                       : userInitials}
                   </div>
-                  <FiChevronDown size={14} className={`ud-profile-chevron ${showProfileDropdown ? "open" : ""}`} />
+                  <FiChevronDown
+                    size={14}
+                    className={`text-[#94a3b8] transition-transform duration-200 shrink-0 ${showProfileDropdown ? "rotate-180" : ""}`}
+                  />
                 </button>
 
                 {showProfileDropdown && (
-                  <div className="ud-profile-dropdown">
-                    <div className="ud-dropdown-header">
-                      <div className="ud-dropdown-username">{session?.user?.name || "User"}</div>
-                      <div className="ud-dropdown-email">{session?.user?.email || ""}</div>
+                  <div className="absolute top-[calc(100%+8px)] right-0 bg-white border border-[#e2e8f0] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.1)] min-w-[200px] z-[999] overflow-hidden animate-[dropdownIn_0.15s_ease]">
+                    <div className="pt-3.5 pb-3 px-4 border-b border-[#f1f5f9]">
+                      <div className="text-sm font-bold text-[#1e293b]">{session?.user?.name || "User"}</div>
+                      <div className="text-xs text-[#94a3b8] mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap">
+                        {session?.user?.email || ""}
+                      </div>
                     </div>
-                    <Link href="/user/settings" className="ud-dropdown-item" onClick={() => setShowProfileDropdown(false)}>
+                    <Link
+                      href="/user/settings"
+                      className={`${dropdownItemBase} text-[#475569] hover:bg-[#f8fafc] hover:text-[#1e293b]`}
+                      onClick={() => setShowProfileDropdown(false)}
+                    >
                       <FiUser size={15} />
                       Profile & Settings
                     </Link>
-                    <div className="ud-dropdown-divider" />
-                    <button type="button" className="ud-dropdown-item logout" onClick={() => signOut({ callbackUrl: "/" })}>
+                    <div className="h-px bg-[#f1f5f9]" />
+                    <button
+                      type="button"
+                      className={`${dropdownItemBase} text-[#ef4444] hover:bg-[#fef2f2] hover:text-[#dc2626]`}
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                    >
                       <FiLogOut size={15} />
                       Logout
                     </button>
@@ -589,79 +510,108 @@ export default function UserDashboard() {
             </div>
           </header>
 
-          <main className="ud-main">
-            <div className="ud-welcome-section">
-              <h2 className="ud-welcome-title">Welcome back, {session?.user?.name?.split(" ")[0] || "there"}!</h2>
+          <main className="flex-1 px-8 py-7 overflow-y-auto min-w-0 max-lg:px-5 max-lg:pt-5 max-lg:pb-8 max-md:p-4 max-[480px]:p-3">
+            <div className="mb-7 max-[480px]:mb-5">
+              <h2 className="text-2xl font-bold text-[#1e293b] tracking-[-0.5px] mb-1 max-md:text-xl">
+                Welcome back, {session?.user?.name?.split(" ")[0] || "there"}!
+              </h2>
             </div>
 
-            <div className="ud-stats">
-            {stats.map((stat) => (
-              <Link key={stat.label} href={stat.href} className="ud-stat-card" style={{ textDecoration: "none" }}>
-                <div className="ud-stat-icon" style={{ background: stat.bg, color: stat.color }}>
-                  <stat.icon size={20} />
-                </div>
-                <div className="ud-stat-info">
-                  <div className="ud-stat-value">{stat.value}</div>
-                  <div className="ud-stat-label">{stat.label}</div>
-                </div>
-              </Link>
-            ))}
+            <div className="grid grid-cols-3 gap-5 mb-7 max-[1200px]:grid-cols-2 max-md:grid-cols-1 max-md:gap-3 max-md:mb-5 max-[480px]:gap-2.5">
+              {stats.map((stat) => (
+                <Link
+                  key={stat.label}
+                  href={stat.href}
+                  className="bg-white border border-[#e2e8f0] rounded-xl p-4 transition-all duration-[250ms] cursor-pointer min-w-0 flex items-center gap-3.5 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 hover:border-[#cbd5e1]"
+                >
+                  <div
+                    className="w-11 h-11 rounded-[10px] flex items-center justify-center text-xl shrink-0 max-[480px]:w-10 max-[480px]:h-10 max-[480px]:text-lg"
+                    style={{ background: stat.bg, color: stat.color }}
+                  >
+                    <stat.icon size={20} />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <div className="text-xl font-bold text-[#1e293b] tracking-[-0.4px] leading-[1.2] max-md:text-[22px] max-[480px]:text-xl">
+                      {stat.value}
+                    </div>
+                    <div className="text-xs text-[#64748b] font-medium mt-px">{stat.label}</div>
+                  </div>
+                </Link>
+              ))}
             </div>
 
-            <div className="ud-section-header">
-              <h3 className="ud-section-title">Recent Orders</h3>
-              <Link href="/user/orders" className="ud-section-link">
+            <div className={sectionHeader}>
+              <h3 className={sectionTitle}>Recent Orders</h3>
+              <Link href="/user/orders" className={sectionLink}>
                 View All <FiChevronRight size={14} />
               </Link>
             </div>
-            <div className="ud-orders-card">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl overflow-hidden mb-7 w-full">
               {ordersLoading ? (
-                <div className="ud-orders-empty">Loading ordersâ€¦</div>
+                <div className="py-10 px-5 text-center text-[#94a3b8] text-[13px]">Loading orders…</div>
               ) : recentOrders.length === 0 ? (
-                <div className="ud-orders-empty">No orders yet.</div>
+                <div className="py-10 px-5 text-center text-[#94a3b8] text-[13px]">No orders yet.</div>
               ) : (
                 <>
-                  <div className="ud-table-wrap">
-                    <table className="ud-table">
+                  <div className="overflow-x-auto w-full max-md:hidden">
+                    <table className="w-full border-collapse min-w-[500px]">
                       <thead>
                         <tr>
-                          <th>Order ID</th>
-                          <th>Date</th>
-                          <th>Status</th>
-                          <th>Amount</th>
+                          {["Order ID", "Date", "Status", "Amount"].map((h) => (
+                            <th
+                              key={h}
+                              className="text-left px-5 py-3.5 text-xs font-semibold text-[#64748b] uppercase tracking-[0.5px] border-b border-[#f1f5f9] bg-[#fafbfc] whitespace-nowrap"
+                            >
+                              {h}
+                            </th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
                         {recentOrders.map((order) => (
-                          <tr key={order.rawId} onClick={() => router.push(`/user/orders/${order.rawId}`)} style={{ cursor: "pointer" }}>
-                            <td><span className="ud-order-id">{order.id}</span></td>
-                            <td>{order.date}</td>
-                            <td>
-                              <span className="ud-status" style={{ background: order.statusColor + "12", color: order.statusColor }}>
-                                <span className="ud-status-dot" style={{ background: order.statusColor }}></span>
+                          <tr
+                            key={order.rawId}
+                            onClick={() => router.push(`/user/orders/${order.rawId}`)}
+                            className="group cursor-pointer last:[&>td]:border-b-0"
+                          >
+                            <td className="px-5 py-3.5 text-sm text-[#334155] border-b border-[#f8fafc] whitespace-nowrap group-hover:bg-[#fafbfc]">
+                              <span className="font-semibold text-[#1e293b] font-[SF_Mono,Fira_Code,monospace] text-[13px]">{order.id}</span>
+                            </td>
+                            <td className="px-5 py-3.5 text-sm text-[#334155] border-b border-[#f8fafc] whitespace-nowrap group-hover:bg-[#fafbfc]">
+                              {order.date}
+                            </td>
+                            <td className="px-5 py-3.5 text-sm text-[#334155] border-b border-[#f8fafc] whitespace-nowrap group-hover:bg-[#fafbfc]">
+                              <span className={statusPill} style={{ background: order.statusColor + "12", color: order.statusColor }}>
+                                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: order.statusColor }}></span>
                                 {order.status}
                               </span>
                             </td>
-                            <td className="ud-amount">{order.amount}</td>
+                            <td className="px-5 py-3.5 text-sm border-b border-[#f8fafc] whitespace-nowrap font-semibold text-[#1e293b] group-hover:bg-[#fafbfc]">
+                              {order.amount}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
 
-                  <div className="ud-mobile-orders">
+                  <div className="hidden flex-col gap-3 p-4 max-md:flex">
                     {recentOrders.map((order) => (
-                      <Link key={order.rawId} href={`/user/orders/${order.rawId}`} className="ud-mobile-order-card" style={{ textDecoration: "none", color: "inherit", display: "block" }}>
-                        <div className="ud-mobile-order-header">
-                          <span className="ud-mobile-order-id">{order.id}</span>
-                          <span className="ud-status" style={{ background: order.statusColor + "12", color: order.statusColor }}>
-                            <span className="ud-status-dot" style={{ background: order.statusColor }}></span>
+                      <Link
+                        key={order.rawId}
+                        href={`/user/orders/${order.rawId}`}
+                        className="block text-inherit bg-[#f8fafc] rounded-[10px] p-3.5 border border-[#f1f5f9]"
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-semibold text-[#1e293b] font-[SF_Mono,monospace] text-[13px]">{order.id}</span>
+                          <span className={statusPill} style={{ background: order.statusColor + "12", color: order.statusColor }}>
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: order.statusColor }}></span>
                             {order.status}
                           </span>
                         </div>
-                        <div className="ud-mobile-order-date">{order.date}</div>
-                        <div className="ud-mobile-order-footer">
-                          <span className="ud-mobile-order-amount">{order.amount}</span>
+                        <div className="text-xs text-[#94a3b8] mb-2">{order.date}</div>
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-[#1e293b] text-sm">{order.amount}</span>
                         </div>
                       </Link>
                     ))}
@@ -670,28 +620,34 @@ export default function UserDashboard() {
               )}
             </div>
 
-            <div className="ud-section-header">
-              <h3 className="ud-section-title">Recent Contacts</h3>
-              <Link href="/user/contacts" className="ud-section-link">
+            <div className={sectionHeader}>
+              <h3 className={sectionTitle}>Recent Contacts</h3>
+              <Link href="/user/contacts" className={sectionLink}>
                 View All <FiChevronRight size={14} />
               </Link>
             </div>
-            <div className="ud-contacts-card">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl overflow-hidden w-full">
               {contactsLoading ? (
-                <div className="ud-contacts-empty">Loading contactsâ€¦</div>
+                <div className="py-10 px-5 text-center text-[#94a3b8] text-[13px]">Loading contacts…</div>
               ) : contacts.length === 0 ? (
-                <div className="ud-contacts-empty">No sellers contacted yet.</div>
+                <div className="py-10 px-5 text-center text-[#94a3b8] text-[13px]">No sellers contacted yet.</div>
               ) : (
                 contacts.map((contact) => (
-                  <div key={contact.id} className="ud-contact-row">
-                    <div className="ud-contact-avatar" style={{ background: contact.color }}>
+                  <div
+                    key={contact.id}
+                    className="flex items-center gap-3.5 px-5 py-3.5 border-b border-[#f8fafc] transition-colors duration-200 hover:bg-[#fafbfc] last:border-b-0 max-md:px-4 max-md:py-3 max-md:gap-3"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-[10px] flex items-center justify-center text-white text-[13px] font-bold shrink-0 max-md:w-9 max-md:h-9 max-md:text-xs"
+                      style={{ background: contact.color }}
+                    >
                       {contact.initials}
                     </div>
-                    <div className="ud-contact-info">
-                      <div className="ud-contact-name">{contact.name}</div>
-                      <div className="ud-contact-phone">{contact.msg}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-[#1e293b] max-md:text-[13px]">{contact.name}</div>
+                      <div className="text-xs text-[#64748b] mt-0.5 max-md:text-[11px]">{contact.msg}</div>
                     </div>
-                    <div className="ud-contact-time">
+                    <div className="text-xs text-[#94a3b8] font-medium flex items-center gap-1 shrink-0 max-md:text-[11px]">
                       <FiClock size={12} />
                       {contact.time}
                     </div>
@@ -704,22 +660,42 @@ export default function UserDashboard() {
       </div>
 
       {showDeleteModal && (
-        <div className="ud-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
-          <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="ud-modal-icon">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-5 animate-[fadeIn_0.2s_ease]"
+          onClick={() => !deleting && setShowDeleteModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-8 w-full max-w-[420px] shadow-[0_25px_50px_rgba(0,0,0,0.25)] animate-[slideUp_0.25s_ease]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-14 h-14 rounded-[14px] bg-[#fef2f2] flex items-center justify-center text-[#ef4444] mx-auto mb-5">
               <FiAlertTriangle size={26} />
             </div>
-            <div className="ud-modal-title">Delete Your Account?</div>
-            <div className="ud-modal-body">
+            <div className="text-lg font-bold text-[#1e293b] text-center mb-2">Delete Your Account?</div>
+            <div className="text-sm text-[#64748b] text-center leading-[1.6] mb-6 [&_strong]:text-[#ef4444]">
               This action is <strong>permanent and irreversible</strong>. All your orders,
               wishlist, and personal data will be permanently deleted.
             </div>
-            {deleteError && <div className="ud-modal-error">{deleteError}</div>}
-            <div className="ud-modal-actions">
-              <button type="button" className="ud-modal-cancel" onClick={() => { setShowDeleteModal(false); setDeleteError(""); }} disabled={deleting}>
+            {deleteError && (
+              <div className="text-[13px] text-[#ef4444] bg-[#fef2f2] rounded-lg px-3.5 py-2.5 mb-4 text-center">
+                {deleteError}
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-[#e2e8f0] bg-white text-[#475569] text-sm font-semibold cursor-pointer transition-all duration-200 hover:bg-[#f8fafc] hover:border-[#cbd5e1]"
+                onClick={() => { setShowDeleteModal(false); setDeleteError(""); }}
+                disabled={deleting}
+              >
                 Cancel
               </button>
-              <button type="button" className="ud-modal-delete" onClick={handleDeleteAccount} disabled={deleting}>
+              <button
+                type="button"
+                className="flex-1 py-[11px] rounded-[10px] border-0 bg-[#ef4444] text-white text-sm font-semibold cursor-pointer transition-all duration-200 flex items-center justify-center gap-1.5 enabled:hover:bg-[#dc2626] disabled:opacity-70 disabled:cursor-not-allowed"
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+              >
                 {deleting ? (
                   <>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -741,4 +717,3 @@ export default function UserDashboard() {
     </>
   );
 }
-

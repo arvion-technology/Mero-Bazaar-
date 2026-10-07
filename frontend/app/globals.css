@@ -55,3 +55,12 @@ img {
   cursor: pointer;
   flex-shrink: 0;
 }
+
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  button { font-family: inherit; }
+  img { display: block; max-width: 100%; }
+}

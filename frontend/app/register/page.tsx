@@ -199,8 +199,6 @@ function RegisterPageContent() {
       theme="colored"
     />
       <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
         .reg-page {
           min-height: 100vh;
           background: #ffffff;
