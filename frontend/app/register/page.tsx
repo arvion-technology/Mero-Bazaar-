@@ -1,37 +1,123 @@
 "use client";
 
 import { useState, useEffect, Suspense, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
-  FiUser,
-  FiMail,
-  FiLock,
-  FiEye,
-  FiEyeOff,
-  FiMapPin,
-  FiArrowRight,
-  FiArrowLeft,
-  FiShoppingBag,
-  FiBriefcase,
-  FiPhone,
+  FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiMapPin,
+  FiArrowRight, FiArrowLeft, FiShoppingBag, FiBriefcase,
 } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import { api } from "../../lib/api";
 import type { RegisterPayload } from "../types/auth";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
-const PRIMARY = "#C0392B";
-const PRIMARY_DARK = "#A93226";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+type FormState = {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  address: string;
+};
+type Errors = Partial<Record<keyof FormState, string>>;
+
+function validate(f: FormState): Errors {
+  const e: Errors = {};
+  if (f.fullName.trim().length < 2) e.fullName = "Enter your full name";
+  const email = f.email.trim();
+  if (!email) e.email = "Email is required";
+  else if (!EMAIL_RE.test(email)) e.email = "Enter a valid email address";
+  if (f.address.trim().length < 3) e.address = "Enter your address";
+  if (!f.password) e.password = "Password is required";
+  else if (f.password.length < 8) e.password = "Use at least 8 characters";
+  else if (!/[A-Za-z]/.test(f.password) || !/[0-9]/.test(f.password))
+    e.password = "Include at least one letter and one number";
+  if (!f.confirmPassword) e.confirmPassword = "Confirm your password";
+  else if (f.confirmPassword !== f.password) e.confirmPassword = "Passwords do not match";
+  return e;
+}
+
+function getStrength(pw: string): number {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  return Math.max(1, score);
+}
+
+/* ── shared classes ── */
+const inputBase =
+  "w-full rounded-lg border-0 bg-[#f0ecec] py-3 pl-10 text-sm text-[#333] outline-none transition-all duration-200 placeholder:text-[#aaa] focus:bg-[#e8e4e4] focus:shadow-[0_0_0_2px_rgba(192,57,43,0.15)]";
+const socialBtn =
+  "flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border-[1.5px] border-[#e5e5e5] bg-white p-2.5 font-[inherit] text-xs font-semibold text-[#555] transition-all duration-200 hover:border-[#ccc] hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-60";
+const primaryBtn =
+  "mx-auto flex w-fit min-w-[140px] cursor-pointer items-center justify-center gap-1.5 rounded-lg border-0 bg-[#C0392B] px-8 py-3 font-[inherit] text-sm font-semibold text-white transition-all duration-200 enabled:hover:-translate-y-px enabled:hover:bg-[#A93226] enabled:hover:shadow-[0_4px_12px_rgba(192,57,43,0.3)] disabled:cursor-not-allowed disabled:opacity-60";
+const toggleBtn =
+  "absolute right-2.5 top-1/2 flex -translate-y-1/2 cursor-pointer items-center border-0 bg-transparent p-1 text-[15px] text-[#aaa] hover:text-[#C0392B]";
+const stepAnim = "animate-[fadeIn_0.3s_ease]";
+
+const districts = [
+  "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal",
+  "Biratnagar", "Birgunj", "Dhangadhi", "Nepalgunj", "Hetauda", "Dharan",
+  "Itahari", "Janakpur", "Lumbini", "Gorkha", "Mustang", "Solukhumbu",
+];
+void districts; // currently unused — remove if you no longer need it
+
+function Field({
+  id, label, icon, error, children,
+}: {
+  id: string; label: string; icon: React.ReactNode; error?: string; children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-[13px] font-semibold text-[#333]">{label}</label>
+      <div className="relative">
+        <span className="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 items-center text-[15px] text-[#aaa]">
+          {icon}
+        </span>
+        {children}
+      </div>
+      {error && (
+        <span id={`${id}-error`} role="alert" className="text-[11.5px] text-red-500">{error}</span>
+      )}
+    </div>
+  );
+}
+
+function PasswordStrength({ password }: { password: string }) {
+  const score = getStrength(password);
+  const colors = ["#ef4444", "#f97316", "#eab308", "#22c55e"];
+  const labels = ["Weak", "Fair", "Good", "Strong"];
+  const color = colors[score - 1] || "#eee";
+
+  return (
+    <>
+      <div className="mt-[5px] flex gap-[3px]">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="h-[3px] flex-1 rounded-sm transition-[background] duration-300"
+            style={{ background: i <= score ? color : "#ddd" }}
+          />
+        ))}
+      </div>
+      <div className="mt-[3px] text-[11px] font-medium" style={{ color }}>
+        {labels[score - 1] || ""}
+      </div>
+    </>
+  );
+}
 
 function RegisterPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
-  // const [accountType, setAccountType] = useState<"buyer" | "seller" | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -41,26 +127,32 @@ function RegisterPageContent() {
   const [accountType, setAccountType] = useState<"buyer" | "seller" | null>(
     searchParams.get("seller") === "true" ? "seller" : null
   );
-  const router = useRouter();
   const [authError, setAuthError] = useState<{ tempToken: string; provider: string } | null>(null);
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState("");
   const [otpSubmitting, setOtpSubmitting] = useState(false);
   const submittingRef = useRef(false);
 
-  const [form, setForm] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    address: "",
+  const [form, setForm] = useState<FormState>({
+    fullName: "", email: "", password: "", confirmPassword: "", address: "",
   });
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [submitted, setSubmitted] = useState(false);
+
+  const errors = validate(form);
+  const err = (k: keyof Errors) => (touched[k] || submitted ? errors[k] : undefined);
+  const ring = (k: keyof Errors) => (err(k) ? "ring-1 ring-red-500" : "");
+  const termsError = submitted && !agreed ? "Please accept the Terms and Privacy Policy" : undefined;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  //handler for tempToken for 2FA state
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    setTouched((prev) => ({ ...prev, [e.target.name]: true }));
+  };
+
+  // pending 2FA state
   useEffect(() => {
     (async () => {
       const res = await fetch("/api/auth/pending-2fa");
@@ -79,71 +171,47 @@ function RegisterPageContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agreed) { toast.warn("Please accept the terms");
-      return;
-    }
-    if (form.password !== form.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-  try {
-    setLoading(true);
-    const payload: RegisterPayload = {
-      email: form.email,
-      password: form.password,
-      name: form.fullName,
-      role: accountType === "seller" ? "VENDOR" : "USER",
-      address: form.address,
-    };
-    const data = await api.register(payload);
-    // The registration response carries an access token that provides no value
-    // here (the user is redirected to login) — never persist it to localStorage.
-    toast.success("Account created successfully!");
-    router.push("/login");
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : " Something went wrong");
-  }finally {
-    setLoading(false);
-  }
-};
+    setSubmitted(true);
+    if (Object.keys(errors).length > 0 || !agreed) return;
 
-  //googleauth
-  const handleGoogle = async () => {
-    if (!accountType) {
-      toast.warn("Please select role first!");
-      return;
-    }
-    setGoogleLoading(true);
     try {
-      await fetch("/api/register/set-role", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: accountType === "seller" ? "VENDOR" : "USER" }),
-      });
-      await signIn("google", { callbackUrl: "/" });
-    } catch {
-      toast.error("Google Sign-in failed. Please try again.");
-      setGoogleLoading(false);
+      setLoading(true);
+      const payload: RegisterPayload = {
+        email: form.email.trim(),
+        password: form.password,
+        name: form.fullName.trim(),
+        role: accountType === "seller" ? "VENDOR" : "USER",
+        address: form.address.trim(),
+      };
+      await api.register(payload);
+      // Registration returns an access token we don't need (user goes to login) — never persist it.
+      toast.success("Account created successfully!");
+      router.push("/login");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
-  //facebookauth
-  const handleFacebook = async () => {
+  const handleSocial = async (provider: "google" | "facebook") => {
     if (!accountType) {
       toast.warn("Please select role first!");
       return;
     }
-    setFacebookLoading(true);
+    const setBusy = provider === "google" ? setGoogleLoading : setFacebookLoading;
+    const label = provider === "google" ? "Google" : "Facebook";
+    setBusy(true);
     try {
       await fetch("/api/register/set-role", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: accountType === "seller" ? "VENDOR" : "USER" }),
       });
-      await signIn("facebook", { callbackUrl: "/" });
+      await signIn(provider, { callbackUrl: "/" });
     } catch {
-      toast.error("Facebook Sign-in failed. Please try again.");
-      setFacebookLoading(false);
+      toast.error(`${label} sign-in failed. Please try again.`);
+      setBusy(false);
     }
   };
 
@@ -169,627 +237,116 @@ function RegisterPageContent() {
 
       if (res?.error) {
         toast.error("Invalid or expired OTP");
-        setOtpError(res.error);
+        setOtpError("Invalid or expired code. Please try again.");
         return;
       }
       toast.success("Login successful!");
-      setTimeout(() => {
-        router.push("/user/dashboard");
-      }, 800);
+      setTimeout(() => router.push("/user/dashboard"), 800);
     } finally {
       submittingRef.current = false;
       setOtpSubmitting(false);
     }
   };
 
-  const districts = [
-    "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal",
-    "Biratnagar", "Birgunj", "Dhangadhi", "Nepalgunj", "Hetauda", "Dharan",
-    "Itahari", "Janakpur", "Lumbini", "Gorkha", "Mustang", "Solukhumbu",
-  ];
-
   return (
     <>
-    <ToastContainer
-      position="top-right"
-      autoClose={3000}
-      hideProgressBar={false}
-      closeOnClick
-      pauseOnHover
-      theme="colored"
-    />
-      <style>{`
-        .reg-page {
-          min-height: 100vh;
-          background: #ffffff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 40px 16px;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover theme="colored" />
 
-        .reg-card {
-          width: 100%;
-          max-width: 900px;
-          min-height: 560px;
-          background: #fff;
-          border-radius: 32px;
-          overflow: hidden;
-          display: flex;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-          border: 1px solid #f0f0f0;
-        }
-
-        .reg-left {
-          flex: 0 0 380px;
-          background: ${PRIMARY};
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 48px 40px;
-          text-align: center;
-          border-radius: 0 80px 80px 0;
-        }
-
-        .reg-left-title {
-          font-size: 36px;
-          font-weight: 700;
-          color: #fff;
-          margin-bottom: 12px;
-        }
-
-        .reg-left-sub {
-          font-size: 14px;
-          color: rgba(255,255,255,0.8);
-          margin-bottom: 28px;
-          line-height: 1.5;
-        }
-
-        .reg-left-btn {
-          padding: 12px 40px;
-          background: rgba(255,255,255,0.2);
-          color: #fff;
-          border: 2px solid rgba(255,255,255,0.4);
-          border-radius: 24px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          text-decoration: none;
-          display: inline-block;
-        }
-
-        .reg-left-btn:hover {
-          background: rgba(255,255,255,0.3);
-          border-color: rgba(255,255,255,0.6);
-        }
-
-        .reg-right {
-          flex: 1;
-          padding: 48px 56px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-        }
-
-        .reg-right-title {
-          font-size: 28px;
-          font-weight: 700;
-          color: ${PRIMARY};
-          text-align: center;
-          margin-bottom: 6px;
-        }
-
-        .reg-right-sub {
-          font-size: 13px;
-          color: #999;
-          text-align: center;
-          margin-bottom: 24px;
-        }
-
-        .reg-divider-line {
-          height: 1px;
-          background: #ddd;
-          margin-bottom: 24px;
-        }
-
-        .reg-form {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .reg-field {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .reg-label {
-          font-size: 13px;
-          font-weight: 600;
-          color: #333;
-        }
-
-        .reg-input-wrap {
-          position: relative;
-        }
-
-        .reg-input {
-          width: 100%;
-          padding: 12px 14px;
-          border: none;
-          border-radius: 8px;
-          font-size: 14px;
-          color: #333;
-          background: #f0ecec;
-          outline: none;
-          transition: all 0.2s;
-          font-family: inherit;
-        }
-
-        .reg-input::placeholder {
-          color: #aaa;
-        }
-
-        .reg-input:focus {
-          background: #e8e4e4;
-          box-shadow: 0 0 0 2px rgba(192,57,43,0.15);
-        }
-
-        .reg-input.with-icon {
-          padding-left: 40px;
-        }
-
-        .reg-input.with-toggle {
-          padding-right: 42px;
-        }
-
-        .reg-input-icon {
-          position: absolute;
-          left: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #aaa;
-          pointer-events: none;
-          display: flex;
-          align-items: center;
-          font-size: 15px;
-        }
-
-        .reg-toggle-btn {
-          position: absolute;
-          right: 10px;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: #aaa;
-          padding: 4px;
-          display: flex;
-          align-items: center;
-          font-size: 15px;
-        }
-
-        .reg-toggle-btn:hover {
-          color: ${PRIMARY};
-        }
-
-        .reg-select {
-          width: 100%;
-          padding: 12px 14px;
-          border: none;
-          border-radius: 8px;
-          font-size: 14px;
-          color: #333;
-          background: #f0ecec;
-          outline: none;
-          cursor: pointer;
-          font-family: inherit;
-          appearance: none;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aaa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          background-position: right 14px center;
-        }
-
-        .reg-select:focus {
-          background: #e8e4e4;
-          box-shadow: 0 0 0 2px rgba(192,57,43,0.15);
-        }
-
-        .reg-strength-bar {
-          display: flex;
-          gap: 3px;
-          margin-top: 5px;
-        }
-
-        .reg-strength-seg {
-          flex: 1;
-          height: 3px;
-          border-radius: 2px;
-          background: #ddd;
-          transition: background 0.3s;
-        }
-
-        .reg-strength-label {
-          font-size: 11px;
-          margin-top: 3px;
-          font-weight: 500;
-        }
-
-        .reg-checkbox-row {
-          display: flex;
-          align-items: flex-start;
-          gap: 8px;
-          margin: 4px 0;
-        }
-
-        .reg-checkbox-row input[type="checkbox"] {
-          width: 15px;
-          height: 15px;
-          accent-color: ${PRIMARY};
-          cursor: pointer;
-          flex-shrink: 0;
-          margin-top: 2px;
-        }
-
-        .reg-checkbox-label {
-          font-size: 12px;
-          color: #666;
-          line-height: 1.5;
-        }
-
-        .reg-checkbox-label a {
-          color: ${PRIMARY};
-          font-weight: 600;
-          text-decoration: none;
-        }
-
-        .reg-checkbox-label a:hover {
-          text-decoration: underline;
-        }
-
-        .reg-btn-primary {
-          width: fit-content;
-          min-width: 140px;
-          padding: 12px 32px;
-          background: ${PRIMARY};
-          color: #fff;
-          border: none;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          font-family: inherit;
-          margin: 0 auto;
-        }
-
-        .reg-btn-primary:hover:not(:disabled) {
-          background: ${PRIMARY_DARK};
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(192,57,43,0.3);
-        }
-
-        .reg-btn-primary:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .reg-btn-back {
-          width: fit-content;
-          padding: 10px 24px;
-          background: none;
-          color: #666;
-          border: 1.5px solid #ddd;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          font-family: inherit;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .reg-btn-back:hover {
-          border-color: ${PRIMARY};
-          color: ${PRIMARY};
-        }
-
-        .reg-actions {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 10px;
-          margin-top: 8px;
-        }
-
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        .reg-spinner {
-          width: 16px;
-          height: 16px;
-          border: 2px solid rgba(255,255,255,0.4);
-          border-top-color: #fff;
-          border-radius: 50%;
-          animation: spin 0.7s linear infinite;
-        }
-
-        .reg-type-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-          margin-bottom: 20px;
-        }
-
-        .reg-type-card {
-          border: 2px solid #eee;
-          border-radius: 12px;
-          padding: 20px 16px;
-          cursor: pointer;
-          transition: all 0.2s;
-          background: #fafafa;
-          text-align: center;
-        }
-
-        .reg-type-card:hover {
-          border-color: ${PRIMARY};
-          box-shadow: 0 2px 12px rgba(192,57,43,0.1);
-        }
-
-        .reg-type-card.selected {
-          border-color: ${PRIMARY};
-          background: #fef2f2;
-        }
-
-        .reg-type-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          background: #eee;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 8px;
-          color: #666;
-          font-size: 18px;
-          transition: all 0.2s;
-        }
-
-        .reg-type-card.selected .reg-type-icon {
-          background: ${PRIMARY};
-          color: #fff;
-        }
-
-        .reg-type-label {
-          font-size: 13px;
-          font-weight: 700;
-          color: #222;
-          margin-bottom: 3px;
-        }
-
-        .reg-type-desc {
-          font-size: 11px;
-          color: #999;
-        }
-
-        .reg-social-row {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 16px;
-        }
-
-        .reg-social-btn {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: 10px;
-          border: 1.5px solid #e5e5e5;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 600;
-          color: #555;
-          background: #fff;
-          cursor: pointer;
-          transition: all 0.2s;
-          font-family: inherit;
-        }
-
-        .reg-social-btn:hover {
-          border-color: #ccc;
-          background: #fafafa;
-        }
-
-        .reg-divider {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin: 12px 0;
-        }
-
-        .reg-divider-line-h {
-          flex: 1;
-          height: 1px;
-          background: #eee;
-        }
-
-        .reg-divider-text {
-          font-size: 11px;
-          color: #bbb;
-          font-weight: 500;
-          white-space: nowrap;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .reg-step {
-          animation: fadeIn 0.3s ease;
-        }
-
-        .reg-error-msg {
-          font-size: 11.5px;
-          color: #ef4444;
-          margin-top: 2px;
-        }
-
-        @media (max-width: 768px) {
-          .reg-card {
-            flex-direction: column;
-            max-width: 420px;
-          }
-          .reg-left {
-            flex: none;
-            padding: 32px 24px;
-            border-radius: 0 0 40px 40px;
-            min-height: 180px;
-          }
-          .reg-left-title {
-            font-size: 28px;
-          }
-          .reg-right {
-            padding: 32px 24px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .reg-page {
-            padding: 0;
-            background: #fff;
-          }
-          .reg-card {
-            border-radius: 0;
-            box-shadow: none;
-            min-height: 100vh;
-          }
-          .reg-left {
-            border-radius: 0 0 32px 32px;
-          }
-          .reg-right {
-            padding: 24px 20px;
-          }
-          .reg-type-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
-
-      <div className="reg-page">
-        <div className="reg-card">
-          <aside className="reg-left">
-            <h1 className="reg-left-title">Welcome to HamroNepal Bazaar</h1>
-            <p className="reg-left-sub">
-              Already have an account? Sign in here
-            </p>
-            <Link href="/login" className="reg-left-btn">
+      <div className="flex min-h-screen items-center justify-center bg-white px-4 py-10 font-[-apple-system,BlinkMacSystemFont,'Segoe_UI',Roboto,'Helvetica_Neue',Arial,sans-serif] max-[480px]:p-0">
+        <div className="flex min-h-[560px] w-full max-w-[900px] overflow-hidden rounded-[32px] border border-[#f0f0f0] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] max-md:max-w-[420px] max-md:flex-col max-[480px]:min-h-screen max-[480px]:rounded-none max-[480px]:shadow-none">
+          {/* ── Left panel ── */}
+          <aside className="flex flex-[0_0_380px] flex-col items-center justify-center rounded-r-[80px] bg-[#C0392B] px-10 py-12 text-center max-md:min-h-[180px] max-md:flex-none max-md:rounded-b-[40px] max-md:rounded-r-none max-md:px-6 max-md:py-8 max-[480px]:rounded-b-[32px]">
+            <h1 className="mb-3 text-4xl font-bold text-white max-md:text-[28px]">Welcome to HamroNepal Bazaar</h1>
+            <p className="mb-7 text-sm leading-normal text-white/80">Already have an account? Sign in here</p>
+            <Link
+              href="/login"
+              className="inline-block cursor-pointer rounded-3xl border-2 border-white/40 bg-white/20 px-10 py-3 text-sm font-semibold text-white! no-underline transition-all duration-200 hover:border-white/60 hover:bg-white/30"
+            >
               SIGN IN
             </Link>
           </aside>
 
-          <div className="reg-right">
-            <h2 className="reg-right-title">
-              {step === 1 ? "Sign Up" : "Complete Profile"}
+          {/* ── Right panel ── */}
+          <div className="flex flex-1 flex-col justify-center px-14 py-12 max-md:px-6 max-md:py-8 max-[480px]:px-5 max-[480px]:py-6">
+            <h2 className="mb-1.5 text-center text-[28px] font-bold text-[#C0392B]">
+              {authError ? "Verify Code" : step === 1 ? "Sign Up" : "Complete Profile"}
             </h2>
-            <p className="reg-right-sub">
-              {step === 1 ? "Enter your Personal Information" : "Step 2 of 2"}
+            <p className="mb-6 text-center text-[13px] text-[#999]">
+              {authError ? "Two-factor authentication" : step === 1 ? "Enter your Personal Information" : "Step 2 of 2"}
             </p>
-            <div className="reg-divider-line" />
+            <div className="mb-6 h-px bg-[#ddd]" />
 
+            {/* ── 2FA OTP ── */}
             {authError ? (
-            <div className="reg-step">
-              <p style={{ fontSize: 13, color: "#666", marginBottom: 16 }}>
-                Enter the 6-digit code sent to your phone to finish signing in.
-              </p>
-              {otpError && <p className="reg-error-msg" style={{ marginBottom: 12 }}>{otpError}</p>}
-              <input
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                maxLength={6}
-                inputMode="numeric"
-                className="reg-input"
-                style={{ textAlign: "center", fontSize: 20, letterSpacing: 6, marginBottom: 16 }}
-                autoFocus
-              />
-              <div className="reg-actions">
-                <button type="button" className="reg-btn-primary" onClick={handleVerifyOtp} disabled={otpSubmitting}>
-                  {otpSubmitting ? "Verifying..." : "Verify"}
-                </button>
+              <div className={stepAnim}>
+                <p className="mb-4 text-[13px] text-[#666]">
+                  Enter the 6-digit code sent to your phone to finish signing in.
+                </p>
+                {otpError && <p role="alert" className="mb-3 text-[11.5px] text-red-500">{otpError}</p>}
+                <input
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                  maxLength={6}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  aria-label="6-digit verification code"
+                  className={`${inputBase} mb-4 pr-3.5 text-center text-xl tracking-[6px]`}
+                />
+                <div className="mt-2 flex flex-col items-center gap-2.5">
+                  <button type="button" className={primaryBtn} onClick={handleVerifyOtp} disabled={otpSubmitting}>
+                    {otpSubmitting ? "Verifying..." : "Verify"}
+                  </button>
+                </div>
               </div>
-            </div>
-          ) : step === 1 && (
-              <div className="reg-step">
+            ) : step === 1 ? (
+              /* ── Step 1 ── */
+              <div className={stepAnim}>
                 <form onSubmit={handleStep1}>
-                  <div className="reg-type-grid" style={{ marginBottom: 20 }}>
+                  <div role="radiogroup" aria-label="Account type" className="mb-5 grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
                     {([
-                      {
-                        type: "buyer",
-                        icon: FiShoppingBag,
-                        label: "Buy & Discover",
-                        desc: "Browse listings & find deals",
-                      },
-                      {
-                        type: "seller",
-                        icon: FiBriefcase,
-                        label: "Sell & Grow",
-                        desc: "List products & reach buyers",
-                      },
-                    ] as const).map((opt) => (
-                      <div
-                        key={opt.type}
-                        className={`reg-type-card${accountType === opt.type ? " selected" : ""}`}
-                        onClick={() => setAccountType(opt.type)}
-                        role="radio"
-                        aria-checked={accountType === opt.type}
-                        tabIndex={0}
-                        onKeyDown={(e) => e.key === "Enter" && setAccountType(opt.type)}
-                      >
-                        <div className="reg-type-icon">
-                          <opt.icon size={20} />
+                      { type: "buyer", icon: FiShoppingBag, label: "Buy & Discover", desc: "Browse listings & find deals" },
+                      { type: "seller", icon: FiBriefcase, label: "Sell & Grow", desc: "List products & reach buyers" },
+                    ] as const).map((opt) => {
+                      const selected = accountType === opt.type;
+                      return (
+                        <div
+                          key={opt.type}
+                          role="radio"
+                          aria-checked={selected}
+                          tabIndex={0}
+                          onClick={() => setAccountType(opt.type)}
+                          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setAccountType(opt.type)}
+                          className={`cursor-pointer rounded-xl border-2 px-4 py-5 text-center transition-all duration-200 hover:border-[#C0392B] hover:shadow-[0_2px_12px_rgba(192,57,43,0.1)] ${
+                            selected ? "border-[#C0392B] bg-[#fef2f2]" : "border-[#eee] bg-[#fafafa]"
+                          }`}
+                        >
+                          <div
+                            className={`mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-[10px] transition-all duration-200 ${
+                              selected ? "bg-[#C0392B] text-white" : "bg-[#eee] text-[#666]"
+                            }`}
+                          >
+                            <opt.icon size={20} />
+                          </div>
+                          <div className="mb-[3px] text-[13px] font-bold text-[#222]">{opt.label}</div>
+                          <div className="text-[11px] text-[#999]">{opt.desc}</div>
                         </div>
-                        <div className="reg-type-label">{opt.label}</div>
-                        <div className="reg-type-desc">{opt.desc}</div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
-                  <div className="reg-social-row" style={{ marginBottom: 12 }}>
-                    <button
-                      type="button"
-                      className="reg-social-btn reg-social-btn--google"
-                      onClick={handleGoogle}
-                      disabled={googleLoading || !accountType}
-                    >
+                  <div className="mb-3 flex gap-2.5 max-[480px]:flex-col">
+                    <button type="button" className={socialBtn} onClick={() => handleSocial("google")} disabled={googleLoading || facebookLoading || !accountType}>
                       {googleLoading ? (
-                        <div className="reg-spinner reg-spinner--sm" />
+                        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black/15 border-t-[#555]" />
                       ) : (
                         <FcGoogle size={16} />
                       )}
                       {googleLoading ? "Signing in..." : "Google"}
                     </button>
-
-                    <button
-                      type="button"
-                      className="reg-social-btn reg-social-btn--facebook"
-                      onClick={handleFacebook}
-                      disabled={facebookLoading || !accountType}
-                    >
+                    <button type="button" className={socialBtn} onClick={() => handleSocial("facebook")} disabled={googleLoading || facebookLoading || !accountType}>
                       {facebookLoading ? (
-                        <div className="reg-spinner reg-spinner--sm" />
+                        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black/15 border-t-[#1877F2]" />
                       ) : (
                         <FaFacebook size={16} color="#1877F2" />
                       )}
@@ -797,213 +354,163 @@ function RegisterPageContent() {
                     </button>
                   </div>
 
-                  <div className="reg-divider">
-                    <div className="reg-divider-line-h" />
-                    <span className="reg-divider-text">or</span>
-                    <div className="reg-divider-line-h" />
+                  <div className="my-3 flex items-center gap-3">
+                    <div className="h-px flex-1 bg-[#eee]" />
+                    <span className="whitespace-nowrap text-[11px] font-medium text-[#bbb]">or</span>
+                    <div className="h-px flex-1 bg-[#eee]" />
                   </div>
 
-                  <div className="reg-actions" style={{ marginTop: 16 }}>
-                    <button
-                      type="submit"
-                      className="reg-btn-primary"
-                      disabled={!accountType}
-                    >
+                  <div className="mt-4 flex flex-col items-center gap-2.5">
+                    <button type="submit" className={primaryBtn} disabled={!accountType}>
                       Continue <FiArrowRight size={14} />
                     </button>
                   </div>
                 </form>
               </div>
-            )}
+            ) : (
+              /* ── Step 2 ── */
+              <div className={stepAnim}>
+                <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+                  <Field id="reg-fullname" label="Full Name" icon={<FiUser size={15} />} error={err("fullName")}>
+                    <input
+                      id="reg-fullname"
+                      name="fullName"
+                      type="text"
+                      placeholder="Enter your name"
+                      className={`${inputBase} pr-3.5 ${ring("fullName")}`}
+                      value={form.fullName}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      autoComplete="name"
+                      aria-invalid={!!err("fullName")}
+                      aria-describedby={err("fullName") ? "reg-fullname-error" : undefined}
+                    />
+                  </Field>
 
-            {step === 2 && (
-              <div className="reg-step">
-                <form onSubmit={handleSubmit} className="reg-form">
-                  <div className="reg-field">
-                    <label className="reg-label" htmlFor="reg-fullname">Full Name</label>
-                    <div className="reg-input-wrap">
-                      <span className="reg-input-icon">
-                        <FiUser size={15} />
-                      </span>
-                      <input
-                        id="reg-fullname"
-                        name="fullName"
-                        type="text"
-                        placeholder="Enter your name"
-                        className="reg-input with-icon"
-                        value={form.fullName}
-                        onChange={handleChange}
-                        required
-                        autoComplete="name"
-                      />
-                    </div>
-                  </div>
+                  <Field id="reg-email" label="Email" icon={<FiMail size={15} />} error={err("email")}>
+                    <input
+                      id="reg-email"
+                      name="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      className={`${inputBase} pr-3.5 ${ring("email")}`}
+                      value={form.email}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      autoComplete="email"
+                      aria-invalid={!!err("email")}
+                      aria-describedby={err("email") ? "reg-email-error" : undefined}
+                    />
+                  </Field>
 
-                  <div className="reg-field">
-                    <label className="reg-label" htmlFor="reg-email">Email</label>
-                    <div className="reg-input-wrap">
-                      <span className="reg-input-icon">
-                        <FiMail size={15} />
-                      </span>
-                      <input
-                        id="reg-email"
-                        name="email"
-                        type="email"
-                        placeholder="Enter your email"
-                        className="reg-input with-icon"
-                        value={form.email}
-                        onChange={handleChange}
-                        required
-                        autoComplete="email"
-                      />
-                    </div>
-                  </div>
-{/* 
-                  <div className="reg-field">
-                    <label className="reg-label" htmlFor="reg-phone">Phone Number</label>
-                    <div className="reg-input-wrap">
-                      <span className="reg-input-icon">
-                        <FiPhone size={15} />
-                      </span>
-                      <input
-                        id="reg-phone"
-                        name="phone"
-                        type="tel"
-                        placeholder="Enter your phone number"
-                        className="reg-input with-icon"
-                        value={form.phone}
-                        onChange={handleChange}
-                        required
-                        autoComplete="tel"
-                      />
-                    </div>
-                  </div> */}
+                  <Field id="reg-address" label="Address" icon={<FiMapPin size={15} />} error={err("address")}>
+                    <input
+                      id="reg-address"
+                      name="address"
+                      type="text"
+                      placeholder="Enter your address"
+                      className={`${inputBase} pr-3.5 ${ring("address")}`}
+                      value={form.address}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      autoComplete="street-address"
+                      aria-invalid={!!err("address")}
+                      aria-describedby={err("address") ? "reg-address-error" : undefined}
+                    />
+                  </Field>
 
-                  <div className="reg-field">
-                    <label className="reg-label" htmlFor="reg-address">Address</label>
-                    <div className="reg-input-wrap">
-                      <span className="reg-input-icon">
-                        <FiMapPin size={15} />
-                      </span>
-                      <input
-                        id="reg-address"
-                        name="address"
-                        type="text"
-                        placeholder="Enter your address"
-                        className="reg-input with-icon"
-                        value={form.address}
-                        onChange={handleChange}
-                        required
-                        autoComplete="street-address"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="reg-field">
-                    <label className="reg-label" htmlFor="reg-password">Password</label>
-                    <div className="reg-input-wrap">
-                      <span className="reg-input-icon">
-                        <FiLock size={15} />
-                      </span>
+                  <div>
+                    <Field id="reg-password" label="Password" icon={<FiLock size={15} />} error={err("password")}>
                       <input
                         id="reg-password"
                         name="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter password"
-                        className="reg-input with-icon with-toggle"
+                        className={`${inputBase} pr-[42px] ${ring("password")}`}
                         value={form.password}
                         onChange={handleChange}
-                        required
-                        minLength={8}
+                        onBlur={handleBlur}
                         autoComplete="new-password"
+                        aria-invalid={!!err("password")}
+                        aria-describedby={err("password") ? "reg-password-error" : undefined}
                       />
                       <button
                         type="button"
-                        className="reg-toggle-btn"
-                        onClick={() => setShowPassword(!showPassword)}
+                        className={toggleBtn}
+                        onClick={() => setShowPassword((s) => !s)}
                         aria-label={showPassword ? "Hide password" : "Show password"}
                       >
                         {showPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
                       </button>
-                    </div>
-                    {form.password.length > 0 && (
-                      <PasswordStrength password={form.password} />
-                    )}
+                    </Field>
+                    {form.password.length > 0 && <PasswordStrength password={form.password} />}
                   </div>
 
-                  <div className="reg-field">
-                    <label className="reg-label" htmlFor="reg-confirm">Confirm Password</label>
-                    <div className="reg-input-wrap">
-                      <span className="reg-input-icon">
-                        <FiLock size={15} />
-                      </span>
-                      <input
-                        id="reg-confirm"
-                        name="confirmPassword"
-                        type={showConfirm ? "text" : "password"}
-                        placeholder="Enter confirm password"
-                        className="reg-input with-icon with-toggle"
-                        value={form.confirmPassword}
-                        onChange={handleChange}
-                        required
-                        autoComplete="new-password"
-                        style={{
-                          borderColor:
-                            form.confirmPassword.length > 0
-                              ? form.confirmPassword === form.password
-                                ? "#22c55e"
-                                : "#ef4444"
-                              : undefined,
-                        }}
-                      />
-                      <button
-                        type="button"
-                        className="reg-toggle-btn"
-                        onClick={() => setShowConfirm(!showConfirm)}
-                        aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
-                      >
-                        {showConfirm ? <FiEyeOff size={15} /> : <FiEye size={15} />}
-                      </button>
-                    </div>
-                    {form.confirmPassword.length > 0 && form.confirmPassword !== form.password && (
-                      <span className="reg-error-msg">Passwords do not match</span>
-                    )}
-                  </div>
-
-                  <div className="reg-checkbox-row">
+                  <Field id="reg-confirm" label="Confirm Password" icon={<FiLock size={15} />} error={err("confirmPassword")}>
                     <input
-                      type="checkbox"
-                      id="reg-agree"
-                      checked={agreed}
-                      onChange={(e) => setAgreed(e.target.checked)}
+                      id="reg-confirm"
+                      name="confirmPassword"
+                      type={showConfirm ? "text" : "password"}
+                      placeholder="Enter confirm password"
+                      className={`${inputBase} pr-[42px] ${
+                        err("confirmPassword")
+                          ? "ring-1 ring-red-500"
+                          : form.confirmPassword && form.confirmPassword === form.password
+                            ? "ring-1 ring-green-500"
+                            : ""
+                      }`}
+                      value={form.confirmPassword}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      autoComplete="new-password"
+                      aria-invalid={!!err("confirmPassword")}
+                      aria-describedby={err("confirmPassword") ? "reg-confirm-error" : undefined}
                     />
-                    <label htmlFor="reg-agree" className="reg-checkbox-label">
-                      I agree to the{" "}
-                      <Link href="/terms">Terms</Link> and{" "}
-                      <Link href="/privacy">Privacy Policy</Link>
-                    </label>
+                    <button
+                      type="button"
+                      className={toggleBtn}
+                      onClick={() => setShowConfirm((s) => !s)}
+                      aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
+                    >
+                      {showConfirm ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+                    </button>
+                  </Field>
+
+                  <div>
+                    <div className="my-1 flex items-start gap-2">
+                      <input
+                        type="checkbox"
+                        id="reg-agree"
+                        checked={agreed}
+                        onChange={(e) => setAgreed(e.target.checked)}
+                        className="mt-0.5 h-[15px] w-[15px] shrink-0 cursor-pointer accent-[#C0392B]"
+                      />
+                      <label htmlFor="reg-agree" className="text-xs leading-normal text-[#666]">
+                        I agree to the{" "}
+                        <Link href="/terms" className="font-semibold text-[#C0392B]! no-underline hover:underline">Terms</Link>{" "}
+                        and{" "}
+                        <Link href="/privacy" className="font-semibold text-[#C0392B]! no-underline hover:underline">Privacy Policy</Link>
+                      </label>
+                    </div>
+                    {termsError && <span role="alert" className="text-[11.5px] text-red-500">{termsError}</span>}
                   </div>
 
-                  <div className="reg-actions">
-                    <button
-                      type="submit"
-                      className="reg-btn-primary"
-                      disabled={loading || !agreed || form.confirmPassword !== form.password}
-                    >
+                  <div className="mt-2 flex flex-col items-center gap-2.5">
+                    <button type="submit" className={primaryBtn} disabled={loading}>
                       {loading ? (
-                        <><div className="reg-spinner" /> Register</>
+                        <>
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Registering...
+                        </>
                       ) : (
                         <>Register</>
                       )}
                     </button>
-
                     <button
                       type="button"
-                      className="reg-btn-back"
                       onClick={() => setStep(1)}
+                      className="flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border-[1.5px] border-[#ddd] bg-transparent px-6 py-2.5 font-[inherit] text-[13px] font-semibold text-[#666] transition-all duration-200 hover:border-[#C0392B] hover:text-[#C0392B]"
                     >
-                      <FiArrowLeft size={13} />
-                      Back
+                      <FiArrowLeft size={13} /> Back
                     </button>
                   </div>
                 </form>
@@ -1016,46 +523,11 @@ function RegisterPageContent() {
   );
 }
 
-function PasswordStrength({ password }: { password: string }) {
-  const score = getStrength(password);
-  const colors = ["#ef4444", "#f97316", "#eab308", "#22c55e"];
-  const labels = ["Weak", "Fair", "Good", "Strong"];
-  const color = colors[score - 1] || "#eee";
-
-  return (
-    <>
-      <div className="reg-strength-bar">
-        {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="reg-strength-seg"
-            style={{ background: i <= score ? color : "#ddd" }}
-          />
-        ))}
-      </div>
-      <div className="reg-strength-label" style={{ color }}>
-        {labels[score - 1] || ""}
-      </div>
-    </>
-  );
-}
-
-function getStrength(pw: string): number {
-  let score = 0;
-  if (pw.length >= 8) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
-  return Math.max(1, score);
-}
-
 export default function RegisterPage() {
   return (
-    <Suspense fallback={
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        Loading...
-      </div>
-    }>
+    <Suspense
+      fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}
+    >
       <RegisterPageContent />
     </Suspense>
   );
