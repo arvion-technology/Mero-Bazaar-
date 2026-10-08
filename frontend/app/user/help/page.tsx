@@ -93,8 +93,8 @@ const faqs = [
 const contactMethods = [
   { icon: FiMessageSquare, label: "Live Chat", desc: "Chat with supports team", status: "Online", statusColor: "#10b981", href: "#" },
   { icon: FiMail, label: "Email Supports", desc: "support@hamronepal.com", href: "mailto:support@hamronepal.com" },
-  { icon: FiPhone, label: "Call Us", desc: "+977 9845672312", href: "tel:+9779845672312" },
-  { icon: FiMessageSquare, label: "WhatsApp", desc: "+977 9845672312", href: "https://wa.me/9779845672312" },
+  { icon: FiPhone, label: "Call Us", desc: "+977 9845670000", href: "tel:+97798456700000" },
+  { icon: FiMessageSquare, label: "WhatsApp", desc: "+977 9845670000", href: "https://wa.me/9779845600000" },
 ];
 
 const supportHours = [
@@ -413,23 +413,25 @@ export default function HelpSupportPage() {
             <div className="grid grid-cols-[1fr_320px] gap-6 max-[1200px]:grid-cols-[1fr_280px] max-lg:grid-cols-1">
               <div>
                 <h2 className="text-base font-bold text-[#1e293b] tracking-[-0.2px] mb-4">How can we help you?</h2>
-                <div className="grid grid-cols-3 gap-4 mb-7 max-[1200px]:grid-cols-2 max-md:grid-cols-1">
-                  {helpCategories.map((cat) => (
-                    <div
-                      key={cat.title}
-                      className="bg-white border border-[#e2e8f0] rounded-xl p-5 flex items-start gap-3.5 cursor-pointer transition-all duration-200 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 hover:border-[#cbd5e1] max-md:p-4"
-                    >
-                      <div className="w-11 h-11 rounded-[10px] flex items-center justify-center text-xl shrink-0" style={{ background: cat.bg, color: cat.color }}>
-                        <cat.icon size={20} />
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4 mb-7">
+                    {helpCategories.map((cat) => (
+                      <div
+                        key={cat.title}
+                        className="bg-white border border-[#e2e8f0] rounded-xl p-5 flex flex-col gap-3 max-md:p-4"
+                      >
+                        <div
+                          className="w-11 h-11 rounded-[10px] flex items-center justify-center shrink-0"
+                          style={{ background: cat.bg, color: cat.color }}
+                        >
+                          <cat.icon size={20} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-[#1e293b] mb-1">{cat.title}</div>
+                          <div className="text-xs text-[#64748b] leading-normal">{cat.desc}</div>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-[#1e293b] mb-1">{cat.title}</div>
-                        <div className="text-xs text-[#64748b] leading-normal">{cat.desc}</div>
-                      </div>
-                      <FiChevronRight size={16} className="text-[#94a3b8] shrink-0 mt-1" />
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
 
                 <div className="mb-7">
                   <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">

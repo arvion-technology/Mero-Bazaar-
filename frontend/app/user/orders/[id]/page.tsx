@@ -13,7 +13,7 @@ import {
   FiGrid, FiShoppingBag, FiHeart, FiBell, FiHelpCircle, FiSettings,
   FiTrash2, FiAlertTriangle, FiLogOut, FiUser, FiChevronDown,
   FiMenu, FiX, FiMoreHorizontal, FiAlertCircle,
-  FiPhone, FiArrowLeft, FiCheckCircle,
+  FiPhone, FiArrowLeft,
 } from "react-icons/fi";
 
 const PRIMARY = "#C0392B";
@@ -28,15 +28,15 @@ const STATUS_DISPLAY: Record<string, { label: string; color: string }> = {
   EXPIRED: { label: "Expired", color: "#ef4444" },
 };
 
-  const sidebarItems = [
-    { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/user/dashboard" },
-    { id: "contacts", icon: FiUser, label: "Contacts", href: "/user/contacts" },
-    { id: "orders", icon: FiShoppingBag, label: "My Orders", href: "/user/orders" },
-    { id: "wishlist", icon: FiHeart, label: "Wishlist", href: "/user/wishlist" },
-    { id: "notification", icon: FiBell, label: "Notifications", href: "/user/notifications" },
-    { id: "help", icon: FiHelpCircle, label: "Help & Support", href: "/user/help" },
-    { id: "settings", icon: FiSettings, label: "Settings", href: "/user/settings" },
-  ];
+const sidebarItems = [
+  { id: "dashboard", icon: FiGrid, label: "Dashboard", href: "/user/dashboard" },
+  { id: "contacts", icon: FiUser, label: "Contacts", href: "/user/contacts" },
+  { id: "orders", icon: FiShoppingBag, label: "My Orders", href: "/user/orders" },
+  { id: "wishlist", icon: FiHeart, label: "Wishlist", href: "/user/wishlist" },
+  { id: "notification", icon: FiBell, label: "Notifications", href: "/user/notifications" },
+  { id: "help", icon: FiHelpCircle, label: "Help & Support", href: "/user/help" },
+  { id: "settings", icon: FiSettings, label: "Settings", href: "/user/settings" },
+];
 
 function formatDate(d: string | null) {
   if (!d) return "—";
@@ -62,8 +62,7 @@ const iconBtn =
 const ddItemBase =
   "flex w-full cursor-pointer items-center gap-2.5 border-0 bg-transparent px-4 py-[11px] text-left font-[inherit] text-sm font-medium no-underline transition-all duration-150";
 
-const odCard =
-  "flex min-w-0 flex-[1_1_100%] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white md:min-w-[240px] md:flex-[1_1_45%] lg:min-w-[260px] lg:flex-[1_1_280px]";
+const card = "min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white";
 const statusPill =
   "inline-flex items-center gap-1.5 whitespace-nowrap rounded-[20px] px-3 py-1 text-xs font-semibold";
 const infoRow =
@@ -386,6 +385,7 @@ export default function OrderDetailPage() {
 
           {/* Main Content */}
           <main className="min-w-0 flex-1 overflow-y-auto p-3 min-[481px]:p-4 md:px-5 md:pb-8 md:pt-5 lg:px-8 lg:py-7">
+            {/* Title row */}
             <div className="mb-6 flex items-center gap-3">
               <Link
                 href="/user/orders"
@@ -394,87 +394,56 @@ export default function OrderDetailPage() {
               >
                 <FiArrowLeft size={18} />
               </Link>
-              <div>
-                <div className="text-[22px] font-bold tracking-[-0.4px] text-slate-800">Orders</div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[22px] font-bold tracking-[-0.4px] text-slate-800">Order details</div>
                 <div className="mt-0.5 text-[13px] text-slate-500">Order ID: #{order.id.slice(-6).toUpperCase()}</div>
               </div>
+              {disp && (
+                <span className={statusPill} style={{ background: disp.color + "18", color: disp.color }}>
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: disp.color }} />
+                  {disp.label}
+                </span>
+              )}
             </div>
 
-            <div className="flex flex-wrap items-stretch gap-5">
-              {/* Product */}
-              <div className={odCard}>
-                <img
-                  src={order.listing.images?.[0] ? getImageUrl(order.listing.images[0]) : "https://ui-avatars.com/api/?name=" + encodeURIComponent(order.listing.title) + "&background=e2e8f0&color=64748b&size=400"}
-                  alt={order.listing.title}
-                  className="block h-[180px] w-full bg-slate-200 object-cover md:h-[200px]"
-                />
-                <div className="p-5">
-                  <div className="mb-1 text-base font-bold text-slate-800">{order.listing.title}</div>
-                  <div className="text-xs text-slate-400">Category: {order.listing.category}</div>
-                </div>
-              </div>
-
-              {/* Delivery / Reservation */}
-              <div className={`${odCard} p-5`}>
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-[15px] font-bold text-slate-800">{order.type === "RESERVATION" ? "Reservation info" : "Delivery info"}</div>
-                  {disp && (
-                    <span className={statusPill} style={{ background: disp.color + "18", color: disp.color }}>
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: disp.color }} />{disp.label}
-                    </span>
-                  )}
-                </div>
-                {order.type === "RESERVATION" ? (
-                  <div className={infoRow}><span className="shrink-0 text-slate-400">Reserved Until</span><span className="text-right font-semibold text-slate-800">{formatDate(order.reservedUntil)}</span></div>
-                ) : (
-                  <>
-                    <div className={infoRow}><span className="shrink-0 text-slate-400">Delivery Date</span><span className="text-right font-semibold text-slate-800">{formatDate(order.deliveryDate)}</span></div>
-                    <div className={infoRow}><span className="shrink-0 text-slate-400">Delivery Address</span><span className="text-right font-semibold text-slate-800">{order.deliveryAddress || "—"}</span></div>
-                  </>
-                )}
-              </div>
-
-              {/* Summary */}
-              <div className={`${odCard} p-5`}>
-                <div className="mb-4 text-[15px] font-bold text-slate-800">Order Summary</div>
-                <div className={`${summaryRow} border-b border-slate-50`}><span>Price per unit</span><span className={summaryVal}>NPR {order.priceAtOrder.toLocaleString()}</span></div>
-                <div className={`${summaryRow} border-b border-slate-50`}><span>Quantity</span><span className={summaryVal}>{order.quantity}</span></div>
-                <div className={`${summaryRow} mt-1 border-t-2 border-slate-100 pt-3.5`}><span>Total Amount</span><span className="text-base font-bold text-[#C0392B]">NPR {order.totalPrice.toLocaleString()}</span></div>
-                <div className={`${summaryRow} mt-2`}>
-                  <span>Status</span>
-                  {disp && (
-                    <span className={statusPill} style={{ background: disp.color + "18", color: disp.color }}>
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: disp.color }} />{disp.label}
-                    </span>
-                  )}
-                </div>
-                <div className={summaryRow}><span>Payment Method</span><span className={summaryVal}>{order.paymentMethod || "—"}</span></div>
-                {order.paymentRef && (
-                  <div className={summaryRow}><span>Payment Ref</span><span className={summaryVal}>{order.paymentRef}</span></div>
-                )}
-              </div>
-
-              {/* Seller */}
-              <div className={`${odCard} p-5`}>
-                <p className="mb-3.5 border-b border-[#f0f0f0] pb-3 text-[15px] font-bold text-slate-800">Seller Information</p>
-
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#C0392B_0%,#8e1c10_100%)] text-lg font-extrabold text-white shadow-[0_2px_10px_rgba(0,0,0,0.14)]">
-                    {vendorInitials}
-                  </div>
-                  <div>
-                    <div className="mb-1 text-sm font-bold text-slate-800">
-                      {vendor?.name || "Unknown seller"}
+            <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+              {/* ── Left column ── */}
+              <div className="flex flex-col gap-5">
+                {/* Product */}
+                <div className={card}>
+                  <img
+                    src={
+                      order.listing.images?.[0]
+                        ? getImageUrl(order.listing.images[0])
+                        : "https://ui-avatars.com/api/?name=" + encodeURIComponent(order.listing.title) + "&background=e2e8f0&color=64748b&size=400"
+                    }
+                    alt={order.listing.title}
+                    className="block h-[240px] w-full bg-slate-200 object-cover md:h-[300px]"
+                  />
+                  <div className="p-5">
+                    <div className="mb-1 text-base font-bold text-slate-800">{order.listing.title}</div>
+                    <div className="text-xs capitalize text-slate-400">
+                      Category: {order.listing.category.toLowerCase()}
                     </div>
-                    {kycVerified && (
-                      <span className="inline-flex items-center gap-1 rounded-[20px] border border-[#a9dfbf] bg-[#eafaf1] px-[9px] py-[3px] text-[11px] font-semibold text-[#1e8449]">
-                        <MdVerified size={11} /> Verified
-                      </span>
-                    )}
                   </div>
                 </div>
 
-                <div className="flex">
+                {/* Seller */}
+                <div className={`${card} p-5`}>
+                  <p className="mb-3.5 border-b border-slate-100 pb-3 text-[15px] font-bold text-slate-800">Seller Information</p>
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#C0392B_0%,#8e1c10_100%)] text-lg font-extrabold text-white shadow-[0_2px_10px_rgba(0,0,0,0.14)]">
+                      {vendorInitials}
+                    </div>
+                    <div>
+                      <div className="mb-1 text-sm font-bold text-slate-800">{vendor?.name || "Unknown seller"}</div>
+                      {kycVerified && (
+                        <span className="inline-flex items-center gap-1 rounded-[20px] border border-[#a9dfbf] bg-[#eafaf1] px-[9px] py-[3px] text-[11px] font-semibold text-[#1e8449]">
+                          <MdVerified size={11} /> Verified
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   <button
                     type="button"
                     className="flex w-full cursor-pointer items-center justify-center gap-[7px] rounded-[10px] border-0 bg-[linear-gradient(135deg,#27ae60_0%,#1e8449_100%)] p-3 font-[inherit] text-sm font-bold text-white shadow-[0_4px_14px_rgba(39,174,96,0.32)] transition-[opacity,transform] duration-200 hover:-translate-y-px hover:opacity-90"
@@ -486,22 +455,77 @@ export default function OrderDetailPage() {
                       window.location.href = `tel:${vendor.phone}`;
                     }}
                   >
-                    <FiPhone size={16} />
-                    Call Seller
+                    <FiPhone size={16} /> Call Seller
                   </button>
+                </div>
+
+                {/* Help */}
+                <div className={`${card} p-5`}>
+                  <div className="mb-1.5 text-[15px] font-bold text-slate-800">Need Help?</div>
+                  <div className="mb-3.5 text-[13px] leading-[1.6] text-slate-500">
+                    If you have issues with your order, please contact support.
+                  </div>
+                  <Link
+                    href="/user/help"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-[1.5px] border-indigo-500 bg-white px-5 py-2.5 text-[13px] font-semibold text-indigo-500! no-underline transition-all duration-200 hover:bg-indigo-500 hover:text-white!"
+                  >
+                    <FiHelpCircle size={15} /> Contact Support
+                  </Link>
                 </div>
               </div>
 
-              {/* Help */}
-              <div className={`${odCard} p-5`}>
-                <div className="mb-1.5 text-[15px] font-bold text-slate-800">Need Help?</div>
-                <div className="mb-3.5 flex-1 text-[13px] leading-[1.6] text-slate-500">If you have issues with your order, please contact support.</div>
-                <Link
-                  href="/user/help"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-[1.5px] border-indigo-500 bg-white px-5 py-2.5 text-[13px] font-semibold text-indigo-500! no-underline transition-all duration-200 hover:bg-indigo-500 hover:text-white!"
-                >
-                  <FiHelpCircle size={15} /> Contact Support
-                </Link>
+              {/* ── Right column ── */}
+              <div className="flex flex-col gap-5">
+                {/* Delivery / Reservation */}
+                <div className={`${card} p-5`}>
+                  <div className="mb-4 text-[15px] font-bold text-slate-800">
+                    {order.type === "RESERVATION" ? "Reservation info" : "Delivery info"}
+                  </div>
+                  {order.type === "RESERVATION" ? (
+                    <div className={infoRow}>
+                      <span className="shrink-0 text-slate-400">Reserved Until</span>
+                      <span className="text-right font-semibold text-slate-800">{formatDate(order.reservedUntil)}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className={infoRow}>
+                        <span className="shrink-0 text-slate-400">Delivery Date</span>
+                        <span className="text-right font-semibold text-slate-800">{formatDate(order.deliveryDate)}</span>
+                      </div>
+                      <div className={infoRow}>
+                        <span className="shrink-0 text-slate-400">Delivery Address</span>
+                        <span className="text-right font-semibold text-slate-800">{order.deliveryAddress || "—"}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Summary */}
+                <div className={`${card} p-5`}>
+                  <div className="mb-4 text-[15px] font-bold text-slate-800">Order Summary</div>
+                  <div className={`${summaryRow} border-b border-slate-50`}>
+                    <span>Price per unit</span>
+                    <span className={summaryVal}>NPR {order.priceAtOrder.toLocaleString()}</span>
+                  </div>
+                  <div className={`${summaryRow} border-b border-slate-50`}>
+                    <span>Quantity</span>
+                    <span className={summaryVal}>{order.quantity}</span>
+                  </div>
+                  <div className={`${summaryRow} mt-1 border-t-2 border-slate-100 pt-3.5`}>
+                    <span>Total Amount</span>
+                    <span className="text-base font-bold text-[#C0392B]">NPR {order.totalPrice.toLocaleString()}</span>
+                  </div>
+                  <div className={`${summaryRow} mt-2`}>
+                    <span>Payment Method</span>
+                    <span className={summaryVal}>{order.paymentMethod || "—"}</span>
+                  </div>
+                  {order.paymentRef && (
+                    <div className={`${summaryRow} gap-4`}>
+                      <span className="shrink-0">Payment Ref</span>
+                      <span className={`${summaryVal} break-all text-right`}>{order.paymentRef}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </main>
