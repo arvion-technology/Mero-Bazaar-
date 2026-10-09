@@ -230,7 +230,6 @@ function normalizeSeller(
 
   const s = flattenSellerSource(sellerSrc);
 
-  /* robust name extraction */
   const first = (s.firstName ?? s.first_name ?? "") as string;
   const last = (s.lastName ?? s.last_name ?? "") as string;
   const fullNameFromParts = first || last ? `${first} ${last}`.trim() : null;
@@ -245,7 +244,6 @@ function normalizeSeller(
     (s.businessName as string | undefined) ??
     "Seller";
 
-  /* robust id extraction — includes fallbackIds from the parent listing */
   const sellerId =
     s.id ??
     s._id ??
@@ -263,14 +261,48 @@ function normalizeSeller(
     fallbackIds?.owner_id ??
     "";
 
-  /* robust avatar extraction */
-  const avatar = (s.avatar ??
-    s.image ??
-    s.profileImage ??
-    s.profile_image ??
-    s.photo ??
-    s.picture ??
+  /* avatar: real URL, or the sentinel SellerCard turns into an initial circle */
+  const rawAvatar = (s.avatar ||
+    s.image ||
+    s.profileImage ||
+    s.profile_image ||
+    s.photo ||
+    s.picture ||
     null) as string | null;
+  const avatar = rawAvatar ? prefixImage(rawAvatar) : "/placeholder-avatar.png";
+
+  /* member since */
+  const joined = (s.memberSince ??
+    s.createdAt ??
+    s.joinedAt ??
+    s.member_since) as string | undefined;
+  const memberSince =
+    joined && !isNaN(new Date(joined).getTime()) ? formatDate(joined) : "N/A";
+
+  /* review count: array, number, or Prisma-style _count */
+  const counts = asRecord(s._count);
+  const reviewCount = Array.isArray(s.reviews)
+    ? s.reviews.length
+    : Number(
+        s.reviewCount ??
+          s.totalReviews ??
+          s.review_count ??
+          counts.reviews ??
+          counts.reviewsReceived ??
+          0
+      ) || 0;
+
+  /* total listings: SellerCard reads `totalListing` (singular) */
+  const totalListings =
+    Number(
+      s.totalListings ??
+        s.listingsCount ??
+        s.listingCount ??
+        s.total_listings ??
+        counts.listings ??
+        (Array.isArray(s.listings) ? s.listings.length : undefined) ??
+        0
+    ) || 0;
 
   return {
     id: String(sellerId),
@@ -285,15 +317,10 @@ function normalizeSeller(
     isPro: Boolean(s.isPro ?? s.is_pro ?? false),
     isTrusted: Boolean(s.isTrusted ?? s.is_trusted ?? false),
     rating: Number(s.rating ?? s.avgRating ?? s.stars ?? 0),
-    reviewCount: Number(
-      s.reviewCount ?? s.reviews ?? s.totalReviews ?? s.review_count ?? 0
-    ),
-    memberSince: String(
-      s.memberSince ?? s.createdAt ?? s.joinedAt ?? s.member_since ?? ""
-    ),
-    totalListings: Number(
-      s.totalListings ?? s.listingsCount ?? s.listingCount ?? s.total_listings ?? 0
-    ),
+    reviewCount,
+    memberSince,
+    totalListings,
+    totalListing: totalListings,
     responseRate: (s.responseRate ?? s.response_rate ?? "N/A") as string,
     avgResponseTime: (s.avgResponseTime ?? s.avg_response_time ?? "N/A") as string,
   };
