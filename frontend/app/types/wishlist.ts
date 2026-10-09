@@ -2,26 +2,27 @@ export interface WishlistSeller {
   id: string;
   name: string;
   image: string | null;
-  avatar?: string | null;
+  avatar: string;
   phone: string;
   email: string;
   isVerified: boolean;
-  isPro?: boolean;
-  isTrusted?: boolean;
+  isPro: boolean;
+  isTrusted: boolean;
   rating: number;
   reviewCount: number;
   memberSince: string;
   totalListings: number;
-  responseRate?: string;
-  avgResponseTime?: string;
+  totalListing: number;
+  responseRate: string;
+  avgResponseTime: string;
 }
 
 export interface WishlistReview {
   id?: string;
   reviewerName: string;
   rating: number;
-  comment?: string;
-  createdAt?: string;
+  comment: string | null;
+  createdAt: string;
 }
 
 export interface WishlistProduct {

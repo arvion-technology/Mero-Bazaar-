@@ -25,7 +25,7 @@ import { FaHeart } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import BackButton from "@/components/BackButton";
 import SellerCard from "@/components/SellerCard";
 import type { WishlistProduct, WishlistCard, WishlistReview } from "@/app/types/wishlist";
 import {
@@ -272,12 +272,9 @@ export default function WishlistItemDetail() {
       <ToastContainer position="top-right" autoClose={2000} newestOnTop closeOnClick pauseOnHover />
 
       <div className="min-h-screen bg-[#f5f6f8] pb-[60px] font-['Inter',-apple-system,BlinkMacSystemFont,sans-serif]">
-        <Link
-          href="/user/wishlist"
-          className="mx-6 mb-1 mt-4 inline-flex items-center gap-2 rounded-[10px] border-[1.5px] border-[#e0e0e0] bg-white px-3.5 py-2 text-[13px] font-semibold text-[#555] no-underline transition-all duration-200 hover:border-[#ccc] hover:bg-slate-50 hover:text-[#1a1a1a] max-[600px]:mx-3.5 max-[600px]:mt-3"
-        >
-          <FiArrowLeft size={16} /> Back to Wishlist
-        </Link>
+        <div className="mx-6 mt-4 max-[600px]:mx-3.5 max-[600px]:mt-3">
+          <BackButton />
+        </div>
 
         <nav className="border-b border-[#ececec] bg-white py-3" aria-label="Breadcrumb">
           <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-1.5 px-6 text-[13px] text-[#888] max-[600px]:px-3.5 max-[600px]:text-xs">
@@ -622,26 +619,8 @@ export default function WishlistItemDetail() {
 
             {seller ? (
               <SellerCard
-                seller={{
-                  name: seller.name,
-                  avatar: seller.avatar ?? seller.image ?? "/default-avatar.png",
-                  phone: seller.phone,
-                  isVerified: seller.isVerified,
-                  isPro: seller.isPro ?? false,
-                  isTrusted: seller.isTrusted ?? false,
-                  rating: seller.rating,
-                  reviewCount: seller.reviewCount,
-                  memberSince: seller.memberSince,
-                  totalListing: seller.totalListings,
-                  responseRate: seller.responseRate ?? "N/A",
-                  avgResponseTime: seller.avgResponseTime ?? "N/A",
-                }}
-                reviews={((product.reviews as WishlistReview[] | undefined) ?? []).map((r) => ({
-                  reviewerName: r.reviewerName,
-                  rating: r.rating,
-                  comment: r.comment ?? null,
-                  createdAt: r.createdAt ?? "",
-                }))}
+                seller={seller}
+                reviews={product.reviews ?? []}
                 listingId={product.id}
                 sellerId={seller.id}
               />
