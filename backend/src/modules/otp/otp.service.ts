@@ -92,8 +92,14 @@ export class PhoneOtpService {
     if (!isValid) {
       throw new BadRequestException('Invalid OTP.');
     }
+    // Atomic consume: if a parallel request already used this OTP, count is 0.
+    const deleted = await this.prisma.phoneOtp.deleteMany({
+      where: { id: record.id },
+    });
+    if (deleted.count === 0) {
+      throw new BadRequestException('OTP already used. Please log in again.');
+    }
 
-    await this.prisma.phoneOtp.delete({ where: { id: record.id } });
     return true;
   }
 }

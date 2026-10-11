@@ -157,8 +157,9 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
     });
-    if (!user?.phone) throw new UnauthorizedException('User not found');
-
+    if (!user?.phone || !user.isActive) {
+      throw new UnauthorizedException('User not found');
+    }
     await this.phoneOtpService.verifyOtp(user.phone, otp, OtpContext.LOGIN);
 
     await this.prisma.user.update({

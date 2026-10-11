@@ -1,10 +1,10 @@
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+  import { NextResponse } from "next/server";
+  import { readPending2fa } from "@/lib/auth";
 
-export async function GET() {
-  const cookieStore = await cookies();
-  const raw = cookieStore.get("pending_2fa")?.value;
-  const res = NextResponse.json(raw ? JSON.parse(raw) : null);
-  if (raw) res.cookies.delete("pending_2fa");
-  return res;
-}
+  export async function GET() {
+    const pending = await readPending2fa();
+    return NextResponse.json(
+      pending ? { pending: true, provider: pending.provider } : { pending: false },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  }
