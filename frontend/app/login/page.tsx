@@ -8,6 +8,7 @@ import { FaFacebook } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -68,6 +69,7 @@ export default function LoginPage() {
   const [submitted, setSubmitted] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [facebookLoading, setFacebookLoading] = useState(false);
+  const router = useRouter();
 
   const errors = validate(form);
   const err = (k: keyof Errors) => (touched[k] || submitted ? errors[k] : undefined);
@@ -101,7 +103,15 @@ export default function LoginPage() {
         window.location.href = "/";
       }, 800);
     } else {
-      toast.error("Invalid email or password");
+      // 2FA users: authorize() returns null after setting the pending_2fa cookie,
+      // so check for it before showing a credentials error.
+      const r = await fetch("/api/2fa/pending", { cache: "no-store" });
+      const d = await r.json().catch(() => ({ pending: false }));
+      if (d.pending) {
+        router.push("/auth/error");
+      } else {
+        toast.error("Invalid email or password");
+      }
     }
   };
 

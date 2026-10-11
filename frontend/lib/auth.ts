@@ -4,8 +4,64 @@ import Facebook from "next-auth/providers/facebook";
 import Credentials from "next-auth/providers/credentials";
 import type { OAuthProfile } from "next-auth/jwt";
 import { cookies, headers } from "next/headers";
+import type { User } from "next-auth";
+
+export type Pending2fa = { tempToken: string; provider: string };
+
+type OtpResult = User | null;
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
+// Dedupe OTP verification: a repeat call with the same tempToken+otp reuses the
+// first result instead of hitting the backend again (the OTP is single-use).
+const otpResults = new Map<string, { at: number; promise: Promise<OtpResult> }>();
+const PENDING_2FA_COOKIE = {
+  httpOnly: true,
+  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production",
+  maxAge: 300,
+  path: "/",
+};
+
+async function verifyOnce(
+  tempToken: string,
+  otp: string,
+  run: () => Promise<OtpResult>,
+): Promise<OtpResult> {
+  const now = Date.now();
+  for (const [k, v] of otpResults) if (now - v.at > 30_000) otpResults.delete(k);
+
+  const key = `${tempToken}:${otp}`;
+  const hit = otpResults.get(key);
+  if (hit) return hit.promise;
+
+  // Don't cache failures, so a retry with the same code can still succeed.
+  const promise = run().then(
+    (result) => {
+      if (!result) otpResults.delete(key);
+      return result;
+    },
+    (err) => {
+      otpResults.delete(key);
+      throw err;
+    },
+  );
+  otpResults.set(key, { at: now, promise });
+  return promise;
+}
+
+export async function readPending2fa(): Promise<Pending2fa | null> {
+  try {
+    const raw = (await cookies()).get("pending_2fa")?.value;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed?.tempToken !== "string") return null;
+    return { tempToken: parsed.tempToken, provider: parsed.provider ?? "credentials" };
+  } catch {
+    return null;
+  }
+}
+
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -29,6 +85,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials) return null;
 
+        (await cookies()).delete("pending_2fa");
+
         const { email, password } = credentials as {
           email: string;
           password: string;
@@ -47,7 +105,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           cookieStore.set(
             "pending_2fa",
             JSON.stringify({ tempToken: data.tempToken, provider: "credentials" }),
-            { httpOnly: true, maxAge: 300, path: "/" },
+            PENDING_2FA_COOKIE,
           );
           return null;
         }
@@ -69,55 +127,54 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       id: "otp",
       name: "OTP",
       credentials: {
-        tempToken: { label: "tempToken", type: "text" },
         otp: { label: "otp", type: "text" },
-        provider: { label: "provider", type: "text" },
       },
       async authorize(credentials) {
-        if (!credentials) return null;
+        const otp = String(credentials?.otp ?? "");
+        if (!/^\d{6}$/.test(otp)) return null;
 
-        const { tempToken, otp, provider } = credentials as {
-          tempToken: string;
-          otp: string;
-          provider?: string;
-        };
+        // Read the cookie before anything can delete it.
+        const pending = await readPending2fa();
+        if (!pending) return null;
+        const { tempToken, provider } = pending;
 
-        const res = await fetch(`${API_URL}/api/auth/2fa/verify`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ tempToken, otp }),
+        return verifyOnce(tempToken, otp, async () => {
+          const res = await fetch(`${API_URL}/api/auth/2fa/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tempToken, otp }),
+          });
+
+          if (!res.ok) return null;
+
+          const data = await res.json();
+          const accessToken = data?.accessToken ?? data?.access_token;
+
+          const profileRes = await fetch(`${API_URL}/api/user/profile/me`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          const profile = profileRes.ok ? await profileRes.json() : {};
+
+          try {
+            const cookieStore = await cookies();
+            cookieStore.delete("pending_2fa");
+          } catch {
+            // cookies() may be unavailable in some contexts;
+          }
+
+          return {
+            id: data.user.id,
+            email: data.user.email,
+            name: profile.name ?? data.user.email.split("@")[0],
+            image: profile.image ?? undefined,
+            phone: profile.phone ?? null,
+            address: profile.address ?? null,
+            role: data.user.role,
+            twoFactorEnabled: true,
+            accessToken,
+            provider: provider || "credentials",
+          };
         });
-
-        const data = await res.json();
-
-        const accessToken = data?.accessToken ?? data?.access_token;
-
-        if (!res.ok) {
-          return null;
-        }
-
-        const profileRes = await fetch(`${API_URL}/api/user/profile/me`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        const profile = profileRes.ok ? await profileRes.json() : {};
-
-        return {
-          id: data.user.id,
-          email: data.user.email,
-          name: profile.name ?? data.user.email.split("@")[0],
-          image: profile.image ?? undefined,
-          phone: profile.phone ?? null,
-          address: profile.address ?? null,
-          role: data.user.role,
-          twoFactorEnabled: true,
-          accessToken,
-          provider: provider || "credentials",
-        };
       },
     }),
   ],
@@ -129,9 +186,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   callbacks: {
     async signIn({ user, account, profile }) {
-      console.log(" SIGNIN CALLBACK ");
-      console.log("Provider:", account?.provider);
-      console.log("User:", user);
       if (account && account.provider !== "credentials" && account.provider !== "otp") {
         const p = profile as OAuthProfile;
         const email = p?.email;
@@ -147,7 +201,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             : true;
 
         if (!email || !emailVerified) {
-          console.error(`Unverified or missing email from ${account.provider}`, p);
+          console.error(`Unverified or missing email from ${account.provider}`);
           return false;
         }
 
@@ -160,15 +214,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const res = await fetch(`${API_URL}/api/user/oauth-sync`, {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "x-internal-secret": process.env.INTERNAL_API_SECRET!, 
+            "x-internal-secret": process.env.INTERNAL_API_SECRET!,
           },
           body: JSON.stringify({ email, name, image, role, userAgent, ipAddress, provider: account.provider }),
         });
         const dbUser = await res.json();
         if (!res.ok) {
-          console.error("oauth-sync failed", account.provider, dbUser);
+          console.error("oauth-sync failed", account.provider, res.status);
           return false;
         }
 
@@ -176,9 +230,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           cookieStore.set(
             "pending_2fa",
             JSON.stringify({ tempToken: dbUser.tempToken, provider: account.provider }),
-            { httpOnly: true, maxAge: 300, path: "/" },
+            PENDING_2FA_COOKIE,
           );
-          return false;
+          return "/auth-error";
         }
 
         // Stash the synced DB user on the `user` object so jwt() can read it below.
