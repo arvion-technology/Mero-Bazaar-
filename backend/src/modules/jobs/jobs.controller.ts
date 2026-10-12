@@ -32,10 +32,15 @@ export class JobsController {
     return this.jobsService.findAll(query);
   }
 
-  // Must be declared before the `:id` route so it is not captured as an id.
   @Get('filters')
   getFilters() {
     return this.jobsService.getFilterOptions();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('applied/ids')
+  appliedIds(@Request() req) {
+    return this.jobsService.getAppliedJobIds(req.user.id);
   }
 
   @Get(':id')

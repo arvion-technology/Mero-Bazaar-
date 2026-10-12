@@ -250,6 +250,13 @@ export default function JobDetailPage() {
       const res = await fetch(`/api/jobs/${id}/apply`, {
         method: "POST",
       });
+
+      if (res.status === 409) {
+        setApplied(true);
+        toast.info("You already applied to this job");
+        return;
+      }
+
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "Failed to apply");

@@ -59,6 +59,8 @@ export class NotificationsService {
       type: string;
       title: string;
       description: string;
+      entityId?: string;
+      entityType?: string;
     },
   ) {
     const notification = await this.prisma.notification.create({

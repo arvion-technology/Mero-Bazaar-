@@ -433,6 +433,7 @@ model Lead {
   @@index([leadType])
   @@index([status])
   @@index([userId])
+  @@unique([listingId, userId, leadType])
 }
 
 enum LeadType {
