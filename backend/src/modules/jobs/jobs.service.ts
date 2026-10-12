@@ -1,14 +1,29 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateJobDto } from './dto/create_job.dto';
 import { UpdateJobDto } from './dto/update_jobs.dto';
-import { LeadType, ListingCategory } from '@prisma/client';
+import {
+  LeadStatus,
+  LeadType,
+  ListingCategory,
+  ListingStatus,
+  Prisma,
+} from '@prisma/client';
 import { JobSearchDto } from 'src/search/dto/job_search.dto';
 import { assertVerifiedSeller } from '../../common/authz/seller-access';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class JobsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsService,
+  ) {}
 
   async create(dto: CreateJobDto, userId: string) {
     await assertVerifiedSeller(this.prisma, userId);
@@ -174,26 +189,48 @@ export class JobsService {
   }
 
   async applyJob(jobId: string, userId: string) {
-    await this.findOne(jobId);
+    const listing = await this.findOne(jobId);
 
-    const existing = await this.prisma.lead.findFirst({
-      where: {
-        listingId: jobId,
-        userId,
-        leadType: LeadType.APPLY,
-      },
-    });
-
-    if (existing) {
-      throw new ConflictException('You have already applied to this job');
+    if (listing.userId === userId) {
+      throw new BadRequestException('You cannot apply to your own job');
     }
-    return this.prisma.lead.create({
-      data: {
-        listingId: jobId,
-        userId,
-        leadType: LeadType.APPLY,
-      },
-    });
+    if (listing.status !== ListingStatus.ACTIVE) {
+      throw new BadRequestException(
+        'This job is no longer accepting applications',
+      );
+    }
+
+    const lead = await this.prisma.lead
+      .create({
+        data: {
+          listingId: jobId,
+          userId,
+          leadType: LeadType.APPLY,
+          status: LeadStatus.PENDING,
+        },
+      })
+      .catch((e) => {
+        if (
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === 'P2002'
+        ) {
+          throw new ConflictException('You have already applied to this job');
+        }
+        throw e;
+      });
+
+    await this.notifications
+      .create(listing.userId, {
+        category: 'LEADS',
+        type: 'NEW_APPLICATION',
+        title: 'New job application',
+        description: `Someone applied to "${listing.title}"`,
+        entityId: listing.id,
+        entityType: 'LISTING',
+      })
+      .catch(() => {});
+
+    return lead;
   }
 
   async hasApplied(jobId: string, userId: string) {
@@ -205,5 +242,13 @@ export class JobsService {
       },
     });
     return { applied: !!existing };
+  }
+
+  async getAppliedJobIds(userId: string) {
+    const rows = await this.prisma.lead.findMany({
+      where: { userId, leadType: LeadType.APPLY },
+      select: { listingId: true },
+    });
+    return { ids: rows.map((r) => r.listingId) };
   }
 }

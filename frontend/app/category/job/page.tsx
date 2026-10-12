@@ -14,7 +14,7 @@ import {
   FiBriefcase,
   FiShare2,
   FiHeart,
-  FiCheck
+  FiCheck,
 } from "react-icons/fi";
 import { FaHeart, FaBriefcase } from "react-icons/fa";
 import { JOB_TYPES, CITIES, SKILLS, JobCard } from "../../types/jobs";
@@ -29,6 +29,22 @@ const SORT_OPTIONS = [
   { value: "salary-high", label: "Salary: High to Low" },
   { value: "salary-low", label: "Salary: Low to High" },
 ];
+
+const SORT_LABEL: Record<string, string> = {
+  newest: "Newest",
+  "salary-high": "Salary: High to Low",
+  "salary-low": "Salary: Low to High",
+};
+
+const BADGE_CLASS: Record<string, string> = {
+  default: "bg-[#d1fae5] text-[#059669]",
+  part: "bg-[#dbeafe] text-[#1d4ed8]",
+  gig: "bg-[#fef3c7] text-[#d97706]",
+  construction: "bg-[#fee2e2] text-[#dc2626]",
+};
+
+const SELECT_CLASS =
+  "w-full appearance-none cursor-pointer rounded-[10px] border-[1.5px] border-[#e8e8f0] bg-[#fafafa] py-[9px] pl-[11px] pr-8 text-[13px] text-[#444] outline-none transition-colors focus:border-[#e05c3a]";
 
 export default function JobsPage() {
   const [search, setSearch] = useState("");
@@ -84,6 +100,7 @@ export default function JobsPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  // Load wishlist
   useEffect(() => {
     if (!session?.accessToken) return;
 
@@ -109,6 +126,19 @@ export default function JobsPage() {
     })();
   }, [session?.accessToken]);
 
+  // Load which jobs the user already applied to
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    fetch("/api/jobs/applied/ids")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.ids) {
+          setApplied(Object.fromEntries(d.ids.map((i: string) => [i, true])));
+        }
+      })
+      .catch(() => {});
+  }, [session?.accessToken]);
+
   const toggleFav = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -121,10 +151,7 @@ export default function JobsPage() {
     const previousState = !!favorites[id];
 
     // Instant heart UI change
-    setFavorites((prev) => ({
-      ...prev,
-      [id]: !previousState,
-    }));
+    setFavorites((prev) => ({ ...prev, [id]: !previousState }));
 
     try {
       const res = await fetch(
@@ -135,25 +162,17 @@ export default function JobsPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.accessToken}`,
           },
-          body: JSON.stringify({
-            listingId: id,
-          }),
+          body: JSON.stringify({ listingId: id }),
         },
       );
 
-      if (!res.ok) {
-        throw new Error("Failed to update wishlist");
-      }
+      if (!res.ok) throw new Error("Failed to update wishlist");
 
       const data = await res.json();
 
       // Use actual backend state
-      setFavorites((prev) => ({
-        ...prev,
-        [id]: data.favorited,
-      }));
+      setFavorites((prev) => ({ ...prev, [id]: data.favorited }));
 
-      // Toast EVERY time heart changes
       if (data.favorited) {
         toast.success("Added to wishlist");
       } else {
@@ -161,45 +180,48 @@ export default function JobsPage() {
       }
     } catch (error) {
       console.error("Wishlist error:", error);
-
       // Rollback heart
-      setFavorites((prev) => ({
-        ...prev,
-        [id]: previousState,
-      }));
-
+      setFavorites((prev) => ({ ...prev, [id]: previousState }));
       toast.error("Something went wrong. Please try again.");
     }
   };
 
-  //apply handler
+  // Apply handler
   const handleApply = async (id: string, e: React.MouseEvent) => {
-  e.preventDefault();
-  e.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
 
-  if (!session?.accessToken) {
-    toast.error("Please log in to apply");
-    return;
-  }
-
-  if (applied[id]) return; // already applied, no-op
-
-  try {
-    const res = await fetch(`/api/jobs/${id}/apply`, {
-      method: "POST",
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error ?? "Failed to apply");
+    if (!session?.accessToken) {
+      toast.error("Please log in to apply");
+      return;
     }
 
-    setApplied((prev) => ({ ...prev, [id]: true }));
-    toast.success("Application submitted");
-  } catch (err) {
-    toast.error(err instanceof Error ? err.message : "Something went wrong, please try again");
-  }
-};
+    if (applied[id]) return; // already applied, no-op
+
+    try {
+      const res = await fetch(`/api/jobs/${id}/apply`, { method: "POST" });
+
+      if (res.status === 409) {
+        setApplied((prev) => ({ ...prev, [id]: true }));
+        toast.info("You already applied to this job");
+        return;
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Failed to apply");
+      }
+
+      setApplied((prev) => ({ ...prev, [id]: true }));
+      toast.success("Application submitted");
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong, please try again",
+      );
+    }
+  };
 
   const shareJob = async (job: JobCard, e: React.MouseEvent) => {
     e.preventDefault();
@@ -223,7 +245,7 @@ export default function JobsPage() {
       // Desktop fallback
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(jobUrl);
-        alert("Job link copied!");
+        toast.success("Job link copied!");
         return;
       }
 
@@ -234,7 +256,6 @@ export default function JobsPage() {
       if (error instanceof DOMException && error.name === "AbortError") {
         return;
       }
-
       console.error("Job share failed:", error);
     }
   };
@@ -265,8 +286,7 @@ export default function JobsPage() {
         );
 
         const data = await api.getJobs(params);
-        const mapped = data.map(toJobCard);
-        setJobs(mapped);
+        setJobs(data.map(toJobCard));
       } catch (err) {
         console.error(err);
       } finally {
@@ -291,12 +311,6 @@ export default function JobsPage() {
     return 0; // newest (default from API)
   });
 
-  const sortLabel: Record<string, string> = {
-    newest: "Newest",
-    "salary-high": "Salary: High to Low",
-    "salary-low": "Salary: Low to High",
-  };
-
   return (
     <>
       <ToastContainer
@@ -306,190 +320,33 @@ export default function JobsPage() {
         closeOnClick
         pauseOnHover
       />
-      <style>{`
-        .jp-wrap { background: #f4f5f7; min-height: 100vh; font-family: 'Inter', -apple-system, sans-serif; }
-        .jp-hero { position: relative; height: 250px; overflow: hidden; display: flex; align-items: center; }
-        .jp-hero-bg { position: absolute; inset: 0; background: url('/job1.jpg') center / cover no-repeat; filter: brightness(0.52); }
-        .jp-hero-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(10,30,90,0.75) 0%, rgba(5,15,50,0.5) 100%); }
-        .jp-hero-wm { position: absolute; bottom: -10px; left: 28px; font-size: clamp(60px,10vw,110px); font-weight: 900; color: rgba(255,255,255,0.05); line-height: 1; pointer-events: none; user-select: none; letter-spacing: -3px; }
-        .jp-hero-inner { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 0 24px; width: 100%; }
-        .jp-hero-tag { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.25); color: #fff; font-size: 11.5px; font-weight: 600; padding: 4px 13px; border-radius: 20px; margin-bottom: 10px; backdrop-filter: blur(6px); }
-        .jp-hero h1 { font-size: clamp(26px,4vw,44px); font-weight: 900; color: #fff; margin: 0 0 6px; line-height: 1.18; text-shadow: 0 2px 16px rgba(0,0,0,0.4); }
-        .jp-hero-sub { color: rgba(255,255,255,0.75); font-size: 14px; margin: 0 0 20px; }
-        .jp-search-wrap { position: relative; max-width: 520px; }
-        .jp-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #aaa; pointer-events: none; }
-        .jp-search { width: 100%; padding: 13px 16px 13px 44px; background: rgba(255,255,255,0.97); border: none; border-radius: 12px; font-size: 14px; color: #333; font-family: inherit; outline: none; box-shadow: 0 6px 28px rgba(0,0,0,0.22); transition: box-shadow 0.2s; }
-        .jp-search:focus { box-shadow: 0 6px 36px rgba(0,0,0,0.32); }
-        .jp-search::placeholder { color: #bbb; }
-        .jp-body { max-width: 1200px; margin: 0 auto; padding: 24px 24px 80px; }
-        .jp-layout { display: flex; gap: 22px; align-items: flex-start; }
-        .jp-sidebar { width: 220px; flex-shrink: 0; background: #fff; border-radius: 16px; border: 1.5px solid #e8e8f0; overflow: hidden; position: sticky; top: 56px; box-shadow: 0 2px 14px rgba(0,0,0,0.07); }
-        .jsb-head { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; background: linear-gradient(90deg, #e05c3a, #c0392b); cursor: pointer; }
-        .jsb-head-title { font-size: 16px; font-weight: 800; color: #fff; }
-        .jsb-head-arrow { width: 28px; height: 28px; background: rgba(255,255,255,0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; }
-        .jsb-section { padding: 13px 16px; border-bottom: 1.5px solid #f2f2f5; }
-        .jsb-section:last-of-type { border-bottom: none; }
-        .jsb-title { font-size: 14px; font-weight: 800; color: #1a1a1a; margin: 0 0 9px; }
-        .jsb-rows { display: flex; flex-direction: column; gap: 7px; }
-        .jsb-row { display: flex; align-items: center; gap: 9px; cursor: pointer; font-size: 13.5px; color: #444; font-weight: 500; user-select: none; }
-        .jsb-row input[type=checkbox] { accent-color: #e05c3a; width: 15px; height: 15px; cursor: pointer; }
-        .jsb-row.checked { color: #e05c3a; font-weight: 600; }
-        .jsb-select { width: 100%; padding: 9px 32px 9px 11px; border: 1.5px solid #e8e8f0; border-radius: 10px; font-size: 13px; color: #444; font-family: inherit; background: #fafafa; appearance: none; outline: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 11px center; transition: border-color 0.2s; }
-        .jsb-select:focus { border-color: #e05c3a; }
-        .jsb-salary-row { display: flex; align-items: center; gap: 6px; }
-        .jsb-salary-input { flex: 1; padding: 9px 11px; border: 1.5px solid #e8e8f0; border-radius: 10px; font-size: 13px; color: #444; font-family: inherit; outline: none; transition: border-color 0.2s; }
-        .jsb-salary-input:focus { border-color: #e05c3a; }
-        .jsb-salary-wrap { position: relative; flex: 1; }
-        .jsb-salary-chevron { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: #999; pointer-events: none; }
-        .jsb-apply { display: block; width: calc(100% - 32px); margin: 12px 16px; padding: 11px; text-align: center; background: linear-gradient(90deg, #e05c3a, #c0392b); color: #fff; font-size: 13.5px; font-weight: 800; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(192,57,43,0.3); transition: opacity 0.18s; }
-        .jsb-apply:hover { opacity: 0.88; }
-        .jp-right { flex: 1; min-width: 0; }
-        .jp-results-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
-        .jp-count { font-size: 14px; color: #555; font-weight: 500; }
-        .jp-count strong { color: #111; font-weight: 800; }
 
-        /* ── CUSTOM SORT DROPDOWN (No overflow issues) ── */
-        .jp-sort-dropdown { position: relative; }
-        .jp-sort-btn {
-          display: flex; align-items: center; gap: 8px;
-          padding: 9px 14px;
-          background: #fff; border: 1.5px solid #e0e0ec;
-          border-radius: 10px; font-size: 13px; font-weight: 600;
-          color: #333; cursor: pointer; font-family: inherit;
-          transition: border-color 0.2s;
-        }
-        .jp-sort-btn:hover { border-color: #bbb; }
-        .jp-sort-menu {
-          position: absolute; top: calc(100% + 6px); right: 0;
-          min-width: 190px;
-          background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-          z-index: 200;
-          overflow: hidden;
-          animation: sortFade 0.15s ease;
-        }
-        @keyframes sortFade {
-          from { opacity: 0; transform: translateY(-4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .jp-sort-option {
-          padding: 10px 16px; font-size: 13px; color: #444;
-          cursor: pointer; transition: all 0.15s;
-          border-bottom: 1px solid #f5f5f5;
-        }
-        .jp-sort-option:last-child { border-bottom: none; }
-        .jp-sort-option:hover { background: #fff1f2; color: #e05c3a; }
-        .jp-sort-option.active { background: #e05c3a; color: #fff; }
-
-        .jp-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-        .jp-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; gap: 16px; }
-        .jp-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
-        .jp-card-save {
-  position: absolute;
-  top: 9px;
-  right: 9px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.94);
-  border: none;
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
-  transition: transform 0.18s, background 0.18s;
-  padding: 0;
-  z-index: 3;
-}
-
-.jp-card-save:hover {
-  transform: scale(1.08);
-  background: #fff;
-}
-
-.jp-card-share {
-  position: absolute;
-  top: 9px;
-  right: 58px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.94);
-  border: none;
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  color: #64748b;
-
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
-  transition: transform 0.18s, background 0.18s, color 0.18s;
-  padding: 0;
-  z-index: 3;
-}
-
-.jp-card-share:hover {
-  transform: scale(1.08);
-  background: #fff;
-  color: #b91c1c;
-}       
-        .jp-card-body-row { display: flex; align-items: flex-start; gap: 16px; }
-        .jp-thumb { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid #e2e8f0; background: #f7fafc; }
-        .jp-card-main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-        .jp-card-title { font-size: 17px; font-weight: 700; color: #000; margin: 0; line-height: 1.25; }
-        .jp-card-company { font-size: 13.5px; color: #333; margin: 0; font-weight: 400; }
-        .jp-card-salary { font-size: 15px; font-weight: 700; color: #ff3b30; margin: 0; }
-        .jp-card-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 2px; }
-        .jp-card-location { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #777; }
-        .jp-type-badge { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 20px; background: #d1fae5; color: #059669; }
-        .jp-type-badge.part { background: #dbeafe; color: #1d4ed8; }
-        .jp-type-badge.gig { background: #fef3c7; color: #d97706; }
-        .jp-type-badge.construction { background: #fee2e2; color: #dc2626; }
-        .jp-skills { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px; }
-        .jp-skill { font-size: 12px; font-weight: 500; color: #444; background: #f1f3f5; border: 1px solid #e2e8f0; padding: 3px 9px; border-radius: 6px; }
-        .jp-skill-more { font-size: 12px; font-weight: 600; color: #666; background: #f1f3f5; border: 1px solid #e2e8f0; padding: 3px 8px; border-radius: 6px; }
-        .jp-card-actions { display: flex; gap: 12px; margin-top: auto; }
-        .jp-btn { flex: 1; padding: 10px 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; font-weight: 700; border-radius: 8px; cursor: pointer; font-family: inherit; transition: background 0.15s, color 0.15s, border-color 0.15s; text-decoration: none; }
-        .jp-btn-apply { background: #ff3b30; color: #fff; border: 1px solid #ff3b30; }
-        .jp-btn-apply:hover { background: #e03126; border-color: #e03126; }
-        .jp-btn-call { background: #fff; color: #ff3b30; border: 1px solid #ff3b30; }
-        .jp-btn-call:hover { background: #fff0f0; }
-        .jp-btn-chat { background: #fff; color: #ff3b30; border: 1px solid #ff3b30; }
-        .jp-btn-chat:hover { background: #fff0f0; }
-
-        /* ── EMPTY / LOADING ── */
-        .jp-empty { text-align: center; padding: 60px 20px; color: #aaa; }
-        .jp-empty-icon { margin-bottom: 14px; color: #bbb; }
-        .jp-empty p { font-size: 16px; font-weight: 700; color: #555; margin: 0 0 6px; }
-        .jp-empty span { font-size: 13px; color: #888; }
-
-        @media (max-width: 900px) { .jp-sidebar { display: none; } }
-        @media (max-width: 768px) { .jp-list { grid-template-columns: 1fr; } }
-        @media (max-width: 600px) { .jp-body { padding: 16px 14px 60px; } .jp-hero { height: 220px; } .jp-card-body-row { gap: 12px; } .jp-thumb { width: 64px; height: 64px; } .jp-card-title { font-size: 16px; } .jp-btn { padding: 9px 8px; font-size: 12.5px; } }
-      `}</style>
-
-      <div className="jp-wrap">
+      <div className="min-h-screen bg-[#f4f5f7] font-sans">
         {/* HERO */}
-        <section className="jp-hero">
-          <div className="jp-hero-bg" />
-          <div className="jp-hero-overlay" />
-          <div className="jp-hero-wm">Jobs</div>
-          <div className="jp-hero-inner">
-            <div className="jp-hero-tag">
+        <section className="relative flex h-[220px] items-center overflow-hidden sm:h-[250px]">
+          <div className="absolute inset-0 bg-[url('/job1.jpg')] bg-cover bg-center brightness-[0.52]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[rgba(10,30,90,0.75)] to-[rgba(5,15,50,0.5)]" />
+          <div className="pointer-events-none absolute -bottom-2.5 left-7 select-none text-[clamp(60px,10vw,110px)] font-black leading-none tracking-[-3px] text-white/5">
+            Jobs
+          </div>
+          <div className="relative z-[2] mx-auto w-full max-w-[1200px] px-6">
+            <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-[13px] py-1 text-[11.5px] font-semibold text-white backdrop-blur-sm">
               <FaBriefcase size={11} />
               Nepal&apos;s #1 Job Portal
             </div>
-            <h1>Find Your Dream Job</h1>
-            <p className="jp-hero-sub">Browse thousands of Jobs across Nepal</p>
-            <div className="jp-search-wrap">
-              <FiSearch className="jp-search-icon" size={17} />
+            <h1 className="mb-1.5 text-[clamp(26px,4vw,44px)] font-black leading-[1.18] text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.4)]">
+              Find Your Dream Job
+            </h1>
+            <p className="mb-5 text-sm text-white/75">
+              Browse thousands of Jobs across Nepal
+            </p>
+            <div className="relative max-w-[520px]">
+              <FiSearch
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#aaa]"
+                size={17}
+              />
               <input
-                className="jp-search"
+                className="w-full rounded-xl border-none bg-white/95 py-[13px] pl-11 pr-4 text-sm text-[#333] shadow-[0_6px_28px_rgba(0,0,0,0.22)] outline-none transition-shadow placeholder:text-[#bbb] focus:shadow-[0_6px_36px_rgba(0,0,0,0.32)]"
                 placeholder="Search job, Companies, Location............"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -499,89 +356,116 @@ export default function JobsPage() {
         </section>
 
         {/* BODY */}
-        <div className="jp-body">
-          <div className="jp-layout">
+        <div className="mx-auto max-w-[1200px] px-3.5 pb-[60px] pt-4 sm:px-6 sm:pb-20 sm:pt-6">
+          <div className="flex items-start gap-[22px]">
             {/* SIDEBAR */}
-            <aside className="jp-sidebar">
-              <div className="jsb-head">
-                <span className="jsb-head-title">Filters</span>
-                <span className="jsb-head-arrow">›</span>
+            <aside className="sticky top-14 w-[220px] shrink-0 overflow-hidden rounded-2xl border-[1.5px] border-[#e8e8f0] bg-white shadow-[0_2px_14px_rgba(0,0,0,0.07)] max-[900px]:hidden">
+              <div className="flex items-center justify-between bg-gradient-to-r from-[#e05c3a] to-[#c0392b] px-4 py-[13px]">
+                <span className="text-base font-extrabold text-white">
+                  Filters
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white/20 text-sm font-bold text-white">
+                  ›
+                </span>
               </div>
-              <div className="jsb-section">
-                <p className="jsb-title">Job Type</p>
-                <div className="jsb-rows">
-                  {jobTypes.map((t) => (
-                    <label
-                      key={t}
-                      className={`jsb-row${selectedTypes.includes(t) ? " checked" : ""}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedTypes.includes(t)}
-                        onChange={() => toggleType(t)}
-                      />
-                      {t}
-                    </label>
-                  ))}
+
+              <div className="border-b-[1.5px] border-[#f2f2f5] px-4 py-[13px]">
+                <p className="mb-[9px] text-sm font-extrabold text-[#1a1a1a]">
+                  Job Type
+                </p>
+                <div className="flex flex-col gap-[7px]">
+                  {jobTypes.map((t) => {
+                    const checked = selectedTypes.includes(t);
+                    return (
+                      <label
+                        key={t}
+                        className={`flex cursor-pointer select-none items-center gap-[9px] text-[13.5px] ${
+                          checked
+                            ? "font-semibold text-[#e05c3a]"
+                            : "font-medium text-[#444]"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="h-[15px] w-[15px] cursor-pointer accent-[#e05c3a]"
+                          checked={checked}
+                          onChange={() => toggleType(t)}
+                        />
+                        {t}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
-              <div className="jsb-section">
-                <p className="jsb-title">City</p>
-                <select
-                  className="jsb-select"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                >
-                  <option value="">Select city</option>
-                  {cities.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+
+              <div className="border-b-[1.5px] border-[#f2f2f5] px-4 py-[13px]">
+                <p className="mb-[9px] text-sm font-extrabold text-[#1a1a1a]">
+                  City
+                </p>
+                <div className="relative">
+                  <select
+                    className={SELECT_CLASS}
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  >
+                    <option value="">Select city</option>
+                    {cities.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <FiChevronDown
+                    size={12}
+                    className="pointer-events-none absolute right-[11px] top-1/2 -translate-y-1/2 text-[#888]"
+                  />
+                </div>
               </div>
-              <div className="jsb-section">
-                <p className="jsb-title">Skill / Keyword</p>
-                <select
-                  className="jsb-select"
-                  value={skill}
-                  onChange={(e) => setSkill(e.target.value)}
-                >
-                  <option value="">Select skill</option>
-                  {skills.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+
+              <div className="border-b-[1.5px] border-[#f2f2f5] px-4 py-[13px]">
+                <p className="mb-[9px] text-sm font-extrabold text-[#1a1a1a]">
+                  Skill / Keyword
+                </p>
+                <div className="relative">
+                  <select
+                    className={SELECT_CLASS}
+                    value={skill}
+                    onChange={(e) => setSkill(e.target.value)}
+                  >
+                    <option value="">Select skill</option>
+                    {skills.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  <FiChevronDown
+                    size={12}
+                    className="pointer-events-none absolute right-[11px] top-1/2 -translate-y-1/2 text-[#888]"
+                  />
+                </div>
               </div>
-              <div className="jsb-section">
-                <p className="jsb-title">Minimum Salary</p>
-                <div className="jsb-salary-row">
+
+              <div className="px-4 py-[13px]">
+                <p className="mb-[9px] text-sm font-extrabold text-[#1a1a1a]">
+                  Minimum Salary
+                </p>
+                <div className="flex items-center gap-1.5">
                   <input
                     type="number"
-                    className="jsb-salary-input"
+                    className="min-w-0 flex-1 rounded-[10px] border-[1.5px] border-[#e8e8f0] px-[11px] py-[9px] text-[13px] text-[#444] outline-none transition-colors focus:border-[#e05c3a]"
                     placeholder="e.g. 20,000"
                     value={minSalary}
                     onChange={(e) => setMinSalary(e.target.value)}
                   />
-                  <div className="jsb-salary-wrap" style={{ flex: "0 0 auto" }}>
-                    <select
-                      className="jsb-select"
-                      style={{
-                        width: "auto",
-                        paddingRight: 28,
-                        paddingLeft: 8,
-                      }}
-                    >
-                      <option>/month</option>
-                    </select>
-                    <FiChevronDown size={11} className="jsb-salary-chevron" />
-                  </div>
+                  <span className="shrink-0 text-[13px] text-[#888]">
+                    /month
+                  </span>
                 </div>
               </div>
+
               <button
-                className="jsb-apply"
+                className="mx-4 my-3 block w-[calc(100%-32px)] cursor-pointer rounded-[10px] border-none bg-gradient-to-r from-[#e05c3a] to-[#c0392b] p-[11px] text-center text-[13.5px] font-extrabold text-white shadow-[0_4px_14px_rgba(192,57,43,0.3)] transition-opacity hover:opacity-90"
                 onClick={() => setFilterNonce((n) => n + 1)}
               >
                 Apply Filters
@@ -589,34 +473,39 @@ export default function JobsPage() {
             </aside>
 
             {/* RIGHT */}
-            <div className="jp-right">
-              <div className="jp-results-bar">
-                <span className="jp-count">
-                  <strong>{loading ? "…" : sortedJobs.length}</strong> results
-                  found
+            <div className="min-w-0 flex-1">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2.5">
+                <span className="text-sm font-medium text-[#555]">
+                  <strong className="font-extrabold text-[#111]">
+                    {loading ? "…" : sortedJobs.length}
+                  </strong>{" "}
+                  results found
                 </span>
 
-                {/* ── CUSTOM SORT DROPDOWN (fixes overflow) ── */}
-                <div className="jp-sort-dropdown" ref={sortRef}>
+                {/* Sort dropdown */}
+                <div className="relative" ref={sortRef}>
                   <button
-                    className="jp-sort-btn"
+                    className="flex cursor-pointer items-center gap-2 rounded-[10px] border-[1.5px] border-[#e0e0ec] bg-white px-3.5 py-[9px] text-[13px] font-semibold text-[#333] transition-colors hover:border-[#bbb]"
                     onClick={() => setIsSortOpen((v) => !v)}
                   >
-                    {sortLabel[sort]}
+                    {SORT_LABEL[sort]}
                     <FiChevronDown
                       size={14}
-                      style={{
-                        transform: isSortOpen ? "rotate(180deg)" : "none",
-                        transition: "transform 0.2s",
-                      }}
+                      className={`transition-transform duration-200 ${
+                        isSortOpen ? "rotate-180" : ""
+                      }`}
                     />
                   </button>
                   {isSortOpen && (
-                    <div className="jp-sort-menu">
+                    <div className="absolute right-0 top-[calc(100%+6px)] z-[200] min-w-[190px] overflow-hidden rounded-[10px] border-[1.5px] border-[#e0e0e0] bg-white shadow-[0_10px_40px_rgba(0,0,0,0.15)]">
                       {SORT_OPTIONS.map((opt) => (
                         <div
                           key={opt.value}
-                          className={`jp-sort-option${sort === opt.value ? " active" : ""}`}
+                          className={`cursor-pointer border-b border-[#f5f5f5] px-4 py-2.5 text-[13px] transition-colors last:border-b-0 ${
+                            sort === opt.value
+                              ? "bg-[#e05c3a] text-white"
+                              : "text-[#444] hover:bg-[#fff1f2] hover:text-[#e05c3a]"
+                          }`}
                           onClick={() => {
                             setSort(opt.value);
                             setIsSortOpen(false);
@@ -631,31 +520,39 @@ export default function JobsPage() {
               </div>
 
               {loading ? (
-                <div className="jp-empty">
-                  <div className="jp-empty-icon">
-                    <FiLoader size={52} />
+                <div className="px-5 py-[60px] text-center">
+                  <div className="mb-3.5 flex justify-center text-[#bbb]">
+                    <FiLoader size={52} className="animate-spin" />
                   </div>
-                  <p>Loading jobs...</p>
+                  <p className="mb-1.5 text-base font-bold text-[#555]">
+                    Loading jobs...
+                  </p>
                 </div>
               ) : sortedJobs.length === 0 ? (
-                <div className="jp-empty">
-                  <div className="jp-empty-icon">
+                <div className="px-5 py-[60px] text-center">
+                  <div className="mb-3.5 flex justify-center text-[#bbb]">
                     <FiBriefcase size={52} />
                   </div>
-                  <p>No jobs found</p>
-                  <span>Try adjusting your filters or search term</span>
+                  <p className="mb-1.5 text-base font-bold text-[#555]">
+                    No jobs found
+                  </p>
+                  <span className="text-[13px] text-[#888]">
+                    Try adjusting your filters or search term
+                  </span>
                 </div>
               ) : (
-                <div className="jp-list">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {sortedJobs.map((j) => {
                     const isFav = !!favorites[j.id];
-                    const typeClass = j.type.toLowerCase().includes("part")
-                      ? "part"
-                      : j.type.toLowerCase().includes("gig")
-                        ? "gig"
-                        : j.type.toLowerCase().includes("labour")
-                          ? "construction"
-                          : "";
+                    const isApplied = !!applied[j.id];
+                    const t = j.type.toLowerCase();
+                    const badge = t.includes("part")
+                      ? BADGE_CLASS.part
+                      : t.includes("gig")
+                        ? BADGE_CLASS.gig
+                        : t.includes("labour")
+                          ? BADGE_CLASS.construction
+                          : BADGE_CLASS.default;
                     const visibleSkills = j.skills.slice(
                       0,
                       EXTRA_SKILLS_THRESHOLD,
@@ -666,19 +563,12 @@ export default function JobsPage() {
                       <Link
                         key={j.id}
                         href={`/category/job/${j.id}`}
-                        className="jp-card"
-                        style={{
-                          textDecoration: "none",
-                          color: "inherit",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "16px",
-                        }}
+                        className="relative flex flex-col gap-4 rounded-xl border border-[#e2e8f0] bg-white p-4 text-inherit no-underline shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_25px_rgba(0,0,0,0.06)]"
                       >
                         {/* Favorite / Wishlist */}
                         <button
                           type="button"
-                          className="jp-card-save"
+                          className="absolute right-[9px] top-[9px] z-[3] flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-none bg-white/95 p-0 shadow-[0_2px_10px_rgba(0,0,0,0.16)] transition hover:scale-[1.08] hover:bg-white"
                           aria-label="Save job"
                           title="Save job"
                           onClick={(e) => toggleFav(j.id, e)}
@@ -693,7 +583,7 @@ export default function JobsPage() {
                         {/* Share */}
                         <button
                           type="button"
-                          className="jp-card-share"
+                          className="absolute right-[58px] top-[9px] z-[3] flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-none bg-white/95 p-0 text-[#64748b] shadow-[0_2px_10px_rgba(0,0,0,0.16)] transition hover:scale-[1.08] hover:bg-white hover:text-[#b91c1c]"
                           aria-label={`Share ${j.title}`}
                           title="Share job"
                           onClick={(e) => shareJob(j, e)}
@@ -701,44 +591,58 @@ export default function JobsPage() {
                           <FiShare2 size={16} />
                         </button>
 
-                        <div className="jp-card-body-row">
-                          { }
-                          {/* <img src={j.thumb} alt={j.company} className="jp-thumb" /> */}
-                          <div className="jp-card-main-content">
-                            <p className="jp-card-title">{j.title}</p>
-                            <p className="jp-card-company">{j.company}</p>
-                            <p className="jp-card-salary">{j.salary}</p>
-                            <div className="jp-card-meta">
-                              <span className="jp-card-location">
+                        <div className="flex items-start gap-3 sm:gap-4">
+                          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                            <p className="m-0 pr-24 text-base font-bold leading-tight text-black sm:text-[17px]">
+                              {j.title}
+                            </p>
+                            <p className="m-0 text-[13.5px] font-normal text-[#333]">
+                              {j.company}
+                            </p>
+                            <p className="m-0 text-[15px] font-bold text-[#ff3b30]">
+                              {j.salary}
+                            </p>
+                            <div className="mt-0.5 flex flex-wrap items-center gap-2.5">
+                              <span className="flex items-center gap-1 text-[13px] text-[#777]">
                                 <FiMapPin size={12} color="#777" />
                                 {j.location}
                               </span>
-                              <span className={`jp-type-badge ${typeClass}`}>
+                              <span
+                                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge}`}
+                              >
                                 {j.type}
                               </span>
                             </div>
-                            <div className="jp-skills">
+                            <div className="mt-1 flex flex-wrap items-center gap-1.5">
                               {visibleSkills.map((sk) => (
-                                <span key={sk} className="jp-skill">
+                                <span
+                                  key={sk}
+                                  className="rounded-md border border-[#e2e8f0] bg-[#f1f3f5] px-[9px] py-[3px] text-xs font-medium text-[#444]"
+                                >
                                   {sk}
                                 </span>
                               ))}
                               {extraCount > 0 && (
-                                <span className="jp-skill-more">
+                                <span className="rounded-md border border-[#e2e8f0] bg-[#f1f3f5] px-2 py-[3px] text-xs font-semibold text-[#666]">
                                   +{extraCount}
                                 </span>
                               )}
                             </div>
                           </div>
                         </div>
-                        <div className="jp-card-actions">
-                          {/* Apply for jobs*/}
+
+                        <div className="mt-auto flex gap-3">
+                          {/* Apply */}
                           <span
-                            className="jp-btn jp-btn-apply"
+                            role="button"
+                            className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border px-2 py-[9px] text-[12.5px] font-bold text-white transition-colors sm:px-3 sm:py-2.5 sm:text-[13.5px] ${
+                              isApplied
+                                ? "border-[#27ae60] bg-[#27ae60]"
+                                : "border-[#ff3b30] bg-[#ff3b30] hover:border-[#e03126] hover:bg-[#e03126]"
+                            }`}
                             onClick={(e) => handleApply(j.id, e)}
-                            style={applied[j.id] ? { background: "#27ae60", borderColor: "#27ae60" } : undefined}
                           >
-                            {applied[j.id] ? (
+                            {isApplied ? (
                               <>
                                 <FiCheck size={14} /> Applied
                               </>
@@ -749,9 +653,10 @@ export default function JobsPage() {
                             )}
                           </span>
 
-                          {/* Call — span with onClick, not <a>, because card is already a Link */}
+                          {/* Call: span, not <a>, because the card is already a Link */}
                           <span
-                            className="jp-btn jp-btn-call"
+                            role="button"
+                            className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#ff3b30] bg-white px-2 py-[9px] text-[12.5px] font-bold text-[#ff3b30] transition-colors hover:bg-[#fff0f0] sm:px-3 sm:py-2.5 sm:text-[13.5px]"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -761,10 +666,10 @@ export default function JobsPage() {
                             <FiPhone size={14} /> Call
                           </span>
 
-                          {/* Chat — button is fine */}
+                          {/* Chat */}
                           <button
                             type="button"
-                            className="jp-btn jp-btn-chat"
+                            className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#ff3b30] bg-white px-2 py-[9px] text-[12.5px] font-bold text-[#ff3b30] transition-colors hover:bg-[#fff0f0] sm:px-3 sm:py-2.5 sm:text-[13.5px]"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
