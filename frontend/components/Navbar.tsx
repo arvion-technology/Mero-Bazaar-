@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { TbGridDots } from "react-icons/tb";
-import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
+import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX, FiUser, FiLogOut, FiHeart, FiShoppingCart } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { activityLabel, isKnownActivity } from "@/lib/activityLabel";
 import { useNotificationSocket } from "@/lib/notificationSocket";
@@ -52,6 +52,9 @@ const chevronOpen = "[transform:rotate(180deg)]";
 
 const avatarImg = "w-full h-full object-cover";
 
+const iconBtn =
+  "relative bg-transparent border-0 cursor-pointer text-[#555] p-[5px] flex items-center rounded-full [transition:background_0.15s,color_0.15s] hover:bg-[#f5f5f5] hover:text-[#111]";
+
 const profileItemBase =
   "flex items-center gap-2.5 py-[9px] px-3 text-[13px] font-medium no-underline rounded-lg cursor-pointer [transition:background_0.15s,color_0.15s] border-0 bg-transparent w-full text-left";
 const profileItemIdle = "text-[#444] hover:bg-[#fff5f5] hover:text-[#C0392B]";
@@ -92,6 +95,21 @@ export default function Navbar() {
     } else {
       router.push("/user/dashboard");
     }
+  };
+
+  // wishlist: everyone except admin. cart: buyers only (no vendor/admin)
+  const role = session?.user?.role;
+  const showWishlist = role !== "ADMIN";
+  const showCart = role !== "ADMIN" && role !== "VENDOR";
+
+  const goProtected = (href: string) => {
+    if (status === "loading") return;
+    if (!session) {
+      router.push("/register");
+      return;
+    }
+    setShowMobileMenu(false);
+    router.push(href);
   };
 
   useEffect(() => {
@@ -321,11 +339,22 @@ export default function Navbar() {
             </div> */}
           </div>
 
-          {/* notifications */}
+          {/* wishlist, cart, notifications */}
           <div className="flex items-center gap-3.5 ml-auto shrink-0 max-[900px]:!hidden">
+            {showWishlist && (
+              <button className={iconBtn} aria-label="Wishlist" onClick={() => goProtected("/user/wishlist")}>
+                <FiHeart size={20} />
+              </button>
+            )}
+            {showCart && (
+              <button className={iconBtn} aria-label="Cart" onClick={() => goProtected("/cart")}>
+                <FiShoppingCart size={20} />
+              </button>
+            )}
+
             <div ref={notifRef} style={{ position: "relative" }}>
               <button
-                className="relative bg-transparent border-0 cursor-pointer text-[#555] p-[5px] flex items-center rounded-full [transition:background_0.15s,color_0.15s] hover:bg-[#f5f5f5] hover:text-[#111]"
+                className={iconBtn}
                 aria-label="Notifications"
                 onClick={() => {
                   if (!session) {
@@ -441,6 +470,23 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               )
+            )}
+
+            {showWishlist && (
+              <button
+                className={`${mobileLink} w-full text-left bg-transparent border-x-0 border-t-0 cursor-pointer`}
+                onClick={() => goProtected("/user/wishlist")}
+              >
+                Wishlist
+              </button>
+            )}
+            {showCart && (
+              <button
+                className={`${mobileLink} w-full text-left bg-transparent border-x-0 border-t-0 cursor-pointer`}
+                onClick={() => goProtected("/cart")}
+              >
+                Cart
+              </button>
             )}
 
             <button
