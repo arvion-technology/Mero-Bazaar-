@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
 import {
   FiHeart,
@@ -17,12 +17,38 @@ import { FaHeart } from "react-icons/fa";
 import { api } from "@/lib/api";
 import { toJobDetail, toJobCard } from "@/lib/adapter";
 import type { JobDetail } from "@/app/types/listing";
-import type { JobCard, JobListing, RawSeller, SellerLike, Review, RawJobResponse, SellerReview } from "../../../types/jobs";
+import type {
+  JobCard,
+  JobListing,
+  RawJobResponse,
+  Review,
+  SellerLike,
+  SellerReview,
+} from "../../../types/jobs";
 import SellerCard from "@/components/SellerCard";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useRouter } from "next/navigation";
+
+// shared class strings
+const card = "bg-white rounded-2xl shadow-[0_2px_14px_rgba(0,0,0,0.07)]";
+const bcLink =
+  "text-[#1a5fd4] no-underline font-medium transition-opacity duration-200 hover:opacity-75 hover:underline";
+const actionBtnBase =
+  "w-[34px] h-[34px] p-0 rounded-full border-[1.5px] cursor-pointer flex items-center justify-center appearance-none [transition:background_0.2s,border-color_0.2s,transform_0.15s] hover:scale-[1.08] focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed";
+const actionBtnIdle =
+  "border-[#e0e0e0] bg-white text-[#555] hover:bg-[#f5f5f5] hover:border-[#ccc]";
+const actionBtnFav = "border-[#e74c3c] bg-[#fff5f5]";
+const specChip =
+  "flex flex-col items-center gap-[5px] bg-[#f8f9fb] rounded-[10px] pt-3 px-1.5 pb-2.5 border border-[#eef0f3] text-center [transition:background_0.2s,border-color_0.2s] hover:bg-[#f0f2f8] hover:border-[#d9dde8]";
+const specIcon =
+  "w-[34px] h-[34px] flex items-center justify-center bg-white rounded-lg shadow-[0_1px_4px_rgba(0,0,0,0.07)]";
+const applyBtnBase =
+  "flex-none min-w-[160px] py-3 px-5 text-white text-[14px] font-bold border-0 rounded-[10px] flex items-center justify-center gap-[7px] [transition:opacity_0.2s,transform_0.15s]";
+const applyBtnIdle =
+  "cursor-pointer bg-[linear-gradient(135deg,#1a5fd4_0%,#0d3d9e_100%)] shadow-[0_4px_14px_rgba(26,95,212,0.32)] hover:opacity-90 hover:-translate-y-px";
+const applyBtnDone =
+  "cursor-default bg-[linear-gradient(135deg,#27ae60_0%,#1e8449_100%)] shadow-[0_4px_14px_rgba(39,174,96,0.32)]";
 
 export default function JobDetailPage() {
   const params = useParams();
@@ -48,7 +74,7 @@ export default function JobDetailPage() {
   const [favLoading, setFavLoading] = useState(false);
   const router = useRouter();
 
-  const [seller, setSeller] = useState<RawSeller | null>(null);
+  const [seller, setSeller] = useState<SellerLike | null>(null);
   const [sellerId, setSellerId] = useState<string>("");
   const [reviews, setReviews] = useState<Review[]>([]);
 
@@ -116,12 +142,11 @@ export default function JobDetailPage() {
 
     const load = async () => {
       try {
-      const raw = (await api.getJob(id)) as RawJobResponse;
+        const raw = (await api.getJob(id)) as RawJobResponse;
 
-      const mapped = toJobDetail(raw as JobListing);
+        const mapped = toJobDetail(raw as JobListing);
         if (cancelled) return;
         setJob(mapped);
-
 
         const rawSeller =
           raw?.postedBy ??
@@ -132,42 +157,28 @@ export default function JobDetailPage() {
           raw?.data?.user ??
           {};
 
-        const extractedId = rawSeller?._id ?? rawSeller?.id ?? "";
-        setSellerId(extractedId);
-
+        setSellerId(rawSeller?._id ?? rawSeller?.id ?? "");
         setSeller({
           ...rawSeller,
           name:
             rawSeller.name ??
             rawSeller.fullName ??
             rawSeller.username ??
-            rawSeller.email ??
-            "Unknown",
+            rawSeller.email,
           avatar:
             rawSeller.avatar ??
             rawSeller.image ??
             rawSeller.profilePicture ??
-            rawSeller.photo ??
-            null,
-          isPro: rawSeller.isPro ?? false,
-          isTrusted: rawSeller.isTrusted ?? false,
-          memberSince:
-            rawSeller.memberSince ?? rawSeller.createdAt ?? "N/A",
-          totalListing:
-            rawSeller.totalListing ?? rawSeller.listingCount ?? 0,
-          responseRate: rawSeller.responseRate ?? "N/A",
-          avgResponseTime: rawSeller.avgResponseTime ?? "N/A",
-          phone: rawSeller.phone ?? "N/A",
-        });
-
+            rawSeller.photo,
+          memberSince: rawSeller.memberSince ?? rawSeller.createdAt,
+          totalListing: rawSeller.totalListing ?? rawSeller.listingCount,
+        } as SellerLike);
         setReviews(raw?.reviews ?? raw?.data?.reviews ?? []);
 
-        /*  similar jobs */
+        /* similar jobs */
         const similar = await api.getSimilarListings<JobListing>(id, 5);
         if (cancelled) return;
-        setSimilarJobs(
-          similar.filter((j) => j.job != null).map(toJobCard),     
-        );
+        setSimilarJobs(similar.filter((j) => j.job != null).map(toJobCard));
       } catch (err) {
         console.error(err);
       } finally {
@@ -182,11 +193,9 @@ export default function JobDetailPage() {
   }, [id]);
 
   if (loading)
-    return <div style={{ padding: 40, textAlign: "center" }}>Loading...</div>;
+    return <div className="p-10 text-center">Loading...</div>;
   if (!job)
-    return (
-      <div style={{ padding: 40, textAlign: "center" }}>Job not found</div>
-    );
+    return <div className="p-10 text-center">Job not found</div>;
 
   const mapLat = job.lat ?? geoCoords?.lat ?? null;
   const mapLng = job.lng ?? geoCoords?.lng ?? null;
@@ -195,15 +204,16 @@ export default function JobDetailPage() {
   //share handler
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({ title: job.title, url: window.location.href }).catch(() => {});
+      navigator
+        .share({ title: job.title, url: window.location.href })
+        .catch(() => {});
     } else {
-     navigator.clipboard?.writeText(window.location.href).catch(() => {});
-     toast.success("Link copied to clipboard");
-   }
-};
+      navigator.clipboard?.writeText(window.location.href).catch(() => {});
+      toast.success("Link copied to clipboard");
+    }
+  };
 
-
-//favorite handler
+  //favorite handler
   const handleToggleFavorite = async () => {
     if (!session?.accessToken) {
       toast.error("Please log in to save jobs");
@@ -243,7 +253,9 @@ export default function JobDetailPage() {
   const handleApply = async () => {
     if (!session?.accessToken) {
       toast.error("Please log in to apply");
-      router.push(`/login?callbackUrl=${encodeURIComponent(`/category/job/${id}`)}`);
+      router.push(
+        `/login?callbackUrl=${encodeURIComponent(`/category/job/${id}`)}`,
+      );
       return;
     }
     try {
@@ -264,30 +276,23 @@ export default function JobDetailPage() {
       setApplied(true);
       toast.success("Application submitted");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong, please try again");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong, please try again",
+      );
     }
   };
 
+  // Real seller data comes from the raw API response (seller state);
+  // job.postedBy is only a fallback.
   const postedBy = (job.postedBy ?? {}) as SellerLike;
-  const sellerForCard = {
-    ...postedBy,
-    name: postedBy.name ?? "Unknown",
-    avatar: postedBy.avatar ?? "",
-    rating: postedBy.rating ?? 0,
-    reviewCount: postedBy.reviewCount ?? 0,
-    isVerified: postedBy.isVerified ?? false,
-    isPro: postedBy.isPro ?? false,
-    isTrusted: postedBy.isTrusted ?? false,
-    memberSince: postedBy.memberSince ?? "N/A",
-    totalListing: postedBy.totalListing ?? 0,
-    responseRate: postedBy.responseRate ?? "N/A",
-    avgResponseTime: postedBy.avgResponseTime ?? "N/A",
-    phone: postedBy.phone ?? "N/A",
-  };
 
-  const sellerReviews: SellerReview[] = (
-    (job as unknown as { reviews?: unknown[] }).reviews ?? []
-  ).map((r) => {
+  const rawReviews: unknown[] = reviews.length
+    ? reviews
+    : ((job as unknown as { reviews?: unknown[] }).reviews ?? []);
+
+  const sellerReviews: SellerReview[] = rawReviews.map((r) => {
     const rv = r as Partial<SellerReview>;
     return {
       reviewerName: rv.reviewerName ?? "Anonymous",
@@ -296,6 +301,33 @@ export default function JobDetailPage() {
       createdAt: rv.createdAt ?? "",
     };
   });
+
+  const avgRating = sellerReviews.length
+    ? Math.round(
+        (sellerReviews.reduce((sum, r) => sum + r.rating, 0) /
+          sellerReviews.length) *
+          10,
+      ) / 10
+    : 0;
+
+  const sellerForCard = {
+    ...postedBy,
+    ...(seller ?? {}),
+    name: seller?.name ?? postedBy.name ?? "Unknown",
+    avatar: seller?.avatar ?? postedBy.avatar ?? "",
+    rating: seller?.rating ?? postedBy.rating ?? avgRating,
+    reviewCount:
+      seller?.reviewCount ?? postedBy.reviewCount ?? sellerReviews.length,
+    isVerified: seller?.isVerified ?? postedBy.isVerified ?? false,
+    isPro: seller?.isPro ?? postedBy.isPro ?? false,
+    isTrusted: seller?.isTrusted ?? postedBy.isTrusted ?? false,
+    memberSince: seller?.memberSince ?? postedBy.memberSince ?? "N/A",
+    totalListing: seller?.totalListing ?? postedBy.totalListing ?? 0,
+    responseRate: seller?.responseRate ?? postedBy.responseRate ?? "N/A",
+    avgResponseTime:
+      seller?.avgResponseTime ?? postedBy.avgResponseTime ?? "N/A",
+    phone: seller?.phone ?? postedBy.phone ?? "N/A",
+  };
 
   return (
     <>
@@ -306,250 +338,34 @@ export default function JobDetailPage() {
         closeOnClick
         pauseOnHover
       />
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-        .jd-page {
-          background: #f5f6f8;
-          min-height: 100vh;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-          display: flex;
-          flex-direction: column;
-        }
-        .jd-main { flex: 1; }
-
-        .jd-topbar { background: #fff; border-bottom: 1px solid #ececec; padding: 11px 0; }
-        .jd-topbar-inner {
-          max-width: 1200px; margin: 0 auto; padding: 0 24px;
-          display: flex; align-items: center; justify-content: space-between;
-          flex-wrap: wrap; gap: 8px;
-        }
-        .jd-breadcrumb { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; font-size: 12.5px; color: #888; }
-        .jd-bc-link { color: #1a5fd4; text-decoration: none; font-weight: 500; transition: opacity 0.18s; }
-        .jd-bc-link:hover { opacity: 0.75; text-decoration: underline; }
-        .jd-bc-sep { color: #ccc; font-size: 11px; }
-        .jd-bc-current { color: #555; font-weight: 500; }
-        .jd-job-id { font-size: 12px; color: #999; font-weight: 500; }
-        .jd-report { font-size: 12px; color: #e74c3c; font-weight: 600; text-decoration: none; transition: opacity 0.18s; cursor: pointer; }
-        .jd-report:hover { opacity: 0.75; text-decoration: underline; }
-
-        .jd-container {
-          max-width: 1200px; margin: 22px auto 0; padding: 0 24px;
-          display: grid; grid-template-columns: 1fr 340px;
-          gap: 22px; align-items: start;
-        }
-        .jd-left { display: flex; flex-direction: column; gap: 16px; }
-
-        .jd-info-card {
-          background: #fff; border-radius: 16px;
-          padding: 20px 22px 22px; box-shadow: 0 2px 14px rgba(0,0,0,0.07);
-        }
-        .jd-title-row {
-          display: flex; align-items: flex-start; justify-content: space-between;
-          gap: 10px; margin-bottom: 4px;
-        }
-        .jd-title {
-          font-size: 20px; font-weight: 800; color: #1a1a1a;
-          line-height: 1.3; margin: 0; flex: 1;
-        }
-        .jd-action-btns {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-shrink: 0;
-          margin-top: 2px;
-        }
-        .jd-action-btn {
-          width: 34px;
-          height: 34px;
-          padding: 0;
-          border-radius: 50%;
-          border: 1.5px solid #e0e0e0;
-          background: #fff;
-          color: #555;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          appearance: none;
-          -webkit-appearance: none;
-          transition:
-            background 0.2s ease,
-            border-color 0.2s ease,
-            transform 0.15s ease;
-        }
-        .jd-action-btn:hover {
-          background: #f5f5f5;
-          border-color: #ccc;
-          transform: scale(1.08);
-        }
-        .jd-action-btn:focus { outline: none; }
-        .jd-action-btn.fav-active {
-          border-color: #e74c3c;
-          background: #fff5f5;
-        }
-        .jd-salary { font-size: 22px; font-weight: 900; color: #1a1a1a; margin: 6px 0 2px; }
-
-        .jd-cta-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
-        .jd-btn-apply {
-          flex: 1; min-width: 140px; padding: 12px 20px;
-          background: linear-gradient(135deg, #1a5fd4 0%, #0d3d9e 100%);
-          color: #fff; font-size: 14px; font-weight: 700;
-          border: none; border-radius: 10px; cursor: pointer;
-          font-family: inherit; display: flex; align-items: center;
-          justify-content: center; gap: 7px;
-          box-shadow: 0 4px 14px rgba(26,95,212,0.32);
-          transition: opacity 0.2s, transform 0.15s;
-        }
-        .jd-btn-apply:hover { opacity: 0.9; transform: translateY(-1px); }
-        .jd-btn-apply.applied { background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%); box-shadow: 0 4px 14px rgba(39,174,96,0.32); }
-        .jd-btn-chat {
-          flex: 1; min-width: 140px; padding: 12px 20px;
-          background: #fff; color: #1a5fd4; font-size: 14px; font-weight: 700;
-          border: 1.5px solid #1a5fd4; border-radius: 10px; cursor: pointer;
-          font-family: inherit; display: flex; align-items: center;
-          justify-content: center; gap: 7px; transition: background 0.18s;
-        }
-        .jd-btn-chat:hover { background: #eef2ff; }
-
-        .jd-specs-bar {
-          display: grid; grid-template-columns: repeat(2, 1fr);
-          gap: 8px; margin-bottom: 0;
-        }
-        .jd-spec-chip {
-          display: flex; flex-direction: column; align-items: center; gap: 5px;
-          background: #f8f9fb; border-radius: 10px; padding: 12px 6px 10px;
-          border: 1px solid #eef0f3; text-align: center;
-          transition: background 0.2s, border-color 0.2s;
-        }
-        .jd-spec-chip:hover { background: #f0f2f8; border-color: #d9dde8; }
-        .jd-spec-icon {
-          width: 34px; height: 34px; display: flex; align-items: center;
-          justify-content: center; background: #fff; border-radius: 8px;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-        }
-        .jd-spec-val { font-size: 12px; font-weight: 800; color: #1a1a1a; line-height: 1.2; }
-        .jd-spec-label { font-size: 10px; color: #999; font-weight: 500; }
-
-        .jd-desc-card {
-          background: #fff; border-radius: 16px;
-          padding: 20px 22px; box-shadow: 0 2px 14px rgba(0,0,0,0.07);
-        }
-        .jd-section-title { font-size: 16px; font-weight: 800; color: #1a1a1a; margin: 0 0 12px; }
-        .jd-desc-text { font-size: 13.5px; color: #444; line-height: 1.8; margin: 0; white-space: pre-line; }
-        .jd-desc-text.clamped {
-          display: -webkit-box; -webkit-line-clamp: 6;
-          -webkit-box-orient: vertical; overflow: hidden;
-        }
-        .jd-see-more {
-          display: inline-block; margin-top: 8px;
-          font-size: 13px; font-weight: 600; color: #1a5fd4;
-          background: none; border: none; cursor: pointer;
-          padding: 0; font-family: inherit; transition: opacity 0.18s;
-        }
-        .jd-see-more:hover { opacity: 0.72; }
-
-        .jd-similar-card {
-          background: #fff; border-radius: 16px;
-          padding: 0 0 20px; box-shadow: 0 2px 14px rgba(0,0,0,0.07);
-          overflow: hidden;
-        }
-        .jd-similar-head {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 18px 20px 14px; border-bottom: 1px solid #f5f5f5;
-        }
-        .jd-similar-title { font-size: 15px; font-weight: 800; color: #1a1a1a; margin: 0; }
-        .jd-similar-viewall { font-size: 13px; font-weight: 600; color: #1a5fd4; text-decoration: none; }
-        .jd-similar-scroll {
-          display: flex; gap: 12px; padding: 14px 16px 4px;
-          overflow-x: auto; scrollbar-width: none;
-        }
-        .jd-similar-scroll::-webkit-scrollbar { display: none; }
-        .jd-sim-card {
-          flex-shrink: 0; width: 160px; background: #f8f9fb;
-          border-radius: 12px; overflow: hidden; text-decoration: none;
-          border: 1.5px solid #eee; transition: transform 0.2s, box-shadow 0.2s;
-          padding: 10px;
-        }
-        .jd-sim-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        .jd-sim-company { font-size: 10px; font-weight: 700; color: #1a5fd4; text-transform: uppercase; margin: 0 0 2px; }
-        .jd-sim-title { font-size: 12px; font-weight: 700; color: #1a1a1a; margin: 0 0 4px; line-height: 1.3; }
-        .jd-sim-type { font-size: 10px; font-weight: 600; color: #3b5bdb; background: #eef2ff; padding: 2px 6px; border-radius: 10px; }
-
-        .jd-right {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          position: sticky;
-          top: 80px;
-          align-self: start;
-        }
-
-        .jd-map-card {
-          background: #fff; border-radius: 16px;
-          overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,0.08);
-        }
-        .jd-map-card-title {
-          font-size: 14px; font-weight: 800; color: #1a1a1a;
-          margin: 0; padding: 16px 18px 12px; border-bottom: 1px solid #f0f0f0;
-        }
-        .jd-map-city { font-size: 12px; color: #555; padding: 10px 18px 4px; font-weight: 500; }
-        .jd-map-link {
-          display: inline-flex; align-items: center; gap: 4px;
-          color: #1a5fd4; font-size: 12.5px; font-weight: 600;
-          text-decoration: none; padding: 4px 18px 14px;
-          transition: opacity 0.18s;
-        }
-        .jd-map-link:hover { opacity: 0.75; }
-        .jd-map-unavailable { padding: 16px 18px; font-size: 13px; color: #888; }
-
-        .jd-seller-card {
-          background: #fff;
-          border-radius: 16px;
-          padding: 22px 20px;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-          border: 1px solid #e8e8e8;
-          overflow: hidden;
-        }
-
-        @media (max-width: 900px) {
-          .jd-container { grid-template-columns: 1fr; }
-          .jd-right { position: static; }
-        }
-        @media (max-width: 640px) {
-          .jd-container { padding: 0 14px; margin-top: 14px; }
-          .jd-cta-row { flex-direction: column; }
-        }
-      `}</style>
-
-      <div className="jd-page">
+      <div className="bg-[#f5f6f8] min-h-screen flex flex-col [font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif]">
         {/* TOP BAR */}
-        <div className="jd-topbar">
-          <div className="jd-topbar-inner">
-            <nav className="jd-breadcrumb">
-              <Link href="/" className="jd-bc-link">
+        <div className="bg-white border-b border-[#ececec] py-[11px]">
+          <div className="max-w-[1200px] mx-auto px-6 flex items-center justify-between flex-wrap gap-2">
+            <nav className="flex items-center gap-[5px] flex-wrap text-[12.5px] text-[#888]">
+              <Link href="/" className={bcLink}>
                 Home
               </Link>
-              <span className="jd-bc-sep">›</span>
-              <Link href="/category/job" className="jd-bc-link">
+              <span className="text-[#ccc] text-[11px]">›</span>
+              <Link href="/category/job" className={bcLink}>
                 Job
               </Link>
               {job.breadcrumbs.map((bc) => (
-                <span
-                  key={bc}
-                  style={{ display: "flex", alignItems: "center", gap: "5px" }}
-                >
-                  <span className="jd-bc-sep">›</span>
-                  <span className="jd-bc-current">{bc}</span>
+                <span key={bc} className="flex items-center gap-[5px]">
+                  <span className="text-[#ccc] text-[11px]">›</span>
+                  <span className="text-[#555] font-medium">{bc}</span>
                 </span>
               ))}
-              <span className="jd-bc-sep">›</span>
-              <span className="jd-bc-current">{job.title}</span>
+              <span className="text-[#ccc] text-[11px]">›</span>
+              <span className="text-[#555] font-medium">{job.title}</span>
             </nav>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <span className="jd-job-id">Job ID: {job.jobId}</span>
+            <div className="flex items-center gap-4">
+              <span className="text-[12px] text-[#999] font-medium">
+                Job ID: {job.jobId}
+              </span>
               <span
-                className="jd-report"
+                className="text-[12px] text-[#e74c3c] font-semibold cursor-pointer transition-opacity duration-200 hover:opacity-75 hover:underline"
                 onClick={() => toast.info("Report feature coming soon")}
               >
                 Report This Job
@@ -558,21 +374,25 @@ export default function JobDetailPage() {
           </div>
         </div>
 
-        <div className="jd-main">
-          <div className="jd-container">
+        <div className="flex-1 pb-12">
+          <div className="max-w-[1200px] mx-auto mt-[22px] px-6 grid grid-cols-[1fr_340px] gap-[22px] items-start max-[900px]:grid-cols-1 max-[640px]:px-3.5 max-[640px]:mt-3.5">
             {/* LEFT COLUMN */}
-            <div className="jd-left">
-              <div className="jd-info-card">
-                <div className="jd-title-row">
-                  <h1 className="jd-title">{job.title}</h1>
-                  <div className="jd-action-btns">
+            <div className="flex flex-col gap-4">
+              <div className={`${card} pt-5 px-[22px] pb-[22px]`}>
+                <div className="flex items-start justify-between gap-2.5 mb-1">
+                  <h1 className="text-[20px] font-extrabold text-[#1a1a1a] leading-[1.3] m-0 flex-1">
+                    {job.title}
+                  </h1>
+                  <div className="flex items-center gap-2 shrink-0 mt-0.5">
                     <button
-                      className="jd-action-btn"
-                      onClick={handleShare}>
+                      className={`${actionBtnBase} ${actionBtnIdle}`}
+                      aria-label="Share"
+                      onClick={handleShare}
+                    >
                       <FiShare2 size={16} />
                     </button>
                     <button
-                      className={`jd-action-btn${isFav ? " fav-active" : ""}`}
+                      className={`${actionBtnBase} ${isFav ? actionBtnFav : actionBtnIdle}`}
                       aria-label="Save to wishlist"
                       onClick={handleToggleFavorite}
                       disabled={favLoading}
@@ -586,38 +406,40 @@ export default function JobDetailPage() {
                   </div>
                 </div>
 
-                <p className="jd-salary">{job.salary}</p>
+                <p className="text-[22px] font-black text-[#1a1a1a] mt-1.5 mb-0.5">
+                  {job.salary}
+                </p>
 
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    marginBottom: "0",
-                  }}
-                >
-                  <div className="jd-specs-bar" style={{ flex: 1 }}>
-                    <div className="jd-spec-chip">
-                      <div className="jd-spec-icon">
+                <div className="flex items-center gap-3 max-[640px]:flex-col max-[640px]:items-stretch">
+                  <div className="grid grid-cols-2 gap-2 flex-1">
+                    <div className={specChip}>
+                      <div className={specIcon}>
                         <FiBriefcase size={18} color="#1a5fd4" />
                       </div>
-                      <span className="jd-spec-val">{job.type}</span>
-                      <span className="jd-spec-label">Employment Type</span>
+                      <span className="text-[12px] font-extrabold text-[#1a1a1a] leading-[1.2]">
+                        {job.type}
+                      </span>
+                      <span className="text-[10px] text-[#999] font-medium">
+                        Employment Type
+                      </span>
                     </div>
-                    <div className="jd-spec-chip">
-                      <div className="jd-spec-icon">
+                    <div className={specChip}>
+                      <div className={specIcon}>
                         <FiCalendar size={18} color="#1a5fd4" />
                       </div>
-                      <span className="jd-spec-val">{job.postedDate}</span>
-                      <span className="jd-spec-label">Posted</span>
+                      <span className="text-[12px] font-extrabold text-[#1a1a1a] leading-[1.2]">
+                        {job.postedDate}
+                      </span>
+                      <span className="text-[10px] text-[#999] font-medium">
+                        Posted
+                      </span>
                     </div>
                   </div>
 
                   <button
-                    className={`jd-btn-apply${applied ? " applied" : ""}`}
+                    className={`${applyBtnBase} ${applied ? applyBtnDone : applyBtnIdle}`}
                     onClick={handleApply}
                     disabled={applied}
-                    style={{ flex: "0 0 auto", minWidth: 160 }}
                   >
                     {applied ? (
                       <>
@@ -632,36 +454,51 @@ export default function JobDetailPage() {
                 </div>
               </div>
 
-              <div className="jd-desc-card">
-                <h2 className="jd-section-title">Job Description</h2>
-                <p className={`jd-desc-text${showFull ? "" : " clamped"}`}>
+              <div className={`${card} py-5 px-[22px]`}>
+                <h2 className="text-[16px] font-extrabold text-[#1a1a1a] m-0 mb-3">
+                  Job Description
+                </h2>
+                <p
+                  className={`text-[13.5px] text-[#444] leading-[1.8] m-0 whitespace-pre-line ${showFull ? "" : "line-clamp-6"}`}
+                >
                   {job.description}
                 </p>
                 <button
-                  className="jd-see-more"
+                  className="inline-block mt-2 text-[13px] font-semibold text-[#1a5fd4] bg-transparent border-0 cursor-pointer p-0 transition-opacity duration-200 hover:opacity-70"
                   onClick={() => setShowFull(!showFull)}
                 >
                   {showFull ? "See Less" : "See More"}
                 </button>
               </div>
 
-              <div className="jd-similar-card">
-                <div className="jd-similar-head">
-                  <p className="jd-similar-title">Similar Jobs</p>
-                  <Link href="/category/job" className="jd-similar-viewall">
+              <div className={`${card} pb-5 overflow-hidden`}>
+                <div className="flex items-center justify-between pt-[18px] px-5 pb-3.5 border-b border-[#f5f5f5]">
+                  <p className="text-[15px] font-extrabold text-[#1a1a1a] m-0">
+                    Similar Jobs
+                  </p>
+                  <Link
+                    href="/category/job"
+                    className="text-[13px] font-semibold text-[#1a5fd4] no-underline"
+                  >
                     View All
                   </Link>
                 </div>
-                <div className="jd-similar-scroll">
+                <div className="flex gap-3 pt-3.5 px-4 pb-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {similarJobs.map((s) => (
                     <Link
                       key={s.id}
                       href={`/category/job/${s.id}`}
-                      className="jd-sim-card"
+                      className="shrink-0 w-40 bg-[#f8f9fb] rounded-xl overflow-hidden no-underline border-[1.5px] border-[#eee] p-2.5 [transition:transform_0.2s,box-shadow_0.2s] hover:-translate-y-[3px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)]"
                     >
-                      <p className="jd-sim-company">{s.company}</p>
-                      <p className="jd-sim-title">{s.title}</p>
-                      <span className="jd-sim-type">{s.type}</span>
+                      <p className="text-[10px] font-bold text-[#1a5fd4] uppercase m-0 mb-0.5">
+                        {s.company}
+                      </p>
+                      <p className="text-[12px] font-bold text-[#1a1a1a] m-0 mb-1 leading-[1.3]">
+                        {s.title}
+                      </p>
+                      <span className="text-[10px] font-semibold text-[#3b5bdb] bg-[#eef2ff] py-0.5 px-1.5 rounded-[10px]">
+                        {s.type}
+                      </span>
                     </Link>
                   ))}
                 </div>
@@ -669,30 +506,36 @@ export default function JobDetailPage() {
             </div>
 
             {/* RIGHT COLUMN */}
-            <div className="jd-right">
+            <div className="flex flex-col gap-4 sticky top-20 self-start max-[900px]:static">
               {/* MAP */}
-              <div className="jd-map-card">
-                <p className="jd-map-card-title">Location</p>
+              <div className="bg-white rounded-2xl overflow-hidden shadow-[0_2px_14px_rgba(0,0,0,0.08)]">
+                <p className="text-[14px] font-extrabold text-[#1a1a1a] m-0 pt-4 px-[18px] pb-3 border-b border-[#f0f0f0]">
+                  Location
+                </p>
                 {geoLoading ? (
-                  <p className="jd-map-unavailable">Loading map...</p>
+                  <p className="py-4 px-[18px] text-[13px] text-[#888]">
+                    Loading map...
+                  </p>
                 ) : hasCoords ? (
                   <>
-                    <div style={{ height: 160, overflow: "hidden" }}>
+                    <div className="h-40 overflow-hidden">
                       <iframe
                         title="Job Location Map"
                         width="100%"
                         height="100%"
-                        style={{ border: 0, display: "block" }}
+                        className="border-0 block"
                         loading="lazy"
                         src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapLng! - 0.015}%2C${mapLat! - 0.01}%2C${mapLng! + 0.015}%2C${mapLat! + 0.01}&layer=mapnik&marker=${mapLat}%2C${mapLng}`}
                       />
                     </div>
-                    <p className="jd-map-city">{job.location}</p>
+                    <p className="text-[12px] text-[#555] pt-2.5 px-[18px] pb-1 font-medium">
+                      {job.location}
+                    </p>
                     <a
                       href={`https://www.openstreetmap.org/?mlat=${mapLat}&mlon=${mapLng}#map=15/${mapLat}/${mapLng}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="jd-map-link"
+                      className="inline-flex items-center gap-1 text-[#1a5fd4] text-[12.5px] font-semibold no-underline pt-1 px-[18px] pb-3.5 transition-opacity duration-200 hover:opacity-75"
                     >
                       <FiMapPin size={12} color="#1a5fd4" />
                       View Full Map
@@ -700,23 +543,23 @@ export default function JobDetailPage() {
                   </>
                 ) : (
                   <>
-                    <p className="jd-map-unavailable">Location not available</p>
-                    <p className="jd-map-city" style={{ paddingTop: 0 }}>
+                    <p className="py-4 px-[18px] text-[13px] text-[#888]">
+                      Location not available
+                    </p>
+                    <p className="text-[12px] text-[#555] px-[18px] pb-4 font-medium">
                       {job.location}
                     </p>
                   </>
                 )}
               </div>
 
-              {/* SELLER CARD – raw extracted seller, correct _id */}
-              <div className="jd-seller-card">
-                <SellerCard
-                  seller={sellerForCard}
-                  reviews={sellerReviews}
-                  listingId={job.id}
-                  sellerId={postedBy.id || job.id}
-                />
-              </div>
+              {/* SELLER CARD */}
+              <SellerCard
+                seller={sellerForCard}
+                reviews={sellerReviews}
+                listingId={job.id}
+                sellerId={sellerId || postedBy.id || ""}
+              />
             </div>
           </div>
         </div>
