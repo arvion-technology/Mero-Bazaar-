@@ -32,7 +32,6 @@ import type {
   BeautyServiceType,
 } from "@/app/types/beauty";
 
-/* ─────────── SERVICE TYPE META (matches Prisma BeautyServiceType enum) ─────────── */
 const SERVICE_TYPE_META: Record<
   BeautyServiceType,
   { label: string; icon: IconType; color: string }
@@ -72,6 +71,33 @@ const SORT_OPTIONS = [
   { value: "rating", label: "Highest Rated" },
 ];
 
+const CAT_CARD_BASE =
+  "flex items-center gap-2.5 py-2.5 px-[18px] rounded-[14px] border-[1.5px] cursor-pointer transition-all duration-[180ms] min-w-[120px] font-[inherit] text-left hover:-translate-y-0.5 max-[640px]:min-w-0 max-[640px]:py-2 max-[640px]:px-3.5 max-[640px]:gap-2 max-[640px]:rounded-[10px] max-[640px]:shrink-0";
+const CAT_CARD_IDLE =
+  "border-[#e4e8f0] bg-[#fafbff] hover:border-[#e11d48] hover:bg-[#fff1f2] hover:shadow-[0_4px_16px_rgba(225,29,72,0.12)]";
+const CAT_CARD_ACTIVE =
+  "border-[#e11d48] bg-[#ffe4e6] shadow-[0_4px_16px_rgba(225,29,72,0.2)]";
+
+const CAT_BTN_BASE =
+  "flex flex-col items-center gap-[3px] py-2 px-1.5 rounded-lg border-[1.5px] cursor-pointer transition-all duration-150 min-w-[52px] font-[inherit]";
+const CAT_BTN_IDLE =
+  "border-[#e5e7eb] bg-white hover:border-[#e11d48] hover:bg-[#fff1f2]";
+const CAT_BTN_ACTIVE = "border-[#e11d48] bg-[#ffe4e6]";
+
+const FLOAT_BTN_BASE =
+  "absolute top-2 w-[30px] h-[30px] rounded-full bg-white/[0.94] border-none flex items-center justify-center cursor-pointer p-0 shadow-[0_1px_6px_rgba(0,0,0,0.15)] transition-[transform,background-color,color] duration-150 ease-in-out z-[4] hover:scale-[1.15] hover:bg-white";
+
+const SB_SECTION =
+  "py-3 px-4 border-b border-[#f0f0f0] last-of-type:border-b-0";
+const SB_TITLE = "text-[13px] font-bold text-[#374151] mb-2.5";
+const CHECK_ROW =
+  "flex items-center gap-2 mb-2 cursor-pointer last:mb-0";
+const CHECKBOX_BASE =
+  "w-3.5 h-3.5 rounded-[3px] border-[1.5px] flex items-center justify-center shrink-0 transition-all duration-150 cursor-pointer";
+const CHECKBOX_OFF = "border-[#d1d5db] bg-white";
+const CHECKBOX_ON =
+  "border-[#e11d48] bg-[#e11d48] after:content-['✓'] after:text-white after:text-[9px] after:font-extrabold";
+
 const parsePrice = (priceStr: string): number => {
   const match = priceStr.replace(/,/g, "").match(/\d+/);
   return match ? parseInt(match[0], 10) : 0;
@@ -86,7 +112,7 @@ async function fetchBeautyListings(): Promise<BeautyListing[]> {
   return [];
 }
 
-/* ─────────── COMPONENT ─────────── */
+/* component */
 export default function BeautyWellnessPage() {
   const [listings, setListings] = useState<BeautyCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -331,7 +357,7 @@ export default function BeautyWellnessPage() {
     const fullStars = Math.floor(rating);
     const hasHalf = rating % 1 >= 0.5;
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+      <div className="flex items-center gap-0.5">
         {Array.from({ length: 5 }).map((_, i) => (
           <FiStar
             key={i}
@@ -346,14 +372,7 @@ export default function BeautyWellnessPage() {
             }
           />
         ))}
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 700,
-            color: "#111",
-            marginLeft: 3,
-          }}
-        >
+        <span className="text-[10px] font-bold text-[#111] ml-[3px]">
           {rating.toFixed(1)}
         </span>
       </div>
@@ -371,169 +390,29 @@ export default function BeautyWellnessPage() {
       />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        * { box-sizing: border-box; }
-        .bw-wrap { min-height: 100vh; background: #f5f5f5; font-family: 'Inter', -apple-system, sans-serif; }
-        .bw-hero { position: relative; height: 220px; overflow: hidden; display: flex; align-items: center; }
-        .bw-hero-bg { position: absolute; inset: 0; background: url('/hero-beauty.jpg') center center / cover no-repeat; filter: brightness(0.5); }
-        .bw-hero-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 100%); }
-        .bw-hero-inner { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 0 28px; width: 100%; }
-        .bw-hero-inner h1 { font-size: 26px; font-weight: 800; color: #fff; margin: 0 0 6px; text-shadow: 0 2px 10px rgba(0,0,0,0.4); }
-        .bw-hero-inner p { color: rgba(255,255,255,0.75); font-size: 13px; margin: 0 0 16px; line-height: 1.5; }
-        .bw-search-wrap { position: relative; max-width: 520px; }
-        .bw-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #aaa; }
-        .bw-search { width: 100%; padding: 11px 14px 11px 42px; background: #fff; border: none; border-radius: 8px; font-size: 14px; color: #333; outline: none; box-shadow: 0 4px 20px rgba(0,0,0,0.2); font-family: inherit; }
-        .bw-cats-strip { background: #fff; border-bottom: 1.5px solid #eaeaea; padding: 18px 0; }
-        .bw-cats-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-        .bw-cats-label { font-size: 13px; font-weight: 700; color: #888; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.6px; }
-        .bw-cats-row { display: flex; gap: 12px; flex-wrap: wrap; }
-        .bw-cat-card { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 14px; border: 1.5px solid #e4e8f0; background: #fafbff; cursor: pointer; transition: all 0.18s; min-width: 120px; font-family: inherit; text-align: left; }
-        .bw-cat-card:hover { border-color: #e11d48; background: #fff1f2; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(225,29,72,0.12); }
-        .bw-cat-card.active { border-color: #e11d48; background: #ffe4e6; box-shadow: 0 4px 16px rgba(225,29,72,0.2); }
-        .bw-cat-icon { font-size: 22px; display: flex; align-items: center; }
-        .bw-cat-name { font-size: 13px; font-weight: 700; color: #1a1a1a; display: block; }
-        .bw-cat-count { font-size: 11px; color: #888; display: block; }
-        .bw-body { max-width: 1200px; margin: 0 auto; padding: 20px 20px 60px; display: flex; gap: 18px; }
-        .bw-sidebar { width: 220px; flex-shrink: 0; background: #fff; border-radius: 10px; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.06); align-self: flex-start; position: sticky; top: 16px; overflow: hidden; }
-        .bw-sb-head { padding: 14px 16px 10px; font-size: 15px; font-weight: 800; color: #1a1a1a; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
-        .bw-sb-head svg { color: #9ca3af; }
-        .bw-sb-section { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; }
-        .bw-sb-section:last-of-type { border-bottom: none; }
-        .bw-sb-title { font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 10px; }
-        .bw-cat-row { display: flex; gap: 6px; flex-wrap: wrap; }
-        .bw-cat-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 6px; border-radius: 8px; border: 1.5px solid #e5e7eb; background: #fff; cursor: pointer; transition: all 0.15s; min-width: 52px; font-family: inherit; }
-        .bw-cat-btn:hover { border-color: #e11d48; background: #fff1f2; }
-        .bw-cat-btn.active { border-color: #e11d48; background: #ffe4e6; }
-        .bw-cat-btn .bw-cat-icon { line-height: 1; color: #374151; }
-        .bw-cat-btn.active .bw-cat-icon { color: #e11d48; }
-        .bw-cat-label { font-size: 9px; font-weight: 600; color: #374151; }
-        .bw-cat-btn.active .bw-cat-label { color: #e11d48; font-weight: 700; }
-        .bw-check-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; }
-        .bw-check-row:last-child { margin-bottom: 0; }
-        .bw-checkbox { width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid #d1d5db; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #fff; transition: all 0.15s; cursor: pointer; }
-        .bw-checkbox.checked { border-color: #e11d48; background: #e11d48; }
-        .bw-checkbox.checked::after { content: "✓"; color: #fff; font-size: 9px; font-weight: 800; }
-        .bw-check-label { font-size: 12px; color: #374151; font-weight: 500; }
-        .bw-check-label.checked { color: #111; font-weight: 700; }
-        .bw-sort-select { width: 100%; padding: 7px 10px; border-radius: 7px; border: 1px solid #e0e4f0; font-size: 12px; color: #444; background: #f9fafb; outline: none; font-family: inherit; cursor: pointer; }
-        .bw-sort-select:focus { border-color: #e11d48; }
-        .bw-more-btn { display: block; width: 100%; padding: 10px; background: #f3f4f6; color: #111; font-size: 13px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; transition: background 0.15s; text-align: center; }
-        .bw-more-btn:hover { background: #e5e7eb; }
-        .bw-main { flex: 1; min-width: 0; }
-        .bw-results-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
-        .bw-count { font-size: 15px; color: #6b7280; font-weight: 600; }
-        .bw-count strong { color: #111; font-weight: 800; }
-        .bw-sort-dropdown { position: relative; }
-        .bw-sort-btn { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: #fff; border: 1px solid #e0e4f0; border-radius: 8px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; font-family: inherit; transition: border-color 0.2s; }
-        .bw-sort-btn:hover { border-color: #bbb; }
-        .bw-sort-menu { position: absolute; top: calc(100% + 6px); right: 0; min-width: 180px; background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 200; overflow: hidden; animation: sortFade 0.15s ease; }
         @keyframes sortFade { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-        .bw-sort-option { padding: 10px 16px; font-size: 13px; color: #444; cursor: pointer; transition: all 0.15s; border-bottom: 1px solid #f5f5f5; }
-        .bw-sort-option:last-child { border-bottom: none; }
-        .bw-sort-option:hover { background: #fff1f2; color: #e11d48; }
-        .bw-sort-option.active { background: #e11d48; color: #fff; }
-        .bw-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-        .bw-card { background: #fff; border-radius: 10px; border: 1px solid #e5e7eb; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; color: inherit; }
-        .bw-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.1); }
-        .bw-card-img-wrap { position: relative; width: 100%; aspect-ratio: 4/3; overflow: hidden; background: #e5e7eb; }
-        .bw-card-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
-        .bw-card:hover .bw-card-img { transform: scale(1.06); }
-     /* SAVE / FAVORITE */
-.bw-card-fav {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.94);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
-  transition: transform 0.15s ease, background 0.15s ease;
-  z-index: 4;
-}
-
-.bw-card-fav:hover {
-  transform: scale(1.15);
-  background: #fff;
-}
-
-
-/* SHARE */
-.bw-card-share {
-  position: absolute;
-  top: 8px;
-  right: 44px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.94);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  color: #64748b;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
-  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
-  z-index: 4;
-}
-
-.bw-card-share:hover {
-  transform: scale(1.15);
-  background: #fff;
-  color: #e11d48;
-}
-        .bw-card-home-badge { position: absolute; bottom: 8px; left: 8px; background: rgba(225,29,72,0.9); color: #fff; font-size: 9px; font-weight: 700; border-radius: 5px; padding: 3px 7px; display: flex; align-items: center; gap: 3px; }
-        .bw-card-body { padding: 14px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
-        .bw-card-name { font-size: 15px; font-weight: 800; color: #111; margin: 0; }
-        .bw-card-meta { font-size: 11px; color: #9ca3af; font-weight: 500; }
-        .bw-card-price-row { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
-        .bw-card-price-label { font-size: 10px; color: #9ca3af; font-weight: 500; }
-        .bw-card-price { font-size: 12px; font-weight: 700; color: #e11d48; }
-        .bw-card-stars { margin-top: 2px; }
-        .bw-card-btn { display: block; width: 100%; padding: 9px 12px; background: #e11d48; color: #fff; font-size: 12px; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; font-family: inherit; text-align: center; text-decoration: none; transition: background 0.15s; margin-top: 8px; }
-        .bw-card-btn:hover { background: #be123c; }
-        .bw-empty, .bw-state { text-align: center; padding: 60px 24px; background: #fff; border-radius: 10px; border: 1px solid #e5e7eb; }
-        .bw-empty-icon { margin-bottom: 12px; color: #bbb; }
-        .bw-empty p, .bw-state p { font-weight: 700; font-size: 16px; color: #111; margin: 0 0 4px; }
-        .bw-empty span, .bw-state span { font-size: 13px; color: #888; }
-        .bw-empty-btn { margin-top: 12px; padding: 9px 22px; background: #e11d48; color: #fff; font-weight: 700; font-size: 13px; border: none; border-radius: 7px; cursor: pointer; font-family: inherit; }
-        @media (max-width: 900px) {
-          .bw-sidebar { display: none; }
-          .bw-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (max-width: 640px) {
-          .bw-grid { grid-template-columns: 1fr; }
-          .bw-body { padding: 14px 14px 40px; }
-          .bw-cats-strip { padding: 14px 0; }
-          .bw-cats-inner { padding: 0 12px; }
-          .bw-cats-row { flex-wrap: nowrap; overflow-x: auto; gap: 8px; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-          .bw-cats-row::-webkit-scrollbar { display: none; }
-          .bw-cat-card { min-width: auto; padding: 8px 14px; gap: 8px; border-radius: 10px; border-width: 1.5px; flex-shrink: 0; }
-        }
       `}</style>
 
-      <div className="bw-wrap">
-        <section className="bw-hero">
-          <div className="bw-hero-bg" />
-          <div className="bw-hero-overlay" />
-          <div className="bw-hero-inner">
-            <h1>
+      <div className="min-h-screen bg-[#f5f5f5] font-[Inter,-apple-system,sans-serif]">
+        <section className="relative h-[220px] overflow-hidden flex items-center">
+          <div className="absolute inset-0 bg-[url('/hero-beauty.jpg')] bg-center bg-cover bg-no-repeat brightness-50" />
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(0,0,0,0.5)_0%,rgba(0,0,0,0.2)_100%)]" />
+          <div className="relative z-[2] max-w-[1200px] mx-auto px-7 w-full">
+            <h1 className="text-[26px] font-extrabold text-white mt-0 mb-1.5 [text-shadow:0_2px_10px_rgba(0,0,0,0.4)]">
               Find The Best
               <br />
               Hair, Beauty & Wellness Services
             </h1>
-            <p>Trusted Professionals ready to serve you</p>
-            <div className="bw-search-wrap">
-              <FiSearch className="bw-search-icon" size={16} />
+            <p className="text-white/75 text-[13px] mt-0 mb-4 leading-normal">
+              Trusted Professionals ready to serve you
+            </p>
+            <div className="relative max-w-[520px]">
+              <FiSearch
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#aaa]"
+                size={16}
+              />
               <input
-                className="bw-search"
+                className="w-full py-[11px] pr-3.5 pl-[42px] bg-white border-none rounded-lg text-sm text-[#333] outline-none shadow-[0_4px_20px_rgba(0,0,0,0.2)] font-[inherit]"
                 placeholder="Search salons, services..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -542,20 +421,24 @@ export default function BeautyWellnessPage() {
           </div>
         </section>
 
-        <section className="bw-cats-strip">
-          <div className="bw-cats-inner">
-            <p className="bw-cats-label">Browse Categories</p>
-            <div className="bw-cats-row">
+        <section className="bg-white border-b-[1.5px] border-[#eaeaea] py-[18px] max-[640px]:py-3.5">
+          <div className="max-w-[1200px] mx-auto px-6 max-[640px]:px-3">
+            <p className="text-[13px] font-bold text-[#888] mt-0 mb-3 uppercase tracking-[0.6px]">
+              Browse Categories
+            </p>
+            <div className="flex gap-3 flex-wrap max-[640px]:flex-nowrap max-[640px]:overflow-x-auto max-[640px]:gap-2 max-[640px]:pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <button
-                className={`bw-cat-card${activeCategory === ALL ? " active" : ""}`}
+                className={`${CAT_CARD_BASE} ${activeCategory === ALL ? CAT_CARD_ACTIVE : CAT_CARD_IDLE}`}
                 onClick={() => setActiveCategory(ALL)}
               >
-                <span className="bw-cat-icon" style={{ color: "#374151" }}>
+                <span className="text-[22px] flex items-center text-[#374151]">
                   <FiGrid size={22} />
                 </span>
                 <span>
-                  <span className="bw-cat-name">All</span>
-                  <span className="bw-cat-count">
+                  <span className="block text-[13px] font-bold text-[#1a1a1a]">
+                    All
+                  </span>
+                  <span className="block text-[11px] text-[#888]">
                     {categoryCount(ALL)} listings
                   </span>
                 </span>
@@ -566,18 +449,20 @@ export default function BeautyWellnessPage() {
                   return (
                     <button
                       key={key}
-                      className={`bw-cat-card${activeCategory === key ? " active" : ""}`}
+                      className={`${CAT_CARD_BASE} ${activeCategory === key ? CAT_CARD_ACTIVE : CAT_CARD_IDLE}`}
                       onClick={() => setActiveCategory(key)}
                     >
                       <span
-                        className="bw-cat-icon"
+                        className="text-[22px] flex items-center"
                         style={{ color: meta.color }}
                       >
                         <meta.icon size={22} />
                       </span>
                       <span>
-                        <span className="bw-cat-name">{meta.label}</span>
-                        <span className="bw-cat-count">
+                        <span className="block text-[13px] font-bold text-[#1a1a1a]">
+                          {meta.label}
+                        </span>
+                        <span className="block text-[11px] text-[#888]">
                           {categoryCount(key)} listings
                         </span>
                       </span>
@@ -589,38 +474,51 @@ export default function BeautyWellnessPage() {
           </div>
         </section>
 
-        <div className="bw-body">
-          <aside className="bw-sidebar">
-            <div className="bw-sb-head">
+        <div className="max-w-[1200px] mx-auto pt-5 px-5 pb-[60px] flex gap-[18px] max-[640px]:pt-3.5 max-[640px]:px-3.5 max-[640px]:pb-10">
+          <aside className="w-[220px] shrink-0 bg-white rounded-[10px] border border-[#e5e7eb] shadow-[0_2px_8px_rgba(0,0,0,0.06)] self-start sticky top-4 overflow-hidden max-[900px]:hidden">
+            <div className="pt-3.5 px-4 pb-2.5 text-[15px] font-extrabold text-[#1a1a1a] border-b border-[#f0f0f0] flex items-center justify-between [&_svg]:text-[#9ca3af]">
               Filter
               <FiChevronDown size={16} />
             </div>
 
-            <div className="bw-sb-section">
-              <p className="bw-sb-title">Service Category</p>
-              <div className="bw-cat-row">
+            <div className={SB_SECTION}>
+              <p className={SB_TITLE}>Service Category</p>
+              <div className="flex gap-1.5 flex-wrap">
                 <button
-                  className={`bw-cat-btn${activeCategory === ALL ? " active" : ""}`}
+                  className={`${CAT_BTN_BASE} ${activeCategory === ALL ? CAT_BTN_ACTIVE : CAT_BTN_IDLE}`}
                   onClick={() => setActiveCategory(ALL)}
                 >
-                  <span className="bw-cat-icon">
+                  <span
+                    className={`text-[22px] flex items-center leading-none ${activeCategory === ALL ? "text-[#e11d48]" : "text-[#374151]"}`}
+                  >
                     <FiGrid size={20} />
                   </span>
-                  <span className="bw-cat-label">All</span>
+                  <span
+                    className={`text-[9px] ${activeCategory === ALL ? "text-[#e11d48] font-bold" : "text-[#374151] font-semibold"}`}
+                  >
+                    All
+                  </span>
                 </button>
                 {(Object.keys(SERVICE_TYPE_META) as BeautyServiceType[]).map(
                   (key) => {
                     const meta = SERVICE_TYPE_META[key];
+                    const active = activeCategory === key;
                     return (
                       <button
                         key={key}
-                        className={`bw-cat-btn${activeCategory === key ? " active" : ""}`}
+                        className={`${CAT_BTN_BASE} ${active ? CAT_BTN_ACTIVE : CAT_BTN_IDLE}`}
                         onClick={() => setActiveCategory(key)}
                       >
-                        <span className="bw-cat-icon">
+                        <span
+                          className={`text-[22px] flex items-center leading-none ${active ? "text-[#e11d48]" : "text-[#374151]"}`}
+                        >
                           <meta.icon size={20} />
                         </span>
-                        <span className="bw-cat-label">{meta.label}</span>
+                        <span
+                          className={`text-[9px] ${active ? "text-[#e11d48] font-bold" : "text-[#374151] font-semibold"}`}
+                        >
+                          {meta.label}
+                        </span>
                       </button>
                     );
                   },
@@ -628,63 +526,65 @@ export default function BeautyWellnessPage() {
               </div>
             </div>
 
-            <div className="bw-sb-section">
-              <p className="bw-sb-title">Price range</p>
-              {PRICE_RANGES.map((pr) => (
-                <div
-                  key={pr}
-                  className="bw-check-row"
-                  onClick={() => togglePriceRange(pr)}
-                >
+            <div className={SB_SECTION}>
+              <p className={SB_TITLE}>Price range</p>
+              {PRICE_RANGES.map((pr) => {
+                const checked = selectedPriceRanges.includes(pr);
+                return (
                   <div
-                    className={`bw-checkbox${selectedPriceRanges.includes(pr) ? " checked" : ""}`}
-                  />
-                  <span
-                    className={`bw-check-label${selectedPriceRanges.includes(pr) ? " checked" : ""}`}
+                    key={pr}
+                    className={CHECK_ROW}
+                    onClick={() => togglePriceRange(pr)}
                   >
-                    {pr}
-                  </span>
-                </div>
-              ))}
+                    <div
+                      className={`${CHECKBOX_BASE} ${checked ? CHECKBOX_ON : CHECKBOX_OFF}`}
+                    />
+                    <span
+                      className={`text-xs ${checked ? "text-[#111] font-bold" : "text-[#374151] font-medium"}`}
+                    >
+                      {pr}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
 
-            <div className="bw-sb-section">
-              <p className="bw-sb-title">Home Visit</p>
-              <div
-                className="bw-check-row"
-                onClick={() => setHomeVisit(!homeVisit)}
-              >
-                <div className={`bw-checkbox${homeVisit ? " checked" : ""}`} />
+            <div className={SB_SECTION}>
+              <p className={SB_TITLE}>Home Visit</p>
+              <div className={CHECK_ROW} onClick={() => setHomeVisit(!homeVisit)}>
+                <div
+                  className={`${CHECKBOX_BASE} ${homeVisit ? CHECKBOX_ON : CHECKBOX_OFF}`}
+                />
                 <span
-                  className={`bw-check-label${homeVisit ? " checked" : ""}`}
+                  className={`text-xs ${homeVisit ? "text-[#111] font-bold" : "text-[#374151] font-medium"}`}
                 >
                   Home Visit Available
                 </span>
               </div>
             </div>
 
-            <div className="bw-sb-section">
-              <p className="bw-sb-title">Bridal Packages</p>
+            <div className={SB_SECTION}>
+              <p className={SB_TITLE}>Bridal Packages</p>
               <div
-                className="bw-check-row"
+                className={CHECK_ROW}
                 onClick={() => setBridalPackage(!bridalPackage)}
               >
                 <div
-                  className={`bw-checkbox${bridalPackage ? " checked" : ""}`}
+                  className={`${CHECKBOX_BASE} ${bridalPackage ? CHECKBOX_ON : CHECKBOX_OFF}`}
                 />
                 <span
-                  className={`bw-check-label${bridalPackage ? " checked" : ""}`}
+                  className={`text-xs ${bridalPackage ? "text-[#111] font-bold" : "text-[#374151] font-medium"}`}
                 >
                   Bridal Service
                 </span>
               </div>
             </div>
 
-            <div className="bw-sb-section">
-              <p className="bw-sb-title">Sort By</p>
-              <div style={{ position: "relative" }}>
+            <div className={SB_SECTION}>
+              <p className={SB_TITLE}>Sort By</p>
+              <div className="relative">
                 <select
-                  className="bw-sort-select"
+                  className="w-full py-[7px] px-2.5 rounded-[7px] border border-[#e0e4f0] text-xs text-[#444] bg-[#f9fafb] outline-none font-[inherit] cursor-pointer focus:border-[#e11d48]"
                   value={sort}
                   onChange={(e) => setSort(e.target.value)}
                 >
@@ -696,61 +596,64 @@ export default function BeautyWellnessPage() {
                 </select>
                 <FiChevronDown
                   size={12}
-                  style={{
-                    position: "absolute",
-                    right: 8,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    pointerEvents: "none",
-                    color: "#666",
-                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[#666]"
                 />
               </div>
             </div>
 
-            <button className="bw-more-btn" onClick={reset}>
+            <button
+              className="block w-full p-2.5 bg-[#f3f4f6] text-[#111] text-[13px] font-bold border-none cursor-pointer font-[inherit] transition-colors duration-150 text-center hover:bg-[#e5e7eb]"
+              onClick={reset}
+            >
               Reset Filters
             </button>
           </aside>
 
-          <div className="bw-main">
+          <div className="flex-1 min-w-0">
             {loading ? (
-              <div className="bw-state">
-                <p>Loading services…</p>
+              <div className="text-center py-[60px] px-6 bg-white rounded-[10px] border border-[#e5e7eb]">
+                <p className="font-bold text-base text-[#111] mt-0 mb-1">
+                  Loading services…
+                </p>
               </div>
             ) : error ? (
-              <div className="bw-state">
-                <p>Couldn&apos;t load services</p>
-                <span>{error}</span>
+              <div className="text-center py-[60px] px-6 bg-white rounded-[10px] border border-[#e5e7eb]">
+                <p className="font-bold text-base text-[#111] mt-0 mb-1">
+                  Couldn&apos;t load services
+                </p>
+                <span className="text-[13px] text-[#888]">{error}</span>
               </div>
             ) : (
               <>
-                <div className="bw-results-bar">
-                  <span className="bw-count">
-                    <strong>{sortedDisplayed.length}</strong> Hair, Beauty &
-                    Wellness found
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <span className="text-[15px] text-[#6b7280] font-semibold">
+                    <strong className="text-[#111] font-extrabold">
+                      {sortedDisplayed.length}
+                    </strong>{" "}
+                    services found
                   </span>
 
-                  <div className="bw-sort-dropdown" ref={sortRef}>
+                  <div className="relative" ref={sortRef}>
                     <button
-                      className="bw-sort-btn"
+                      className="flex items-center gap-2 py-2 px-3.5 bg-white border border-[#e0e4f0] rounded-lg text-[13px] font-semibold text-[#333] cursor-pointer font-[inherit] transition-colors duration-200 hover:border-[#bbb]"
                       onClick={() => setIsSortOpen((v) => !v)}
                     >
                       {sortLabel[sort]}
                       <FiChevronDown
                         size={14}
-                        style={{
-                          transform: isSortOpen ? "rotate(180deg)" : "none",
-                          transition: "transform 0.2s",
-                        }}
+                        className={`transition-transform duration-200 ${isSortOpen ? "rotate-180" : ""}`}
                       />
                     </button>
                     {isSortOpen && (
-                      <div className="bw-sort-menu">
+                      <div className="absolute top-[calc(100%+6px)] right-0 min-w-[180px] bg-white border-[1.5px] border-[#e0e0e0] rounded-[10px] shadow-[0_10px_40px_rgba(0,0,0,0.15)] z-[200] overflow-hidden animate-[sortFade_0.15s_ease]">
                         {SORT_OPTIONS.map((opt) => (
                           <div
                             key={opt.value}
-                            className={`bw-sort-option${sort === opt.value ? " active" : ""}`}
+                            className={`py-2.5 px-4 text-[13px] cursor-pointer transition-all duration-150 border-b border-[#f5f5f5] last:border-b-0 ${
+                              sort === opt.value
+                                ? "bg-[#e11d48] text-white"
+                                : "text-[#444] hover:bg-[#fff1f2] hover:text-[#e11d48]"
+                            }`}
                             onClick={() => {
                               setSort(opt.value);
                               setIsSortOpen(false);
@@ -765,39 +668,48 @@ export default function BeautyWellnessPage() {
                 </div>
 
                 {sortedDisplayed.length === 0 ? (
-                  <div className="bw-empty">
-                    <div className="bw-empty-icon">
+                  <div className="text-center py-[60px] px-6 bg-white rounded-[10px] border border-[#e5e7eb]">
+                    <div className="mb-3 text-[#bbb] flex justify-center">
                       <FiScissors size={48} />
                     </div>
-                    <p>No services found</p>
-                    <span>Try adjusting your filters or search term</span>
+                    <p className="font-bold text-base text-[#111] mt-0 mb-1">
+                      No services found
+                    </p>
+                    <span className="text-[13px] text-[#888]">
+                      Try adjusting your filters or search term
+                    </span>
                     <br />
-                    <button className="bw-empty-btn" onClick={reset}>
+                    <button
+                      className="mt-3 py-[9px] px-[22px] bg-[#e11d48] text-white font-bold text-[13px] border-none rounded-[7px] cursor-pointer font-[inherit]"
+                      onClick={reset}
+                    >
                       Reset Filters
                     </button>
                   </div>
                 ) : (
-                  <div className="bw-grid">
+                  <div className="grid grid-cols-3 gap-4 max-[900px]:grid-cols-2 max-[640px]:grid-cols-1">
                     {sortedDisplayed.map((item) => {
                       const isFav = !!favorites[item.id];
                       const meta = SERVICE_TYPE_META[item.serviceType];
                       return (
-                        <div key={item.id} className="bw-card">
+                        <div
+                          key={item.id}
+                          className="group bg-white rounded-[10px] border border-[#e5e7eb] overflow-hidden flex flex-col shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-[transform,box-shadow] duration-200 no-underline text-inherit hover:-translate-y-[3px] hover:shadow-[0_10px_28px_rgba(0,0,0,0.1)]"
+                        >
                           <Link
                             href={`/category/beauty/${item.id}`}
-                            className="bw-card-img-wrap"
-                            style={{ display: "block", textDecoration: "none" }}
+                            className="relative block w-full aspect-[4/3] overflow-hidden bg-[#e5e7eb] no-underline"
                           >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={item.thumb}
                               alt={item.title}
-                              className="bw-card-img"
+                              className="w-full h-full object-cover transition-transform duration-[400ms] group-hover:scale-[1.06]"
                             />
                             {/* Share */}
                             <button
                               type="button"
-                              className="bw-card-share"
+                              className={`${FLOAT_BTN_BASE} right-11 text-[#64748b] hover:text-[#e11d48]`}
                               onClick={(e) => shareBeauty(item, e)}
                               aria-label={`Share ${item.title}`}
                               title="Share"
@@ -807,7 +719,7 @@ export default function BeautyWellnessPage() {
                             {/* Favorite */}
                             <button
                               type="button"
-                              className="bw-card-fav"
+                              className={`${FLOAT_BTN_BASE} right-2`}
                               onClick={(e) => toggleFav(item.id, e)}
                               aria-label="Save beauty service"
                               title="Save"
@@ -820,35 +732,34 @@ export default function BeautyWellnessPage() {
                             </button>
 
                             {item.homeVisit && (
-                              <span className="bw-card-home-badge">
+                              <span className="absolute bottom-2 left-2 bg-[rgba(225,29,72,0.9)] text-white text-[9px] font-bold rounded-[5px] py-[3px] px-[7px] flex items-center gap-[3px]">
                                 <FiHome size={9} /> Home Visit
                               </span>
                             )}
                           </Link>
 
-                          <div className="bw-card-body">
-                            <p className="bw-card-name">{item.title}</p>
-                            <p className="bw-card-meta">
+                          <div className="p-3.5 flex flex-col gap-[5px] flex-1">
+                            <p className="text-[15px] font-extrabold text-[#111] m-0">
+                              {item.title}
+                            </p>
+                            <p className="text-[11px] text-[#9ca3af] font-medium m-0">
                               {meta?.label ?? item.serviceType}
                               {item.city ? ` • ${item.city}` : ""}
                             </p>
-                            <div className="bw-card-price-row">
+                            <div className="flex items-center justify-between mt-1">
                               <div>
-                                <span className="bw-card-price-label">
+                                <span className="text-[10px] text-[#9ca3af] font-medium">
                                   Starting From
                                 </span>
-                                <div className="bw-card-price">
+                                <div className="text-xs font-bold text-[#e11d48]">
                                   {item.price}
                                 </div>
                               </div>
                             </div>
-                            <div className="bw-card-stars">
-                              {renderStars(item.rating ?? 0)}
-                            </div>
 
                             <Link
                               href={`/category/beauty/${item.id}`}
-                              className="bw-card-btn"
+                              className="block w-full py-[9px] px-3 bg-[#e11d48] text-white text-xs font-bold border-none rounded-md cursor-pointer font-[inherit] text-center no-underline transition-colors duration-150 mt-2 hover:bg-[#be123c]"
                             >
                               Book Now
                             </Link>

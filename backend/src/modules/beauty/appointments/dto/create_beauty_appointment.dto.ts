@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, Matches } from 'class-validator';
 
 export class CreateBeautyAppointmentDto {
   @IsString()
@@ -6,6 +6,9 @@ export class CreateBeautyAppointmentDto {
 
   @IsString()
   slotId: string;
+
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'date must be YYYY-MM-DD' })
+  date: string;
 
   @IsString()
   customerName: string;

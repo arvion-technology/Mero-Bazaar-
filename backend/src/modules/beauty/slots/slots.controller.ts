@@ -7,6 +7,7 @@ import {
   Get,
   Patch,
   Request,
+  Query,
 } from '@nestjs/common';
 import { BeautySlotsService } from './slots.service';
 import { CreateBeautySlotDto } from './dto/create_beauty_slot.dto';
@@ -29,8 +30,11 @@ export class BeautySlotsController {
   }
 
   @Get('listing-id/:listingId')
-  findByListing(@Param('listingId') listingId: string) {
-    return this.slotsService.findByListing(listingId);
+  findByListing(
+    @Param('listingId') listingId: string,
+    @Query('date') date?: string,
+  ) {
+    return this.slotsService.findByListing(listingId, date);
   }
 
   @Get(':id')
