@@ -32,7 +32,6 @@ import type {
   BeautyServiceType,
 } from "@/app/types/beauty";
 
-/* ─────────── SERVICE TYPE META (matches Prisma BeautyServiceType enum) ─────────── */
 const SERVICE_TYPE_META: Record<
   BeautyServiceType,
   { label: string; icon: IconType; color: string }
@@ -72,7 +71,6 @@ const SORT_OPTIONS = [
   { value: "rating", label: "Highest Rated" },
 ];
 
-/* ─────────── TAILWIND CLASS GROUPS (shared / stateful) ─────────── */
 const CAT_CARD_BASE =
   "flex items-center gap-2.5 py-2.5 px-[18px] rounded-[14px] border-[1.5px] cursor-pointer transition-all duration-[180ms] min-w-[120px] font-[inherit] text-left hover:-translate-y-0.5 max-[640px]:min-w-0 max-[640px]:py-2 max-[640px]:px-3.5 max-[640px]:gap-2 max-[640px]:rounded-[10px] max-[640px]:shrink-0";
 const CAT_CARD_IDLE =
@@ -114,7 +112,7 @@ async function fetchBeautyListings(): Promise<BeautyListing[]> {
   return [];
 }
 
-/* ─────────── COMPONENT ─────────── */
+/* component */
 export default function BeautyWellnessPage() {
   const [listings, setListings] = useState<BeautyCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -390,7 +388,6 @@ export default function BeautyWellnessPage() {
         closeOnClick
         pauseOnHover
       />
-      {/* Only things Tailwind can't express inline: font import + keyframes */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         @keyframes sortFade { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }

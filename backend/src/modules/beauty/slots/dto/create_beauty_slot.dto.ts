@@ -1,5 +1,7 @@
 import { WeekDay } from '@prisma/client';
-import { IsString, IsEnum } from 'class-validator';
+import { IsString, IsEnum, Matches } from 'class-validator';
+
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export class CreateBeautySlotDto {
   @IsString()
@@ -8,9 +10,9 @@ export class CreateBeautySlotDto {
   @IsEnum(WeekDay)
   day: WeekDay;
 
-  @IsString()
+  @Matches(HHMM, { message: 'startTime must be HH:mm (24h), e.g. 09:30' })
   startTime: string;
 
-  @IsString()
+  @Matches(HHMM, { message: 'endTime must be HH:mm (24h), e.g. 17:00' })
   endTime: string;
 }

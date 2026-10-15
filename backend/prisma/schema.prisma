@@ -990,6 +990,7 @@ model BeautyAppointment {
 
   customerName String
   customerId   String?
+  date         DateTime? @db.Date
   startTime    DateTime
   endTime      DateTime
 
@@ -1002,6 +1003,7 @@ model BeautyAppointment {
 
   @@index([beautyId])
   @@index([status])
+  @@index([slotId, date])
 }
 
 model BeautySlot {

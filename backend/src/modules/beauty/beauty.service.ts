@@ -6,7 +6,7 @@ import {
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateHairBeautyAndWellnessDto } from './dto/create_beauty.dto';
 import { UpdateHairBeautyAndWellnessDto } from './dto/update_beauty.dto';
-import { ListingCategory } from '@prisma/client';
+import { ListingCategory, ListingStatus } from '@prisma/client';
 import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
 import { assertVerifiedSeller } from '../../common/authz/seller-access';
 
@@ -60,9 +60,14 @@ export class HairBeautyAndWellnessService {
     });
   }
 
+  // Public list: only live listings (AC03). Seller verification is enforced
+  // at creation via assertVerifiedSeller, so it is not re-checked here.
   async findAll() {
     return this.prisma.listing.findMany({
-      where: { category: ListingCategory.BEAUTY },
+      where: {
+        category: ListingCategory.BEAUTY,
+        status: ListingStatus.ACTIVE,
+      },
       include: {
         beauty: true,
         user: {
@@ -116,10 +121,13 @@ export class HairBeautyAndWellnessService {
     dto: UpdateHairBeautyAndWellnessDto,
     userId: string,
   ) {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
+    if (existing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
 
     return this.prisma.listing.update({
-      where: { id, userId },
+      where: { id },
       data: {
         title: dto.serviceTitle,
         description:
@@ -158,8 +166,12 @@ export class HairBeautyAndWellnessService {
   }
 
   async remove(id: string, userId: string) {
-    await this.findOne(id);
-    return this.prisma.listing.delete({ where: { id, userId } });
+    const existing = await this.findOne(id);
+    if (existing.userId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
+    return this.prisma.listing.delete({ where: { id } });
   }
 
   async addPhotos(id: string, files: Express.Multer.File[], userId: string) {

@@ -7,7 +7,9 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateBeautyAppointmentDto } from './dto/create_beauty_appointment.dto';
-import { AppointmentStatus } from '@prisma/client';
+import { AppointmentStatus, Prisma } from '@prisma/client';
+
+const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'] as const;
 
 @Injectable()
 export class BeautyAppointmentsService {
@@ -36,30 +38,42 @@ export class BeautyAppointmentsService {
       );
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const slotClaim = await tx.beautySlot.updateMany({
-        where: { id: dto.slotId, isBooked: false },
-        data: { isBooked: true },
-      });
+    const date = new Date(`${dto.date}T00:00:00.000Z`);
+    if (isNaN(date.getTime())) throw new BadRequestException('Invalid date');
 
-      if (slotClaim.count === 0) {
-        throw new BadRequestException('Slot is already booked');
-      }
+    const todayNp = new Date().toLocaleDateString('en-CA', {
+      timeZone: 'Asia/Kathmandu',
+    });
+    if (dto.date < todayNp) throw new BadRequestException('Date is in the past');
 
-      return tx.beautyAppointment.create({
+    if (WEEKDAYS[date.getUTCDay()] !== slot.day) {
+      throw new BadRequestException(`That date is not a ${slot.day}`);
+    }
+
+    try {
+      return await this.prisma.beautyAppointment.create({
         data: {
           beautyId: beauty.id,
           slotId: dto.slotId,
           listingId: dto.listingId,
           customerId,
           customerName: dto.customerName,
+          date,
           startTime: new Date(`1970-01-01T${slot.startTime}:00`),
           endTime: new Date(`1970-01-01T${slot.endTime}:00`),
           notes: dto.notes,
           status: AppointmentStatus.PENDING,
         },
       });
-    });
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new BadRequestException('Slot is already booked for that date');
+      }
+      throw e;
+    }
   }
 
   async findAll() {
@@ -164,54 +178,47 @@ export class BeautyAppointmentsService {
       );
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const result = await tx.beautyAppointment.updateMany({
-        where: { id, status: appointment.status },
-        data: { status },
-      });
-
-      if (result.count === 0) {
-        throw new ConflictException(
-          'Appointment status changed concurrently, please retry',
-        );
-      }
-
-      if (status === AppointmentStatus.CANCELLED) {
-        await tx.beautySlot.updateMany({
-          where: { id: appointment.slotId, isBooked: true },
-          data: { isBooked: false },
-        });
-      }
-
-      return tx.beautyAppointment.findUniqueOrThrow({ where: { id } });
+    // Optimistic concurrency: only update if status is still what we read.
+    // Cancelling frees the slot automatically (the unique index only covers
+    // PENDING / CONFIRMED appointments).
+    const result = await this.prisma.beautyAppointment.updateMany({
+      where: { id, status: appointment.status },
+      data: { status },
     });
+
+    if (result.count === 0) {
+      throw new ConflictException(
+        'Appointment status changed concurrently, please retry',
+      );
+    }
+
+    return this.prisma.beautyAppointment.findUniqueOrThrow({ where: { id } });
   }
 
   async cancel(appointmentId: string, userId: string, role: string) {
     const appointment = await this.findWithOwnerContext(appointmentId);
     this.assertCanAccess(appointment, userId, role);
 
-    return this.prisma.$transaction(async (tx) => {
-      const result = await tx.beautyAppointment.updateMany({
-        where: {
-          id: appointmentId,
-          status: { not: AppointmentStatus.CANCELLED },
-        },
-        data: { status: AppointmentStatus.CANCELLED },
-      });
+    if (
+      appointment.status === AppointmentStatus.COMPLETED ||
+      appointment.status === AppointmentStatus.CANCELLED
+    ) {
+      throw new BadRequestException(
+        `Cannot cancel a ${appointment.status} appointment`,
+      );
+    }
 
-      if (result.count === 0) {
-        throw new BadRequestException('Appointment is already cancelled');
-      }
+    const result = await this.prisma.beautyAppointment.updateMany({
+      where: { id: appointmentId, status: appointment.status },
+      data: { status: AppointmentStatus.CANCELLED },
+    });
 
-      await tx.beautySlot.updateMany({
-        where: { id: appointment.slotId, isBooked: true },
-        data: { isBooked: false },
-      });
+    if (result.count === 0) {
+      throw new ConflictException('Appointment changed, please retry');
+    }
 
-      return tx.beautyAppointment.findUniqueOrThrow({
-        where: { id: appointmentId },
-      });
+    return this.prisma.beautyAppointment.findUniqueOrThrow({
+      where: { id: appointmentId },
     });
   }
 }

@@ -26,6 +26,8 @@ import type { BeautyDetail } from "@/app/types/listing";
 import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import BeautyBookingPanel from "@/components/BeautyBookingPanel";
+
 const RELATED_LIMIT = 3;
 
 /* Only things Tailwind can't express inline: font import, body overflow, keyframes */
@@ -44,15 +46,6 @@ async function fetchBeautyListing(id: string): Promise<BeautyListing | null> {
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Failed to load listing (${res.status})`);
   return res.json();
-}
-
-async function fetchBeautyListings(): Promise<BeautyListing[]> {
-  const res = await fetch("/api/beauty", { cache: "no-store" });
-  if (!res.ok) return [];
-  const json = await res.json();
-  if (Array.isArray(json)) return json;
-  if (Array.isArray(json?.data)) return json.data;
-  return [];
 }
 
 function NotFoundView() {
@@ -519,13 +512,14 @@ export default function BeautyDetailPage() {
                   Currently Accepting Bookings
                 </div>
                 <div className="flex gap-2.5">
-                  <Link
-                    href={`tel:${item.seller.phone}`}
+                  {/* Scrolls to the booking panel below */}
+                  <a
+                    href="#booking"
                     className="flex-1 flex items-center justify-center gap-[7px] p-[13px] bg-[#e11d48] text-white text-sm font-extrabold border-none rounded-[9px] cursor-pointer font-[inherit] transition-[background-color,transform] duration-150 no-underline hover:bg-[#be123c] hover:-translate-y-px"
                   >
                     <FiCalendar size={16} />
                     Book Now
-                  </Link>
+                  </a>
                   <button
                     className={`${CARD_BTN} hover:bg-[#fce7f3] hover:border-[#fbcfe8] hover:text-[#be185d]`}
                     onClick={() =>
@@ -549,6 +543,11 @@ export default function BeautyDetailPage() {
                   </button>
                 </div>
               </div>
+
+              <BeautyBookingPanel
+                listingId={id}
+                defaultName={session?.user?.name ?? ""}
+              />
 
               <div
                 className={`bg-white rounded-xl border border-[#e5e7eb] py-[18px] px-5 ${PANEL_SHADOW}`}
