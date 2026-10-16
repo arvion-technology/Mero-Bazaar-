@@ -961,6 +961,7 @@ model HairBeautyAndWellness {
   serviceLocationType String?
   studioLocation      String?
   duration            String?
+  durationMinutes     Int?
   whoIsThisFor        String?
   genderPreference    String?
   experienceLevel     String?
@@ -1016,7 +1017,6 @@ model BeautySlot {
   startTime String
   endTime   String
 
-  isBooked  Boolean  @default(false)
   createdAt DateTime @default(now())
 
   beautyappointments BeautyAppointment[]

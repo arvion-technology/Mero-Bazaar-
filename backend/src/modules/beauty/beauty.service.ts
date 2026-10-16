@@ -9,6 +9,22 @@ import { UpdateHairBeautyAndWellnessDto } from './dto/update_beauty.dto';
 import { ListingCategory, ListingStatus } from '@prisma/client';
 import { validateAndReencodeImage } from '../../common/uploads/upload.utils';
 import { assertVerifiedSeller } from '../../common/authz/seller-access';
+import {
+  assertValidSlots,
+  buildDefaultSlots,
+  parseDurationMinutes,
+} from './beauty-slots.util';
+
+const SELLER_SELECT = {
+  id: true,
+  name: true,
+  isVerified: true,
+  phone: true,
+  createdAt: true,
+  vendorProfile: {
+    select: { businessName: true, rating: true },
+  },
+} as const;
 
 @Injectable()
 export class HairBeautyAndWellnessService {
@@ -16,6 +32,15 @@ export class HairBeautyAndWellnessService {
 
   async create(dto: CreateHairBeautyAndWellnessDto, userId: string) {
     await assertVerifiedSeller(this.prisma, userId);
+
+    if (dto.availability?.length) assertValidSlots(dto.availability);
+
+    const minutes = dto.durationMinutes ?? parseDurationMinutes(dto.duration);
+    const slots = dto.availability?.length
+      ? dto.availability
+      : buildDefaultSlots(minutes);
+
+    // Nested create is atomic: listing, beauty and slots all succeed or all fail.
     return this.prisma.listing.create({
       data: {
         title: dto.serviceTitle,
@@ -46,16 +71,23 @@ export class HairBeautyAndWellnessService {
             serviceLocationType: dto.serviceLocationType,
             studioLocation: dto.studioLocation,
             duration: dto.duration,
+            durationMinutes: minutes ?? undefined,
             whoIsThisFor: dto.whoIsThisFor,
             genderPreference: dto.genderPreference,
             experienceLevel: dto.experienceLevel,
             preparationTime: dto.preparationTime,
             tags: dto.tags ?? [],
+            beautySlots: {
+              createMany: {
+                data: slots,
+                skipDuplicates: true,
+              },
+            },
           },
         },
       },
       include: {
-        beauty: true,
+        beauty: { include: { beautySlots: true } },
       },
     });
   }
@@ -69,19 +101,8 @@ export class HairBeautyAndWellnessService {
         status: ListingStatus.ACTIVE,
       },
       include: {
-        beauty: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            isVerified: true,
-            phone: true,
-            createdAt: true,
-            vendorProfile: {
-              select: { businessName: true, rating: true },
-            },
-          },
-        },
+        beauty: { include: { beautySlots: true } },
+        user: { select: SELLER_SELECT },
         reviews: true,
       },
       orderBy: { createdAt: 'desc' },
@@ -92,19 +113,8 @@ export class HairBeautyAndWellnessService {
     const listing = await this.prisma.listing.findUnique({
       where: { id },
       include: {
-        beauty: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            isVerified: true,
-            phone: true,
-            createdAt: true,
-            vendorProfile: {
-              select: { businessName: true, rating: true },
-            },
-          },
-        },
+        beauty: { include: { beautySlots: true } },
+        user: { select: SELLER_SELECT },
         reviews: true,
       },
     });
@@ -126,42 +136,87 @@ export class HairBeautyAndWellnessService {
       throw new ForbiddenException('Unauthorized');
     }
 
-    return this.prisma.listing.update({
-      where: { id },
-      data: {
-        title: dto.serviceTitle,
-        description:
-          dto.shortDescription ??
-          (dto.city
-            ? `${dto.serviceType ?? ''} available in ${dto.city}`
-            : undefined),
-        price: dto.price,
-        location: dto.location,
-        latitude: dto.latitude,
-        longitude: dto.longitude,
-        images: dto.portfolioUrls ?? undefined,
-        beauty: {
-          update: {
-            serviceType: dto.serviceType,
-            price: dto.price,
-            priceStartingFrom: dto.priceStartingFrom,
-            homeVisit: dto.homeVisit,
-            portfolioUrls: dto.portfolioUrls,
-            bridalAvailable: dto.bridalAvailable,
-            city: dto.city,
-            shortDescription: dto.shortDescription,
-            serviceLocationType: dto.serviceLocationType,
-            studioLocation: dto.studioLocation,
-            duration: dto.duration,
-            whoIsThisFor: dto.whoIsThisFor,
-            genderPreference: dto.genderPreference,
-            experienceLevel: dto.experienceLevel,
-            preparationTime: dto.preparationTime,
-            tags: dto.tags,
+    if (dto.availability?.length) assertValidSlots(dto.availability);
+
+    const newMinutes =
+      dto.durationMinutes ??
+      (dto.duration !== undefined
+        ? parseDurationMinutes(dto.duration)
+        : undefined);
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.listing.update({
+        where: { id },
+        data: {
+          title: dto.serviceTitle,
+          description:
+            dto.shortDescription ??
+            (dto.city
+              ? `${dto.serviceType ?? ''} available in ${dto.city}`
+              : undefined),
+          price: dto.price,
+          location: dto.location,
+          latitude: dto.latitude,
+          longitude: dto.longitude,
+          images: dto.portfolioUrls ?? undefined,
+          beauty: {
+            update: {
+              serviceType: dto.serviceType,
+              price: dto.price,
+              priceStartingFrom: dto.priceStartingFrom,
+              homeVisit: dto.homeVisit,
+              portfolioUrls: dto.portfolioUrls,
+              bridalAvailable: dto.bridalAvailable,
+              city: dto.city,
+              shortDescription: dto.shortDescription,
+              serviceLocationType: dto.serviceLocationType,
+              studioLocation: dto.studioLocation,
+              duration: dto.duration,
+              durationMinutes: newMinutes ?? undefined,
+              whoIsThisFor: dto.whoIsThisFor,
+              genderPreference: dto.genderPreference,
+              experienceLevel: dto.experienceLevel,
+              preparationTime: dto.preparationTime,
+              tags: dto.tags,
+            },
           },
         },
-      },
-      include: { beauty: true },
+        include: { beauty: true },
+      });
+
+      const beautyId = updated.beauty?.id;
+      if (beautyId) {
+        const durationChanged =
+          newMinutes != null &&
+          newMinutes !== existing.beauty?.durationMinutes;
+        const availabilityProvided = !!dto.availability?.length;
+        const slotCount = await tx.beautySlot.count({ where: { beautyId } });
+
+        if (durationChanged || availabilityProvided || slotCount === 0) {
+          // Keep slots that already have appointments (FK is Restrict).
+          await tx.beautySlot.deleteMany({
+            where: { beautyId, beautyappointments: { none: {} } },
+          });
+
+          const minutes =
+            updated.beauty?.durationMinutes ??
+            parseDurationMinutes(updated.beauty?.duration);
+
+          const slots = availabilityProvided
+            ? dto.availability!
+            : buildDefaultSlots(minutes);
+
+          await tx.beautySlot.createMany({
+            data: slots.map((s) => ({ ...s, beautyId })),
+            skipDuplicates: true,
+          });
+        }
+      }
+
+      return tx.listing.findUnique({
+        where: { id },
+        include: { beauty: { include: { beautySlots: true } } },
+      });
     });
   }
 

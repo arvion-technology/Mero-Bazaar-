@@ -1,4 +1,5 @@
 import {
+  ArrayMaxSize,
   IsArray,
   IsBoolean,
   IsEnum,
@@ -7,10 +8,25 @@ import {
   IsString,
   IsLatitude,
   IsLongitude,
+  Matches,
   Min,
+  ValidateNested,
 } from 'class-validator';
-import { BeautyServiceType } from '@prisma/client';
+import { BeautyServiceType, WeekDay } from '@prisma/client';
 import { Type } from 'class-transformer';
+
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export class AvailabilitySlotDto {
+  @IsEnum(WeekDay)
+  day: WeekDay;
+
+  @Matches(HHMM, { message: 'startTime must be HH:mm (24h), e.g. 09:30' })
+  startTime: string;
+
+  @Matches(HHMM, { message: 'endTime must be HH:mm (24h), e.g. 17:00' })
+  endTime: string;
+}
 
 export class CreateHairBeautyAndWellnessDto {
   @IsString()
@@ -59,6 +75,12 @@ export class CreateHairBeautyAndWellnessDto {
   duration?: string;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(15)
+  durationMinutes?: number;
+
+  @IsOptional()
   @IsBoolean()
   homeVisit?: boolean;
 
@@ -95,4 +117,11 @@ export class CreateHairBeautyAndWellnessDto {
   @IsOptional()
   @IsString()
   city?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(200)
+  @ValidateNested({ each: true })
+  @Type(() => AvailabilitySlotDto)
+  availability?: AvailabilitySlotDto[];
 }
