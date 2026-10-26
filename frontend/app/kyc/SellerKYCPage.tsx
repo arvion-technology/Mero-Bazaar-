@@ -526,7 +526,7 @@ export default function SellerKYCPage() {
     clearError(name);
   };
 
-  // ── PAN OCR (runs from event handlers only, skipped if file + PAN unchanged)
+  // PAN OCR (runs from event handlers only, skipped if file + PAN unchanged)
   const runPanOcr = async (file: File, panRaw: string) => {
     const pan = panRaw.trim().toUpperCase();
     if (!pan) return;
@@ -564,7 +564,7 @@ export default function SellerKYCPage() {
     }
   };
 
-  // ── shared face detection logic (used by camera capture)
+  // shared face detection logic (used by camera capture)
   const runFaceDetection = async (file: File) => {
     setFaceStatus("scanning");
     try {
@@ -626,10 +626,11 @@ export default function SellerKYCPage() {
       reader.onloadend = () => setPreview(reader.result as string);
       reader.readAsDataURL(file);
 
+    // eslint-disable-next-line react-hooks/refs -- called from an event handler, not during render
       if (field === "panCard") void runPanOcr(file, form.panNumber);
     };
 
-  // ── Desktop/webcam camera capture
+  // Desktop/webcam camera capture
   const openCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -694,7 +695,7 @@ export default function SellerKYCPage() {
     };
   }, []);
 
-  // ── OTP handler
+  // OTP handler
   const sendOtp = async () => {
     const token = session?.accessToken;
 
@@ -763,7 +764,7 @@ export default function SellerKYCPage() {
     }
   };
 
-  // ── per-phase validation
+  // per-phase validation
   const validatePersonal = (): boolean => {
     const next: Errors = {};
     const name = form.fullName.trim();
