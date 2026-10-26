@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { TbGridDots } from "react-icons/tb";
-import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX, FiUser, FiLogOut, FiHeart, FiShoppingCart } from "react-icons/fi";
+import { FiChevronDown, FiChevronRight, FiBell, FiMenu, FiX, FiUser, FiLogOut, FiHeart, FiShoppingCart, FiPlus } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { activityLabel, isKnownActivity } from "@/lib/activityLabel";
 import { useNotificationSocket } from "@/lib/notificationSocket";
@@ -63,8 +63,72 @@ const profileItemLogout = "text-[#d9534f] hover:bg-[#fdf2f2] hover:text-[#c9302c
 const mobileLink =
   "block py-[11px] px-1 text-[14px] font-medium text-[#333] border-b border-[#f5f5f5] no-underline [transition:color_0.12s] hover:text-[#C0392B]";
 
+const notifItem =
+  "block w-full text-left bg-transparent border-0 cursor-pointer py-[9px] px-2.5 text-[12.5px] text-[#444] rounded-lg [transition:background_0.12s] hover:bg-[#fff5f5]";
+
 type ActivityItem = { id: string; type: string; createdAt: string; read: boolean };
-type UserNotif = { id: string; title: string; createdAt: string; read: boolean };
+type UserNotif = {
+  id: string;
+  title: string;
+  createdAt: string;
+  read: boolean;
+  category?: string;
+  type?: string;
+  description?: string;
+  entityType?: string | null;
+  entityId?: string | null;
+};
+
+type Role = string | null | undefined;
+
+const ROUTES = {
+  ADMIN: {
+    home: "/admin",
+    byCategory: {
+      KYC: "/admin",
+      LISTINGS: "/admin",
+      DISPUTES: "/admin",
+      PAYMENTS: "/admin",
+    } as Record<string, string>,
+  },
+  VENDOR: {
+    home: "/seller/dashboard",
+    byCategory: {
+      ORDERS: "/seller/orders",
+      APPOINTMENTS: "/seller/orders",
+      PAYMENTS: "/seller/orders",
+      DISPUTES: "/seller/orders",
+      LEADS: "/seller/clients",
+      LISTINGS: "/seller/dashboard",
+      REVIEWS: "/seller/dashboard",
+      KYC: "/seller/dashboard",
+    } as Record<string, string>,
+  },
+  USER: {
+    home: "/user/dashboard",
+    byCategory: {
+      ORDERS: "/user/dashboard",
+      APPOINTMENTS: "/user/dashboard",
+      PAYMENTS: "/user/dashboard",
+    } as Record<string, string>,
+  },
+};
+
+function roleRoutes(role: Role) {
+  if (role === "ADMIN") return ROUTES.ADMIN;
+  if (role === "VENDOR") return ROUTES.VENDOR;
+  return ROUTES.USER;
+}
+
+// Account/security events (login, password change, 2FA...) open the account home
+function accountHref(role: Role) {
+  return roleRoutes(role).home;
+}
+
+function notifHref(n: UserNotif, role: Role): string {
+  const r = roleRoutes(role);
+  return (n.category && r.byCategory[n.category]) || r.home;
+}
 
 export default function Navbar() {
   const [showCategories, setShowCategories] = useState(false);
@@ -86,21 +150,15 @@ export default function Navbar() {
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  const handleAccountClick = () => {
-    setShowProfileMenu(false);
-    if (session?.user?.role === "ADMIN") {
-      router.push("/admin");
-    } else if (session?.user?.role === "VENDOR") {
-      router.push("/seller/dashboard");
-    } else {
-      router.push("/user/dashboard");
-    }
-  };
-
   // wishlist: everyone except admin. cart: buyers only (no vendor/admin)
   const role = session?.user?.role;
   const showWishlist = role !== "ADMIN";
   const showCart = role !== "ADMIN" && role !== "VENDOR";
+
+  const handleAccountClick = () => {
+    setShowProfileMenu(false);
+    router.push(accountHref(role));
+  };
 
   const goProtected = (href: string) => {
     if (status === "loading") return;
@@ -139,11 +197,13 @@ export default function Navbar() {
       key: `n-${n.id}`,
       text: n.title,
       createdAt: n.createdAt,
+      href: notifHref(n, role),
     })),
     ...securityNotifs.map((a) => ({
       key: `a-${a.id}`,
       text: activityLabel(a.type),
       createdAt: a.createdAt,
+      href: accountHref(role),
     })),
   ]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -341,6 +401,16 @@ export default function Navbar() {
 
           {/* wishlist, cart, notifications */}
           <div className="flex items-center gap-3.5 ml-auto shrink-0 max-[900px]:!hidden">
+            {role === "VENDOR" && (
+              <Link
+                href="/seller/dashboard?new=listing"
+                className="flex items-center gap-1.5 bg-[#C0392B] !text-white rounded-lg py-[7px] px-3.5 text-[13px] font-semibold no-underline whitespace-nowrap [transition:background_0.15s,transform_0.1s] hover:bg-[#a93226] hover:[transform:translateY(-1px)]"
+              >
+                <FiPlus size={15} />
+                New Listing
+              </Link>
+            )}
+
             {showWishlist && (
               <button className={iconBtn} aria-label="Wishlist" onClick={() => goProtected("/user/wishlist")}>
                 <FiHeart size={20} />
@@ -382,10 +452,30 @@ export default function Navbar() {
                   {profilePrompts.length + feed.length > 0 ? (
                     <>
                       {profilePrompts.map((msg, i) => (
-                        <div key={`p-${i}`} className="py-[9px] px-2.5 text-[12.5px] text-[#444] rounded-lg [transition:background_0.12s] hover:bg-[#fff5f5]">⚠️ {msg}</div>
+                        <button
+                          key={`p-${i}`}
+                          type="button"
+                          className={notifItem}
+                          onClick={() => {
+                            setOpenNotif(false);
+                            router.push(accountHref(role));
+                          }}
+                        >
+                          ⚠️ {msg}
+                        </button>
                       ))}
                       {feed.map((item) => (
-                        <div key={item.key} className="py-[9px] px-2.5 text-[12.5px] text-[#444] rounded-lg [transition:background_0.12s] hover:bg-[#fff5f5]">🔔 {item.text}</div>
+                        <button
+                          key={item.key}
+                          type="button"
+                          className={notifItem}
+                          onClick={() => {
+                            setOpenNotif(false);
+                            router.push(item.href);
+                          }}
+                        >
+                          🔔 {item.text}
+                        </button>
                       ))}
                     </>
                   ) : (
@@ -470,6 +560,16 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               )
+            )}
+
+            {role === "VENDOR" && (
+              <Link
+                href="/seller/dashboard?new=listing"
+                className={`${mobileLink} !text-[#C0392B] font-semibold`}
+                onClick={() => setShowMobileMenu(false)}
+              >
+                + New Listing
+              </Link>
             )}
 
             {showWishlist && (
