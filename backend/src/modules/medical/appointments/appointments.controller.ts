@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { CreateMedicalAppointmentDto } from './dto/create_medical_appointment.dto';
 import { MedicalAppointmentsService } from './appointments.service';
-import { UpdateMedicalAppointmentStatusDto } from './dto/update_beauty_appointment_status.dto';
+import { UpdateMedicalAppointmentStatusDto } from './dto/update_medical_appointment.dto';
 import { JwtAuthGuard } from '../../auth/jwt_auth.guards';
 import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';

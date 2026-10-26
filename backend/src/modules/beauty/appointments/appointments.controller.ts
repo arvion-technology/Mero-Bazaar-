@@ -35,6 +35,14 @@ export class BeautyAppointmentsController {
     return this.appointmentsService.findAll();
   }
 
+  // Must stay above ':id' so it isn't swallowed by the param route.
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('VENDOR', 'ADMIN')
+  @Get('seller/mine')
+  findBySeller(@Request() req) {
+    return this.appointmentsService.findBySeller(req.user.id);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('mine')
   findMine(@Request() req) {
